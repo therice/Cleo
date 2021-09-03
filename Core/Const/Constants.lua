@@ -80,48 +80,11 @@ AddOn.Constants = {
     },
     
     Commands = {
-        Awarded                 =   "awd",
-        ChangeResponse          =   "cr",
-        PlayerInfo              =   "pi",
-        PlayerInfoRequest       =   "pir",
-        HandleLootStart         =   "hlst",
-        HandleLootStop          =   "hlstp",
-        LootAck                 =   "la",
-        LootHistoryAdd          =   "lha",
-        LootSessionEnd          =   "lse",
-        LootTable               =   "lt",
-        LootTableAdd            =   "lta",
-        MasterLooterDb          =   "mldb",
-        MasterLooterDbRequest   =   "mldbr",
-        OfflineTimer            =   "ot",
-        Reconnect               =   "rct",
-        Response                =   "rsp",
-        ReRoll                  =   "rer",
-        Roll                    =   "roll",
-        Rolls                   =   "rolls",
-        StandbyPing             =   "sbp",
-        StandbyPingAck          =   "sbpa",
-        Sync                    =   "sync",
-        SyncACK                 =   "sack",
-        SyncNACK                =   "snack",
-        SyncSYN                 =   "ssyn",
-        TrafficHistoryAdd       =   "tha",
-        VersionCheck            =   "vc",
-        VersionCheckReply       =   "vcr",
-        VersionPing             =   "vp",
-        VersionPingReply        =   "vpr",
+
     },
 
     DropDowns = {
-        AllocateRightClick       = name .. "_Allocate_RightClick",
-        AllocateFilter           = name .. "_Allocate_Filter",
-        Enchanters               = name .. "_EnchantersMenu",
-        LootHistoryFilter        = name .. "_LH_Filter",
-        StandbyRightClick        = name .. "_Standby_RightClick",
-        StandingsRightClick      = name .. "_Standings_RightClick",
-        StandingsFilter          = name .. "_Standings_Filter",
-        TrafficHistoryFilter     = name .. "_TH_Filter",
-        TrafficHistoryRightClick = name .. "_TH_RightClick",
+
     },
 
     Events = {
@@ -198,12 +161,7 @@ AddOn.Constants = {
     },
 
     Messages = {
-        AwardSuccess            =   name .. "_AwardFailed",
-        AwardFailed             =   name .. "_AwardSuccess",
-        ConfigTableChanged      =   name .. "_ConfigTableChanged",
-        LootTableAddition       =   name .. "_LootTableAddition",
-        MasterLooterAddItem     =   name .. "_MasterLooterAddItem",
-        PlayerNotFound          =   name .. "_PlayerNotFound",
+
     },
 
     Modes = {
@@ -214,31 +172,11 @@ AddOn.Constants = {
     },
     
     Popups = {
-        ConfirmAbort            =   name .. "_ConfigAbort",
-        ConfirmAdjustPoints     =   name .. "_ConfirmAdjustPoints",
-        ConfirmAward            =   name .. "_ConfirmAward",
-        ConfirmDecayPoints      =   name .. "_ConfirmDecayPoints",
-        ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
-        ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
-        ConfirmRevert           =   name .. "_ConfirmRevert",
-        ConfirmSync             =   name .. "_ConfirmSync",
-        ConfirmUsage            =   name .. "_ConfirmUsage",
+
     },
 
     Responses = {
-        Announced    = "ANNOUNCED",
-        AutoPass     = "AUTOPASS",
-        Awarded      = "AWARDED",
-        Default      = "DEFAULT",
-        Disabled     = "DISABLED",
-        NotAnnounced = "NOTANNOUNCED",
-        Nothing      = "NOTHING",
-        NotInRaid    = "NOTINRAID",
-        Pass         = "PASS",
-        Removed      = "REMOVED",
-        Roll         = "ROLL",
-        Timeout      = "TIMEOUT",
-        Wait         = "WAIT",
+
     },
 
     VersionStatus = {

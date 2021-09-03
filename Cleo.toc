@@ -14,3 +14,5 @@ Libs\Libs.xml
 Locales\Locales.xml
 ## Core Pre-Loaded
 Core\PreLoad.xml
+## Initialization Stub
+Init.lua

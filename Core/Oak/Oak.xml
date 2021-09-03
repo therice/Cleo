@@ -1,4 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
-    <Include file="Const\Const.xml"/>
-    <Include file="Oak\Oak.xml"/>
+    <Script file="Library.lua"/>
+    <Script file="Package.lua"/>
+    <Script file="Instance.lua"/>
 </Ui>

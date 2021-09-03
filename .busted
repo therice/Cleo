@@ -1,0 +1,11 @@
+return {
+  _all = {
+    coverage = false,
+    ['ROOT'] = {'.'},
+    ['exclude-tags'] = {'travisignore'}
+  },
+  default = {
+    verbose = true,
+    pattern = {'.*Test.lua$'},
+  },
+}
