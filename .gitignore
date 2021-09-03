@@ -1,0 +1,35 @@
+logs
+tmp
+dist
+.cache
+.DS_Store
+RUNNING_PID
+
+/.idea
+/.idea_modules
+/.classpath
+/.project
+/.settings
+/RUNNING_PID
+*.iml
+.release
+
+# SBT
+dist
+project/project
+project/boot
+project/target
+project/plugins/target
+target
+.target
+.g8
+
+# coverage
+luacov.report.out
+luacov.stats.out
+
+# general
+*~
+*.log
+tmp
+dump
