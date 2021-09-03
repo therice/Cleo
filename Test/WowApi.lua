@@ -225,7 +225,7 @@ end
 function GuildRoster ()
     -- dubious to work around issues with library using this function
     -- being called before addon is loaded
-    if _G.IsAddOnLoaded('R2D2X') then
+    if _G.IsAddOnLoaded('Cleo') then
         -- print('GuildRoster')
         GuildRosterUpdate()
     end

@@ -1,0 +1,16 @@
+## Interface: 20502
+## X-Min-Interface: 20502
+## Title: |cfffe7b2cCleo|r
+## Notes: Cleo - SK AddOn for World of Warcraft (TBC Classic)
+## Author: Gnomechómsky-Atiesh
+## Version: @project-version@
+## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_TrafficDB, Cleo_LootDB
+## X-AddonName: Cleo
+## X-InterfaceName: Cleo TBC Classic
+
+## Required Libraries
+Libs\Libs.xml
+## Localization
+Locales\Locales.xml
+## Core Pre-Loaded
+Core\PreLoad.xml

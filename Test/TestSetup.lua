@@ -5,11 +5,10 @@
 -- [4] - Table of post-hook functions (for addon loading)
 local params = {...}
 local pl = require('pl.path')
-local pretty = require('pl.pretty')
 local assert = require("luassert")
 local say = require("say")
 local addOnTestNs, testNs, loadAddon, logFileName, logFile, caller =
-    'R2D2X_Testing', nil, nil, nil, nil, pl.abspath(pl.abspath('.') .. '/' .. debug.getinfo(2, "S").source:match("@(.*)$"))
+    'Cleo_Testing', nil, nil, nil, nil, pl.abspath(pl.abspath('.') .. '/' .. debug.getinfo(2, "S").source:match("@(.*)$"))
 
 loadAddon = params[1] or false
 
@@ -227,7 +226,7 @@ local True = function(...) return true end
 local name, addon
 
 if loadAddon then
-    local toc = pl.abspath(thisDir .. '/../R2D2X.toc')
+    local toc = pl.abspath(thisDir .. '/../Cleo.toc')
     print('Loading TOC @ ' .. toc)
     loadfile('Test/WowAddonParser.lua')()
     local preload_fns = params[3] or {}
