@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <Script file="Native.lua"/>
+    <Script file="Util.lua"/>
+    <Include file="Widgets\Widgets.xml"/>
+    <Script file="AceConfig.lua"/>
+    <Script file="Ace.lua"/>
+    <Script file="ScrollingTable.lua"/>
+    <Script file="DropDown.lua"/>
+</Ui>

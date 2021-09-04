@@ -1,0 +1,31 @@
+local AddOnName, AddOn, Encounter
+
+describe("Encounter", function()
+	setup(function()
+		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Encounter')
+		Encounter = AddOn.Package('Models').Encounter
+	end)
+
+	teardown(function()
+		After()
+	end)
+
+	describe("functional", function()
+		it("is created from start parameters", function()
+			local e = Encounter(1, "encounterName1", 1, 40)
+			assert(e.id == 1)
+			assert(e.name == "encounterName1")
+			assert(e.difficultyId == 1)
+			assert(e.groupSize == 40)
+			assert(not e:IsSuccess())
+		end)
+		it("is created from end parameters", function()
+			local e = Encounter(2, "encounterName2", 9, 40, 1)
+			assert(e.id == 2)
+			assert(e.name == "encounterName2")
+			assert(e.difficultyId == 9)
+			assert(e.groupSize == 40)
+			assert(e:IsSuccess())
+		end)
+	end)
+end)

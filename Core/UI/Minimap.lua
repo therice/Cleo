@@ -23,7 +23,7 @@ function MinimapButton:initialize()
                         AddOn.ToggleConfig()
                     else
                         if IsShiftKeyDown() then
-                            -- AddOn:LoggingModule():Toggle()
+                            AddOn:LoggingModule():Toggle()
                         else
                             -- AddOn:ToggleModule("Standings")
                         end

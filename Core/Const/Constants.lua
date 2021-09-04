@@ -80,7 +80,12 @@ AddOn.Constants = {
     },
     
     Commands = {
-
+        PlayerInfo              =   "pi",
+        PlayerInfoRequest       =   "pir",
+        VersionCheck            =   "vc",
+        VersionCheckReply       =   "vcr",
+        VersionPing             =   "vp",
+        VersionPingReply        =   "vpr",
     },
 
     DropDowns = {

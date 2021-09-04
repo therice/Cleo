@@ -1,0 +1,27 @@
+exclude = {
+    ".luarocks/*",
+    "Test/*",
+    -- explicitly exclude libs as there are libs we have authored where coverage is useful
+    "Libs/Ace.*",
+    "Libs/CallbackHandler.*",
+    "Libs/lib%-st.*",
+    "Libs/LibBabble.*",
+    "Libs/LibBase64.*",
+    "Libs/LibDBIcon.*",
+    "Libs/LibDataBroker.*",
+    "Libs/LibDeflate.*",
+    "Libs/LibDeformat.*",
+    "Libs/LibDialog.*",
+    "Libs/LibJSON.*",
+    "Libs/LibMessagePack.*",
+    "Libs/LibRx%-.*",
+    "Libs/LibStub.*",
+    "Libs/LibWindow.*",
+    "Libs/MSA%-DropDownMenu.*",
+    "Locales/*",
+}
+
+includeuntestedfiles = false
+deletestats = false
+runreport = true
+reportfile = "luacov.report.out"
