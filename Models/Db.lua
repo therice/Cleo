@@ -25,7 +25,6 @@ elseif SerializerType == 'M' then
     Deserialize = function(s) return pcall(function() return Serializer.unpack(s) end) end
 end
 
-
 local function compress(data)
     if data == nil then return nil end
     local serialized = Serialize(data)

@@ -82,6 +82,7 @@ AddOn.Constants = {
     Commands = {
         PlayerInfo              =   "pi",
         PlayerInfoRequest       =   "pir",
+        Reconnect               =   "rct",
         VersionCheck            =   "vc",
         VersionCheckReply       =   "vcr",
         VersionPing             =   "vp",
@@ -166,7 +167,8 @@ AddOn.Constants = {
     },
 
     Messages = {
-
+        ConfigTableChanged      =   name .. "_ConfigTableChanged",
+        PlayerNotFound          =   name .. "_PlayerNotFound",
     },
 
     Modes = {
@@ -177,7 +179,7 @@ AddOn.Constants = {
     },
     
     Popups = {
-
+        ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
     },
 
     Responses = {

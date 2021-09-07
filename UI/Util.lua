@@ -196,11 +196,11 @@ function U.GetPlayerClassColor(name)
 end
 
 function U.RGBToHex(r,g,b)
-    return string.format("%02x%02x%02x", math.floor(255*r), math.floor(255*g), math.floor(255*b))
+    return string.format("%02X%02X%02X", math.floor(255*r), math.floor(255*g), math.floor(255*b))
 end
 
 function U.RGBToHexPrefix(r, g, b)
-    return "|cff" .. U.RGBToHex(r, g, b)
+    return "|cFF" .. U.RGBToHex(r, g, b)
 end
 
 function U.ColoredDecorator(...)

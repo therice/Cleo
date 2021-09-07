@@ -4,6 +4,8 @@ local Logging, Util, Window = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Uti
 local NativeUI = AddOn.Require('UI.Native')
 --- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
+--- @type UI.Widgets.ButtonIcon
+local ButtonIcon = AddOn.ImportPackage('UI.Widgets').ButtonIcon
 local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
 
 --- Creates a standard frame with title, minimizing, positioning and scaling supported
@@ -28,7 +30,7 @@ function Frame:initialize(parent, name, module, title, width, height, hookConfig
 end
 
 function Frame:Create()
-    local f = CreateFrame("Frame", AddOn:Qualify(self.name), self.parent)
+    local f = CreateFrame("Frame", d, self.parent)
     local hookIt = Util.Objects.IsNil(self.hookConfig) and true or self.hookConfig
     local storage = { }
     if self.module and AddOn.db then
@@ -99,6 +101,7 @@ function Frame:Create()
 
     self:CreateTitle(f)
     self:CreateContent(f)
+    self:CreateButtons(f)
     self.EmbedMinimizeSupport(f)
     NativeUI:TrackFrame(f)
     return f
@@ -108,7 +111,7 @@ function Frame:CreateTitle(f)
     local tf = CreateFrame("Frame", AddOn:Qualify(self.name, 'Title'), f, BackdropTemplateMixin and "BackdropTemplate")
     tf:SetToplevel(true)
     tf:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        bgFile = BaseWidget.ResolveTexture('white'),
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
         tile = true, tileSize = 8, edgeSize = 2,
         insets = { left = 2, right = 2, top = 2, bottom = 2 },
@@ -146,16 +149,16 @@ end
 function Frame:CreateContent(f)
     local c = CreateFrame("Frame", AddOn:Qualify(self.name, 'Content'), f, BackdropTemplateMixin and "BackdropTemplate")
     c:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        bgFile = BaseWidget.ResolveTexture('white'),
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
         tile = true, tileSize = 8, edgeSize = 2,
         insets = { left = 2, right = 2, top = 2, bottom = 2 }
     })
+    c:SetBackdropColor(0, 0, 0, 1)
+    c:SetBackdropBorderColor(0, 0, 0, 1)
     c:EnableMouse(true)
     c:SetWidth(self.width or 450)
     c:SetHeight(self.height or 325)
-    c:SetBackdropColor(0, 0, 0, 1)
-    c:SetBackdropBorderColor(0, 0, 0, 1)
     c:SetPoint("TOPLEFT")
     c:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
     c:SetScript("OnMouseUp", function(self)
@@ -171,6 +174,14 @@ function Frame:CreateContent(f)
         self.content:SetHeight(h)
     end)
     f.content = c
+end
+
+function Frame:CreateButtons(f)
+    local close = NativeUI:New('ButtonIcon', f.content, ButtonIcon.Type.Close)
+    close:SetSize(18,18)
+    close:SetPoint("TOPRIGHT",-1,0)
+    close:SetScript("OnClick", function() f.content:GetParent():Hide() end)
+    f.close = close
 end
 
 local _MinimizePrototype = {

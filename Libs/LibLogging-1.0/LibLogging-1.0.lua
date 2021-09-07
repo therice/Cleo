@@ -25,14 +25,37 @@ for i=1,MaxLevels do
     LevelHierarchy[LevelHierarchy[i]] = i
 end
 
+local LevelColorsRgb = {
+    {},
+    {0.54510, 0.00000, 0.00000},
+    {1.00000, 0.00000, 0.00000},
+    {1.00000, 0.98039, 0.31373},
+    {0.50196, 0.50196, 0.00000},
+    {0.12649, 0.69804, 0.66667},
+    {0.56471, 0.93333, 0.56471},
+}
+
+
+function Colored(c, text)
+    return "|cFF" ..
+            string.format("%02X%02X%02X", math.floor(255*c[1]), math.floor(255*c[2]), math.floor(255*c[3])) ..
+           text .. ":|r"
+end
+
 local LevelColors = {
     "",
-    "|cFF8B0000FATAL:|r",
-    "|cFFFF0000ERROR:|r",
-    "|cFFFFA500WARN:|r",
-    "|cFF808000INFO:|r",
-    "|cFF20B2AADEBUG:|r",
-    "|cFF90EE90TRACE:|r",
+    --"|cFF8B0000FATAL:|r",
+    Colored(LevelColorsRgb[2], "FATAL"),
+    --"|cFFFF0000ERROR:|r",
+    Colored(LevelColorsRgb[3], "ERROR"),
+    --"|cFFFFA500WARN:|r",
+    Colored(LevelColorsRgb[4], "WARN"),
+    --"|cFF808000INFO:|r",
+    Colored(LevelColorsRgb[5], "INFO"),
+    --"|cFF20B2AADEBUG:|r",
+    Colored(LevelColorsRgb[6], "DEBUG"),
+    --"|cFF90EE90TRACE:|r",
+    Colored(LevelColorsRgb[7], "TRACE"),
 }
 
 -- validates specified level is of correct type and within valid range
@@ -72,6 +95,10 @@ end
 
 -- a numeric value mapping on to level
 local RootThreshold = GetThreshold(Level.Disabled)
+
+function lib:GetLevelRGBColor(level)
+    return LevelColorsRgb[self:GetThreshold(level)]
+end
 
 function lib:GetThreshold(level)
     return GetThreshold(level)

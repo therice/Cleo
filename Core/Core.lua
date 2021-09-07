@@ -69,6 +69,11 @@ function AddOn:VersionCheckModule()
     return self:GetModule("VersionCheck")
 end
 
+--- @return CustomItems
+function AddOn:CustomItemsModule()
+    return self:GetModule("CustomItems")
+end
+
 
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
@@ -113,6 +118,24 @@ function AddOn:RegisterChatCommands()
                 true
             }
     )
+end
+
+
+function AddOn:UpdateGroupMembers()
+    Logging:Trace("UpdateGroupMembers()")
+    for i = 1, GetNumGroupMembers() do
+        self.group[self:UnitName(GetRaidRosterInfo(i))] = true
+    end
+    -- make sure we are present
+    self.group[self.player.name] = true
+
+    --in test mode, add some other players to help with testing
+    --if AddOn:TestModeEnabled() then
+    --    self.group['Gnomechómsky-Atiesh'] = true
+    --    self.group['Cerrendel-Atiesh'] = true
+    --end
+
+    return self.group
 end
 
 function AddOn:IsMasterLooter(unit)

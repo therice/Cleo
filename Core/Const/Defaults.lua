@@ -62,16 +62,21 @@ AddOn.BaseConfigOptions = {
 
 AddOn.DefaultCustomItems = {
     -- Classic P2
+    --[[
     [18422] = { 4, 74, "INVTYPE_NECK", "Horde" },       -- Head of Onyxia
     [18423] = { 4, 74, "INVTYPE_NECK", "Alliance" },    -- Head of Onyxia
     [18646] = { 4, 75, "INVTYPE_2HWEAPON" },            -- The Eye of Divinity
     [18703] = { 4, 75, "INVTYPE_RANGED" },              -- Ancient Petrified Leaf
+    --]]
 
     -- Classic P3
+    --[[
     [19002] = { 4, 83, "INVTYPE_NECK", "Horde" },      -- Head of Nefarian
     [19003] = { 4, 83, "INVTYPE_NECK", "Alliance" },   -- Head of Nefarian
+    --]]
 
     -- Classic P5
+    --[[
     [20928] = { 4, 78, "INVTYPE_SHOULDER" },    -- T2.5 shoulder, feet (Qiraji Bindings of Command)
     [20932] = { 4, 78, "INVTYPE_SHOULDER" },    -- T2.5 shoulder, feet (Qiraji Bindings of Dominance)
     [20930] = { 4, 81, "INVTYPE_HEAD" },        -- T2.5 head (Vek'lor's Diadem)
@@ -83,8 +88,10 @@ AddOn.DefaultCustomItems = {
     [21221] = { 4, 88, "INVTYPE_NECK" },        -- Neck, Back, Finger (Eye of C'Thun)
     [21232] = { 4, 79, "INVTYPE_WEAPON" },      -- Weapon, Shield (Imperial Qiraji Armaments)
     [21237] = { 4, 79, "INVTYPE_2HWEAPON" },    -- 2H Weapon (Imperial Qiraji Regalia)
+    --]]
 
     -- Classic P6
+    --[[
     [22349] = { 4, 88, "INVTYPE_CHEST" },       -- Desecrated Breastplate
     [22350] = { 4, 88, "INVTYPE_CHEST" },       -- Desecrated Tunic
     [22351] = { 4, 88, "INVTYPE_CHEST" },       -- Desecrated Robe
@@ -111,6 +118,44 @@ AddOn.DefaultCustomItems = {
     [22372] = { 4, 88, "INVTYPE_FEET" },        -- Desecrated Sandals
     [22520] = { 4, 90, "INVTYPE_TRINKET" },     -- The Phylactery of Kel'Thuzad
     [22726] = { 5, 90, "INVTYPE_2HWEAPON" },    -- Splinter of Atiesh
+    --]]
+
+    -- TBC Classic P1
+    [29761] = { 4, 120, "INVTYPE_HEAD" },               -- Helm of the Fallen Defender
+    [29759] = { 4, 120, "INVTYPE_HEAD" },               -- Helm of the Fallen Hero
+    [29760] = { 4, 120, "INVTYPE_HEAD" },               -- Helm of the Fallen Champion
+    [29764] = { 4, 120, "INVTYPE_SHOULDER" },           -- Pauldrons of the Fallen Defender
+    [29762] = { 4, 120, "INVTYPE_SHOULDER" },           -- Pauldrons of the Fallen Hero
+    [29763] = { 4, 120, "INVTYPE_SHOULDER" },           -- Pauldrons of the Fallen Champion
+    [29753] = { 4, 120, "INVTYPE_CHEST" },              -- Chestguard of the Fallen Defender
+    [29755] = { 4, 120, "INVTYPE_CHEST" },              -- Chestguard of the Fallen Hero
+    [29754] = { 4, 120, "INVTYPE_CHEST" },              -- Chestguard of the Fallen Champion
+    [29758] = { 4, 120, "INVTYPE_HAND" },               -- Gloves of the Fallen Defender
+    [29756] = { 4, 120, "INVTYPE_HAND" },               -- Gloves of the Fallen Hero
+    [29757] = { 4, 120, "INVTYPE_HAND" },               -- Gloves of the Fallen Champion
+    [29767] = { 4, 120, "INVTYPE_LEGS" },               -- Leggings of the Fallen Defender
+    [29765] = { 4, 120, "INVTYPE_LEGS" },               -- Leggings of the Fallen Hero
+    [29766] = { 4, 120, "INVTYPE_LEGS" },               -- Leggings of the Fallen Champion
+    [32385] = { 4, 125, "INVTYPE_FINGER", "Alliance" }, -- Magtheridon's Head
+    [32386] = { 4, 125, "INVTYPE_FINGER", "Horde" },    -- Magtheridon's Head
+
+    -- TBC Classic P2
+    [30243] = { 4, 133, "INVTYPE_HEAD" },               -- Helm of the Vanquished Defender
+    [30244] = { 4, 133, "INVTYPE_HEAD" },               -- Helm of the Vanquished Hero
+    [30242] = { 4, 133, "INVTYPE_HEAD" },               -- Helm of the Vanquished Champion
+    [30249] = { 4, 133, "INVTYPE_SHOULDER" },           -- Pauldrons of the Vanquished Defender
+    [30250] = { 4, 133, "INVTYPE_SHOULDER" },           -- Pauldrons of the Vanquished Hero
+    [30248] = { 4, 133, "INVTYPE_SHOULDER" },           -- Pauldrons of the Vanquished Champion
+    [30237] = { 4, 133, "INVTYPE_CHEST" },              -- Chestguard of the Vanquished Defender
+    [30238] = { 4, 133, "INVTYPE_CHEST" },              -- Chestguard of the Vanquished Hero
+    [30236] = { 4, 133, "INVTYPE_CHEST" },              -- Chestguard of the Vanquished Champion
+    [30240] = { 4, 133, "INVTYPE_HAND" },               -- Gloves of the Vanquished Defender
+    [30241] = { 4, 133, "INVTYPE_HAND" },               -- Gloves of the Vanquished Hero
+    [30239] = { 4, 133, "INVTYPE_HAND" },               -- Gloves of the Vanquished Champion
+    [30246] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Defender
+    [30247] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Hero
+    [30245] = { 4, 120, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Champion
+
 }
 
 AddOn.TestItems = {

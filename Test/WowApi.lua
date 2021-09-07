@@ -671,7 +671,7 @@ function Color:New(r, g, b, a)
     local c = {r=r, g=g, b=b, a=a}
     c['GetRGB'] = function() return c.r, c.g, c.b end
     c['GetRGBA'] = function() return c.r, c.g, c.b, c.a end
-    c.hex = string.format("%02x%02x%02x", math.floor(255*c.r), math.floor(255*c.g), math.floor(255*c.b))
+    c.hex = string.format("%02X%02X%02X", math.floor(255*c.r), math.floor(255*c.g), math.floor(255*c.b))
     return c
 end
 

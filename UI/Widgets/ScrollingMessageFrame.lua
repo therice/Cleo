@@ -27,12 +27,14 @@ function ScrollingMessageFrame:Create()
     smf:EnableMouseWheel(true)
     smf:SetBackdrop(
             {
-                bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
+                bgFile   = BaseWidget.ResolveTexture('white'),
                 edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
                 tile     = true, tileSize = 8, edgeSize = 4,
                 insets   = { left = 2, right = 2, top = 2, bottom = 2 }
             }
     )
+    smf:SetBackdropColor(0, 0, 0, 1)
+    smf:SetBackdropBorderColor(0, 0, 0, 1)
     smf:SetWidth(self.parent:GetWidth() - 25)
     smf:SetHeight(self.parent:GetHeight() - 50)
     smf:SetPoint("CENTER", self.parent, "CENTER")

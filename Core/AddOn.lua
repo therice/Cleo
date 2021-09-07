@@ -109,11 +109,37 @@ function AddOn:OnEnable()
         )
     end
 
+    -- register events
+    self:SubscribeToEvents()
+    self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
+
     -- register configuration
     self:RegisterConfig()
     -- add minimap button
     self:AddMinimapButton()
     self:Print(format(L["chat_version"], tostring(self.version)) .. " is now loaded.")
+
+    -- this filters out any responses to whispers related to addon
+    local ChatMsgWhisperInformFilter = function(_, event, msg, player, ...)
+        return strfind(msg, "[[" .. self:GetName() .. "]]:")
+    end
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", ChatMsgWhisperInformFilter)
+
+    -- this filters (and captures) relevant messages related to attempting to contact individual players
+    local ChatMsgFilter = function(f, event, msg, player, ...)
+        if msg:match(string.format(ERR_CHAT_PLAYER_NOT_FOUND_S, "(.+)")) then
+            local regex = gsub(ERR_CHAT_PLAYER_NOT_FOUND_S, "%%s", "(.+)")
+            local _, _, character = strfind(msg, regex)
+            Logging:Trace("%s - %s", msg, character)
+            -- if a player is not found, dispatch the message and let subscribers handle as they see fit
+            self:SendMessage(C.Messages.PlayerNotFound, character)
+        end
+
+        -- don't muck with workflow here, just return what was passed and let it flow onward
+        return false, msg, player, ...
+    end
+
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", ChatMsgFilter)
 end
 
 function AddOn:OnDisable()
