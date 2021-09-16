@@ -80,7 +80,7 @@ function DeleteButtonCell:initialize(fn)
                 -- todo : prevent repeated textures and OnEnter/OnLeave?
                 frame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
                 frame:SetScript("OnEnter", function()
-                    UIUtil:CreateTooltip(L['double_click_to_delete_this_entry'])
+                    UIUtil.ShowTooltip(L['double_click_to_delete_this_entry'])
                 end)
                 frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
                 frame:SetScript(

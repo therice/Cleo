@@ -1,23 +1,24 @@
 local _, AddOn = ...
+--- @type LibUtil
+local Util = AddOn:GetLibrary("Util")
+---@type UI.Util
+local UIUtil = AddOn.Require('UI.Util')
+--- @type UI.Native
 local NativeUI = AddOn.Require('UI.Native')
+--- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local Button = AddOn.Package('UI.Widgets'):Class('Button', BaseWidget)
 
-function Button:initialize(parent, name)
+function Button:initialize(parent, name, text)
     BaseWidget.initialize(self, parent, name)
+    self.text = text or ""
 end
 
+-- Button()
 function Button:Create()
-    local b = CreateFrame("Button", self.parent:GetName() .. '_' .. self.name, self.parent)
-    b:SetText("")
-    b:SetSize(100,20)
-
-    b.text = b:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    b.text:SetPoint("CENTER", b, "CENTER")
-    b.text:SetJustifyV("MIDDLE")
-    b.Text = b.text
-
-    b:SetFontString(b.Text)
+    local b = CreateFrame("Button", self.name, self.parent)
+    b:SetText(self.text)
+    b:SetSize(100, 20)
 
     b.HighlightTexture = b:CreateTexture()
     b.HighlightTexture:SetColorTexture(1,1,1,.3)
@@ -57,7 +58,59 @@ function Button:Create()
         self:HideBorders()
     end
 
+    BaseWidget.Mod(
+        b,
+        'Tooltip', Button.SetTooltip,
+        'GetTextObj', Button.GetTextObj,
+        'FontSize', Button.SetFontSize
+    )
+
+    b._Disable = self.Disable
+    b.Disable = Button.Disable
+
     return b
+end
+
+function Button:Disable()
+    self:_Disable()
+    return self
+end
+
+function Button:GetTextObj()
+    for i = 1, self:GetNumRegions() do
+        local obj = select(i, self:GetRegions())
+        if obj.GetText and obj:GetText() == self:GetText() then
+            return obj
+        end
+    end
+end
+
+function Button:SetFontSize(size)
+    local obj = self:GetFontString()
+    obj:SetFont(obj:GetFont(),size)
+    return self
+end
+
+function Button:SetTooltip(tooltip)
+    self.tooltip = self:GetText()
+    if Util.Objects.IsEmpty(self.tooltip) or not self.tooltip then
+        self.tooltip = tooltip
+    else
+        self.tooltipText = tooltip
+    end
+    self:SetScript(
+        "OnEnter",
+        function(self)
+            UIUtil.ShowTooltip(
+                    self,
+                    "ANCHOR_RIGHT",
+                    self.tooltip,
+                   { Util.Objects.IsFunction(self.tooltipText) and self.tooltipText(self) or self.tooltipText, 1, 1, 1 }
+            )
+        end
+    )
+    self:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+    return self
 end
 
 NativeUI:RegisterWidget('Button', Button)

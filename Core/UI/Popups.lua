@@ -9,6 +9,7 @@ local Logging =  AddOn:GetLibrary("Logging")
 local Dialog = AddOn:GetLibrary("Dialog")
 ---@type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
+
 local MachuPicchu = "text is missing, machu picchu!"
 
 --[[
@@ -105,10 +106,11 @@ Dialog:Register(C.Popups.ConfirmDecayPoints, {
 Dialog:Register(C.Popups.ConfirmDeleteItem, {
     text = MachuPicchu,
     on_show = AddOn:CustomItemsModule().DeleteItemOnShow,
+    width = 400,
     buttons = {
         {
             text = _G.YES,
-            on_click = AddOn:CustomItemsModule().DeleteItemOnClickYes,
+            on_click = function(...) AddOn:CustomItemsModule():DeleteItemOnClickYes(...) end,
         },
         {
             text = _G.NO,

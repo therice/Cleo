@@ -5,18 +5,15 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
---- @type UI.Ace
-local AceUI = AddOn.Require('UI.Ace')
 --- @type LibGuildStorage
 local GuildStorage = AddOn:GetLibrary("GuildStorage")
 --- @type LibItemUtil
 local ItemUtil =  AddOn:GetLibrary("ItemUtil")
 --- @type Models.Item.Item
--- local Item = AddOn.Package('Models.Item').Item
+local Item = AddOn.Package('Models.Item').Item
 
-local ACR = AddOn:GetLibrary('AceConfigRegistry')
 --- @class CustomItems
-local CustomItems  = AddOn:NewModule("CustomItems", "AceBucket-3.0")
+local CustomItems  = AddOn:NewModule("CustomItems", "AceBucket-3.0", "AceTimer-3.0")
 
 CustomItems.defaults = {
 	profile = {
@@ -98,8 +95,8 @@ function CustomItems:AddItem(item)
 		item['id'] = nil
 		AddOn.SetDbValue(CustomItems, { 'custom_items.'.. id }, item)
 		-- todo : this isn't going to refresh in the UI due to memoizing the options, need to fix
-		-- Item.ClearCache(item)
-		ACR:NotifyChange(C.name)
+		Item.ClearCache(id)
+		-- ACR:NotifyChange(C.name)
 	end
 end
 
@@ -110,11 +107,11 @@ function CustomItems:RemoveItem(item)
 	if existingItem and existingItem.default then
 		self.db.profile.ignored_default_items[item] = true
 	end
-	-- could do this, but don't get the callback for configuration change
+	-- could do this, but won't result in callback for configuration change
 	-- CustomItems.db.profile.custom_items[item] = nil
 	AddOn.SetDbValue(CustomItems, { 'custom_items.'..item }, nil)
-	-- Item.ClearCache(item)
-	ACR:NotifyChange(C.name)
+	Item.ClearCache(item)
+	-- ACR:NotifyChange(C.name)
 end
 
 function CustomItems:AddDefaultCustomItems()
@@ -137,7 +134,7 @@ function CustomItems:AddDefaultCustomItems()
 					custom_items[id_key] = {
 						rarity = value[1],
 						item_level = value[2],
-						equip_location =  value[3],
+						equip_location = value[3],
 						default = true,
 					}
 				end
@@ -151,6 +148,7 @@ CustomItems.EquipmentLocations = {
 	INVTYPE_NECK           = C.ItemEquipmentLocationNames.Neck,
 	INVTYPE_SHOULDER       = C.ItemEquipmentLocationNames.Shoulder,
 	INVTYPE_CHEST          = C.ItemEquipmentLocationNames.Chest,
+	INVTYPE_ROBE           = C.ItemEquipmentLocationNames.Chest,
 	INVTYPE_WAIST          = C.ItemEquipmentLocationNames.Waist,
 	INVTYPE_LEGS           = C.ItemEquipmentLocationNames.Legs,
 	INVTYPE_FEET           = C.ItemEquipmentLocationNames.Feet,
@@ -166,84 +164,20 @@ CustomItems.EquipmentLocations = {
 	INVTYPE_WEAPONOFFHAND  = C.ItemEquipmentLocationNames.OffHandWeapon,
 	INVTYPE_HOLDABLE       = C.ItemEquipmentLocationNames.Holdable,
 	INVTYPE_RANGED         = C.ItemEquipmentLocationNames.Ranged,
+	INVTYPE_RANGEDRIGHT    = C.ItemEquipmentLocationNames.Ranged,
 	INVTYPE_WAND           = C.ItemEquipmentLocationNames.Wand,
 	INVTYPE_THROWN         = C.ItemEquipmentLocationNames.Thrown,
 	INVTYPE_RELIC          = C.ItemEquipmentLocationNames.Relic,
 }
 
-local EquipmentLocationsSort = {}
+CustomItems.EquipmentLocationsSort = {}
 
 do
 	for i, v in pairs(Util.Tables.ASort(CustomItems.EquipmentLocations, function(a, b) return a[2] < b[2] end)) do
-		EquipmentLocationsSort[i] = v[1]
+		CustomItems.EquipmentLocationsSort[i] = v[1]
 	end
 end
 
-local function AddItemToConfigOptions(self, builder, id)
-	local name, link, _, _, _, _, _, _, _, texture = GetItemInfo(tonumber(id))
-	Logging:Trace('AddItemToConfigOptions(%s) : %s', tostring(id), tostring(name))
-	if name then
-		local paramPrefix = 'custom_items.' .. id .. '.'
-		builder
-			:group(id, name):set('icon', texture)
-				:set('get',
-		             function(i)
-			             self.selectedItem = Util.Strings.Split(tostring(i[#i]), '.')[2]
-			             return AddOn.GetDbValue(self, i)
-		             end
-				)
-				:set('hidden',
-		             function()
-			             local item = self.db.profile.custom_items[tostring(id)]
-			             if item == nil then return true else return false end
-		             end
-				)
-				:args()
-					:description(paramPrefix .. 'header', link):order(1):fontSize('large')
-						:set('image', texture)
-					:header(paramPrefix .. 'filler', ""):order(2)
-					:select(paramPrefix .. 'rarity', L['quality']):order(3)
-						:desc(L['quality_desc']):set('width', 'double')
-						:set('values', Util.Tables.Copy(C.ItemQualityDescriptions))
-					:range(paramPrefix .. 'item_level', L['item_lvl'], 1, 200):order(4)
-						:desc(L['item_lvl_desc']):set('width', 'double')
-					:select(paramPrefix .. 'equip_location', L['equipment_loc']):order(5)
-						:desc(L['equipment_loc_desc']):set('width', 'double')
-						:set('values', self.EquipmentLocations)
-						:set('sorting', EquipmentLocationsSort)
-				:close()
-	else
-		-- Logging:Trace('AddItemToConfigOptions() : Item %s not available, submitting query', tostring(id))
-		ItemUtil:QueryItemInfo(id, function() AddItemToConfigOptions(self, builder, id) end)
-	end
-end
-
-local function BuildOptions(self)
-	Logging:Debug("BuildOptions()")
-	local builder = AceUI.ConfigBuilder()
-	builder
-			:group(CustomItems:GetName(), L["custom_items"]):desc(L["custom_items_desc"])
-			:args()
-				:header("spacer1",""):order(1)
-				:description("help", L["custom_items_help"]):order(2)
-				:header("spacer2",""):order(3)
-				:execute("add", "Add"):desc("Add a new custom item"):order(4)
-					:set('func',function(...) self:OnAddItemClick(...) end)
-				:execute("remove", "Delete"):desc("Delete current custom item"):order(5)
-					:set('func', function(...) self:OnDeleteItemClick(...) end)
-				:header("spacer3",""):order(6)
-
-	for _, id in pairs(Util.Tables.Sort(Util.Tables.Keys(self.db.profile.custom_items))) do
-		AddItemToConfigOptions(self, builder, id)
-	end
-
-	return builder:build()
-end
-
-local Options = Util.Memoize.Memoize(BuildOptions)
-
-function CustomItems:BuildConfigOptions()
-	Logging:Debug("BuildConfigOptions()")
-	local options = Options(self)
-	return options[self:GetName()], true
+function CustomItems:LaunchpadSupplement()
+	return L["custom_items"], function(container) self:LayoutInterface(container) end , true
 end

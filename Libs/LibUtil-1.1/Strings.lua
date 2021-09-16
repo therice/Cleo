@@ -56,14 +56,23 @@ function Self.Split(str, del)
     return t
 end
 
-function Self.Join(del, ...)
+function Self.Join2(del, fn, ...)
     local s = ""
     for _,v in Util.Each(...) do
-        if not Self.IsEmpty(v) then
+        -- dubious check for \n'
+        if fn(v) then
             s = s .. (s == "" and "" or del or " ") .. v
         end
     end
     return s
+end
+
+function Self.Join(del, ...)
+    return Self.Join2(
+            del,
+            function(v) return not Self.IsEmpty(v) end,
+            ...
+    )
 end
 
 function Self.UcFirst(str)

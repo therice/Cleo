@@ -377,10 +377,34 @@ function FrameClass:GetFontObject() return "" end
 
 function FrameClass:GetTextWidth() return 10 end
 
+function FrameClass:SetShadowColor(...) end
+
+function FrameClass:SetShadowOffset(...) end
+
+function FrameClass:SetShown(...) end
+
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind
     frame.parent = parent
+
+
+    if kind == 'Button' then
+        frame.Click = function(self)  end
+        frame.SetEnabled = function(self, enabled)  end
+    elseif kind == 'Slider' then
+        frame.GetValue = function(self)  return 1 end
+        frame.GetMinMaxValues = function(self)  return 0, 1 end
+        frame.GetOrientation = function(...) return "HORIZONTAL" end
+    elseif kind == 'CheckButton' then
+        frame.CreateTexture = function(...) return CreateTexture(...) end
+        frame.SetCheckedTexture = function(...) end
+        frame.SetChecked = function(...) end
+        frame.GetChecked = function(...) return true end
+        frame.IsEnabled = function(...) return true end
+    elseif kind == 'ScrollFrame' then
+        frame.SetVerticalScroll = function(...)  end
+    end
 
     if template then
         if template == 'UIDropDownMenuTemplate' then
@@ -475,6 +499,14 @@ function TextureClass:GetParent() return self.parent end
 function TextureClass:ClearAllPoints() end
 
 function TextureClass:GetTexture() end
+
+function TextureClass:SetAtlas() end
+
+function TextureClass:SetEnabled(enabled) end
+
+function TextureClass:SetCheckedTexture(...) end
+
+function TextureClass:GetWidth() return 100 end
 
 function CreateTexture(name, texture, texturePath, parent)
     local tex = TextureClass:New(name)

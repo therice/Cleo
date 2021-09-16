@@ -1,5 +1,5 @@
 local _, AddOn = ...
-local Logging, Util = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local Util = AddOn:GetLibrary('Util')
 local Attributes, Builder = AddOn.Package('UI.Util').Attributes, AddOn.Package('UI.Util').Builder
 
 local Entry = AddOn.Class('Entry', Attributes)
@@ -78,7 +78,7 @@ function DropDown.RightClickMenu(predicate, entries, callback)
         if not predicate() then return end
         if not menu or not level then return end
 
-        local candidateName, el, module = menu.name, menu.entry, menu.module
+        local name, el, module = menu.name, menu.entry, menu.module
         local value = _G.MSA_DROPDOWNMENU_MENU_VALUE
         local levelEntries = entries[level]
         if not levelEntries then return end
@@ -87,16 +87,16 @@ function DropDown.RightClickMenu(predicate, entries, callback)
         for _, entry in ipairs(levelEntries) do
             info = MSA_DropDownMenu_CreateInfo()
             if not entry.special then
-                if not entry.onValue or entry.onValue == value or (Util.Objects.IsFunction(entry.onValue) and entry.onValue(candidateName, el)) then
-                    if (entry.hidden and Util.Objects.IsFunction(entry.hidden) and not entry.hidden(candidateName, el)) or not entry.hidden then
+                if not entry.onValue or entry.onValue == value or (Util.Objects.IsFunction(entry.onValue) and entry.onValue(name, el)) then
+                    if (entry.hidden and Util.Objects.IsFunction(entry.hidden) and not entry.hidden(name, el)) or not entry.hidden then
                         for name, val in pairs(entry) do
                             -- custom attributes with support for callbacks
                             -- the parameters are attributes on the menu itself, which must be manually specified
                             -- typically done in the OnClick event, see Standings.lua for example
                             if name == "func" then
-                                info[name] = function() return val(candidateName, el, module) end
+                                info[name] = function() return val(name, el, module) end
                             elseif Util.Objects.IsFunction(val) then
-                                info[name] = val(candidateName, el, module)
+                                info[name] = val(name, el, module)
                             else
                                 info[name] = val
                             end

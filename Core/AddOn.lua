@@ -78,12 +78,25 @@ function AddOn:OnEnable()
     self.mode:Disable(AddOn.Constants.Modes.Persistence)
     self.player = Player:Get("player")
 
+
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))
+    local configSupplements, lpadSupplements = {}, {}
     for name, module in self:IterateModules() do
         Logging:Debug("OnEnable(%s) : Examining module (startup) '%s'", self:GetName(), name)
         if module:EnableOnStartup() then
             Logging:Debug("OnEnable(%s) : Enabling module (startup) '%s'", self:GetName(), name)
             module:Enable()
+        end
+
+        -- extract module's configuration supplement for later application
+        local cname, cfn = self:GetConfigSupplement(module)
+        if cname and cfn then
+            configSupplements[cname] = cfn
+        end
+
+        local mname, metadata = self:GeLaunchpadSupplement(module)
+        if mname and metadata then
+            lpadSupplements[mname] = metadata
         end
     end
 
@@ -113,8 +126,8 @@ function AddOn:OnEnable()
     self:SubscribeToEvents()
     self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
 
-    -- register configuration
-    self:RegisterConfig()
+    -- prepare the launchpad
+    self:PrepareForLaunch(configSupplements, lpadSupplements)
     -- add minimap button
     self:AddMinimapButton()
     self:Print(format(L["chat_version"], tostring(self.version)) .. " is now loaded.")

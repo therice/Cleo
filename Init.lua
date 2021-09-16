@@ -9,6 +9,7 @@ _G[AddOnName] = AddOn
 -- just capture version here, it will be turned into semantic version later
 -- as we don't have access to that model yet here
 AddOn.version = GetAddOnMetadata(AddOnName, "Version")
+AddOn.author = GetAddOnMetadata(AddOnName, "Author")
 --@debug@
 -- if local development and not substituted, then use a dummy version
 if AddOn.version == '@project-version@' then
@@ -68,9 +69,10 @@ local function GetDbValue(self, i, ...)
 end
 
 local function SetDbValue(self, i, v)
-    Logging:Trace("SetDbValue(%s, %s, %s)", self:GetName(), tostring(i[#i]), tostring(v or 'nil'))
-    Util.Tables.Set(self.db.profile, tostring(i[#i]), v)
-    AddOn:ConfigChanged(self:GetName(), i[#i])
+    local path = Util.Objects.IsTable(i) and tostring(i[#i]) or i
+    Logging:Trace("SetDbValue(%s, %s, %s)", self:GetName(), path, tostring(v))
+    Util.Tables.Set(self.db.profile, path, v)
+    AddOn:ConfigChanged(self:GetName(), path)
 end
 
 AddOn.GetDbValue = GetDbValue
@@ -108,13 +110,20 @@ local ModulePrototype = {
         Logging:Debug("EnableOnStartup(%s) : %s", self:GetName(), tostring(enable))
         return enable
     end,
-    -- return a tuple
-    --  1, table which contains the module's configuration options
-    --  2, boolean indicating if enable/disable support should be enabled
-    --
-    -- by default, no options are returned
-    BuildConfigOptions = function(self)
-        return nil, false
+    -- a function which is invoked for determining configuration supplements, which will be added to generic configuration layout
+    -- must return a tuple
+    --  1, a string which is the configuration group name (all settings will be bucketed here)
+    --  2, a function which is invoked and takes a container for adding configuration settings
+    ConfigSupplement = function(self)
+        return nil, nil
+    end,
+    -- a function which is invoked for determining launchpad supplements, which will be added as a new layout
+    -- must return a tuple
+    --  1, a string which is the launchpad module display name
+    --  2, a function which is invoked and takes a container for adding a launchpad module
+    --  3, a boolean indicating if enable/disable support should be setup
+    LaunchpadSupplement = function(self)
+        return nil, nil, false
     end,
     -- implement to provide data import functionality for a module
     ImportData = function(self, data)

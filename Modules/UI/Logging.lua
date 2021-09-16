@@ -5,55 +5,72 @@ local L, Log, Util, C = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibr
 local UI = AddOn.Require('UI.Native')
 ---@type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
---- @type UI.Ace
--- local AceUI = AddOn.Require('UI.Ace')
---- @type UI.Widgets.Dropdown
-local Dropdown = AddOn.ImportPackage('UI.Widgets').Dropdown
 --- @type UI.Widgets.Dropdown
 local Dropdown = AddOn.ImportPackage('UI.Widgets').Dropdown
 --- @type Logging
 local Logging = AddOn:GetModule("Logging", true)
 
+local function CreateLevelDropdown(parent)
+    local threshold =
+        UI:NewNamed("Dropdown", parent, "LoggingLevel", Dropdown.Type.Radio, 100, 5)
+            :SetTextDecorator(
+                function(item)
+                    local c = Log:GetLevelRGBColor(item.value)
+                    return (c and #c > 0) and UIUtil.ColoredDecorator(c):decorate(item.text) or item.text
+                end
+            )
+            :SetClickHandler(
+                function(_, _, item)
+                    Logging:SetLoggingThreshold(item.value)
+                    return true
+                end
+            )
+            :SetList(Logging.GetLoggingLevels())
+            :SetValue(Log:GetRootThreshold())
+            :Tooltip(L["logging_threshold_desc"])
+    return threshold
+end
+
 function Logging:BuildFrame()
     if not self.frame then
         local frame = UI:NewNamed('Frame', UIParent, 'Console', self:GetName(), L['frame_logging'], 750, 400, false)
         -- frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
+        frame:CreateShadow(20)
+        frame:ShadowInside()
 
-        local msg = UI:NewNamed('ScrollingMessageFrame', frame.content, 'Messages')
+        local msg = UI:NewNamed('ScrollingMessageFrame', frame.content or frame, 'Messages')
         msg:SetMaxLines(10000)
-        msg:SetPoint("CENTER", frame.content, "CENTER", 0, 10)
+        msg:SetPoint("CENTER",frame.content or frame, "CENTER", 0, 10)
         frame.msg = msg
 
-        local clear = UI:NewNamed("Button", frame.content, "Clear")
-        clear:SetText(L['clear'])
+        local clear = UI:NewNamed("Button", frame.content or frame, "Clear", L['clear'])
+        --clear:SetText(L['clear'])
         clear:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -13, 5)
         clear:SetScript("OnClick", function() frame.msg:Clear() end)
         frame.clear = clear
 
         --- @type UI.Widgets.Dropdown
-        local threshold = UI:NewNamed("Dropdown", frame.content, "LoggingLevel", Dropdown.Type.Radio, 100, 5)
+        local threshold = CreateLevelDropdown(frame.content or frame)
         threshold:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 7)
-        threshold:SetTextDecorator(
-                function(item)
-                    local c = Log:GetLevelRGBColor(item.value)
-                    return (c and #c > 0) and UIUtil.ColoredDecorator(c):decorate(item.text) or item.text
-                end
-        )
-        threshold:SetClickHandler(
-                function(_, _, item)
-                    Logging:SetLoggingThreshold(item.value)
-                    return true
-                end
-        )
-        threshold:SetList(Logging.GetLoggingLevels())
-        threshold:SetValue(Log:GetRootThreshold())
-
         frame.threshold = threshold
 
         self.frame = frame
     end
 
     return self.frame
+end
+
+function Logging:LayoutConfigSettings(container)
+    container:Tooltip(L['logging_help'])
+    container.thresholdText = UI:New('Text', container, L['logging_threshold'], 11):Point(20, -20):Top()
+    container.threshold =
+        CreateLevelDropdown(container)
+            :Point("TOPLEFT", container.thresholdText, "BOTTOMLEFT", 0, -10)
+    container.toggle =
+        UI:New("Button", container, L["logging_window_toggle"]):Size(150, 20)
+            :Point("TOPLEFT", container.threshold, "BOTTOMLEFT", 0, -20)
+            :Tooltip(L["logging_window_toggle_desc"])
+            :OnClick(function() Logging:Toggle() end)
 end
 
 function Logging:SwitchDestination(msgs)

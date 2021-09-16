@@ -1,4 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <Script file="Texture.lua"/>
     <Script file="Button.lua"/>
     <Script file="ButtonIcon.lua"/>
     <Script file="EditBox.lua"/>
@@ -6,7 +7,13 @@
     <Script file="Slider.lua"/>
     <Script file="Dropdown.lua"/>
     <Script file="Text.lua"/>
+    <Script file="DecorationLine.lua"/>
     <Script file="Frame.lua"/>
     <Script file="ScrollingMessageFrame.lua"/>
+    <Script file="ScrollList.lua"/>
+    <Script file="ScrollFrame.lua"/>
+    <Script file="ScrollBar.lua"/>
+    <Script file="Tabs.lua"/>
+    <Script file="CheckBox.lua"/>
     <Script file="GameTooltip.lua"/>
 </Ui>

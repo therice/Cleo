@@ -10,16 +10,14 @@ end
 
 function lib:GET_ITEM_INFO_RECEIVED(_, item, success)
     Logging:Trace("GET_ITEM_INFO_RECEIVED(%s) : success=%s", tostring(item), tostring(success))
-    if success then
-        local item_id = tonumber(item)
-        local callback_fn = itemQueue[item_id]
+    local item_id = tonumber(item)
+    local callback_fn = itemQueue[item_id]
 
-        if callback_fn then
-            Logging:Trace("GET_ITEM_INFO_RECEIVED(%s) : invoking callback", tostring(item))
-            local result = xpcall(callback_fn, OnError)
-            Logging:Trace("GET_ITEM_INFO_RECEIVED(%s) : callback result %s", tostring(item), tostring(result))
-            itemQueue[item_id] = nil
-        end
+    if callback_fn then
+        Logging:Trace("GET_ITEM_INFO_RECEIVED(%s) : invoking callback", tostring(item))
+        local result = xpcall(callback_fn, OnError, item_id, success)
+        Logging:Trace("GET_ITEM_INFO_RECEIVED(%s) : callback result %s", tostring(item), tostring(result))
+        itemQueue[item_id] = nil
     end
 
     Logging:Trace("GET_ITEM_INFO_RECEIVED() - Awaiting %s results", tostring(Util.Tables.Count(itemQueue)))
@@ -36,7 +34,7 @@ function lib:QueryItemInfo(id, callback)
     end
 
     if type(callback) ~= "function" then
-        error("Usage: GetItemInfo(id, callback): 'callback' - function", 2)
+        error("Usage: QueryItemInfo(id, callback): 'id' - number, 'callback' - function", 2)
     end
 
     id = tonumber(id)

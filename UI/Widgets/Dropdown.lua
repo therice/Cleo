@@ -6,16 +6,16 @@ local Logging = AddOn:GetLibrary('Logging')
 local Util =  AddOn:GetLibrary("Util")
 --- @type UI.Native
 local NativeUI = AddOn.Require('UI.Native')
+---@type UI.Util
+local UIUtil = AddOn.Require('UI.Util')
 --- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 --- @class UI.Widgets.Dropdown
 local Dropdown = AddOn.Package('UI.Widgets'):Class('Dropdown', BaseWidget)
---- @type UI.Util.Attributes
-local Attributes = AddOn.Package('UI.Util').Attributes
 --- @class UI.Widgets.DropdownItem
 local DropdownItem = AddOn.Package('UI.Widgets'):Class('DropdownItem')
 --- @class UI.Widgets.DropdownProperties
-local DropdownProperties = AddOn.Package('UI.Widgets'):Class('DropdownMeta', Attributes)
+local DropdownProperties = AddOn.Package('UI.Widgets'):Class('DropdownProperties')
 
 -- holds all the dropdown templates for reuse
 local Templates, ReloadTemplates = {}, nil
@@ -40,6 +40,7 @@ function DropdownProperties:initialize(type, width, lines)
 	self.value = {}
 	self.textDecorator = function(item) return item and item.text or "???" end
 	self.clickHandler = function(...) return true end
+	self.valueChangedHandler = function(...)  end
 end
 
 function DropdownProperties:DecorateText(item)
@@ -47,8 +48,9 @@ function DropdownProperties:DecorateText(item)
 end
 
 function DropdownProperties:SetValue(value)
-	Logging:Debug("SetValue(%s)", tostring(value))
+	-- Logging:Debug("SetValue(%s)", tostring(value))
 	self.value = { value }
+	self:OnValueChanged()
 end
 
 function DropdownProperties:HasValue(value)
@@ -65,13 +67,19 @@ function DropdownProperties:HandleClick(button, down, item)
 	return false
 end
 
+function DropdownProperties:OnValueChanged()
+	if self.valueChangedHandler then
+		self.valueChangedHandler(unpack(self.value))
+	end
+end
+
 function Dropdown:initialize(parent, name, type, width, lines)
 	BaseWidget.initialize(self, parent, name)
 	self.props = DropdownProperties(type, width, lines)
 end
 
 function Dropdown:Create()
-	local dd = CreateFrame("Frame", self.parent:GetName() .. '_' .. self.name, self.parent)
+	local dd = CreateFrame("Frame", self.name, self.parent)
 	dd:SetSize(40,20)
 
 	dd.Text = dd:CreateFontString(nil,"ARTWORK","GameFontHighlightSmall")
@@ -92,12 +100,8 @@ function Dropdown:Create()
 	dd.Button = self:CreateButton(dd)
 	dd.Button:SetPoint("RIGHT",-2,0)
 
-	dd:SetScript("OnHide",
-	             function()
-					Dropdown.Close()
-					CloseDropDownMenus()
-	             end
-	)
+	dd.Button:SetScript("OnClick", Dropdown.OnClick)
+	dd:SetScript("OnHide", function() Dropdown.Close() end)
 
 	---@type table<number, UI.Widgets.DropdownItem>
 	dd.List = {}
@@ -108,12 +112,18 @@ function Dropdown:Create()
 
 	BaseWidget.Mod(
 		dd,
-	    'SetList',              Dropdown.SetList,
-		'SetValue',             Dropdown.SetValue,
-		'SetText',              Dropdown.SetText,
-		'IterateItems',         Dropdown.IterateItems,
-		'SetTextDecorator',     function(self, fn) self.Props.textDecorator = fn end,
-		'SetClickHandler',      function(self, fn) self.Props.clickHandler = fn end
+		'SetEnabled',               function(self, enabled)  self.Button:SetEnabled(enabled) end,
+	    'SetList',                  Dropdown.SetList,
+		'Tooltip',                  Dropdown.SetTooltip,
+		'SetValue',                 Dropdown.SetValue,
+		'ClearValue',               Dropdown.ClearValue,
+		'HasValue',                 Dropdown.HasValue,
+		'SetText',                  Dropdown.SetText,
+		'IterateItems',             Dropdown.IterateItems,
+		'SetTextDecorator',         function(self, fn) self.Props.textDecorator = fn return self end,
+		'SetClickHandler',          function(self, fn) self.Props.clickHandler = fn return self  end,
+		'OnValueChanged',           function(self, fn)  self.Props.valueChangedHandler = fn return self end,
+		'OnDatasourceConfigured',   Dropdown.OnDatasourceConfigured
 	)
 
 	dd._Size = dd.Size
@@ -123,6 +133,20 @@ function Dropdown:Create()
 	dd:SetWidth(dd.Props.width)
 
 	return dd
+end
+
+function Dropdown.OnDatasourceConfigured(self)
+	-- Logging:Debug("Dropdown.OnDatasourceConfigured(%s)", self.ds.key)
+	-- remove any currently configured click handler
+	self:SetClickHandler(Util.Functions.Noop)
+	self:SetValue(self.ds:Get())
+	-- establish callback for setting db value
+	self:SetClickHandler(
+			function(_, _, item)
+				self.ds:Set(item.value)
+				return true
+			end
+	)
 end
 
 function Dropdown:CreateButton(f)
@@ -216,21 +240,52 @@ function Dropdown:SetList(list, order)
 			self.List[i] = DropdownItem(key, list[key])
 			SortList[i] = nil
 		end
+	else
+		for i, key in ipairs(order) do
+			self.List[i] = DropdownItem(key, list[key])
+		end
 	end
+	return self
+end
+
+function Dropdown:ClearValue()
+	self.Props:SetValue(nil)
+	self:SetText(nil)
 end
 
 function Dropdown:SetValue(value)
-	local item = self.List[value]
-	-- Logging:Debug("SetValue(%s) : %s", tostring(value), Util.Objects.ToString(self))
+	local _, item = Util.Tables.FindFn(self.List, function(item) return item.value == value end)
 	if item then
 		self.Props:SetValue(item.value)
 		self:SetText(self.Props:DecorateText(item))
 	end
+	return self
+end
+
+function Dropdown:HasValue()
+	return not Util.Tables.IsEmpty(self.Props.value)
 end
 
 function Dropdown:SetText(text)
 	-- Logging:Debug("SetText(%s)", tostring(text))
 	self.Text:SetText(text)
+	return self
+end
+
+function Dropdown:SetTooltip(tooltip)
+	self.tooltip = tooltip
+	self:SetScript(
+		"OnEnter",
+		function(self)
+			if self.tooltip then
+				UIUtil.ShowTooltip(self, nil, self.tooltip, self.Text:IsTruncated() and self.Text:GetText())
+			elseif self.Text:IsTruncated() then
+				UIUtil.ShowTooltip(self, nil, self.Text:GetText())
+			end
+		end
+	)
+	self:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+	return self
 end
 
 local DefaultPadding = 25
@@ -243,10 +298,22 @@ function Dropdown:SetSize(width)
 		self:_SetWidth(width)
 	end
 	-- self.noResize = true
+	return self
+end
+
+function Dropdown.OnClick(self, ...)
+	Logging:Debug("Dropdown.OnClick()")
+
+	local parent = self:GetParent()
+	if parent.PreUpdate then
+		parent.PreUpdate(parent)
+	end
+
+	Dropdown.OnClickButton(self, ...)
 end
 
 function Dropdown.OnClickButton(self)
-	-- Logging:Debug("OnClick : START")
+	Logging:Debug("Dropdown.OnClickButton()")
 	if Templates[1]:IsShown() then
 		Dropdown.Close()
 		return
@@ -338,11 +405,9 @@ local function CreateTemplateMenuButton(parent, id)
 	b.NormalText:SetPoint("LEFT")
 
 	b:SetFontString(b.NormalText)
-
 	b:SetNormalFontObject("GameFontHighlightSmallLeft")
 	b:SetHighlightFontObject("GameFontHighlightSmallLeft")
 	b:SetDisabledFontObject("GameFontDisableSmallLeft")
-
 	b:SetPushedTextOffset(1,-1)
 
 	b:SetScript(
@@ -367,7 +432,7 @@ local function CreateTemplateMenuButton(parent, id)
 			"OnClick",
 			function(self, button, down)
 				local dd = self:GetParent()
-				if dd.Props:HandleClick(button, down, self.data) then
+				if dd.Props:HandleClick(button, down, self.item) then
 					if Util.Objects.In(dd.Props.type, Dropdown.Type.Standard, Dropdown.Type.Radio) then
 						Dropdown.Close()
 					end
@@ -552,6 +617,7 @@ ReloadTemplates = function(level)
 						button.radioButton:Hide()
 					end
 
+					--[[
 					if item.texture then
 						button.Texture:SetTexture(item.texture)
 						button.Texture:Show()
@@ -570,8 +636,10 @@ ReloadTemplates = function(level)
 					else
 						button:SetEnabled(true)
 					end
+					--]]
 
 					button.index = index
+					--[[
 					button.arg1 = item.arg1
 					button.arg2 = item.arg2
 					button.arg3 = item.arg3
@@ -588,8 +656,10 @@ ReloadTemplates = function(level)
 					end
 
 					button.subMenu = item.subMenu
+					--]]
+
 					button.Lines = item.Lines
-					button.data = item
+					button.item = item
 					button:Show()
 
 					if index >= template.LinesNow then
@@ -625,7 +695,7 @@ for i = 1, 2 do
 					self.P  = self.P + elapsed
 					local P = self.P
 					if P > 2.5 then
-						P      = P % 2.5
+						P = P % 2.5
 						self.P = P
 					end
 					local color  = P <= 1 and P / 2 or P <= 1.5 and 0.5 or (2.5 - P) / 2

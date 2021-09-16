@@ -164,6 +164,7 @@ C_Timer = {}
 function C_Timer.After(duration, callback)  callback() end
 function C_Timer.NewTimer(duration, callback)  end
 function C_Timer.NewTicker(duration, callback, iterations)  end
+function C_Timer.Cancel() end
 
 if not wipe then
     function wipe(tbl)
@@ -699,6 +700,24 @@ end
 function GetItemQualityColor(rarity)
     return _G.ITEM_QUALITY_COLORS[rarity].color
 end
+
+
+_G.CreateFont = function(name)
+    local font = {}
+
+    font.GetFont = function(self)  return {} end
+    font.SetFont = function()  end
+    font.SetShadowColor = function()  end
+    font.SetShadowOffset = function()  end
+    font.SetShadowOffset = function()  end
+    font.SetTextColor = function()  end
+
+    return font
+end
+_G.GetFont = _G.CreateFont()
+_G.GameFontNormal = _G.CreateFont()
+_G.GameFontHighlightSmall = _G.CreateFont()
+
 
 _G.RAID_CLASS_COLORS = {}
 

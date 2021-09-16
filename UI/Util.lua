@@ -8,6 +8,8 @@ local Util = AddOn:GetLibrary("Util")
 local UIPackage, UIUtilPackage = AddOn.Package('UI'), AddOn.Package('UI.Util')
 -- @type UI.Native
 local UI = AddOn.Require('UI.Native')
+-- @type UI.Native.BaseWidget
+local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 
 ----- @type Models.Award
 --local Award = AddOn.Package('Models').Award
@@ -117,23 +119,88 @@ end
 
 --- Used to decorate LibDialog Popups
 function U.DecoratePopup(frame)
+    -- basic fixup for the library provided frame
     frame:SetFrameStrata("DIALOG")
-    frame:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 8, edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
-    })
-    frame:SetBackdropColor(0, 0, 0, 1)
-    frame:SetBackdropBorderColor(0, 0, 0, 1)
+    frame:SetClampedToScreen(true)
+    frame:EnableMouse(true)
+    frame:SetMovable(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetDontSavePosition(true)
+    frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+
+    -- change the border and backdroup
+    frame.border = BaseWidget.Shadow(frame, 20)
+    frame:SetBackdrop({bgFile=BaseWidget.ResolveTexture('white')})
+    frame:SetBackdropColor(0.05,0.05,0.07,0.98)
+
+    -- replace the close button
+    frame.close_button:Hide()
+    frame.close = UI:New('ButtonClose', frame)
+    frame.close:SetSize(18,18)
+    frame.close:SetPoint("TOPRIGHT",-1,0)
+    frame.close:SetScript("OnClick", function() frame.close_button:Click() end)
+
+    -- replace the other buttons
+    for buttonIndex = 1, #frame.buttons do
+        local delegate, replacement = frame.buttons[buttonIndex], nil
+        if not frame.replacement_buttons then
+            frame.replacement_buttons = {}
+        end
+
+        if frame.replacement_buttons[buttonIndex] then
+            replacement = frame.replacement_buttons[buttonIndex]
+        else
+            replacement = UI:NewNamed("Button", delegate:GetParent(), delegate:GetName() .. "_replacement")
+            frame.replacement_buttons[buttonIndex] = replacement
+        end
+
+        replacement:SetText(delegate:GetText())
+        replacement:SetSize(delegate:GetSize())
+        replacement:SetPoint("TOPLEFT", delegate, "TOPLEFT")
+        replacement:SetPoint("BOTTOMRIGHT", delegate, "BOTTOMRIGHT")
+        replacement:SetScript("OnClick", function() delegate:Click() end)
+        delegate:Hide()
+    end
 end
 
+local GameTooltip = GameTooltip
+
 -- creates a tooltip anchored to cursor using the standard GameTooltip
-function U.CreateTooltip(...)
-    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
-    for i = 1, select("#", ...) do
-        GameTooltip:AddLine(select(i, ...),1,1,1)
+--function U.ShowTooltip(...)
+--    U.ShowTooltip(UIParent, "ANCHOR_CURSOR", nil, ...)
+--    --[[
+--    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
+--    for i = 1, select("#", ...) do
+--        GameTooltip:AddLine(select(i, ...),1,1,1)
+--    end
+--    GameTooltip:Show()
+--    --]]
+--end
+
+function U.ShowTooltip(owner, anchor, title, ...)
+    local x, y = 0, 0
+    if Util.Objects.IsTable(anchor) then
+        x, y = anchor[2], anchor[3]
+        anchor = anchor[1] or "ANCHOR_RIGHT"
+    elseif not anchor then
+        anchor = "ANCHOR_RIGHT"
     end
+
+    GameTooltip:SetOwner(owner, anchor, x, y)
+    if Util.Strings.IsSet(title) then
+        GameTooltip:SetText(title)
+    end
+
+    for i = 1, select("#", ...) do
+        local line = select(i, ...)
+        if Util.Objects.IsTable(line) then
+            GameTooltip:AddLine(unpack(line))
+        else
+            GameTooltip:AddLine(line)
+        end
+    end
+
     GameTooltip:Show()
 end
 
@@ -144,12 +211,27 @@ function U:HideTooltip()
     GameTooltip:Hide()
 end
 
+function U.Link(at, data, ...)
+    if not data then return end
+    local x = at:GetRight()
+    if x >= (GetScreenWidth() / 2) then
+        GameTooltip:SetOwner(at, "ANCHOR_LEFT")
+    else
+        GameTooltip:SetOwner(at, "ANCHOR_RIGHT")
+    end
+    GameTooltip:SetHyperlink(data,...)
+    GameTooltip:Show()
+end
+
 -- creates and displays a hyperlink tooltip
-function U:CreateHypertip(link)
+-- todo : change this ala Link()
+function U:CreateHypertip(link, owner, anchor)
     if Util.Strings.IsEmpty(link) then return end
+
     -- this is to support shift click comparison on all tooltips
     local function hypertip()
-        local tip = UI:NewNamed("GameTooltip", UIParent, AddOn:Qualify("TooltipEventHandler"))
+        --  UI:NewNamed("GameTooltip", UIParent, AddOn:Qualify("TooltipEventHandler"))
+        local tip = U.CreateGameTooltip("TooltipEventHandler", owner or UIParent)
         tip:RegisterEvent("MODIFIER_STATE_CHANGED")
         tip:SetScript("OnEvent",
                 function(_, event, arg)
@@ -165,15 +247,20 @@ function U:CreateHypertip(link)
     local tooltip = self.private:GetHypertip(hypertip)
     tooltip.showing = true
     tooltip.link = link
-    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
+
+    GameTooltip:SetOwner(owner or UIParent, anchor or "ANCHOR_CURSOR")
     GameTooltip:SetHyperlink(link)
+    GameTooltip:Show()
 end
 
 function U.CreateGameTooltip(module, parent)
+    return UI:NewNamed('GameTooltip', parent, AddOn:Qualify(module, "GameTooltip"))
+    --[[
     local itemTooltip = CreateFrame("GameTooltip", AddOn:Qualify(module, "GameTooltip"), parent, "GameTooltipTemplate")
     itemTooltip:SetClampedToScreen(false)
-    itemTooltip:SetScale(parent and parent:GetScale()*.95 or 1)
+    itemTooltip:SetScale(parent and parent:GetScale() * 0.95 or 1)
     return itemTooltip
+    --]]
 end
 
 function U.GetClassColorRGB(class)
@@ -231,13 +318,14 @@ function U.ItemQualityDecorator(rarity)
     return ColoredDecorator(GetItemQualityColor(rarity))
 end
 
+--[[
 local GP = Util.Memoize.Memoize(function() return AddOn:GearPointsModule() end)
 
 function U.AwardReasonDecorator(award)
     return ColoredDecorator(GP():GetAwardColor(award))
 end
 
---[[
+
 local Colors = {
     ResourceTypes = {
         [Award.ResourceType.Ep] = C.Colors.ItemArtifact,
@@ -291,12 +379,22 @@ function U.ItemIconFn()
             texture = select(5, GetItemInfoInstant(link))
         end
         frame:SetNormalTexture(texture or "Interface/ICONS/INV_Misc_QuestionMark.png")
-        frame:SetScript("OnEnter", function() U:CreateHypertip(link) end)
-        frame:SetScript("OnLeave", function() U:HideTooltip() end)
-        frame:SetScript("OnClick", function()
-            if link and IsModifiedClick() then
-                HandleModifiedItemClick(link)
-            end
-        end)
+        if link then
+            frame:SetScript("OnEnter", function() U:CreateHypertip(link, frame, "ANCHOR_RIGHT") end)
+            frame:SetScript("OnLeave", function() U:HideTooltip() end)
+            -- todo
+            --[[
+            frame:SetScript("OnClick", function()
+                if IsModifiedClick() then
+                    HandleModifiedItemClick(link)
+                end
+            end)
+            --]]
+        else
+            frame:SetScript("OnEnter", nil)
+            frame:SetScript("OnLeave", nil)
+            -- todo
+            -- frame:SetScript("OnClick", nil)
+        end
     end
 end

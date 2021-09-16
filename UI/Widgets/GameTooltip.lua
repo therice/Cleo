@@ -10,16 +10,17 @@ end
 function GameTooltip:Create()
     local tt = CreateFrame(
             "GameTooltip",
-            self.parent:GetName() .. '_' .. self.name,
+            self.name,
             self.parent,
             "GameTooltipTemplate"
     )
-    tt:SetScale(self.parent:GetScale())
+    tt:SetClampedToScreen(false)
+    tt:SetScale(self.parent:GetScale() * 0.95 or 1)
     if self.parent.content then
         self.parent.content:SetScript(
             "OnSizeChanged",
             function()
-               tt:SetScale(self.parent:GetScale())
+                tt:SetScale(self.parent:GetScale() * 0.95 or 1)
             end
         )
     end

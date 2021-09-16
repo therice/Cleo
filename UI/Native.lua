@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local Logging = AddOn:GetLibrary('Logging')
 --- @type LibUtil
@@ -6,17 +7,31 @@ local pkg = AddOn.Package('UI.Native')
 
 --- @class UI.Native.Widget
 local Widget = pkg:Class('Widget')
+
+Widget.FontNormalName = AddOn.name .. "FontNormal"
+Widget.FontNormal = CreateFont(Widget.FontNormalName)
+Widget.FontNormal:SetFont(GameFontNormal:GetFont())
+Widget.FontNormal:SetShadowColor(0,0,0)
+Widget.FontNormal:SetShadowOffset(1,-1)
+Widget.FontNormal:SetTextColor(1,.82,0)
+
+Widget.FontGrayName = AddOn.name .. "FontGray"
+Widget.FontGray = CreateFont(Widget.FontGrayName)
+Widget.FontGray:SetFont(GameFontHighlightSmall:GetFont())
+Widget.FontGray:SetShadowColor(0,0,0)
+Widget.FontGray:SetShadowOffset(1,-1)
+Widget.FontGray:SetTextColor(0.63,0.68,0.69)
+
 function Widget:initialize(parent, name)
     self.parent = parent
     self.name = name
-    -- Logging:Debug("Widget(%s, %s)", tostring(parent and parent:GetName() or "Nil"), tostring(name))
 end
 
 function Widget.ResolveTexture(texture)
     return "Interface\\Addons\\" .. AddOn.name .. "\\Media\\Textures\\" ..texture
 end
 
-function Widget.Border(self,cR,cG,cB,cA,size,offsetX,offsetY)
+function Widget.Border(self, cR, cG, cB, cA, size, offsetX, offsetY)
     offsetX = offsetX or 0
     offsetY = offsetY or 0
 
@@ -46,6 +61,91 @@ function Widget.Border(self,cR,cG,cB,cA,size,offsetX,offsetY)
         self.BorderBottom:Hide()
         self.BorderRight:Hide()
     end
+
+    self.ShowBorders = function(self)
+        self.BorderTop:Show()
+        self.BorderLeft:Show()
+        self.BorderBottom:Show()
+        self.BorderRight:Show()
+    end
+end
+
+function Widget.LayerBorder(parent, size, cR, cG, cB, cA, outside, layer)
+    outside = outside or 0
+    layer = Util.Objects.Default(layer, "")
+
+    local function GetLayerBorderName(position)
+        -- e.g. BorderTop1
+        local suffix = Util.Strings.IsEmpty(layer) and layer or Util.Strings.UcFirst(layer)
+        return Util.Strings.Join("", "Border", (Util.Strings.UcFirst(position) .. suffix))
+    end
+
+    local function GetLayerBorder(position, from)
+        from = from or parent
+        return from[GetLayerBorderName(position)]
+    end
+
+    if size == 0 then
+        if GetLayerBorder("Top") then
+            GetLayerBorder("Top"):Hide()
+            GetLayerBorder("Bottom"):Hide()
+            GetLayerBorder("Left"):Hide()
+            GetLayerBorder("Right"):Hide()
+        end
+        return
+    end
+
+    local textureOwner = parent.CreateTexture and parent or parent:GetParent()
+
+    local function GetOrCreateLayerBorder(position)
+
+
+        local border = GetLayerBorder(position)
+        if not border then
+            border = textureOwner:CreateTexture(nil, "BORDER")
+        end
+
+        parent[GetLayerBorderName(position)] = border
+        return border
+    end
+
+    local top, bottom, left, right =
+        GetOrCreateLayerBorder("Top"), GetOrCreateLayerBorder("Bottom"),
+        GetOrCreateLayerBorder("Left"), GetOrCreateLayerBorder("Right")
+
+    top:SetPoint("TOPLEFT", parent, "TOPLEFT", -size - outside, size + outside)
+    top:SetPoint("BOTTOMRIGHT", parent, "TOPRIGHT", size + outside, outside)
+
+    bottom:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", -size - outside, -size - outside)
+    bottom:SetPoint("TOPRIGHT", parent, "BOTTOMRIGHT", size + outside, -outside)
+
+    left:SetPoint("TOPLEFT", parent, "TOPLEFT", -size - outside, outside)
+    left:SetPoint("BOTTOMRIGHT", parent, "BOTTOMLEFT", -outside, -outside)
+
+    right:SetPoint("TOPLEFT", parent, "TOPRIGHT", outside, outside)
+    right:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", size + outside, -outside)
+
+    top:SetColorTexture(cR, cG, cB, cA)
+    bottom:SetColorTexture(cR, cG, cB, cA)
+    left:SetColorTexture(cR, cG, cB, cA)
+    right:SetColorTexture(cR, cG, cB, cA)
+
+    top:Show()
+    bottom:Show()
+    left:Show()
+    right:Show()
+
+    parent.SetBorderColor = function(self, cR, cG, cB, cA, layer)
+        layer = Util.Objects.Default(layer, "")
+        local top, bottom, left, right =
+            GetLayerBorder("Top", self), GetLayerBorder("Bottom", self),
+            GetLayerBorder("Left", self), GetLayerBorder("Right", self)
+
+        top:SetColorTexture(cR, cG, cB, cA)
+        bottom:SetColorTexture(cR, cG, cB, cA)
+        left:SetColorTexture(cR, cG, cB, cA)
+        right:SetColorTexture(cR, cG, cB, cA)
+    end
 end
 
 function Widget.Shadow(parent, size, edgeSize)
@@ -59,8 +159,79 @@ function Widget.Shadow(parent, size, edgeSize)
     return shadow
 end
 
+function Widget.ShadowInside(self, enableBorder, enableLine)
+    local offset = enableBorder and 4 or 0
+    local notOffset = enableBorder and 0 or 4
+
+    self.ShadowCornerTopLeft = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerTopLeft:SetPoint("TOPLEFT",offset,-offset)
+    self.ShadowCornerTopLeft:SetAtlas("collections-background-shadow-large",true)
+
+    self.ShadowCornerTopRight = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerTopRight:SetPoint("TOPRIGHT",-offset,-offset)
+    self.ShadowCornerTopRight:SetAtlas("collections-background-shadow-large",true)
+    self.ShadowCornerTopRight:SetTexCoord(1,0,0,1)
+
+    self.ShadowCornerBottomLeft = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerBottomLeft:SetPoint("BOTTOMLEFT",offset,offset)
+    self.ShadowCornerBottomLeft:SetAtlas("collections-background-shadow-large",true)
+    self.ShadowCornerBottomLeft:SetTexCoord(0,1,1,0)
+
+    self.ShadowCornerBottomRight = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerBottomRight:SetPoint("BOTTOMRIGHT",-offset,offset)
+    self.ShadowCornerBottomRight:SetAtlas("collections-background-shadow-large",true)
+    self.ShadowCornerBottomRight:SetTexCoord(1,0,1,0)
+
+    self.ShadowCornerTop = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerTop:SetPoint("TOPLEFT",149-notOffset,-offset)
+    self.ShadowCornerTop:SetPoint("TOPRIGHT",-149+notOffset,-offset)
+    self.ShadowCornerTop:SetAtlas("collections-background-shadow-large",true)
+    self.ShadowCornerTop:SetTexCoord(0.9999,1,0,1)
+
+    self.ShadowCornerLeft = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerLeft:SetPoint("TOPLEFT",offset,-151+notOffset)
+    self.ShadowCornerLeft:SetPoint("BOTTOMLEFT",offset,151-notOffset)
+    self.ShadowCornerLeft:SetAtlas("collections-background-shadow-large",true)
+    self.ShadowCornerLeft:SetTexCoord(0,1,0.9999,1)
+
+    self.ShadowCornerRight = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerRight:SetPoint("TOPRIGHT",-offset,-151+notOffset)
+    self.ShadowCornerRight:SetPoint("BOTTOMRIGHT",-offset,151-notOffset)
+    self.ShadowCornerRight:SetAtlas("collections-background-shadow-large",true)
+    self.ShadowCornerRight:SetTexCoord(1,0,0.9999,1)
+
+    self.ShadowCornerBottom = self:CreateTexture(nil,"BORDER",nil,2)
+    self.ShadowCornerBottom:SetPoint("BOTTOMLEFT",149-notOffset,offset)
+    self.ShadowCornerBottom:SetPoint("BOTTOMRIGHT",-149+notOffset,offset)
+    self.ShadowCornerBottom:SetAtlas("collections-background-shadow-large",true)
+    self.ShadowCornerBottom:SetTexCoord(0.9999,1,1,0)
+
+    self.HideShadow = function(self)
+        self.ShadowCornerTopLeft:Hide()
+        self.ShadowCornerTopRight:Hide()
+        self.ShadowCornerBottomLeft:Hide()
+        self.ShadowCornerBottomRight:Hide()
+        self.ShadowCornerTop:Hide()
+        self.ShadowCornerLeft:Hide()
+        self.ShadowCornerRight:Hide()
+        self.ShadowCornerBottom:Hide()
+    end
+
+    self.ShowShadow = function(self)
+        self.ShadowCornerTopLeft:Show()
+        self.ShadowCornerTopRight:Show()
+        self.ShadowCornerBottomLeft:Show()
+        self.ShadowCornerBottomRight:Show()
+        self.ShadowCornerTop:Show()
+        self.ShadowCornerLeft:Show()
+        self.ShadowCornerRight:Show()
+        self.ShadowCornerBottom:Show()
+    end
+end
+
+
 do
-    local function Widget_SetPoint(self, arg1, arg2, arg3, arg4, arg5)
+    local function SetPoint(self, arg1, arg2, arg3, arg4, arg5)
         if arg1 == 'x' then arg1 = self:GetParent() end
         if arg2 == 'x' then arg2 = self:GetParent() end
 
@@ -88,45 +259,56 @@ do
         return self
     end
 
-    local function Widget_SetSize(self, ...)
+    local function SetSize(self, ...)
+        --Logging:Debug("Native.SetSize(%s) : %s", tostring(self:GetName()), Util.Objects.ToString(Util.Tables.New(...)))
         self:SetSize(...)
         return self
     end
 
-    local function Widget_SetNewPoint(self, ...)
+    local function SetNewPoint(self, ...)
         self:ClearAllPoints()
         self:Point(...)
         return self
     end
 
-    local function Widget_SetScale(self, ...)
+    local function SetScale(self, ...)
         self:SetScale(...)
         return self
     end
 
-    local function Widget_OnClick(self, func)
-        self:SetScript("OnClick", func)
+    local function OnEnter(self, fn)
+        self:SetScript("OnEnter", fn)
         return self
     end
 
-    local function Widget_OnShow(self, func, disableFirstRun)
-        if not func then
+    local function OnLeave(self, fn)
+        self:SetScript("OnLeave", fn)
+        return self
+    end
+
+    local function OnClick(self, fn)
+        self:SetScript("OnClick", fn)
+        return self
+    end
+
+    local function OnShow(self, fn, disableFirstRun)
+        if not fn then
             self:SetScript("OnShow", nil)
             return self
         end
-        self:SetScript("OnShow", func)
+        self:SetScript("OnShow", fn)
         if not disableFirstRun then
-            func(self)
+            fn(self)
         end
         return self
     end
 
-    local function Widget_Run(self, func, ...)
-        func(self, ...)
+    local function Run(self, fn, ...)
+        fn(self, ...)
         return self
     end
 
-    local function Widget_Shown(self, bool)
+    local function Shown(self, bool)
         if bool then
             self:Show()
         else
@@ -135,27 +317,66 @@ do
         return self
     end
 
-    local function Widget_OnEnter(self, func)
-        self:SetScript("OnEnter", func)
+    local function SetMultipleScripts(self, scripts)
+        -- event, function
+        for k, v in pairs(scripts) do
+            self:SetScript(k, v)
+        end
         return self
     end
 
-    local function Widget_OnLeave(self, func)
-        self:SetScript("OnLeave", func)
+
+    local function SetDatasource(self, handler, key, callback)
+        if Util.Objects.IsSet(handler) and Util.Objects.IsSet(key) then
+            if not handler.GetDbValue then
+               error("Datasource 'handler' does not support 'GetDbValue'")
+            end
+
+            if not handler.SetDbValue then
+                error("Datasource 'handler' does not support 'SetDbValue'")
+            end
+
+            self.ds = {
+                key = key,
+                callback = callback,
+                Set = function(_, value)
+                    -- Logging:Debug("Widget.DataSource.Set(%s) : %s", tostring(self), tostring(value))
+                    handler:SetDbValue(key, value)
+                    if callback then
+                        callback(value)
+                    end
+                end,
+                Get = function(_, ...)
+                    -- Logging:Debug("Widget.DataSource.Get(%s)", tostring(self))
+                    return handler:GetDbValue(key, ...)
+                end,
+            }
+        end
+
+        if not self.OnDatasourceConfigured then
+            Logging:Warn("%s : 'OnDatasourceConfigured()' unavailable, any usage must be manually managed", self:GetWidgetType())
+        else
+            self:OnDatasourceConfigured()
+        end
+
         return self
     end
 
     function Widget.Mod(self, ...)
-        self.Point    = Widget_SetPoint
-        self.Size     = Widget_SetSize
-        self.NewPoint = Widget_SetNewPoint
-        self.Scale    = Widget_SetScale
-        self.OnClick  = Widget_OnClick
-        self.OnShow   = Widget_OnShow
-        self.Run      = Widget_Run
-        self.Shown    = Widget_Shown
-        self.OnEnter  = Widget_OnEnter
-        self.OnLeave  = Widget_OnLeave
+        self.Point              = SetPoint
+        self.Size               = SetSize
+        self.NewPoint           = SetNewPoint
+        self.Scale              = SetScale
+        self.OnClick            = OnClick
+        self.OnShow             = OnShow
+        self.Shown              = Shown
+        self.OnEnter            = OnEnter
+        self.OnLeave            = OnLeave
+        self.Run                = Run
+        self.LayerBorder        = Widget.LayerBorder
+        self.Border             = Widget.Border
+        self.SetMultipleScripts = SetMultipleScripts
+        self.Datasource         = SetDatasource
 
         for i = 1, select("#", ...) do
             if i % 2 == 1 then
@@ -168,8 +389,7 @@ end
 
 function Widget:Create() error("Create() not implemented") end
 
--- Class UI.Natives
---- @class UI.AceConfig.Natives
+--- @class Natives
 local Natives = AddOn.Class('Natives')
 function Natives:initialize()
     self.widgets = {}   -- mapping of widget type to widget class
@@ -183,8 +403,8 @@ end
 
 function Natives:MinimizeFrames()
     for _, frame in ipairs(self.frames) do
-        if frame:IsVisible() and not frame.combatMinimized then
-            frame.combatMinimized = true
+        if frame:IsVisible() and not frame.minimized then
+            frame.minimized = true
             frame:Minimize()
         end
     end
@@ -192,8 +412,8 @@ end
 
 function Natives:MaximizeFrames()
     for _, frame in ipairs(self.frames) do
-        if frame.combatMinimized then
-            frame.combatMinimized = false
+        if frame.minimized then
+            frame.minimized = false
             frame:Maximize()
         end
     end
@@ -209,27 +429,13 @@ function Natives:New(widgetType, parent, name, ...)
             self.count[widgetType] = self.count[widgetType] + 1
             name = format("%s_UI_%s_%d", AddOn.Constants.name, widgetType, self.count[widgetType])
         end
-        return self:Embed(widget(parent, name, ...):Create())
+        local instance = widget(parent, name, ...):Create()
+        instance.GetWidgetType = function() return widgetType end
+        return instance
     else
         Logging:Warn("Natives:New() : No widget available for type '%s'", widgetType)
         error(format("(Native UI) No widget available for type '%s'", widgetType))
     end
-end
-
-local _Embeds = {
-    ["SetMultipleScripts"] =
-        function(object, scripts)
-            for k, v in pairs(scripts) do
-                object:SetScript(k, v)
-            end
-        end
-}
-
-function Natives:Embed(object)
-    for k, v in pairs(_Embeds) do
-        object[k] = v
-    end
-    return object
 end
 
 --- @class UI.Native
@@ -266,6 +472,32 @@ end
 
 function Native:MaximizeFrames()
     self.private:MaximizeFrames()
+end
+
+function Native:Popup(...)
+    local p = self:NewNamed('Frame', ...)
+    p.banner =
+        self:New('DecorationLine', p.content, true, "BACKGROUND")
+            :Point("TOPLEFT", p, 0, -16)
+            :Point("BOTTOMRIGHT", p, "TOPRIGHT", 0, -36)
+
+
+    p:CreateShadow(20)
+    p:ShadowInside()
+
+    return p
+end
+
+function Native.Border(...)
+    return Widget.Border(...)
+end
+
+function Native.LayerBorder(...)
+    return Widget.LayerBorder(...)
+end
+
+function Native.ResolveTexture(texture)
+    return Widget.ResolveTexture(texture)
 end
 
 if AddOn._IsTestContext('UI_Native') then

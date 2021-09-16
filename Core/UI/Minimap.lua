@@ -20,7 +20,8 @@ function MinimapButton:initialize()
                 end,
                 OnClick = function(_, button)
                     if button == C.Buttons.Right then
-                        AddOn.ToggleConfig()
+                        AddOn:ToggleLaunchpad()
+                        -- AddOn.ToggleConfig()
                     else
                         if IsShiftKeyDown() then
                             AddOn:LoggingModule():Toggle()
@@ -34,7 +35,6 @@ function MinimapButton:initialize()
 end
 
 local mm = MinimapButton()
-
 function AddOn:AddMinimapButton()
     local db = {}
     if AddOn.db then db = Util.Tables.Get(AddOn.db, 'profile.ui.minimap') or {} end

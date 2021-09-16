@@ -48,8 +48,18 @@ local function parsePrereleaseAndBuild(str)
     return prerelease, build
 end
 
+
 local function parseVersion(str)
-    local sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+    return str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+end
+
+local function isVersion(str)
+    local major = parseVersion(str)
+    return Util.Objects.IsString(major)
+end
+
+local function parseVersionAndValidate(str)
+    local sMajor, sMinor, sPatch, sPrereleaseAndBuild = parseVersion(str)
     assert(Util.Objects.IsString(sMajor), ("Could not extract version number(s) from %q"):format(str))
     local major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
     local prerelease, build = parsePrereleaseAndBuild(sPrereleaseAndBuild)
@@ -114,7 +124,7 @@ function SemanticVersion:initialize(major, minor, patch, prerelease, build)
     assert(major, "At least one parameter is needed")
     
     if Util.Objects.IsString(major) then
-        major,minor,patch,prerelease,build = parseVersion(major)
+        major,minor,patch,prerelease,build = parseVersionAndValidate(major)
     elseif Util.Objects.IsTable(major) then
         major,minor,patch,prerelease,build = major.major, major.minor, major.patch, major.prerelease, major.build
     end
@@ -139,6 +149,10 @@ function SemanticVersion.Create(major, minor, patch, prerelease, build)
     return pcall(function ()
         return SemanticVersion(major, minor, patch, prerelease, build)
     end)
+end
+
+function SemanticVersion.Is(value)
+   return isVersion(value)
 end
 
 function SemanticVersion:nextMajor()

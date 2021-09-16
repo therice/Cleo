@@ -2,12 +2,9 @@
 local _, AddOn = ...
 local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibLogging
-local Log =  AddOn:GetLibrary("Logging")
+local Log = AddOn:GetLibrary("Logging")
 --- @type LibUtil
-local Util =  AddOn:GetLibrary("Util")
---- @type UI.Ace
-local AceUI = AddOn.Require('UI.Ace')
-
+local Util = AddOn:GetLibrary("Util")
 --- @class Logging
 local Logging = AddOn:NewModule("Logging")
 local accum
@@ -60,25 +57,6 @@ function Logging:SetLoggingThreshold(threshold)
     Log:SetRootThreshold(threshold)
 end
 
-local Options = Util.Memoize.Memoize(function ()
-    return AceUI.ConfigBuilder()
-                 :group(Logging:GetName(), L['logging']):desc(L['logging_desc'])
-                     :args()
-                        :header("spacer1", ""):order(1)
-                        :description('help', L['logging_help']):order(2)
-                        :header("spacer2", ""):order(3)
-                        :select('logThreshold', L['logging_threshold']):desc(L['logging_threshold_desc']):order(4)
-                            :set('values', Logging.GetLoggingLevels())
-                            :set('get', function() return Log:GetRootThreshold() end)
-                            :set('set', function(_, logThreshold) Logging:SetLoggingThreshold(logThreshold) end)
-                        :header('spacer3', ""):order(5)
-                        :execute('toggleWindow', L['logging_window_toggle']):desc(L['logging_window_toggle_desc']):order(6)
-                            :set('func', function() Logging:Toggle() end)
-                 :build()
-end)
-
-function Logging:BuildConfigOptions()
-   local options = Options()
-    return options[self:GetName()], false
+function Logging:ConfigSupplement()
+    return L["logging"], function(container) self:LayoutConfigSettings(container) end
 end
-

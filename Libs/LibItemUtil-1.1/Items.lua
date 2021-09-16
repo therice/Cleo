@@ -79,6 +79,40 @@ lib.TokenEquipmentLocations = {
     [22368] = { "ShoulderSlot" },               -- Desecrated Shoulderpads (Priest, Mage, Warlock)
     [22361] = { "ShoulderSlot" },               -- Desecrated Spaulders (Paladin, Hunter, Shaman, Paladin)
     [22354] = { "ShoulderSlot" },               -- Desecrated Pauldrons (Warrior, Rogue)
-    [22520] = { "Trinket0Slot", "Trinket1Slot" }-- The Phylactery of Kel'Thuzad
+    [22520] = { "Trinket0Slot", "Trinket1Slot"},-- The Phylactery of Kel'Thuzad
+    -- TBC Classic P1
+    [29761] = { "HeadSlot" },                   -- Helm of the Fallen Defender
+    [29759] = { "HeadSlot" },                   -- Helm of the Fallen Hero
+    [29760] = { "HeadSlot" },                   -- Helm of the Fallen Champion
+    [29764] = { "ShoulderSlot" },               -- Pauldrons of the Fallen Defender
+    [29762] = { "ShoulderSlot" },               -- Pauldrons of the Fallen Hero
+    [29763] = { "ShoulderSlot" },               -- Pauldrons of the Fallen Champion
+    [29753] = { "ChestSlot" },                  -- Chestguard of the Fallen Defender
+    [29755] = { "ChestSlot" },                  -- Chestguard of the Fallen Hero
+    [29754] = { "ChestSlot" },                  -- Chestguard of the Fallen Champion
+    [29758] = { "HandSlot" },                   -- Gloves of the Fallen Defender
+    [29756] = { "HandSlot" },                   -- Gloves of the Fallen Hero
+    [29757] = { "HandSlot" },                   -- Gloves of the Fallen Champion
+    [29767] = { "LegsSlot" },                   -- Leggings of the Fallen Defender
+    [29765] = { "LegsSlot" },                   -- Leggings of the Fallen Hero
+    [29766] = { "LegsSlot" },                   -- Leggings of the Fallen Champion
+    [32385] = { "Finger0Slot", "Finger1Slot" }, -- Magtheridon's Head
+    [32386] = { "Finger0Slot", "Finger1Slot" }, -- Magtheridon's Head
+    -- TBC Classic P2
+    [30243] = { "HeadSlot" },                   -- Helm of the Vanquished Defender
+    [30244] = { "HeadSlot" },                   -- Helm of the Vanquished Hero
+    [30242] = { "HeadSlot" },                   -- Helm of the Vanquished Champion
+    [30249] = { "ShoulderSlot" },               -- Pauldrons of the Vanquished Defender
+    [30250] = { "ShoulderSlot" },               -- Pauldrons of the Vanquished Hero
+    [30248] = { "ShoulderSlot" },               -- Pauldrons of the Vanquished Champion
+    [30237] = { "ChestSlot" },                  -- Chestguard of the Vanquished Defender
+    [30238] = { "ChestSlot" },                  -- Chestguard of the Vanquished Hero
+    [30236] = { "ChestSlot" },                  -- Chestguard of the Vanquished Champion
+    [30240] = { "HandSlot" },                   -- Gloves of the Vanquished Defender
+    [30241] = { "HandSlot" },                   -- Gloves of the Vanquished Hero
+    [30239] = { "HandSlot" },                   -- Gloves of the Vanquished Champion
+    [30246] = { "LegsSlot" },                   -- Leggings of the Vanquished Defender
+    [30247] = { "LegsSlot" },                   -- Leggings of the Vanquished Hero
+    [30245] = { "LegsSlot" },                   -- Leggings of the Vanquished Champion
 }
 

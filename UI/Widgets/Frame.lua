@@ -16,7 +16,7 @@ local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
 --
 -- @param name global name of the frame
 -- @param module name of the module (used for lib-window-1.1 config in DB).
--- @param title the title text.
+-- @param title the title text. (if nil, not title will be shown)
 -- @param width width of the frame, defaults to 450
 -- @param height height of the frame, defaults to 325
 -- @param hookConfig should the frame be hooked into respecting configuration frame (hide/show if present). defaults to true
@@ -30,7 +30,7 @@ function Frame:initialize(parent, name, module, title, width, height, hookConfig
 end
 
 function Frame:Create()
-    local f = CreateFrame("Frame", d, self.parent)
+    local f = CreateFrame("Frame", AddOn:Qualify(self.name), self.parent, BackdropTemplateMixin and "BackdropTemplate")
     local hookIt = Util.Objects.IsNil(self.hookConfig) and true or self.hookConfig
     local storage = { }
     if self.module and AddOn.db then
@@ -50,15 +50,15 @@ function Frame:Create()
     f:RestorePosition()
     f:MakeDraggable()
     f:SetScript("OnMouseWheel", function(f,delta) if IsControlKeyDown() then Window.OnMouseWheel(f,delta) end end)
-    f:HookScript("OnShow", function() f.restoreConfig = hookIt and AddOn.HideConfig() end)
-    f:HookScript("OnHide",
-                 function()
-                     if f.restoreConfig then
-                         AddOn.ShowConfig()
-                         f.restoreConfig = false
-                     end
-                 end
-    )
+    --f:HookScript("OnShow", function() f.restoreConfig = hookIt and AddOn.HideConfig() end)
+    --f:HookScript("OnHide",
+    --             function()
+    --                 if f.restoreConfig then
+    --                     AddOn.ShowConfig()
+    --                     f.restoreConfig = false
+    --                 end
+    --             end
+    --)
 
     f:SetScript("OnKeyDown",
             function(self, key)
@@ -104,46 +104,55 @@ function Frame:Create()
     self:CreateButtons(f)
     self.EmbedMinimizeSupport(f)
     NativeUI:TrackFrame(f)
+
+    BaseWidget.Mod(
+        f,
+        'CreateShadow', function(self, ...) self.border = BaseWidget.Shadow(self, ...) end,
+        'ShadowInside', BaseWidget.ShadowInside
+    )
+
     return f
 end
 
 function Frame:CreateTitle(f)
-    local tf = CreateFrame("Frame", AddOn:Qualify(self.name, 'Title'), f, BackdropTemplateMixin and "BackdropTemplate")
-    tf:SetToplevel(true)
-    tf:SetBackdrop({
-        bgFile = BaseWidget.ResolveTexture('white'),
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 8, edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
-    })
-    tf:SetBackdropColor(0, 0, 0, 1)
-    tf:SetBackdropBorderColor(0, 0, 0, 1)
-    tf:SetHeight(22)
-    tf:EnableMouse()
-    tf:SetMovable(true)
-    tf:SetWidth(f:GetWidth() * 0.75)
-    tf:SetPoint("CENTER", f, "TOP", 0, -1)
-    tf:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
-    tf:SetScript("OnMouseUp", function(self)
-        local frame = self:GetParent()
-        frame:StopMovingOrSizing()
-        if frame:GetScale() and frame:GetLeft() and frame:GetRight() and frame:GetTop() and frame:GetBottom() then
-            frame:SavePosition()
-        end
-        if self.lastClick and GetTime() - self.lastClick <= 0.5 then
-            self.lastClick = nil
-            if frame.minimized then frame:Maximize() else frame:Minimize() end
-        else
-            self.lastClick = GetTime()
-        end
-    end)
+    if not Util.Objects.IsEmpty(self.title) then
+        local tf = CreateFrame("Frame", AddOn:Qualify(self.name, 'Title'), f, BackdropTemplateMixin and "BackdropTemplate")
+        tf:SetToplevel(true)
+        tf:SetBackdrop({
+                           bgFile = BaseWidget.ResolveTexture('white'),
+                           edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+                           tile = true, tileSize = 8, edgeSize = 2,
+                           insets = { left = 2, right = 2, top = 2, bottom = 2 },
+                       })
+        tf:SetBackdropColor(0, 0, 0, 1)
+        tf:SetBackdropBorderColor(0, 0, 0, 1)
+        tf:SetHeight(22)
+        tf:EnableMouse()
+        tf:SetMovable(true)
+        tf:SetWidth(f:GetWidth() * 0.75)
+        tf:SetPoint("CENTER", f, "TOP", 0, -1)
+        tf:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
+        tf:SetScript("OnMouseUp", function(self)
+            local frame = self:GetParent()
+            frame:StopMovingOrSizing()
+            if frame:GetScale() and frame:GetLeft() and frame:GetRight() and frame:GetTop() and frame:GetBottom() then
+                frame:SavePosition()
+            end
+            if self.lastClick and GetTime() - self.lastClick <= 0.5 then
+                self.lastClick = nil
+                if frame.minimized then frame:Maximize() else frame:Minimize() end
+            else
+                self.lastClick = GetTime()
+            end
+        end)
 
-    local text = tf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("CENTER", tf, "CENTER")
-    text:SetText(self.title)
-    tf.text = text
-    f.title = tf
-    f.title:SetPoint("CENTER", f, "TOP", 0, 10)
+        local text = tf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        text:SetPoint("CENTER", tf, "CENTER")
+        text:SetText(self.title)
+        tf.text = text
+        f.title = tf
+        f.title:SetPoint("CENTER", f, "TOP", 0, 10)
+    end
 end
 
 function Frame:CreateContent(f)
@@ -177,10 +186,10 @@ function Frame:CreateContent(f)
 end
 
 function Frame:CreateButtons(f)
-    local close = NativeUI:New('ButtonIcon', f.content, ButtonIcon.Type.Close)
+    local close = NativeUI:New('ButtonClose', f.content or f)
     close:SetSize(18,18)
     close:SetPoint("TOPRIGHT",-1,0)
-    close:SetScript("OnClick", function() f.content:GetParent():Hide() end)
+    close:SetScript("OnClick", function() if f.content then f.content:GetParent():Hide() else f:Hide() end end)
     f.close = close
 end
 
@@ -191,13 +200,17 @@ local _MinimizePrototype = {
     end,
     Minimize = function(f)
         if not f.minimized then
-            f.content:Hide()
+            if f.content then f.content:Hide() else f:Hide() end
+            if f.border then f.border:Hide() end
+            if f.HideShadow then f:HideShadow() end
             f.minimized = true
         end
     end,
     Maximize = function(f)
         if f.minimized then
-            f.content:Show()
+            if f.content then f.content:Show() else f:Show() end
+            if f.border then f.border:Show() end
+            if f.ShowShadow then f:ShowShadow() end
             f.minimized = false
         end
     end

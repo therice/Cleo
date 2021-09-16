@@ -5,6 +5,8 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
 
@@ -134,6 +136,44 @@ function AddOn:UnitClass(name)
     local player = Player:Get(name)
     if player and Util.Strings.IsSet(player.class) then return player.class end
     return select(2, UnitClass(Ambiguate(name, "short")))
+end
+
+-- The link of same item generated from different players, or if two links are generated between player spec switch, are NOT the same
+-- This function compares the raw item strings with link level and spec ID removed.
+--
+-- Also compare with unique id removed, because wowpedia says that:
+-- "In-game testing indicates that the UniqueId can change from the first loot to successive loots on the same item."
+-- Although log shows item in the loot actually has no uniqueId in Legion, but just in case Blizzard changes it in the future.
+--
+-- @return true if two items are the same item
+function AddOn.ItemIsItem(item1, item2)
+    if not Util.Objects.IsString(item1) or not Util.Objects.IsString(item2) then return item1 == item2 end
+    item1 = ItemUtil:ItemLinkToItemString(item1)
+    item2 = ItemUtil:ItemLinkToItemString(item2)
+    if not (item1 and item2) then return false end
+    return ItemUtil:NeutralizeItem(item1) ==  ItemUtil:NeutralizeItem(item2)
+end
+
+function AddOn.TransmittableItemString(item)
+    local transmit = ItemUtil:ItemLinkToItemString(item)
+    transmit = ItemUtil:NeutralizeItem(transmit)
+    return AddOn.SanitizeItemString(transmit)
+end
+
+---@param item string any value to be prefaced with 'item:'
+function AddOn.DeSanitizeItemString(item)
+    return "item:" .. (item or "0")
+end
+
+---@param link string any string containing an item link
+function AddOn.SanitizeItemString(link)
+    return gsub(ItemUtil:ItemLinkToItemString(link), "item:", "")
+end
+
+function AddOn:ExtractCreatureId(guid)
+    if not guid then return nil end
+    local id = guid:match(".+(%b--)")
+    return id and (id:gsub("-", "")) or nil
 end
 
 local function GetAverageItemLevel()

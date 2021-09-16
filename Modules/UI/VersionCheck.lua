@@ -131,7 +131,7 @@ function VersionCheck.ModeTooltip(mode)
 			end
 		end
 
-		UIUtil.CreateTooltip(ModeTooltipDecorator:decorate(L['modes'] .. '\n'), unpack(modes))
+		UIUtil.ShowTooltip(ModeTooltipDecorator:decorate(L['modes'] .. '\n'), unpack(modes))
 	else
 		UIUtil:HideTooltip()
 	end
