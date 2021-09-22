@@ -81,19 +81,19 @@ function AddOn:Launchpad()
 
 		-- sets the current module index, results in that frame being set to current and displayed
 		f.SetModuleIndex = function(self, index)
-			Logging:Debug("SetModuleIndex(%d)", tonumber(index))
+			Logging:Trace("SetModuleIndex(%d)", tonumber(index))
 			self:SetCurrentFrame(self.frames[index])
 			self.modulesList:SetTo(index)
 		end
 
 		f.modulesList.SetListValue = function(_, index)
-			Logging:Debug("SetListValue(%d)", tonumber(index))
+			Logging:Trace("SetListValue(%d)", tonumber(index))
 			f:SetModuleIndex(index)
 		end
 
 		-- creates a module frame, adds to list, and returns the created frame
 		f.AddModule = function(self, moduleName, displayName, withTitle)
-			Logging:Debug("AddModuleFrame(%s, %s)", tostring(moduleName), tostring(displayName))
+			Logging:Trace("AddModuleFrame(%s, %s)", tostring(moduleName), tostring(displayName))
 			local moduleFrame = CreateFrame("Frame", self:GetName() .. "_" .. moduleName, self.content or self)
 			moduleFrame.moduleName = moduleName
 			moduleFrame.displayName = Util.Objects.Default(displayName, moduleName)
@@ -137,7 +137,7 @@ function AddOn:ApplyModules(moduleSuppliers)
 		for _, name in pairs(sorted) do
 			-- suppliers will be a tuple or {[module], [function], [boolean]}
 			local metadata = moduleSuppliers[name]
-			Logging:Debug("ApplyModules(%s) : %s, %s, %s", tostring(name), metadata[1]:GetName(), Util.Objects.ToString(metadata[2]), tostring(metadata[3]))
+			Logging:Trace("ApplyModules(%s) : %s, %s, %s", tostring(name), metadata[1]:GetName(), Util.Objects.ToString(metadata[2]), tostring(metadata[3]))
 
 			local _, moduleFrame = self.launchpad:AddModule(metadata[1]:GetName(), name, true)
 			moduleFrame:SetWide()
@@ -166,18 +166,24 @@ function AddOn:ApplyModules(moduleSuppliers)
 	end
 end
 
-function AddOn:PrepareForLaunch(configSupplements, lpadSupplements)
-	-- build the launchpad
-	self:Launchpad()
-	-- add about information to launchpad
-	self:AddAbout()
-	-- apply configuration supplements, registering as necessary in appropriate layout
-	self:ApplyConfiguration(configSupplements)
-	-- apply modules, registering each as an additional layout
-	self:ApplyModules(lpadSupplements)
+function AddOn:PrepareForLaunch()
+	if not self.supplements[1] then
+		local configSupplements, lpadSupplements = self.supplements[2], self.supplements[3]
+		-- build the launchpad
+		self:Launchpad()
+		-- add about information to launchpad
+		self:AddAbout()
+		-- apply configuration supplements, registering as necessary in appropriate layout
+		self:ApplyConfiguration(configSupplements)
+		-- apply modules, registering each as an additional layout
+		self:ApplyModules(lpadSupplements)
+		self.supplements[1] = true
+	end
 end
 
 function AddOn:ToggleLaunchpad()
+	self:PrepareForLaunch()
+
 	local lpad = self:Launchpad()
 	if lpad:IsVisible() then
 		lpad:Hide()

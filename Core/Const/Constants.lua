@@ -8,13 +8,14 @@ local L = LibStub("AceLocale-3.0"):GetLocale(name)
 if not AddOn._IsTestContext then AddOn._IsTestContext = function() return false end end
 
 AddOn.Constants = {
-    name    =   name,
-    name_c  =   "|CFF87CEFA" .. name .. "|r",
-    chat    =   "chat",
-    group   =   "group",
-    guild   =   "guild",
-    player  =   "player",
-    party   =   "party",
+    name        =   name,
+    name_c      =   "|CFF87CEFA" .. name .. "|r",
+    chat        =   "chat",
+    group       =   "group",
+    guild       =   "guild",
+    player      =   "player",
+    party       =   "party",
+    NoGuild     =   "No Guild",
 
     Buttons = {
         Left    =   "LeftButton",
@@ -183,6 +184,7 @@ AddOn.Constants = {
     
     Popups = {
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
+        ConfirmDeleteListConfig =   name .. "_ConfirmDeleteListConfig",
     },
 
     Responses = {
@@ -194,3 +196,38 @@ AddOn.Constants = {
         OutOfDate = "o"
     }
 }
+
+local C = AddOn.Constants
+
+AddOn.Constants.EquipmentLocations = {
+    INVTYPE_HEAD           = C.ItemEquipmentLocationNames.Head,
+    INVTYPE_NECK           = C.ItemEquipmentLocationNames.Neck,
+    INVTYPE_SHOULDER       = C.ItemEquipmentLocationNames.Shoulder,
+    INVTYPE_CLOAK          = C.ItemEquipmentLocationNames.Cloak,
+    INVTYPE_CHEST          = C.ItemEquipmentLocationNames.Chest,
+    -- This needs mapped to chest where used
+    -- INVTYPE_ROBE           = C.ItemEquipmentLocationNames.Chest,
+    INVTYPE_WAIST          = C.ItemEquipmentLocationNames.Waist,
+    INVTYPE_LEGS           = C.ItemEquipmentLocationNames.Legs,
+    INVTYPE_FEET           = C.ItemEquipmentLocationNames.Feet,
+    INVTYPE_WRIST          = C.ItemEquipmentLocationNames.Wrist,
+    INVTYPE_HAND           = C.ItemEquipmentLocationNames.Hand,
+    INVTYPE_FINGER         = C.ItemEquipmentLocationNames.Finger,
+    INVTYPE_TRINKET        = C.ItemEquipmentLocationNames.Trinket,
+    INVTYPE_WEAPON         = C.ItemEquipmentLocationNames.OneHandWeapon,
+    INVTYPE_SHIELD         = C.ItemEquipmentLocationNames.Shield,
+    INVTYPE_2HWEAPON       = C.ItemEquipmentLocationNames.TwoHandWeapon,
+    INVTYPE_WEAPONMAINHAND = C.ItemEquipmentLocationNames.MainHandWeapon,
+    INVTYPE_WEAPONOFFHAND  = C.ItemEquipmentLocationNames.OffHandWeapon,
+    INVTYPE_HOLDABLE       = C.ItemEquipmentLocationNames.Holdable,
+    INVTYPE_RANGED         = C.ItemEquipmentLocationNames.Ranged,
+    -- This needs mapped to ranged where used
+    -- INVTYPE_RANGEDRIGHT    = C.ItemEquipmentLocationNames.Ranged,
+    INVTYPE_WAND           = C.ItemEquipmentLocationNames.Wand,
+    INVTYPE_THROWN         = C.ItemEquipmentLocationNames.Thrown,
+    INVTYPE_RELIC          = C.ItemEquipmentLocationNames.Relic,
+}
+
+-- Populated later in Init.lua
+AddOn.Constants.EquipmentLocationsSort = {}
+

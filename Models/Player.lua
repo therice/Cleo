@@ -88,7 +88,11 @@ function Player:GetInfo()
 end
 
 function Player:__tostring()
-    return self.name .. ' (' .. self.guid .. ')'
+    return self.name .. ' (' .. tostring(self.guid or '???') .. ')'
+end
+
+function Player:__lt(o)
+    return self:GetShortName() < o:GetShortName()
 end
 
 function Player:__eq(o)
@@ -126,9 +130,9 @@ function Player.Create(guid, info)
     return player
 end
 
---/run print(R2D2X.Package('Models').Player:Get('Eliovak'))
---/run print(R2D2X.Package('Models').Player:Get('Eliovak-Atiesh'))
---/run print(R2D2X.Package('Models').Player:Get('Gnomechómsky'))
+--/run print(Cleo.Package('Models').Player:Get('Eliovak'))
+--/run print(Cleo.Package('Models').Player:Get('Eliovak-Atiesh'))
+--/run print(Cleo.Package('Models').Player:Get('Gnomechómsky'))
 function Player:Get(input)
     local guid, info
 
@@ -141,6 +145,7 @@ function Player:Get(input)
             guid = input
         else
             local name = Ambiguate(input, "short")
+            -- For players: Player-[server ID]-[player UID] (Example: "Player-976-0002FD64")
             guid = UnitGUID(name)
             -- GUID(s) are only available for people we're grouped with
             -- so attempt a few other approaches if not available
@@ -160,7 +165,7 @@ function Player:Get(input)
         error(format("%s is an invalid player", tostring(input)), 2)
     end
 
-    Logging:Debug("Get(%s) : GUID=%s", tostring(input), tostring(guid))
+    Logging:Trace("Get(%s) : GUID=%s", tostring(input), tostring(guid))
 
     if Util.Strings.IsEmpty(guid) then Logging:Warn("Get(%s) : unable to determine GUID", tostring(input)) end
     return Get(guid) or Player.Create(guid, info)

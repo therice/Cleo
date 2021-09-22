@@ -8,7 +8,6 @@ local Logging = AddOn:GetLibrary("Logging")
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type table<number, Models.Item.Item>
 local cache = {}
-
 --
 -- Item
 --

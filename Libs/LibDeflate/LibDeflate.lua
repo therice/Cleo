@@ -2905,8 +2905,7 @@ end
 -- -- "encoded" does not contain "\000" or "\001"
 -- local decoded = codec:Decode(encoded)
 -- -- assert(decoded == SOME_STRING)
-function LibDeflate:CreateCodec(reserved_chars, escape_chars
-	, map_chars)
+function LibDeflate:CreateCodec(reserved_chars, escape_chars, map_chars)
 	-- select a default escape character
 	if type(reserved_chars) ~= "string"
 		or type(escape_chars) ~= "string"

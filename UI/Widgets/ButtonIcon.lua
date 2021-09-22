@@ -20,6 +20,17 @@ local ButtonClose = AddOn.Package('UI.Widgets'):Class('ButtonClose', ButtonIcon)
 local ButtonTrash = AddOn.Package('UI.Widgets'):Class('ButtonTrash', ButtonIcon)
 --- @class UI.Widgets.ButtonAdd
 local ButtonAdd = AddOn.Package('UI.Widgets'):Class('ButtonAdd', ButtonIcon)
+--- @class UI.Widgets.ButtonMinus
+local ButtonMinus = AddOn.Package('UI.Widgets'):Class('ButtonMinus', ButtonIcon)
+--- @class UI.Widgets.ButtonLeft
+local ButtonLeft = AddOn.Package('UI.Widgets'):Class('ButtonLeft', ButtonIcon)
+--- @class UI.Widgets.ButtonRight
+local ButtonRight = AddOn.Package('UI.Widgets'):Class('ButtonRight', ButtonIcon)
+--- @class UI.Widgets.ButtonLeftLarge
+local ButtonLeftLarge = AddOn.Package('UI.Widgets'):Class('ButtonLeftLarge', ButtonIcon)
+--- @class UI.Widgets.ButtonRightLarge
+local ButtonRightLarge = AddOn.Package('UI.Widgets'):Class('ButtonRightLarge', ButtonIcon)
+
 
 ---@type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
@@ -31,6 +42,12 @@ local Type = {
     Down  = 4,
     Trash = 5,
     Plus  = 6,
+    Minus = 7,
+    Left  = 8,
+    Right = 9,
+    LeftLarge = 10,
+    RightLarge = 11,
+
 }
 
 ButtonIcon.Type = Type
@@ -41,7 +58,12 @@ local TypeMetadata = {
     [ButtonIcon.Type.Up]    = { { 0.3125, 0.375, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
     [ButtonIcon.Type.Down]  = { { 0.25, 0.3125, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
     [ButtonIcon.Type.Trash] = { { 0.7568, 0.81176, 0.5, 0.625 }, { 1, 1, 1, .7 }, { .8, 0, 0, 1 } },
-    [ButtonIcon.Type.Plus] = { { 0.0039, 0.0588, 0.625, 0.75 }, { 1, 1, 1, .7 }, { 0, 1, 0, 1 } },
+    [ButtonIcon.Type.Plus]  = { { 0.0039, 0.0588, 0.625, 0.75 }, { 0, 1, 0, 0.3 }, { 0, 1, 0, 1 } },
+    [ButtonIcon.Type.Minus] = { { 0.0667, 0.1216, 0.625, 0.75 }, { 0.8, 0, 0, 0.3 }, { .8, 0, 0, 1 } },
+    [ButtonIcon.Type.Left]  = { { 0.4414, 0.5, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.Right] = { { 0.375, 0.4414, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.LeftLarge] = { { 0.18359, 0.25, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.RightLarge] = { { 0.125 , 0.18359, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
 }
 
 
@@ -172,6 +194,25 @@ function ButtonAdd:initialize(parent, name)
     ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.Plus)
 end
 
+function ButtonMinus:initialize(parent, name)
+    ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.Minus)
+end
+
+function ButtonLeft:initialize(parent, name)
+    ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.Left)
+end
+
+function ButtonRight:initialize(parent, name)
+    ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.Right)
+end
+
+function ButtonLeftLarge:initialize(parent, name)
+    ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.LeftLarge)
+end
+
+function ButtonRightLarge:initialize(parent, name)
+    ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.RightLarge)
+end
 
 NativeUI:RegisterWidget('ButtonIcon', ButtonIcon)
 NativeUI:RegisterWidget('ButtonUp', ButtonUp)
@@ -179,3 +220,10 @@ NativeUI:RegisterWidget('ButtonDown', ButtonDown)
 NativeUI:RegisterWidget('ButtonClose', ButtonClose)
 NativeUI:RegisterWidget('ButtonTrash', ButtonTrash)
 NativeUI:RegisterWidget('ButtonAdd', ButtonAdd)
+NativeUI:RegisterWidget('ButtonPlus', ButtonAdd)
+NativeUI:RegisterWidget('ButtonMinus', ButtonMinus)
+NativeUI:RegisterWidget('ButtonLeft', ButtonLeft)
+NativeUI:RegisterWidget('ButtonRight', ButtonRight)
+NativeUI:RegisterWidget('ButtonLeftLarge', ButtonLeftLarge)
+NativeUI:RegisterWidget('ButtonRightLarge', ButtonRightLarge)
+

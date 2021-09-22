@@ -53,7 +53,7 @@ end
 
 function Text.Color(self, colR, colG, colB)
     if Util.Objects.IsString(colR) then
-        local r, g, b    = colR:sub(-6, -5), colR:sub(-4, -3), colR:sub(-2, -1)
+        local r, g, b = colR:sub(-6, -5), colR:sub(-4, -3), colR:sub(-2, -1)
         colR, colG, colB = tonumber(r, 16), tonumber(g, 16), tonumber(b, 16)
         colR = (colR or 255) / 255
         colG = (colG or 255) / 255

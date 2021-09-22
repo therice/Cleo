@@ -252,12 +252,15 @@ function lib:ClassTransitiveMapping(class)
     end
 end
 
+-- https://wowwiki-archive.fandom.com/wiki/ItemEquipLoc
+-- https://wowwiki-archive.fandom.com/wiki/InventorySlotName
 local EquipLocationToGearSlots = {
     INVTYPE_HEAD            = {"HeadSlot"},
     INVTYPE_NECK            = {"NeckSlot"},
     INVTYPE_SHOULDER        = {"ShoulderSlot"},
     INVTYPE_CLOAK           = {"BackSlot"},
     INVTYPE_CHEST           = {"ChestSlot"},
+    INVTYPE_ROBE            = {"ChestSlot"},
     INVTYPE_WRIST           = {"WristSlot"},
     INVTYPE_HAND            = {"HandsSlot"},
     INVTYPE_WAIST           = {"WaistSlot"},
@@ -274,7 +277,8 @@ local EquipLocationToGearSlots = {
     INVTYPE_RANGEDRIGHT     = {"MainHandSlot", ["or"] = "SecondaryHandSlot"},
     INVTYPE_FINGER          = {"Finger0Slot", "Finger1Slot"},
     INVTYPE_HOLDABLE        = {"SecondaryHandSlot", ["or"] = "MainHandSlot"},
-    INVTYPE_TRINKET         = {"Trinket0Slot", "Trinket1Slot"}
+    INVTYPE_TRINKET         = {"Trinket0Slot", "Trinket1Slot"},
+    INVTYPE_RELIC           = {"SecondaryHandSlot"},
 }
 
 -- @return a table containing corresponding gear slots (or nil if not found)

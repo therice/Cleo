@@ -33,9 +33,6 @@ function Tabs:Create()
 	tabGroup.Resize = Tabs.ResizeTab
 	tabGroup.Select = Tabs.SelectTab
 	tabGroup.Deselect = Tabs.DeselectTab
-	tabGroup.First = function(self)
-		return self.tabs[1]
-	end
 
 	tabGroup.tabs = {}
 	-- Logging:Debug("Tabs.Create(%s)", Util.Objects.ToString(self.args))
@@ -84,13 +81,24 @@ function Tabs:Create()
 
 	BaseWidget.Mod(
 		tabGroup,
-		'SetTo', Tabs.SetTo
+		'SetTo', Tabs.SetTo,
+		'First', Tabs.First,
+		'Get', Tabs.Get
+
 	)
 
 	tabGroup._Size = tabGroup.Size
 	tabGroup.Size = Tabs.SetSize
 
 	return tabGroup
+end
+
+function Tabs.Get(self, index)
+	return self.tabs[index]
+
+end
+function Tabs.First(self)
+	return self:Get(1)
 end
 
 function Tabs.SetSize(self, width, height)
@@ -360,7 +368,7 @@ function Tabs.CreateTabButton(parent, name)
 	tabButton:SetScript(
 			"OnShow",
 			function(self)
-				Logging:Debug("TabButton.OnShow(%s) : width=%d", self:GetName(), self:GetTextWidth() )
+				-- Logging:Debug("TabButton.OnShow(%s) : width=%d", self:GetName(), self:GetTextWidth() )
 				self:GetParent().Resize(self, 0)
 				self.HighlightTexture:SetWidth(self:GetTextWidth() + 30)
 			end

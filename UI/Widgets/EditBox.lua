@@ -7,6 +7,8 @@ local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local Util = AddOn:GetLibrary("Util")
 --- @type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
+local Logging = AddOn:GetLibrary('Logging')
+
 --- @class UI.Widgets.EditBox
 local EditBox = AddOn.Package('UI.Widgets'):Class('EditBox', BaseWidget)
 
@@ -51,9 +53,30 @@ function EditBox:Create()
         'TopText', EditBox.AddLeftTop,
         'BackgroundText',EditBox.AddBackgroundText,
         'ColorBorder', EditBox.ColorBorder,
-        'GetTextHighlight', EditBox.GetTextHighlight
+        'GetTextHighlight', EditBox.GetTextHighlight,
+        'OnDatasourceConfigured',  EditBox.OnDatasourceConfigured
     )
+
+    eb:SetFontObject(BaseWidget.FontNormal)
+
     return eb
+end
+
+function EditBox.OnDatasourceConfigured(self)
+    self:OnChange(Util.Functions.Noop)
+    self:SetText(self.ds:Get())
+    self:OnChange(
+        Util.Functions.Debounce(
+            function(self, userInput)
+                Logging:Trace("EditBox.OnChange(%s)", tostring(userInput))
+                if userInput then
+                    self.ds:Set(self:GetText())
+                end
+            end, -- function
+            1, -- seconds
+            true -- leading
+        )
+    )
 end
 
 function EditBox.SetText(self, text)
@@ -62,22 +85,15 @@ function EditBox.SetText(self, text)
     return self
 end
 
-function EditBox.SetTooltip(self, tooltip)
-    if Util.Objects.IsFunction(tooltip) then
-        self.tooltipText = nil
-        self.tooltipTextFunc = tooltip
-    else
-        self.tooltipText = tooltip
-        self.tooltipTextFunc = nil
-    end
+function EditBox.SetTooltip(self, title, ...)
+    self.tipTitle = title
+    self.tipLines = {...}
 
     self:SetScript(
         "OnEnter",
         function(self)
-            if Util.Objects.IsFunction(self.tooltipTextFunc) then
-                self.tooltipText = self.tooltipTextFunc()
-            end
-            UIUtil.ShowTooltip(self, nil, nil, self.tooltipText)
+            local lines = Util.Tables.Copy(self.tipLines or {})
+            UIUtil.ShowTooltip(self, nil, self.tipTitle, unpack(lines))
         end
     )
 

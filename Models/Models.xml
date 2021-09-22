@@ -6,4 +6,6 @@
     <Script file="Player.lua"/>
     <Script file="Encounter.lua"/>
     <Script file="Item\Item.lua"/>
+    <Script file="List\Configuration.lua"/>
+    <Script file="List\List.lua"/>
 </Ui>

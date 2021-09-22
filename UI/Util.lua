@@ -197,7 +197,7 @@ function U.ShowTooltip(owner, anchor, title, ...)
         if Util.Objects.IsTable(line) then
             GameTooltip:AddLine(unpack(line))
         else
-            GameTooltip:AddLine(line)
+            GameTooltip:AddLine(line,1,1,1)
         end
     end
 
@@ -288,6 +288,12 @@ end
 
 function U.RGBToHexPrefix(r, g, b)
     return "|cFF" .. U.RGBToHex(r, g, b)
+end
+
+function U.ColorWithAlpha(color, alpha)
+    local rgba = Util.Tables.New(color:GetRGB())
+    rgba[4] = alpha
+    return rgba
 end
 
 function U.ColoredDecorator(...)

@@ -11,6 +11,9 @@ local NativeUI = AddOn.Require('UI.Native')
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 --- @class UI.Widgets.Slider
 local Slider = AddOn.Package('UI.Widgets'):Class('Slider', BaseWidget)
+---@type UI.Util
+local UIUtil = AddOn.Require('UI.Util')
+
 local GameTooltip = GameTooltip
 
 function Slider:initialize(parent, name, horizontal, width, height, x, y, relativePoint, minVal, maxVal, defVal, text)
@@ -80,7 +83,6 @@ function Slider:Create()
 	BaseWidget.Mod(
 		slider,
 		'SetText', Slider.SetText,
-		'TooltipTitle', Slider.SetTooltipTitle,
 		'Tooltip', Slider.SetTooltip,
 		'EditBox', Slider.WithEditBox,
 		'OnDatasourceConfigured', Slider.OnDatasourceConfigured
@@ -184,22 +186,18 @@ function Slider.SetSize(self, size)
 	return self
 end
 
-function Slider.SetTooltipTitle(self, tooltipTitle)
-	self.tooltipTitle = tooltipTitle
-	return self
-end
-
-function Slider.SetTooltip(self, tooltipText)
-	self.tooltipText = tooltipText
+function Slider.SetTooltip(self, title, ...)
+	self.tipTitle = title
+	self.tipLines = {...}
 	return self
 end
 
 function Slider.ShowTooltip(self)
-	local text = self.text:GetText()
-	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	GameTooltip:SetText(self.tooltipTitle or text or "")
-	GameTooltip:AddLine(self.tooltipText or "", 1, 1, 1)
-	GameTooltip:Show()
+	-- Logging:Debug("Slider.ShowTooltip()")
+	local lines = Util.Tables.Copy(self.tipLines or {})
+	Util.Tables.Push(lines, {self:GetValue(), 0.90, 0.80, 0.50})
+	-- Logging:Debug("Slider.ShowTooltip() : %s, %s", tostring(self.tipTitle), Util.Objects.ToString(lines))
+	UIUtil.ShowTooltip(self, nil, self.tipTitle, unpack(lines))
 end
 
 function Slider.HideTooltip(self)
@@ -224,7 +222,6 @@ function Slider.SetTo(self, value)
 		local _, max = self:GetMinMaxValues()
 		value = max
 	end
-	self:Tooltip(value)
 	self:SetValue(value)
 	if self.editBox then self.editBox:SetText(value) end
 	self:ReloadTooltip()

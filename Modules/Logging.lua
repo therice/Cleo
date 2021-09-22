@@ -7,8 +7,8 @@ local Log = AddOn:GetLibrary("Logging")
 local Util = AddOn:GetLibrary("Util")
 --- @class Logging
 local Logging = AddOn:NewModule("Logging")
-local accum
 
+local accum
 if not AddOn._IsTestContext() then
     accum = {}
     Log:SetWriter(
@@ -53,7 +53,7 @@ function Logging.GetLoggingLevels()
 end
 
 function Logging:SetLoggingThreshold(threshold)
-    AddOn:SetDbValue({'logThreshold'}, threshold)
+    AddOn:SetDbValue(AddOn.db.profile, {'logThreshold'}, threshold)
     Log:SetRootThreshold(threshold)
 end
 

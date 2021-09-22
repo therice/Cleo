@@ -37,6 +37,7 @@ function DropdownProperties:initialize(type, width, lines)
 	self.type = type or Dropdown.Type.Standard
 	self.width = width or 150
 	self.lines = lines or 5
+	-- this is an array due to possibility of multi-select
 	self.value = {}
 	self.textDecorator = function(item) return item and item.text or "???" end
 	self.clickHandler = function(...) return true end
@@ -114,8 +115,11 @@ function Dropdown:Create()
 		dd,
 		'SetEnabled',               function(self, enabled)  self.Button:SetEnabled(enabled) end,
 	    'SetList',                  Dropdown.SetList,
+		'GetListItem',              Dropdown.GetListItem,
+		'MaxLines',                 Dropdown.SetMaxLines,
 		'Tooltip',                  Dropdown.SetTooltip,
 		'SetValue',                 Dropdown.SetValue,
+		'SetValueFromText',         Dropdown.SetValueFromText,
 		'ClearValue',               Dropdown.ClearValue,
 		'HasValue',                 Dropdown.HasValue,
 		'SetText',                  Dropdown.SetText,
@@ -218,7 +222,7 @@ function Dropdown:IterateItems(fn)
 	Util.Tables.Call(self.List, fn)
 end
 
-local SortList = {}
+
 local function SortListFn(x, y)
 	local num1, num2 = tonumber(x), tonumber(y)
 	if num1 and num2 then
@@ -229,6 +233,7 @@ local function SortListFn(x, y)
 end
 
 function Dropdown:SetList(list, order)
+	local SortList = {}
 	self.List = {}
 	if not Util.Objects.IsTable(order) then
 		for v in pairs(list) do
@@ -248,6 +253,10 @@ function Dropdown:SetList(list, order)
 	return self
 end
 
+function Dropdown:GetListItem(index)
+	return self.List[index]
+end
+
 function Dropdown:ClearValue()
 	self.Props:SetValue(nil)
 	self:SetText(nil)
@@ -262,8 +271,23 @@ function Dropdown:SetValue(value)
 	return self
 end
 
+function Dropdown:SetValueFromText(text)
+	local _, item = Util.Tables.FindFn(self.List, function(item) return item.text == text end)
+	if item then
+		self.Props:SetValue(item.value)
+		self:SetText(self.Props:DecorateText(item))
+	end
+
+	return self
+end
+
 function Dropdown:HasValue()
 	return not Util.Tables.IsEmpty(self.Props.value)
+end
+
+function Dropdown:SetMaxLines(lines)
+	self.Props.lines = lines
+	return self
 end
 
 function Dropdown:SetText(text)
@@ -272,16 +296,19 @@ function Dropdown:SetText(text)
 	return self
 end
 
-function Dropdown:SetTooltip(tooltip)
-	self.tooltip = tooltip
+function Dropdown:SetTooltip(title, ...)
+	self.tipTitle = title
+	self.tipLines = {...}
+
 	self:SetScript(
 		"OnEnter",
 		function(self)
-			if self.tooltip then
-				UIUtil.ShowTooltip(self, nil, self.tooltip, self.Text:IsTruncated() and self.Text:GetText())
-			elseif self.Text:IsTruncated() then
-				UIUtil.ShowTooltip(self, nil, self.Text:GetText())
+			local lines = Util.Tables.Copy(self.tipLines or {})
+			if self.Text:IsTruncated() then
+				Util.Tables.Push(lines, self.Text:GetText())
 			end
+
+			UIUtil.ShowTooltip(self, nil, self.tipTitle, unpack(lines))
 		end
 	)
 	self:SetScript("OnLeave", function() UIUtil:HideTooltip() end)

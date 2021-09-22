@@ -14,7 +14,7 @@ local function LayoutGeneralConfig(container)
 		UI:New('Checkbox', container, L["minimize_in_combat"])
 			:Point(20, -30)
 			:Tooltip(L['minimize_in_combat_desc'])
-			:Datasource(AddOn, "minimizeInCombat")
+			:Datasource(AddOn, AddOn.db.profile, "minimizeInCombat")
 	container.test =
 		UI:New("Button", container, L["Test"])
 			:Size(150, 20)
@@ -91,7 +91,6 @@ function AddOn:ApplyConfiguration(supplements)
 		config.tabGroup = UI:NewNamed('Tabs', config, "Tabs", unpack(sorted)):Point(0, -36):Size(700, 600):SetTo(1)
 		config.tabGroup:SetBackdropBorderColor(0,0,0,0)
 		config.tabGroup:SetBackdropColor(0,0,0,0)
-		-- config.tabGroup:First():Tooltip("Howdy")
 		config.tabGroup:First():SetPoint("TOPLEFT",0,20)
 
 		for index, module in pairs(sorted) do

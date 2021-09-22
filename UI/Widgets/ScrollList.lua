@@ -17,6 +17,11 @@ function ScrollList:initialize(parent, name, list)
 	self.list = list
 end
 
+local DefaultHL, DefaultP = {C.Colors.Grey:GetRGBA()}, {C.Colors.Salmon:GetRGBA()}
+DefaultHL[4] = 0.5
+DefaultP[4] = 0.9
+
+
 function ScrollList:Create()
 	local sl = CreateFrame("Frame", self.name, self.parent)
 	sl.frame = NativeUI:New('ScrollFrame', sl):Point(0, 0)
@@ -25,13 +30,14 @@ function ScrollList:Create()
 	BaseWidget.LayerBorder(sl, 1, 0, 0, 0, 1, 2, 1)
 
 	-- these are all reasonable defaults, but can be changed
-	sl.linesPerPage, sl.lineHeight, sl.linePaddingLeft = 1, 16, 7
+	sl.linesPerPage, sl.lineHeight, sl.linePaddingLeft, sl.scrollWidth = 1, 16, 7, 0
 	sl.fontName, sl.fontSize, sl.lineTexture, sl.ignoreBlend  = nil, 12, BaseWidget.ResolveTexture('white'), true
-	sl.lineTextureHeight, sl.lineTextureColorHL, sl.lineTextureColorP = 24, {C.Colors.Grey:GetRGBA()} --[[{1.0, 1.0, 1.0, 0.5}--]], {C.Colors.Salmon:GetRGBA()} --[[{1.0, 0.82, 0.0, 0.6}--]]
-	sl.enableHoverAnimation = true
+	sl.lineTextureHeight, sl.lineTextureColorHL, sl.lineTextureColorP = 24, DefaultHL, DefaultP
+	sl.enableHoverAnimation, sl.lineTextFormatter = true, nil
 
-	-- List tracks the actual display items
+	-- List tracks the actual display items (lines)
 	-- L is the raw values (indexes) from which they are created
+	-- LDisabled are indexes of disabled lines
 	sl.List = {}
 	sl.L, sl.LDisabled = self.list or {}, {}
 
@@ -43,7 +49,18 @@ function ScrollList:Create()
 		'LineHeight', ScrollList.SetLineHeight,
 		'AddDrag', ScrollList.AddDrag,
 		'HideBorders', ScrollList.HideBorders,
-		'SetTo', ScrollList.SetTo
+		'SetTo', ScrollList.SetTo,
+		'SetToLast', ScrollList.SetToLast,
+		'LinePaddingLeft', ScrollList.SetLinePaddingLeft,
+		'ScrollWidth', ScrollList.SetScrollWidth,
+		'LineTexture', ScrollList.SetLineTexture,
+		'Add', ScrollList.Add,
+		'Insert', ScrollList.Insert,
+		'Remove', ScrollList.Remove,
+		'RemoveSelected', ScrollList.RemoveSelected,
+		'SetList', ScrollList.SetList,
+		'Selected', ScrollList.Selected,
+		'LineTextFormatter', ScrollList.SetLineTextFormatter
 	)
 
 	sl._Size = sl.Size
@@ -72,8 +89,30 @@ function ScrollList:Create()
 	return sl
 end
 
+function ScrollList.SetLinePaddingLeft(self, padding)
+	self.linePaddingLeft = padding
+	return self
+end
+
 function ScrollList.SetLineHeight(self, height)
 	self.lineHeight = height
+	return self
+end
+
+function ScrollList.SetScrollWidth(self, width)
+	self.scrollWidth = width
+	return self
+end
+
+function ScrollList.SetLineTexture(self, height, highlight, pushed)
+	self.lineTextureHeight = height or self.lineTextureHeight
+	self.lineTextureColorHL = highlight or self.lineTextureColorHL
+	self.lineTextureColorP = pushed or self.lineTextureColorP
+	return self
+end
+
+function ScrollList.SetLineTextFormatter(self, formatter)
+	self.lineTextFormatter = formatter
 	return self
 end
 
@@ -139,10 +178,87 @@ function ScrollList.HideBorders(self)
 end
 
 
+local function SortListFn(x, y)
+	local num1, num2 = tonumber(x), tonumber(y)
+	if num1 and num2 then
+		return num1 < num2
+	else
+		return tostring(x) < tostring(y)
+	end
+end
+
+function ScrollList.SetList(self, list, order)
+	local SortList = {}
+
+	self.L = {}
+	if not Util.Objects.IsTable(order) then
+		for v in pairs(list) do
+			SortList[#SortList + 1] = v
+		end
+
+		Util.Tables.Sort(SortList, SortListFn)
+
+		for i, key in ipairs(SortList) do
+			self.L[i] = list[key]
+			SortList[i] = nil
+		end
+	else
+		for i, key in ipairs(order) do
+			self.L[i] = list[key]
+		end
+	end
+	return self
+end
+
+
+-- this always adds to end of the list
+function ScrollList.Add(self, item)
+	self.L[#self.L + 1] = item
+	self:Update()
+end
+
+function ScrollList.Remove(self, index)
+	Util.Tables.Remove(self.L, index)
+	self:Update()
+end
+
+function ScrollList.Insert(self, item, indexFn)
+	if Util.Objects.IsFunction(indexFn) then
+		local index = Util.Tables.FindFn(self.L, indexFn)
+		if index then
+			Util.Tables.Insert(self.L, index, item)
+		else
+			self:Add(item)
+		end
+	else
+		self:Add(item)
+	end
+
+	self:Update()
+end
+
+function ScrollList.RemoveSelected(self)
+	if self.selected then
+		local selected = self.L[self.selected]
+		self:Remove(self.selected)
+		return selected
+	end
+
+	return nil
+end
+
+function ScrollList.Selected(self)
+	return self.L[self.selected]
+end
+
 function ScrollList.SetTo(self, index)
 	self.selected = index
 	self:Update()
 	return self
+end
+
+function ScrollList.SetToLast(self)
+	return self:SetTo(#self.L)
 end
 
 function ScrollList.SetSize(self, width, height)
@@ -155,8 +271,7 @@ function ScrollList.SetSize(self, width, height)
 end
 
 function ScrollList.LineClick(self, button, ...)
-	Logging:Debug("ScrollList.LineClick")
-
+	-- Logging:Debug("ScrollList.LineClick")
 	local parent = self.mainFrame
 	ScrollList.SetTo(parent, self.index)
 	if parent.SetListValue then
@@ -166,7 +281,7 @@ end
 
 function ScrollList.LineEnter(self)
 	local parent = self.mainFrame
-	Logging:Debug("ScrollList.LineEnter : %s", Util.Objects.ToString(parent:GetName()))
+	-- Logging:Debug("ScrollList.LineEnter : %s", Util.Objects.ToString(parent:GetName()))
 	if parent.HoverListValue then
 		parent:HoverListValue(true, self.index, self)
 		parent.hoveredLine = self
@@ -352,8 +467,12 @@ function ScrollList.Update(self)
 		if not line then line = ScrollList.AddLine(self, index) end
 
 		local l = self.L[current]
-		if Util.Objects.IsTable(l) then
-			line:SetText(l[1])
+		if self.lineTextFormatter then
+			line:SetText(self.lineTextFormatter(l))
+		elseif Util.Objects.IsTable(l) then
+			-- this handles the case where current index is a "table", but "enriched"
+			-- "enriched" in this case means an instance of a class which defines __tostring
+			line:SetText(l[1] or tostring(l))
 		else
 			line:SetText(l)
 		end
@@ -410,7 +529,7 @@ function ScrollList.Update(self)
 	else
 		-- Logging:Debug("ScrollList.Update() : Showing ScrollBar (width=%d)", self.frame:GetWidth() - self.lineHeight)
 		self.frame.ScrollBar:Show()
-		self.frame.content:SetWidth(self.frame:GetWidth() - self.lineHeight)
+		self.frame.content:SetWidth(self.frame:GetWidth() - (self.scrollWidth or self.lineHeight))
 	end
 
 	if self.hoveredLine then

@@ -27,7 +27,7 @@ local function CreateLevelDropdown(parent)
             )
             :SetList(Logging.GetLoggingLevels())
             :SetValue(Log:GetRootThreshold())
-            :Tooltip(L["logging_threshold_desc"])
+            :Tooltip(L["logging_threshold"], L["logging_threshold_desc"])
     return threshold
 end
 

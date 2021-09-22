@@ -15,5 +15,6 @@
     <Script file="ScrollBar.lua"/>
     <Script file="Tabs.lua"/>
     <Script file="CheckBox.lua"/>
+    <Script file="DualListbox.lua"/>
     <Script file="GameTooltip.lua"/>
 </Ui>

@@ -18,6 +18,8 @@ local CustomItems  = AddOn:NewModule("CustomItems", "AceBucket-3.0", "AceTimer-3
 CustomItems.defaults = {
 	profile = {
 		enabled = true,
+	},
+	factionrealm = {
 		custom_items = {
 
 		},
@@ -27,11 +29,9 @@ CustomItems.defaults = {
 	}
 }
 
-local NoGuild = "No Guild"
-
 function CustomItems:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
-	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify("CustomItems"), CustomItems.defaults, NoGuild)
+	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify("CustomItems"), CustomItems.defaults)
 	--[[
 	AddOn:SyncModule():AddHandler(self:GetName(), L['gp_custom_sync_text'],
 	                              function() return self.db.profile end,
@@ -42,33 +42,16 @@ end
 
 function CustomItems:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
-	if IsInGuild() then
-		GuildStorage.RegisterCallback(
-				self,
-				GuildStorage.Events.GuildNameChanged,
-				function()
-					GuildStorage.UnregisterCallback(self, GuildStorage.Events.GuildNameChanged)
-					CustomItems:PerformEnable()
-				end
-		)
-	else
-		self:PerformEnable()
-	end
+	self:AddDefaultCustomItems()
+	self:ConfigureItemUtil()
+	self:RegisterBucketMessage(C.Messages.ConfigTableChanged, 5, "ConfigTableChanged")
+	Logging:Debug("PerformEnable(%s) : custom item count = %d", self:GetName(), Util.Tables.Count(self.db.factionrealm.custom_items))
 end
 
 function CustomItems:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())
 	self:UnregisterAllBuckets()
 	ItemUtil:ResetCustomItems()
-end
-
-function CustomItems:PerformEnable()
-	Logging:Debug("PerformEnable(%s) : %s", self:GetName(), tostring(GuildStorage:GetGuildName()))
-	self.db:SetProfile(GuildStorage:GetGuildName() or NoGuild)
-	self:AddDefaultCustomItems()
-	self:ConfigureItemUtil()
-	self:RegisterBucketMessage(C.Messages.ConfigTableChanged, 5, "ConfigTableChanged")
-	Logging:Debug("PerformEnable(%s) : custom item count = %d", self:GetName(), Util.Tables.Count(self.db.profile.custom_items))
 end
 
 function CustomItems:ConfigTableChanged(msg)
@@ -84,7 +67,7 @@ end
 
 function CustomItems:ConfigureItemUtil()
 	Logging:Debug("ConfigureItemUtil(%s)", self:GetName())
-	ItemUtil:SetCustomItems(self.db.profile.custom_items)
+	ItemUtil:SetCustomItems(self.db.factionrealm.custom_items)
 end
 
 function CustomItems:AddItem(item)
@@ -93,30 +76,25 @@ function CustomItems:AddItem(item)
 	if id then
 		-- remove id from table, don't want to store it
 		item['id'] = nil
-		AddOn.SetDbValue(CustomItems, { 'custom_items.'.. id }, item)
-		-- todo : this isn't going to refresh in the UI due to memoizing the options, need to fix
+		self:SetDbValue(self.db.factionrealm, { 'custom_items.'.. id }, item)
 		Item.ClearCache(id)
-		-- ACR:NotifyChange(C.name)
 	end
 end
 
 function CustomItems:RemoveItem(item)
 	Logging:Debug("RemoveItem() : %s", Util.Objects.ToString(item))
 	item = tostring(item)
-	local existingItem = self.db.profile.custom_items[item]
+	local existingItem = self.db.factionrealm.custom_items[item]
 	if existingItem and existingItem.default then
 		self.db.profile.ignored_default_items[item] = true
 	end
-	-- could do this, but won't result in callback for configuration change
-	-- CustomItems.db.profile.custom_items[item] = nil
-	AddOn.SetDbValue(CustomItems, { 'custom_items.'..item }, nil)
+	self:SetDbValue(self.db.factionrealm, { 'custom_items.'..item }, nil)
 	Item.ClearCache(item)
-	-- ACR:NotifyChange(C.name)
 end
 
 function CustomItems:AddDefaultCustomItems()
 	Logging:Debug("AddDefaultCustomItems(%s)", self:GetName())
-	local config = self.db.profile
+	local config = self.db.factionrealm
 	if not config.custom_items then config.custom_items = { } end
 	local custom_items = config.custom_items
 	local ignored_default_items = config.ignored_default_items
@@ -140,41 +118,6 @@ function CustomItems:AddDefaultCustomItems()
 				end
 			end
 		end
-	end
-end
-
-CustomItems.EquipmentLocations = {
-	INVTYPE_HEAD           = C.ItemEquipmentLocationNames.Head,
-	INVTYPE_NECK           = C.ItemEquipmentLocationNames.Neck,
-	INVTYPE_SHOULDER       = C.ItemEquipmentLocationNames.Shoulder,
-	INVTYPE_CHEST          = C.ItemEquipmentLocationNames.Chest,
-	INVTYPE_ROBE           = C.ItemEquipmentLocationNames.Chest,
-	INVTYPE_WAIST          = C.ItemEquipmentLocationNames.Waist,
-	INVTYPE_LEGS           = C.ItemEquipmentLocationNames.Legs,
-	INVTYPE_FEET           = C.ItemEquipmentLocationNames.Feet,
-	INVTYPE_WRIST          = C.ItemEquipmentLocationNames.Wrist,
-	INVTYPE_HAND           = C.ItemEquipmentLocationNames.Hand,
-	INVTYPE_FINGER         = C.ItemEquipmentLocationNames.Finger,
-	INVTYPE_TRINKET        = C.ItemEquipmentLocationNames.Trinket,
-	INVTYPE_CLOAK          = C.ItemEquipmentLocationNames.Cloak,
-	INVTYPE_WEAPON         = C.ItemEquipmentLocationNames.OneHandWeapon,
-	INVTYPE_SHIELD         = C.ItemEquipmentLocationNames.Shield,
-	INVTYPE_2HWEAPON       = C.ItemEquipmentLocationNames.TwoHandWeapon,
-	INVTYPE_WEAPONMAINHAND = C.ItemEquipmentLocationNames.MainHandWeapon,
-	INVTYPE_WEAPONOFFHAND  = C.ItemEquipmentLocationNames.OffHandWeapon,
-	INVTYPE_HOLDABLE       = C.ItemEquipmentLocationNames.Holdable,
-	INVTYPE_RANGED         = C.ItemEquipmentLocationNames.Ranged,
-	INVTYPE_RANGEDRIGHT    = C.ItemEquipmentLocationNames.Ranged,
-	INVTYPE_WAND           = C.ItemEquipmentLocationNames.Wand,
-	INVTYPE_THROWN         = C.ItemEquipmentLocationNames.Thrown,
-	INVTYPE_RELIC          = C.ItemEquipmentLocationNames.Relic,
-}
-
-CustomItems.EquipmentLocationsSort = {}
-
-do
-	for i, v in pairs(Util.Tables.ASort(CustomItems.EquipmentLocations, function(a, b) return a[2] < b[2] end)) do
-		CustomItems.EquipmentLocationsSort[i] = v[1]
 	end
 end
 

@@ -58,20 +58,30 @@ AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
 local Logging = AddOn:GetLibrary("Logging")
 ---@type LibUtil
 local Util = AddOn:GetLibrary("Util")
+
+
 --@debug@
 Logging:SetRootThreshold(AddOn._IsTestContext() and Logging.Level.Trace or Logging.Level.Debug)
 --@end-debug@
 
-local function GetDbValue(self, i, ...)
-    local path = Util.Objects.IsTable(i) and tostring(i[#i]) or Util.Strings.Join('.', i, ...)
-    Logging:Trace("GetDbValue(%s, %s)", self:GetName(), path)
-    return Util.Tables.Get(self.db.profile, path)
+-- Augment constants with some stuff that requires initial bootstrapping to be completed first
+do
+    for i, v in pairs(Util.Tables.ASort(AddOn.Constants.EquipmentLocations, function(a, b) return a[2] < b[2] end)) do
+        AddOn.Constants.EquipmentLocationsSort[i] = v[1]
+    end
 end
 
-local function SetDbValue(self, i, v)
+
+local function GetDbValue(self, db, i, ...)
+    local path = Util.Objects.IsTable(i) and tostring(i[#i]) or Util.Strings.Join('.', i, ...)
+    Logging:Trace("GetDbValue(%s, %s, %s)", self:GetName(), tostring(db), path)
+    return Util.Tables.Get(db, path)
+end
+
+local function SetDbValue(self, db, i, v)
     local path = Util.Objects.IsTable(i) and tostring(i[#i]) or i
-    Logging:Trace("SetDbValue(%s, %s, %s)", self:GetName(), path, tostring(v))
-    Util.Tables.Set(self.db.profile, path, v)
+    Logging:Trace("SetDbValue(%s, %s, %s, %s)", self:GetName(), tostring(db), tostring(path), Util.Objects.ToString(v))
+    Util.Tables.Set(db, path, v)
     AddOn:ConfigChanged(self:GetName(), path)
 end
 

@@ -66,7 +66,7 @@ function AddOn:OnInitialize()
 end
 
 function AddOn:OnEnable()
-    Logging:Debug("OnEnable(%s)", self:GetName())
+    Logging:Debug("OnEnable(%s) : Mode=%s", self:GetName(), tostring(self.mode))
 
     --@debug@
     -- this enables certain code paths that wouldn't otherwise be available in normal usage
@@ -77,7 +77,6 @@ function AddOn:OnEnable()
     -- it can be disabled as needed through /cleo pm
     self.mode:Disable(AddOn.Constants.Modes.Persistence)
     self.player = Player:Get("player")
-
 
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))
     local configSupplements, lpadSupplements = {}, {}
@@ -126,8 +125,11 @@ function AddOn:OnEnable()
     self:SubscribeToEvents()
     self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
 
-    -- prepare the launchpad
-    self:PrepareForLaunch(configSupplements, lpadSupplements)
+
+    -- track launchpad (UI) supplements for application as needed
+    -- will only be applied the first time the UI is displayed
+    -- {applied [boolean], configuration supplements [table], launchpad supplements [table]}
+    self.supplements = {false, configSupplements, lpadSupplements}
     -- add minimap button
     self:AddMinimapButton()
     self:Print(format(L["chat_version"], tostring(self.version)) .. " is now loaded.")

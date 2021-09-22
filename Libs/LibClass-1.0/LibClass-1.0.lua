@@ -129,7 +129,7 @@ local DefaultMixin = {
 
     isInstanceOf = function(self, aClass)
         return type(aClass) == 'table' and type(self) == 'table' and
-                (self.clazz == aClass or type(self.clazz) == 'table' and type(self.clazz.isSubclassOf) == 'function' and self.clazz:isSubclassOf(aClass))
+                (self.clazz == aClass or (type(self.clazz) == 'table' and type(self.clazz.isSubclassOf) == 'function' and self.clazz:isSubclassOf(aClass)))
     end,
 
     -- creates a clone of current instance, including metadata

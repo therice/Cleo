@@ -7,6 +7,8 @@ local Logging =  AddOn:GetLibrary("Logging")
 local Util =  AddOn:GetLibrary("Util")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
+--- @type LibGuildStorage
+local GuildStorage = AddOn:GetLibrary("GuildStorage")
 --- @type Core.SlashCommands
 local SlashCommands = AddOn.Require('Core.SlashCommands')
 
@@ -74,6 +76,10 @@ function AddOn:CustomItemsModule()
     return self:GetModule("CustomItems")
 end
 
+--- @return Lists
+function AddOn:ListsModule()
+    return self:GetModule("Lists")
+end
 
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
@@ -268,4 +274,84 @@ function AddOn:NewMasterLooterCheck()
         return Dialog:Spawn(C.Popups.ConfirmUsage)
     end
     --]]
+end
+
+
+function AddOn:UpdateGroupMembers()
+    Logging:Trace("UpdateGroupMembers()")
+    for i = 1, GetNumGroupMembers() do
+        self.group[self:UnitName(GetRaidRosterInfo(i))] = true
+    end
+    -- make sure we are present
+    self.group[self.player.name] = true
+
+    --in test mode, add some other players to help with testing
+    --if AddOn:TestModeEnabled() then
+    --    self.group['Gnomechómsky-Atiesh'] = true
+    --    self.group['Cerrendel-Atiesh'] = true
+    --end
+
+    return self.group
+end
+
+function AddOn:GroupIterator()
+    Logging:Trace("GroupIterator()")
+    local groupMembers, index = {}, 1
+    for name, _ in pairs(self:UpdateGroupMembers()) do
+        groupMembers[index] = name
+        index = index + 1
+    end
+
+    index = 0
+    local total = #groupMembers
+    return function()
+        index = index + 1
+        if index <= total then return groupMembers[index] end
+    end
+end
+
+function AddOn:GuildIterator()
+    Logging:Trace("GuildIterator()")
+    local guildMembers, index = {}, 1
+
+    for name, _ in pairs(GuildStorage:GetMembers()) do
+        guildMembers[index] = name
+        index = index + 1
+    end
+
+    index = 0
+    local total = #guildMembers
+    return function()
+        index = index + 1
+        if index <= total then return guildMembers[index] end
+    end
+end
+
+--- @return table<string, Models.Player>
+function AddOn:Players(group, guild, ambiguate)
+    group = Util.Objects.Default(group, false)
+    guild = Util.Objects.Default(guild, false)
+    ambiguate = Util.Objects.Default(ambiguate, false)
+    Logging:Trace("Players(%s, %s, %s)", tostring(group), tostring(guild), tostring(ambiguate))
+
+    local players = {}
+
+    if group then
+        for name, _ in self:GroupIterator() do
+            players[ambiguate and self.Ambiguate(name) or name] = Player:Get(name)
+        end
+    end
+
+    if guild then
+        for name, _ in self:GuildIterator() do
+            players[ambiguate and self.Ambiguate(name) or name] = Player:Get(name)
+        end
+    end
+
+    Util.Tables.Sort(
+        players,
+        function(p1, p2) return p1:GetName() < p2:GetName() end
+    )
+
+    return players
 end

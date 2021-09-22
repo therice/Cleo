@@ -22,6 +22,9 @@ local Modules = {
     "Objects",
     "Compression",
     "Memoize",
+    "UUID",
+    "MD5",
+    "Bitfield",
 }
 
 local Module = {

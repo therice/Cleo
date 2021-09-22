@@ -3,7 +3,7 @@
 -- probably way too much stuff in here for what is actually used
 
 local _, AddOn = ...
-local Util, Logging = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging")
+local Util = AddOn:GetLibrary("Util")
 local os_time, os_date = time, date
 
 --- @class Models.Date

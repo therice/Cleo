@@ -4,8 +4,6 @@ local Logging, Util, Window = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Uti
 local NativeUI = AddOn.Require('UI.Native')
 --- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
---- @type UI.Widgets.ButtonIcon
-local ButtonIcon = AddOn.ImportPackage('UI.Widgets').ButtonIcon
 local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
 
 --- Creates a standard frame with title, minimizing, positioning and scaling supported

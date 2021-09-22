@@ -1,5 +1,6 @@
 --- @type AddOn
 local _, AddOn = ...
+local C = AddOn.Constants
 local Logging = AddOn:GetLibrary('Logging')
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
@@ -14,6 +15,7 @@ Widget.FontNormal:SetFont(GameFontNormal:GetFont())
 Widget.FontNormal:SetShadowColor(0,0,0)
 Widget.FontNormal:SetShadowOffset(1,-1)
 Widget.FontNormal:SetTextColor(1,.82,0)
+-- Widget.FontNormal:SetTextColor(C.Colors.ItemArtifact.r, C.Colors.ItemArtifact.g, C.Colors.ItemArtifact.b)
 
 Widget.FontGrayName = AddOn.name .. "FontGray"
 Widget.FontGray = CreateFont(Widget.FontGrayName)
@@ -326,10 +328,16 @@ do
     end
 
 
-    local function SetDatasource(self, handler, key, callback)
+    --- @param handler any the instance which supports [Get|Set]DbValue
+    --- @param db table the datasource on which values will be read/written
+    --- @param key string the key used for reading/writing values in db
+    --- @param before_write function<any> a function to be invoked before writing value to db which returns value to be written
+    --- @param after_write function<any> a function to be invoked after writing a value to db
+    --- @param after_read function<any> a function to be invoked after reading a value from db which returns modified value
+    local function SetDatasource(self, handler, db, key, before_write, after_write, after_read)
         if Util.Objects.IsSet(handler) and Util.Objects.IsSet(key) then
             if not handler.GetDbValue then
-               error("Datasource 'handler' does not support 'GetDbValue'")
+                error("Datasource 'handler' does not support 'GetDbValue'")
             end
 
             if not handler.SetDbValue then
@@ -337,20 +345,28 @@ do
             end
 
             self.ds = {
+                handler = handler,
+                db =  db,
                 key = key,
-                callback = callback,
-                Set = function(_, value)
-                    -- Logging:Debug("Widget.DataSource.Set(%s) : %s", tostring(self), tostring(value))
-                    handler:SetDbValue(key, value)
-                    if callback then
-                        callback(value)
-                    end
+                before_write = before_write,
+                after_write = after_write,
+                after_read = after_read,
+                Set = function(ds, value)
+                    -- Logging:Trace("Widget.DataSource.Set(%s) : %s, %s", tostring(ds.key), Util.Objects.ToString(value), Util.Objects.ToString(ds.before_write))
+                    local v = value
+                    if ds.before_write then v = ds.before_write(value) end
+                    ds.handler:SetDbValue(ds.db, ds.key, v)
+                    if ds.after_write then ds.after_write(value) end
                 end,
-                Get = function(_, ...)
-                    -- Logging:Debug("Widget.DataSource.Get(%s)", tostring(self))
-                    return handler:GetDbValue(key, ...)
+                Get = function(ds, ...)
+                    -- Logging:Trace("Widget.DataSource.Get(%s)", tostring(ds.key))
+                    local v = ds.handler:GetDbValue(ds.db, ds.key, ...)
+                    if ds.after_read then v = ds.after_read(v) end
+                    return v
                 end,
             }
+        else
+            Logging:Warn("SetDatasource() : Either 'handler' or 'key' not specified")
         end
 
         if not self.OnDatasourceConfigured then
