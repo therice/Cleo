@@ -115,7 +115,7 @@ function Lists:LayoutConfigurationTab(tab)
 					local config = module.Configuration.Create()
 					tab.configList:Add(config)
 					-- todo : can insert alphabetically instead of blindly adding
-					module.Configuration.Add(config)
+					module.Configuration:Add(config)
 					-- select it in the list
 					tab.configList:SetToLast()
 					-- update fields to reflect the selected configuration
@@ -146,15 +146,15 @@ function Lists:LayoutConfigurationTab(tab)
 			:MaxLines(10)
 			:SetTextDecorator(
 				function(item)
-					return UIUtil.PlayerClassColorDecorator(item.text):decorate(item.text)
+					return UIUtil.PlayerClassColorDecorator(item.value):decorate(item.value)
 				end
 			)
 			:SetClickHandler(
 				function(_, _, item)
 					local config = SelectedConfiguration()
 					Logging:Debug("Config.Owner.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
-					config:SetOwner(item.text)
-					module.Configuration.Update(config, "permissions")
+					config:SetOwner(item.value)
+					module.Configuration:Update(config, "permissions")
 					return true
 				end
 			)
@@ -169,7 +169,7 @@ function Lists:LayoutConfigurationTab(tab)
 			)
 		self:SetList(players)
 		if owner then
-			self:SetValueFromText(owner:GetShortName())
+			self:SetViaValue(owner:GetShortName())
 		end
 	end
 
@@ -213,7 +213,7 @@ function Lists:LayoutConfigurationTab(tab)
 					else
 						config:RevokePermissions(player, Configuration.Permissions.Admin)
 					end
-					module.Configuration.Update(config, "permissions")
+					module.Configuration:Update(config, "permissions")
 				end
 			)
 
@@ -252,11 +252,10 @@ function Lists.DeleteConfigurationOnShow(frame, config)
 end
 
 function Lists:DeleteConfigurationOnClickYes(_, config)
-	self.Configuration.Remove(config)
+	self.Configuration:Remove(config)
 	self.configTab.configList:RemoveSelected()
 	self.configTab:UpdateFields()
 end
-
 
 function Lists:LayoutListTab(tab)
 	local module = self
@@ -303,14 +302,20 @@ function Lists:LayoutListTab(tab)
 	  :Point("BOTTOMLEFT",tab:GetParent(),"BOTTOM",0,-18)
 	  :Size(1,0)
 
+	local function SelectedConfiguration()
+		local value = tab.config:GetValue()
+		return #value == 1 and value[1] or nil
+	end
+
 	tab.config =
 		UI:New('Dropdown', tab)
 			:SetWidth(170)
 		    :Point("TOPLEFT", tab.lists, 5, 25)
 		    :MaxLines(10)
-			:SetTextDecorator(function()  end)
-		
-	tab.config:SetList(module:Configurations())
+			:SetTextDecorator(function(item) return item.value.name end)
+			:Tooltip(L["configuration"], L["list_config_dd_desc"])
+			:SetList(module:Configurations())
+
 
 
 	self.listTab = tab

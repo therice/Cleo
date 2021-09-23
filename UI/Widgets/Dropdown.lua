@@ -27,9 +27,13 @@ Dropdown.Type = {
 }
 
 -- attributes of an individual item in dropdown
-function DropdownItem:initialize(value, text)
+function DropdownItem:initialize(key, value)
+	self.key = key
 	self.value = value
-	self.text = text
+end
+
+function DropdownItem:__tostring()
+	return format("%s = %s", Util.Objects.ToString(self.key, 2), Util.Objects.ToString(self.value, 2))
 end
 
 -- attributes that apply to entire dropdown
@@ -39,7 +43,7 @@ function DropdownProperties:initialize(type, width, lines)
 	self.lines = lines or 5
 	-- this is an array due to possibility of multi-select
 	self.value = {}
-	self.textDecorator = function(item) return item and item.text or "???" end
+	self.textDecorator = function(item) return item and tostring(item.value) or "???" end
 	self.clickHandler = function(...) return true end
 	self.valueChangedHandler = function(...)  end
 end
@@ -61,16 +65,29 @@ end
 function DropdownProperties:HandleClick(button, down, item)
 	-- Logging:Debug("HandleClick(%s, %s) : %s", tostring(button), tostring(down), Util.Objects.ToString(item))
 	if self.clickHandler(button, down, item) then
-		self:DropDown():SetValue(item.value)
+		self:DropDown():SetViaKey(item.key)
 		return true
 	end
 
 	return false
 end
 
+function DropdownProperties:GetValue()
+	local values = {}
+	for _, value in pairs(self.value) do
+		Util.Tables.Push(values, self:DropDown():GetViaKey(value))
+	end
+	return values
+end
+
 function DropdownProperties:OnValueChanged()
 	if self.valueChangedHandler then
-		self.valueChangedHandler(unpack(self.value))
+		local value = self:GetValue()
+
+		-- todo : is this right?
+		if #value > 0 then
+			self.valueChangedHandler(unpack(value))
+		end
 	end
 end
 
@@ -115,13 +132,14 @@ function Dropdown:Create()
 		dd,
 		'SetEnabled',               function(self, enabled)  self.Button:SetEnabled(enabled) end,
 	    'SetList',                  Dropdown.SetList,
-		'GetListItem',              Dropdown.GetListItem,
+		'GetViaKey',                Dropdown.GetViaKey,
 		'MaxLines',                 Dropdown.SetMaxLines,
 		'Tooltip',                  Dropdown.SetTooltip,
-		'SetValue',                 Dropdown.SetValue,
-		'SetValueFromText',         Dropdown.SetValueFromText,
+		'SetViaKey',                Dropdown.SetViaKey,
+		'SetViaValue',              Dropdown.SetViaValue,
 		'ClearValue',               Dropdown.ClearValue,
 		'HasValue',                 Dropdown.HasValue,
+		'Selected',                 Dropdown.Selected,
 		'SetText',                  Dropdown.SetText,
 		'IterateItems',             Dropdown.IterateItems,
 		'SetTextDecorator',         function(self, fn) self.Props.textDecorator = fn return self end,
@@ -143,11 +161,11 @@ function Dropdown.OnDatasourceConfigured(self)
 	-- Logging:Debug("Dropdown.OnDatasourceConfigured(%s)", self.ds.key)
 	-- remove any currently configured click handler
 	self:SetClickHandler(Util.Functions.Noop)
-	self:SetValue(self.ds:Get())
+	self:SetViaKey(self.ds:Get())
 	-- establish callback for setting db value
 	self:SetClickHandler(
 			function(_, _, item)
-				self.ds:Set(item.value)
+				self.ds:Set(item.key)
 				return true
 			end
 	)
@@ -253,8 +271,9 @@ function Dropdown:SetList(list, order)
 	return self
 end
 
-function Dropdown:GetListItem(index)
-	return self.List[index]
+function Dropdown:GetViaKey(key)
+	local _, item = Util.Tables.FindFn(self.List, function(item) return item.key == key end)
+	return item
 end
 
 function Dropdown:ClearValue()
@@ -262,27 +281,29 @@ function Dropdown:ClearValue()
 	self:SetText(nil)
 end
 
-function Dropdown:SetValue(value)
-	local _, item = Util.Tables.FindFn(self.List, function(item) return item.value == value end)
+function Dropdown:SetViaKey(key)
+	local _, item = Util.Tables.FindFn(self.List, function(item) return item.key == key end)
 	if item then
-		self.Props:SetValue(item.value)
+		self.Props:SetValue(item.key)
 		self:SetText(self.Props:DecorateText(item))
 	end
 	return self
 end
 
-function Dropdown:SetValueFromText(text)
-	local _, item = Util.Tables.FindFn(self.List, function(item) return item.text == text end)
+function Dropdown:SetViaValue(value)
+	local _, item = Util.Tables.FindFn(self.List, function(item) return item.value == value end)
 	if item then
-		self.Props:SetValue(item.value)
-		self:SetText(self.Props:DecorateText(item))
+		self:SetViaKey(item.key)
 	end
-
 	return self
 end
 
 function Dropdown:HasValue()
 	return not Util.Tables.IsEmpty(self.Props.value)
+end
+
+function Dropdown:Selected()
+
 end
 
 function Dropdown:SetMaxLines(lines)
@@ -291,7 +312,6 @@ function Dropdown:SetMaxLines(lines)
 end
 
 function Dropdown:SetText(text)
-	-- Logging:Debug("SetText(%s)", tostring(text))
 	self.Text:SetText(text)
 	return self
 end
@@ -317,6 +337,7 @@ end
 
 local DefaultPadding = 25
 function Dropdown:SetSize(width)
+	self.Props.width = width
 	if self.Middle then
 		self.Middle:SetWidth(width)
 		self:_SetWidth(width + DefaultPadding + DefaultPadding)
@@ -607,6 +628,7 @@ ReloadTemplates = function(level)
 					local text, icon = button.NormalText, button.Icon
 					local paddingLeft = item.padding or 0
 
+
 					if item.icon then
 						icon:SetTexture(item.icon)
 						paddingLeft = paddingLeft + 18
@@ -614,6 +636,7 @@ ReloadTemplates = function(level)
 					else
 						icon:Hide()
 					end
+
 
 					button:SetNormalFontObject(GameFontHighlightSmallLeft)
 					button:SetHighlightFontObject(GameFontHighlightSmallLeft)
@@ -631,14 +654,14 @@ ReloadTemplates = function(level)
 					text:SetJustifyH(item.justifyH or "LEFT")
 
 					if type == Dropdown.Type.Checkbox then
-						button.checkButton:SetChecked(props:HasValue(item.value))
+						button.checkButton:SetChecked(props:HasValue(item.key))
 						button.checkButton:Show()
 					else
 						button.checkButton:Hide()
 					end
 
 					if type == Dropdown.Type.Radio then
-						button.radioButton:SetChecked(props:HasValue(item.value))
+						button.radioButton:SetChecked(props:HasValue(item.key))
 						button.radioButton:Show()
 					else
 						button.radioButton:Hide()

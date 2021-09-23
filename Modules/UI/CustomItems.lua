@@ -270,8 +270,8 @@ function CustomItems:GetAddItemFrame()
 
 		f.quality:SetWidth(200):Point("TOPRIGHT", f.name, "BOTTOMRIGHT", 0, -10)
 			:OnValueChanged(
-				function(value)
-					f.item.rarity = value
+				function(item)
+					f.item.rarity = item.key
 					f.add:EnableDisable()
 				end
 			)
@@ -280,8 +280,8 @@ function CustomItems:GetAddItemFrame()
 
 		f.type:SetWidth(200):Point("TOPRIGHT", f.quality, "BOTTOMRIGHT", 0, -10)
 			:OnValueChanged(
-				function(value)
-					f.item.equip_location = value
+				function(item)
+					f.item.equip_location = item.key
 					f.add:EnableDisable()
 				end
 			)
@@ -371,9 +371,9 @@ function CustomItems:GetAddItemFrame()
 							}
 
 							self.name:Text(name)
-							self.quality:SetValue(quality)
+							self.quality:SetViaKey(quality)
 							if equipLoc then
-								self.type:SetValue(equipLoc)
+								self.type:SetViaKey(equipLoc)
 							else
 								self.type:ClearValue()
 							end

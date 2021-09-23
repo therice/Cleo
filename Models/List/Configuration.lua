@@ -18,7 +18,6 @@ Configuration.Permissions = {
 	Admin       =   0x04,
 }
 
-
 --- @class Models.List.Permission
 local Permission = AddOn.Package('Models.List'):Class('Permission', Bitfield)
 function Permission:initialize()

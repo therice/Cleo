@@ -12,21 +12,21 @@ local Logging = AddOn:GetModule("Logging", true)
 
 local function CreateLevelDropdown(parent)
     local threshold =
-        UI:NewNamed("Dropdown", parent, "LoggingLevel", Dropdown.Type.Radio, 100, 5)
+        UI:NewNamed('Dropdown', parent, "LoggingLevel", Dropdown.Type.Radio, 100, 5)
             :SetTextDecorator(
                 function(item)
-                    local c = Log:GetLevelRGBColor(item.value)
-                    return (c and #c > 0) and UIUtil.ColoredDecorator(c):decorate(item.text) or item.text
+                    local c = Log:GetLevelRGBColor(item.key)
+                    return (c and #c > 0) and UIUtil.ColoredDecorator(c):decorate(item.value) or item.value
                 end
             )
             :SetClickHandler(
                 function(_, _, item)
-                    Logging:SetLoggingThreshold(item.value)
+                    Logging:SetLoggingThreshold(item.key)
                     return true
                 end
             )
             :SetList(Logging.GetLoggingLevels())
-            :SetValue(Log:GetRootThreshold())
+            :SetViaKey(Log:GetRootThreshold())
             :Tooltip(L["logging_threshold"], L["logging_threshold_desc"])
     return threshold
 end
