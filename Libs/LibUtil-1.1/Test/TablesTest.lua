@@ -10,6 +10,7 @@ describe("LibUtil", function()
         Util = LibStub:GetLibrary('LibUtil-1.1')
     end)
 
+
     teardown(function()
         After()
     end)
@@ -100,6 +101,51 @@ describe("LibUtil", function()
             Util.Tables.Remove(c, "b")
             assert(Util.Tables.ContainsKey(o, 'b'))
             assert(not Util.Tables.ContainsKey(c, 'b'))
+        end)
+        it("copies (except) where", function()
+            local t = {
+                "A",
+                "B",
+                "C",
+                "D",
+                "Z"
+            }
+
+            local c = Util(t):CopyWhere(false, "A", "Z")()
+            assert.same({"A", "Z"}, c)
+
+            c = Util(t):CopyExceptWhere(false, "A", "Z")()
+            assert.same({"B", "C", "D"}, c)
+        end)
+        --it("mutates (except) where", function()
+        --    local t = {
+        --        "A",
+        --        "B",
+        --        "C",
+        --        "D",
+        --        "Z"
+        --    }
+        --    print("here")
+        --    local b = Util(t):ExceptWhere(false, {"B", "C"})()
+        --    print(Util.Objects.ToString(b))
+        --    assert(false)
+        --end)
+        it("merges (uniquely)", function()
+            local a = {
+                "A",
+                "B",
+                "Z"
+            }
+
+            local b = {
+                "A",
+                "D",
+                "E",
+                "Z"
+            }
+
+            local c = Util(a):Merge(b, true)()
+            assert.same({"A", "B", "Z", "D", "E"}, c)
         end)
         it("yields difference", function()
             local source = {

@@ -8,6 +8,7 @@
     <Script file="Numbers.lua"/>
     <Script file="Strings.lua"/>
     <Script file="Tables.lua"/>
+    <Script file="Lists.lua"/>
     <Script file="UUID.lua"/>
     <Script file="MD5.lua"/>
 </Ui>

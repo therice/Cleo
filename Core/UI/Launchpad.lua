@@ -105,8 +105,8 @@ function AddOn:Launchpad()
 				return self
 			end
 
-			moduleFrame.SetWide = function(self)
-				self.isWide = true
+			moduleFrame.SetWide = function(self, value)
+				self.isWide = Util.Objects.IsEmpty(value) and true or value
 				return self
 			end
 
@@ -145,7 +145,7 @@ function AddOn:ApplyModules(moduleSuppliers)
 			moduleFrame.banner =
 				UI:New('DecorationLine', moduleFrame, true,"BACKGROUND",-5)
 						:Point("TOPLEFT",moduleFrame,0,-16)
-						:Point("BOTTOMRIGHT",moduleFrame,"TOPRIGHT",0,-36)
+						:Point("BOTTOMRIGHT",moduleFrame,"TOPRIGHT", -2,-36)
 
 			-- enableDisableSupport (as button with callbacks through module prototype)
 			if metadata[3] then

@@ -378,6 +378,18 @@ do
         return self
     end
 
+    local function ClearDatasource(self)
+        self.ds = nil
+
+        if not self.OnDatasourceCleared then
+            Logging:Warn("%s : 'OnDatasourceCleared()' unavailable, any usage must be manually managed", self:GetWidgetType())
+        else
+            self:OnDatasourceCleared()
+        end
+
+        return self
+    end
+
     function Widget.Mod(self, ...)
         self.Point              = SetPoint
         self.Size               = SetSize
@@ -393,6 +405,7 @@ do
         self.Border             = Widget.Border
         self.SetMultipleScripts = SetMultipleScripts
         self.Datasource         = SetDatasource
+        self.ClearDatasource    = ClearDatasource
 
         for i = 1, select("#", ...) do
             if i % 2 == 1 then

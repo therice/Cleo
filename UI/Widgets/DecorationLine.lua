@@ -21,6 +21,8 @@ end
 function DecorationLine:Create()
 	local dl = self.parent:CreateTexture(nil, self.layer, nil, self.layerCounter)
 
+	dl.isGradient = self.isGradient
+
 	if self.isGradient then
 		dl:SetColorTexture(1, 1, 1, 1)
 		dl:SetGradientAlpha("VERTICAL", .24, .25, .30, 1, .27, .28, .33, 1)
@@ -28,10 +30,24 @@ function DecorationLine:Create()
 		dl:SetColorTexture(.24, .25, .30, 1)
 	end
 
-	BaseWidget.Mod(dl)
+	BaseWidget.Mod(
+		dl,
+		'Color', DecorationLine.SetColorTexture
+	)
 
 	return dl
 end
 
+
+function DecorationLine.SetColorTexture(self, r, g, b, a, gradientPct)
+	self:SetColorTexture(r, g, b, a)
+	-- if this line is a gradient and a percentage was specified (as decimal)
+	if self.isGradient and (gradientPct and Util.Objects.IsNumber(gradientPct)) then
+		if Util.Numbers.In(gradientPct, 0, 1) then
+			self:SetGradientAlpha("VERTICAL",(r * gradientPct), (g * gradientPct), (b * gradientPct), a,  r, g, b, a)
+		end
+	end
+	return self
+end
 
 NativeUI:RegisterWidget('DecorationLine', DecorationLine)

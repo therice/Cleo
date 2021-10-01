@@ -25,6 +25,7 @@ local Modules = {
     "UUID",
     "MD5",
     "Bitfield",
+    "Lists",
 }
 
 local Module = {

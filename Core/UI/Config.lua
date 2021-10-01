@@ -67,7 +67,7 @@ function AddOn:ApplyConfiguration(supplements)
 		-- add a new module section to the launchpad
 		local _, config = self.launchpad:AddModule(L["configuration"], L["configuration"], true)
 		-- add grey decoration line for tab names
-		local dl = UI:New('DecorationLine', config, true,"BACKGROUND",-5):Point("TOPLEFT",config,0,-16):Point("BOTTOMRIGHT",config,"TOPRIGHT",0,-36)
+		local dl = UI:New('DecorationLine', config, true,"BACKGROUND",-5):Point("TOPLEFT",config,0,-16):Point("BOTTOMRIGHT",config,"TOPRIGHT", -2,-36)
 		-- add enable/disable button
 		config.enable =
 			UI:New('Checkbox', config, L["enable"], AddOn.enabled)
@@ -88,7 +88,7 @@ function AddOn:ApplyConfiguration(supplements)
 
 
 		-- create the tabs itself
-		config.tabGroup = UI:NewNamed('Tabs', config, "Tabs", unpack(sorted)):Point(0, -36):Size(700, 600):SetTo(1)
+		config.tabGroup = UI:New('Tabs', config, unpack(sorted)):Point(0, -36):Size(700, 600):SetTo(1)
 		config.tabGroup:SetBackdropBorderColor(0,0,0,0)
 		config.tabGroup:SetBackdropColor(0,0,0,0)
 		config.tabGroup:First():SetPoint("TOPLEFT",0,20)

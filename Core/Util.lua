@@ -142,6 +142,18 @@ function AddOn.SanitizeItemString(link)
     return gsub(ItemUtil:ItemLinkToItemString(link), "item:", "")
 end
 
+function AddOn.GetEquipmentLocation(name)
+    return C.EquipmentNameToLocation[name]
+end
+
+function AddOn.EquipmentLocationToName(...)
+    local names = {}
+    for _, loc in Util.Objects.Each(...) do
+        Util.Tables.Push(names, C.EquipmentLocations[loc])
+    end
+    return names
+end
+
 function AddOn:ExtractCreatureId(guid)
     if not guid then return nil end
     local id = guid:match(".+(%b--)")

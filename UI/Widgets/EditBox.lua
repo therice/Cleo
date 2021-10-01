@@ -48,13 +48,17 @@ function EditBox:Create()
         'OnChange', EditBox.OnChange,
         'OnFocus', EditBox.OnFocus,
         'InsideIcon', EditBox.InsideIcon,
+        'InsideTexture', EditBox.InsideTexture,
         'AddSearchIcon',EditBox.AddSearchIcon,
         'LeftText', EditBox.AddLeftText,
         'TopText', EditBox.AddLeftTop,
         'BackgroundText',EditBox.AddBackgroundText,
+        'GetBackgroundText',EditBox.GetBackgroundText,
         'ColorBorder', EditBox.ColorBorder,
         'GetTextHighlight', EditBox.GetTextHighlight,
-        'OnDatasourceConfigured',  EditBox.OnDatasourceConfigured
+        'OnDatasourceConfigured',  EditBox.OnDatasourceConfigured,
+        'OnDatasourceCleared',  EditBox.OnDatasourceCleared,
+        'AddXIcon', EditBox.AddXIcon
     )
 
     eb:SetFontObject(BaseWidget.FontNormal)
@@ -64,7 +68,7 @@ end
 
 function EditBox.OnDatasourceConfigured(self)
     self:OnChange(Util.Functions.Noop)
-    self:SetText(self.ds:Get())
+    self:Text(self.ds:Get())
     self:OnChange(
         Util.Functions.Debounce(
             function(self, userInput)
@@ -77,6 +81,11 @@ function EditBox.OnDatasourceConfigured(self)
             true -- leading
         )
     )
+end
+
+function EditBox.OnDatasourceCleared(self)
+    self:OnChange(Util.Functions.Noop)
+    self:Text(nil)
 end
 
 function EditBox.SetText(self, text)
@@ -121,10 +130,28 @@ function EditBox.InsideIcon(self,texture,size,offset)
     return self
 end
 
+function EditBox.InsideTexture(self, texture, size, tcoord, color)
+    self.insideTexture = self.insideTexture or self:CreateTexture(nil, "ARTWORK", nil, 2)
+    self.insideTexture:SetTexture(texture)
+    self.insideTexture:SetPoint("RIGHT", 2, 0)
+    self.insideTexture:SetSize(size or 14,size or 14)
+    if Util.Objects.IsTable(tcoord) then self.insideTexture:SetTexCoord(unpack(tcoord)) end
+    if Util.Objects.IsTable(color) then self.insideTexture:SetVertexColor(unpack(color)) end
+    return self
+end
+
 function EditBox.AddSearchIcon(self,size)
     return self:InsideIcon([[Interface\Common\UI-Searchbox-Icon]], size or 15)
 end
 
+function EditBox.AddXIcon(self, size)
+    return self:InsideTexture(
+        BaseWidget.ResolveTexture("DiesalGUIcons16x256x128"),
+        size,
+        {0.5, 0.5625, 0.5, 0.625} --,
+        --{ .8, 0, 0, 1 }
+    )
+end
 
 function EditBox.AddLeftText(self,text,size)
     if self.leftText then
@@ -175,6 +202,10 @@ function EditBox.AddBackgroundText(self,text)
     self.BackgroundTextCheck = BgCheck
     self:BackgroundTextCheck()
     return self
+end
+
+function EditBox.GetBackgroundText(self)
+    return self.backText
 end
 
 function EditBox.ColorBorder(self,cR,cG,cB,cA)

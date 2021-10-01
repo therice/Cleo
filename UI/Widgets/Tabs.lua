@@ -42,6 +42,7 @@ function Tabs:Create()
 		-- Logging:Debug("Tabs.Create(%s)", tabName)
 
 		tabGroup.tabs[i] = CreateFrame("Frame", "Tab_" .. tabName, tabGroup)
+		tabGroup.tabs[i].name = tabName
 		tabGroup.tabs[i]:SetPoint("TOPLEFT", 0,0)
 		tabGroup.tabs[i].Tooltip = function(self, tooltip)
 			self.button.tooltip = tooltip
@@ -83,8 +84,9 @@ function Tabs:Create()
 		tabGroup,
 		'SetTo', Tabs.SetTo,
 		'First', Tabs.First,
-		'Get', Tabs.Get
-
+		'Get', Tabs.Get,
+		'GetByName', Tabs.GetByName,
+		'IterateTabs', Tabs.IterateTabs
 	)
 
 	tabGroup._Size = tabGroup.Size
@@ -93,12 +95,26 @@ function Tabs:Create()
 	return tabGroup
 end
 
+function Tabs.IterateTabs(self)
+	return pairs(self.tabs)
+end
+
 function Tabs.Get(self, index)
 	return self.tabs[index]
 
 end
 function Tabs.First(self)
 	return self:Get(1)
+end
+
+function Tabs.GetByName(self, name)
+	for i = 1, self.tabCount do
+		if Util.Strings.Equal(self.tabs[i].name, name) then
+			return self.tabs[i]
+		end
+	end
+
+	return nil
 end
 
 function Tabs.SetSize(self, width, height)

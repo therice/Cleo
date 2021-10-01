@@ -11,6 +11,8 @@ local NativeUI = AddOn.Require('UI.Native')
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 --- @class UI.Widgets.ScrollList
 local ScrollList = AddOn.Package('UI.Widgets'):Class('ScrollList', BaseWidget)
+--- @type UI.Util
+local UIUtil = AddOn.Require('UI.Util')
 
 function ScrollList:initialize(parent, name, list)
 	BaseWidget.initialize(self, parent, name)
@@ -58,9 +60,12 @@ function ScrollList:Create()
 		'Insert', ScrollList.Insert,
 		'Remove', ScrollList.Remove,
 		'RemoveSelected', ScrollList.RemoveSelected,
+		'ClearSelection', ScrollList.ClearSelection,
+		'Clear', ScrollList.Clear,
 		'SetList', ScrollList.SetList,
 		'Selected', ScrollList.Selected,
-		'LineTextFormatter', ScrollList.SetLineTextFormatter
+		'LineTextFormatter', ScrollList.SetLineTextFormatter,
+		'Tooltip', ScrollList.SetTooltip
 	)
 
 	sl._Size = sl.Size
@@ -87,6 +92,22 @@ function ScrollList:Create()
 	)
 
 	return sl
+end
+
+function ScrollList.SetTooltip(self, title, ...)
+
+	local lines = Util.Tables.Copy({...} or {})
+
+	self:SetScript(
+			"OnEnter",
+			function(self)
+				UIUtil.ShowTooltip(self, nil, title, unpack(lines))
+			end
+	)
+
+	self:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+
+	return self
 end
 
 function ScrollList.SetLinePaddingLeft(self, padding)
@@ -210,7 +231,6 @@ function ScrollList.SetList(self, list, order)
 	return self
 end
 
-
 -- this always adds to end of the list
 function ScrollList.Add(self, item)
 	self.L[#self.L + 1] = item
@@ -245,6 +265,16 @@ function ScrollList.RemoveSelected(self)
 	end
 
 	return nil
+end
+
+function ScrollList.ClearSelection(self)
+	self.selected = nil
+	self:Update()
+end
+
+function ScrollList.Clear(self)
+	self:SetList({})
+	self:ClearSelection()
 end
 
 function ScrollList.Selected(self)

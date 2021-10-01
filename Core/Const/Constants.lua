@@ -185,6 +185,7 @@ AddOn.Constants = {
     Popups = {
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
         ConfirmDeleteListConfig =   name .. "_ConfirmDeleteListConfig",
+        ConfirmDeleteListList   =   name .. "_ConfirmDeleteListList",
     },
 
     Responses = {
@@ -227,6 +228,8 @@ AddOn.Constants.EquipmentLocations = {
     INVTYPE_THROWN         = C.ItemEquipmentLocationNames.Thrown,
     INVTYPE_RELIC          = C.ItemEquipmentLocationNames.Relic,
 }
+
+AddOn.Constants.EquipmentNameToLocation = tInvert(AddOn.Constants.EquipmentLocations)
 
 -- Populated later in Init.lua
 AddOn.Constants.EquipmentLocationsSort = {}

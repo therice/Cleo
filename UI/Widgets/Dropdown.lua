@@ -303,7 +303,7 @@ function Dropdown:HasValue()
 end
 
 function Dropdown:Selected()
-
+	return self.Props:GetValue()
 end
 
 function Dropdown:SetMaxLines(lines)

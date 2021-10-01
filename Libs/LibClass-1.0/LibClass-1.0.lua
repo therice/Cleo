@@ -108,13 +108,15 @@ local function _cycle_aware_copy(t, cache)
     return setmetatable(res,mt)
 end
 
-local function _strip_class_metadata(t)
+local function _strip_class_metadata(t, cache)
     if type(t) ~= 'table' then return t end
+    if cache[t] then return cache[t] end
     local res = {}
+    cache[t] = res
     for k, v in pairs(t) do
         if k ~= "clazz" then
-            k = _strip_class_metadata(k)
-            v = _strip_class_metadata(v)
+            k = _strip_class_metadata(k, cache)
+            v = _strip_class_metadata(v, cache)
             res[k] = v
         end
     end
@@ -143,7 +145,7 @@ local DefaultMixin = {
     -- class metadata is stripped
     -- useful for serializing the information over the wire
     toTable = function(self)
-        return _strip_class_metadata(self)
+        return _strip_class_metadata(self, {})
     end,
 
     -- allows for manipulation of reconstituted instance before being returned

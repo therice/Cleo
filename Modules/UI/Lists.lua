@@ -27,7 +27,9 @@ local Tabs = {
 }
 
 function Lists:LayoutInterface(container)
-	container.tabs = UI:NewNamed('Tabs', container, "Tabs", unpack(Util.Tables.Keys(Tabs))):Point(0, -36):Size(840, 580):SetTo(1)
+	container:SetWide(1000)
+
+	container.tabs = UI:New('Tabs', container, unpack(Util.Tables.Keys(Tabs))):Point(0, -36):Size(1000, 580):SetTo(1)
 	container.tabs:SetBackdropBorderColor(0, 0, 0, 0)
 	container.tabs:SetBackdropColor(0, 0, 0, 0)
 	container.tabs:First():SetPoint("TOPLEFT", 0, 20)
@@ -36,7 +38,7 @@ function Lists:LayoutInterface(container)
 		container.tabs.tabs[index]:Tooltip(description)
 	end
 
-	self:LayoutConfigurationTab(container.tabs:First())
+	self:LayoutConfigurationTab(container.tabs:Get(1))
 	self:LayoutListTab(container.tabs:Get(2))
 end
 
@@ -60,9 +62,10 @@ end
 function Lists:LayoutConfigurationTab(tab)
 	local module = self
 
+	-- Horizontal line extending from scroll list to right of tab
 	UI:New('DecorationLine', tab)
 		:Point("TOPLEFT",0,-65)
-		:Point("BOTTOMRIGHT",'x',"TOPRIGHT", 8, -66)
+		:Point("BOTTOMRIGHT",'x',"TOPRIGHT", -2, -66)
 
 	tab.configList =
 		UI:New('ScrollList', tab)
@@ -75,10 +78,10 @@ function Lists:LayoutConfigurationTab(tab)
 	tab.configList.frame.ScrollBar:Size(10,0):Point("TOPRIGHT",0,0):Point("BOTTOMRIGHT",0,0)
 	tab.configList.frame.ScrollBar.buttonUp:HideBorders()
 	tab.configList.frame.ScrollBar.buttonDown:HideBorders()
-	-- invoked when a lis item is clicked, where index is the numeric id within the list
+	-- invoked when a list item is clicked, where index is the numeric id within the list
 	tab.configList.SetListValue = function(self, index)
 		Logging:Trace("Config(Tab).ConfigList.SetListValue(%d)", index)
-		self:GetParent():UpdateFields()
+		self:GetParent():Update()
 	end
 	tab.configList:SetList(module:Configurations())
 
@@ -88,9 +91,16 @@ function Lists:LayoutConfigurationTab(tab)
 		return tab.configList:Selected()
 	end
 
+	-- background in which config dropdown and buttons are located
 	UI:New('DecorationLine', tab, true,"BACKGROUND",-5)
-	  :Point("TOPLEFT", tab.configList, 0, 20)
-	  :Point("BOTTOMRIGHT",tab.configList,"TOPRIGHT",0, 0)
+		:Point("TOPLEFT", tab.configList, 0, 20)
+        :Point("BOTTOMRIGHT",tab.configList,"TOPRIGHT",0, 0)
+
+	-- background (colored) which extends beyond the previous one
+	UI:New('DecorationLine', tab, true, "BACKGROUND",-5)
+		:Point("TOPLEFT", tab.configList, "TOPRIGHT", 0, 0)
+		:Point("BOTTOMRIGHT", tab, "TOPRIGHT", -2, -46)
+		:Color(0.25, 0.78, 0.92, 1, 0.50)
 
 	-- delete configuration
 	tab.delete =
@@ -100,7 +110,7 @@ function Lists:LayoutConfigurationTab(tab)
 	        :Size(18,18)
 			:OnClick(
 				function(...)
-					Lists.OnDeleteConfigurationClick(SelectedConfiguration())
+					module.OnDeleteConfigurationClick(SelectedConfiguration())
 				end
 			)
 	-- add configuration
@@ -114,28 +124,24 @@ function Lists:LayoutConfigurationTab(tab)
 					-- create and persist new configuration
 					local config = module.Configuration.Create()
 					tab.configList:Add(config)
-					-- todo : can insert alphabetically instead of blindly adding
 					module.Configuration:Add(config)
 					-- select it in the list
 					tab.configList:SetToLast()
 					-- update fields to reflect the selected configuration
-					tab:UpdateFields()
+					tab:Update()
 				end
 			)
 
-	UI:New('DecorationLine', tab.configList.frame.ScrollBar)
-		:Point("TOPLEFT",-1,1)
-		:Point("BOTTOMRIGHT",'x',"BOTTOMLEFT",0,0)
-
+	-- vertical lines on right side of list
 	UI:New('DecorationLine', tab)
-		:Point("TOPLEFT", tab.configList,"TOPRIGHT",0,1)
+		:Point("TOPLEFT", tab.configList,"TOPRIGHT",-1,1)
 		:Point("BOTTOMLEFT",tab:GetParent(),"BOTTOM",0,-18)
 		:Size(1,0)
 
 	tab.name =
 		UI:New('EditBox', tab)
 	        :Size(425,20)
-	        :Point("LEFT", tab.delete, "RIGHT", 15, -25)
+	        :Point("LEFT", tab.delete, "RIGHT", 15, -35)
 	        :Tooltip(L["name"], L["list_config_name_desc"])
 
 	tab.owner =
@@ -179,6 +185,8 @@ function Lists:LayoutConfigurationTab(tab)
 			:Point("TOPLEFT", tab.owner, "BOTTOMLEFT", 0, -10)
 			:Point("TOPRIGHT", tab.name, "BOTTOMRIGHT", 0, -10)
 			:Height(210)
+			:AvailableTooltip(L["available"], L["administrators_avail_desc"])
+			:SelectedTooltip(L["administrators"], L["administrators_desc"])
 			:LineTextFormatter(
 				function(player)
 					return UIUtil.ClassColorDecorator(player.class):decorate(player:GetShortName())
@@ -218,9 +226,17 @@ function Lists:LayoutConfigurationTab(tab)
 			)
 
 
-	tab.UpdateFields = function(self)
+	tab.SetFieldsEnabled = function(self, enabled)
+		self.name:SetEnabled(enabled)
+		self.owner:SetEnabled(enabled)
+		self.admins:SetEnabled(enabled)
+	end
+
+	tab.Update = function(self)
 		local config = SelectedConfiguration()
-		Logging:Trace("Config(Tab).UpdateFields(%s)", tostring(config.id))
+		Logging:Trace("Config(Tab).Update(%s)", tostring(config.id))
+
+		self:SetFieldsEnabled(true)
 
 		self.name:Datasource(
 			module,
@@ -239,6 +255,8 @@ function Lists:LayoutConfigurationTab(tab)
 		self.admins:Refresh()
 	end
 
+	tab:SetFieldsEnabled(false)
+
 	self.configTab = tab
 end
 
@@ -254,58 +272,90 @@ end
 function Lists:DeleteConfigurationOnClickYes(_, config)
 	self.Configuration:Remove(config)
 	self.configTab.configList:RemoveSelected()
-	self.configTab:UpdateFields()
+	self.configTab:Update()
 end
+
+local ListTabs = {
+	[L["priority"]]     = L["list_list_priority_desc"],
+	[L["equipment"]]    = L["list_list_equipment_desc"],
+}
+
 
 function Lists:LayoutListTab(tab)
 	local module = self
 
-	UI:New('DecorationLine', tab)
-	  :Point("TOPLEFT",0, -45)
-	  :Point("BOTTOMRIGHT",'x',"TOPRIGHT", 8, -46)
-
 	tab.lists =
 		UI:New('ScrollList', tab)
-		  :Size(230, 540)
-		  :Point(1, -46)
-		  :LinePaddingLeft(2)
-		  :ScrollWidth(12)
-		  :LineTexture(15, UIUtil.ColorWithAlpha(C.Colors.White, 0.5), UIUtil.ColorWithAlpha(C.Colors.ItemArtifact, 0.6))
-		  :HideBorders()
+			:Size(230, 540)
+			:Point(1, -46)
+			:LinePaddingLeft(2)
+			:ScrollWidth(12)
+			:LineTexture(15, UIUtil.ColorWithAlpha(C.Colors.White, 0.5), UIUtil.ColorWithAlpha(C.Colors.ItemArtifact, 0.6))
+			:LineTextFormatter(function(list) return list.name end)
+		    :HideBorders()
 	tab.lists.frame.ScrollBar:Size(10,0):Point("TOPRIGHT",0,0):Point("BOTTOMRIGHT",0,0)
 	tab.lists.frame.ScrollBar.buttonUp:HideBorders()
 	tab.lists.frame.ScrollBar.buttonDown:HideBorders()
+	-- invoked when a list item is clicked, where index is the numeric id within the list
+	tab.lists.SetListValue = function(self, index)
+		Logging:Trace("List(Tab).Lists.SetListValue(%d)", index)
+		self:GetParent():Update()
+	end
 
 	-- wide bar in which buttons and drop down are located
 	UI:New('DecorationLine', tab, true, "BACKGROUND",-5)
 	  :Point("TOPLEFT", tab.lists, 0, 30)
 	  :Point("BOTTOMRIGHT",tab.lists,"TOPRIGHT",0, 0)
 
+	--- @return Models.List.Configuration
+	local function SelectedConfiguration()
+		local values = tab.config:Selected()
+		local config = #values == 1 and values[1].value or nil
+		Logging:Debug("SelectedConfiguration() : %s", tostring(config and config.id or nil))
+		return config
+	end
+
+	--- @return Models.List.List
+	local function SelectedList()
+		local list = tab.lists:Selected()
+		Logging:Debug("SelectedList() : %s", tostring(list and list.id or nil))
+		return list
+	end
+
 	tab.delete =
 		UI:New('ButtonMinus', tab)
-		  :Point("TOPRIGHT", tab.lists, "TOPRIGHT", -5, 25)
-		  :Tooltip(L["delete"])
-		  :Size(18,18)
+			:Point("TOPRIGHT", tab.lists, "TOPRIGHT", -5, 25)
+			:Tooltip(L["delete"])
+			:Size(18,18)
+			:OnClick(
+				function(...)
+					module.OnDeleteListClick(SelectedList())
+				end
+			)
 
 	tab.add =
 		UI:New('ButtonPlus', tab)
-		  :Point("TOPRIGHT", tab.delete, "TOPRIGHT", -25, 0)
-		  :Tooltip(L["add"])
-		  :Size(18,18)
+			:Point("TOPRIGHT", tab.delete, "TOPRIGHT", -25, 0)
+			:Tooltip(L["add"])
+			:Size(18,18)
+			:OnClick(
+				function(...)
+					local config = SelectedConfiguration()
+					local list = module.List.Create(config.id)
+					tab.lists:Add(list)
+					module.List:Add(list)
+					-- select it in the list
+					tab.lists:SetToLast()
+					-- update fields to reflect the selected list
+					tab:Update()
+				end
+			)
 
-	UI:New('DecorationLine', tab.lists.frame.ScrollBar)
-	  :Point("TOPLEFT",-1,1)
-	  :Point("BOTTOMRIGHT",'x',"BOTTOMLEFT",0,0)
-
+	-- background in which config dropdown and buttons are located
 	UI:New('DecorationLine', tab)
-	  :Point("TOPLEFT", tab.lists,"TOPRIGHT",0,1)
+	  :Point("TOPLEFT", tab.lists,"TOPRIGHT", -1, 1)
 	  :Point("BOTTOMLEFT",tab:GetParent(),"BOTTOM",0,-18)
 	  :Size(1,0)
-
-	local function SelectedConfiguration()
-		local value = tab.config:GetValue()
-		return #value == 1 and value[1] or nil
-	end
 
 	tab.config =
 		UI:New('Dropdown', tab)
@@ -314,9 +364,462 @@ function Lists:LayoutListTab(tab)
 		    :MaxLines(10)
 			:SetTextDecorator(function(item) return item.value.name end)
 			:Tooltip(L["configuration"], L["list_config_dd_desc"])
-			:SetList(module:Configurations())
+			:OnShow(
+				function(self) self:SetList(module:Configurations()) end, false
+			)
+			:OnValueChanged(
+				function(item)
+					local config = item.value
+					Logging:Debug("List.Config.OnValueChanged(%s)", tostring(config.id))
+					tab.lists:SetList(module:Lists(config.id))
+					tab.lists:ClearSelection()
+					tab:Update()
+					tab:SetButtonsEnabled(true)
+					return true
+				end
+			)
+
+	tab.name =
+		UI:New('EditBox', tab)
+		  :Size(425,20)
+		  :Point("LEFT", tab.delete, "RIGHT", 15, 2)
+		  :Tooltip(L["name"], L["list_list_name_desc"])
+
+	tab.SetButtonsEnabled = function(self, enabled)
+		self.add:SetEnabled(enabled)
+		self.delete:SetEnabled(enabled)
+	end
+
+	tab.SetFieldsEnabled = function(self, enabled)
+		self.name:SetEnabled(enabled)
+	end
+
+	tab.Update = function(self)
+		local config, list = SelectedConfiguration(), SelectedList()
+		Logging:Trace("List(Tab).Update() : %s - %s", tostring(config and config.id or nil), tostring(list and list.id or nil))
+		self:SetFieldsEnabled(Util.Objects.IsSet(list))
+		self:SetButtonsEnabled(Util.Objects.IsSet(config))
+
+		if list then
+			self.name:Datasource(
+					module,
+					module.db.factionrealm.lists,
+					module.List.Key(list, "name"),
+					function(value)
+						list.name = value
+						return value
+					end,
+					function(...)
+						tab.lists:Update()
+					end
+			)
+		else
+			self.name:ClearDatasource()
+		end
+
+		-- iterate and child tabs and update their fields
+		for _, childTab in self.listSettings:IterateTabs() do
+			if childTab.Update then
+				childTab:Update()
+			end
+		end
+	end
+
+	-- various tabs related to a configuration list
+	tab.listSettings = UI:New('Tabs', tab, unpack(Util.Tables.Keys(ListTabs))):Point(230, -65):Size(840, 530):SetTo(1)
+	tab.listSettings:SetBackdropBorderColor(0, 0, 0, 0)
+	tab.listSettings:SetBackdropColor(0, 0, 0, 0)
+	tab.listSettings:First():SetPoint("TOPLEFT", 0, 20)
+	tab.listSettings:SetTo(2)
+
+	for index, description in pairs(Util.Tables.Values(ListTabs)) do
+		tab.listSettings.tabs[index]:Tooltip(description)
+	end
+
+	-- the background for configuration list tabs
+	UI:New('DecorationLine', tab.listSettings, true, "BACKGROUND",-5)
+		:Point("TOPLEFT", tab.listSettings, 0, 0)
+		:Point("BOTTOMRIGHT",tab,"TOPRIGHT", -2, -45)
+		:Color(0.25, 0.78, 0.92, 1, 0.50)
+
+	self:LayoutListEquipmentTab(
+			tab.listSettings:GetByName(L["equipment"]),
+			SelectedConfiguration,
+			SelectedList
+	)
+
+	self:LayoutListPriorityTab(
+			tab.listSettings:GetByName(L["priority"]),
+			SelectedConfiguration,
+			SelectedList
+	)
 
 
-
+	tab:Update()
 	self.listTab = tab
 end
+
+function Lists.OnDeleteListClick(list)
+	Dialog:Spawn(C.Popups.ConfirmDeleteListList, list)
+end
+
+function Lists.DeleteListOnShow(frame, list)
+	UIUtil.DecoratePopup(frame)
+	frame.text:SetText(format(L['confirm_delete_entry'], UIUtil.ColoredDecorator(C.Colors.ItemArtifact):decorate(list.name)))
+end
+
+function Lists:DeleteListOnClickYes(_, list)
+	self.List:Remove(list)
+	self.listTab.lists:RemoveSelected()
+	self.listTab:Update()
+end
+
+function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
+	local module = self
+
+	tab.equipment =
+		UI:New('DualListbox', tab)
+			:Point("TOPLEFT", tab, "TOPLEFT", 20, -35)
+			:Point("TOPRIGHT", tab, "TOPRIGHT", -80, 0)
+			:Height(210)
+			:AvailableTooltip(L["available"], L["equipment_type_avail_desc"])
+			:SelectedTooltip(L["equipment_types"], L["equipment_type_desc"])
+			:OptionsSorter(
+				function(opts)
+					local sorted =
+						Util(C.EquipmentLocationsSort)
+							:CopyFilter(
+								function(v)
+									return Util.Tables.ContainsKey(opts, v)
+								end
+							)()
+					return sorted
+				end
+			)
+			:OptionsSupplier(
+				function()
+					local config, list = configSupplier(), listSupplier()
+					Logging:Debug("List.Equipment(OptionsSupplier) : %s ", tostring(list and list.id or nil))
+					local unassigned = config and module:UnassignedEquipmentLocations(config.id) or {}
+					--[[
+					Logging:Debug("%s - %s",
+					              Util.Objects.ToString(unassigned),
+					              Util.Objects.ToString(Util.Tables.CopySelect(C.EquipmentLocations, unpack(unassigned))))
+					--]]
+					return
+						Util.Tables.CopySelect(C.EquipmentLocations, unpack(unassigned)),
+						list and list:GetEquipment(true) or {}
+				end
+			)
+			:OnSelectedChanged(
+				function(equipment, added)
+					-- translate name into actual type/slot
+					local slot = AddOn.GetEquipmentLocation(equipment)
+					Logging:Debug("List.Equipment(OnSelectedChanged) : %s/%s, %s", tostring(equipment), tostring(slot), tostring(added))
+
+					local list = listSupplier()
+					if list then
+						if added then
+							list:AddEquipment(slot)
+						else
+							list:RemoveEquipment(slot)
+						end
+						module.List:Update(list, "equipment")
+					end
+				end
+			)
+
+	tab.SetFieldsEnabled = function(self, enabled)
+		self.equipment:SetEnabled(enabled)
+		if not enabled then self.equipment:Clear() end
+	end
+
+	-- will be invoked when a list is selected
+	tab.Update = function(self)
+		Logging:Debug("List.Equipment(Tab).Update(%s)", tostring(self:IsVisible()))
+		if self:IsVisible() then
+			local enabled = (configSupplier() and listSupplier())
+			self:SetFieldsEnabled(enabled)
+			if enabled then self.equipment:Refresh() end
+		end
+	end
+
+	tab:SetScript("OnShow", function(self) self:Update() end)
+end
+
+
+local PriorityWidth, PriorityHeight = 150, 18
+local EditDragType = {
+	Within = 1, -- within existing priorities (reorder)
+	Into   = 2, -- new addition to existing priorities (insert)
+	Out    = 3, -- removal from existing priorities (delete)
+}
+
+function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
+	local module = self
+	local rowsPerColumn, columns = ceil(tab:GetHeight()/(PriorityHeight+6)), min(3, floor(tab:GetWidth()/(PriorityWidth + 25)))
+
+	local function PriorityCoord(self, xAdjust, yAdjust)
+		xAdjust = Util.Objects.IsNumber(xAdjust) and xAdjust or 0
+		yAdjust = Util.Objects.IsNumber(yAdjust) and yAdjust or 0
+
+		local column = floor((self.index - 1) / rowsPerColumn)
+		local row = ((self.index -1) % rowsPerColumn)
+		Logging:Trace(
+			"columns=%d, rowsPerColumn=%d, index=%d, column=%d, row=%d",
+			columns, rowsPerColumn, self.index, column, row
+		)
+		return (10 + (column * (PriorityWidth + 15))) + xAdjust, (-20 - (row  * 22)) + yAdjust
+	end
+
+	local function EditOnDragStart(self)
+		if self:IsMovable() then
+			self:StartMoving()
+		end
+	end
+
+	local function EditOnDragStop(self, dragType)
+		self:StopMovingOrSizing()
+
+
+		local function SetText(edit, text, bgText)
+			edit:SetText(text)
+			if Util.Objects.IsEmpty(text) then
+				edit:BackgroundText(bgText)
+				edit.insideTexture:Hide()
+			else
+				edit:BackgroundText(nil)
+				edit.insideTexture:Show()
+
+			end
+			edit:SetCursorPosition(1)
+		end
+
+		local function SwapText(from, to)
+			local bgTextFrom, textFrom = from:GetBackgroundText(), from:GetText()
+			local bgTextTo, textTo  = to:GetBackgroundText(), to:GetText()
+
+			SetText(to, textFrom, Util.Objects.IsSet(bgTextFrom) and bgTextFrom or tostring(from.index))
+			SetText(from, textTo, Util.Objects.IsSet(bgTextTo) and bgTextTo or tostring(from.index))
+		end
+
+		local x, y
+		for i = 1, #tab.priorities do
+			local target = tab.priorities[i]
+			if target:IsMouseOver() and target ~= self then
+				if dragType == EditDragType.Within then
+					SwapText(self, target)
+					x, y = PriorityCoord(self)
+				elseif dragType == EditDragType.Into then
+					SetText(target, self:GetText(), nil)
+					self:Hide()
+					x, y = PriorityCoord(target)
+				end
+				break
+			end
+		end
+
+		if not (x and y) then
+			x, y = PriorityCoord(self)
+		end
+
+		self:NewPoint("TOPLEFT", x, y)
+		self:ClearFocus()
+	end
+
+
+	-- this tracks player's priority "edits" which are currently on the list (pure UI element)
+	tab.priorities = {}
+	-- create individual priority slots (which can be dragged and dropped)
+	for index = 1, (columns * rowsPerColumn) do
+		local priority = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):AddXIcon()
+		tab.priorities[index] = priority
+		priority.index = index
+		priority:BackgroundText(tostring(index))
+		priority.insideTexture:Hide()
+		priority:SetMovable(true)
+		priority:SetEnabled(false)
+		priority:RegisterForDrag("LeftButton")
+		priority:SetScript("OnDragStart", EditOnDragStart)
+		priority:SetScript("OnDragStop", function(self) EditOnDragStop(self, EditDragType.Within) end)
+		priority:Point("TOPLEFT", PriorityCoord(priority))
+	end
+
+	-- this tracks player "edits" which aren't currently on the list (pure UI element)
+	tab.players = {}
+	tab.playersScroll =
+		UI:New('ScrollBar', tab)
+			:Point("TOP", tab.priorities[1], 0, -(PriorityHeight * 1.5))
+			:Point("BOTTOM", tab.priorities[#tab.priorities], 0, (PriorityHeight * 2))
+			:Point("RIGHT", tab, -135, 0)
+			:Size(12,558)
+			:SetMinMaxValues(0,1)
+			:SetValue(0)
+			:SetObey(true)
+			:OnChange(function(self) tab:UpdatePlayers() end)
+	tab.playersScroll:SetShown(false)
+	tab.playersScroll:SetScript(
+			"OnMouseWheel",
+			function(self, delta)
+				local min, max = self:GetMinMaxValues()
+				local val = self:GetValue()
+				if (val - delta) < min then
+					self:SetValue(min)
+				elseif (val - delta) > max then
+					self:SetValue(max)
+				else
+					self:SetValue(val - delta)
+				end
+			end
+	)
+
+	tab.playersInGuild =
+		UI:New('Checkbox', tab, L["guild"], false)
+			:Point("TOP", tab.priorities[1], (columns * PriorityWidth), 0)
+		    :TextSize(10)
+		    :OnClick(
+				function(self)
+					self:GetParent().includeGuild = self:GetChecked()
+ 					self:GetParent():UpdatePlayers()
+				end
+			)
+	tab.playersInGuild:SetSize(12, 12)
+
+	tab.playersInRaid = 
+		UI:New('Checkbox', tab, L["raid"], false)
+			:Point("LEFT", tab.playersInGuild, "RIGHT", 40, 0)
+			:TextSize(10)
+			:OnClick(
+				function(self)
+					self:GetParent().includeRaid = self:GetChecked()
+					self:GetParent():UpdatePlayers()
+				end
+			)
+	tab.playersInRaid:SetSize(12, 12)
+
+	-- 1. capture current priority list
+	-- 2. handle edits in memory
+	-- 3. allow for revert
+	
+	-- todo : memoize this shit
+	tab.UpdatePlayers = function(self)
+		local list, displayRows = listSupplier(), (rowsPerColumn - 3) -- less 3 rows because of headers and footers
+		--- @type  table<string, Models.Player>
+		local allPlayers = AddOn:Players(self.includeRaid, self.includeGuild, true)
+		--- @type  table<number, Models.Player>
+		local listPlayers = list and list:GetPlayers():toTable() or {}
+		Logging:Trace("UpdatePlayers() : all(%d) / list(%d)", Util.Tables.Count(allPlayers), Util.Tables.Count(listPlayers))
+		local available =
+			Util(allPlayers)
+				:CopyExceptWhere(false, unpack(listPlayers))
+				:Sort(function(p1, p2) return p1:GetName() < p2:GetName() end)()
+
+		-- update scroll (as needed)
+		local overflow = #available - displayRows
+		Logging:Trace("UpdatePlayers() : available(%d), rows(%d), overflow(%d)", Util.Tables.Count(available), displayRows, overflow)
+		if overflow > 0 then
+			self.playersScroll:SetMinMaxValues(0, overflow)
+		else
+			self.playersScroll:SetMinMaxValues(0, max(1, #available))
+		end
+
+		self.playersScroll:SetShown(overflow > 0 and true or false)
+
+		for index=1, min(displayRows, #available) do
+			local player = self.players[index]
+			-- create individual player slot (which can be dragged and dropped)
+			if not player then
+				player = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight)
+				self.players[index] = player
+				player.index = index
+				player:Point("TOPLEFT", PriorityCoord(player, (3.5*PriorityWidth), -(PriorityHeight * 1.5)))
+				player:SetFont(player:GetFont(), 12)
+				player:SetEnabled(false)
+				player:SetMovable(true)
+				player:RegisterForDrag("LeftButton")
+				player:SetScript("OnDragStart", EditOnDragStart)
+				player:SetScript("OnDragStop", function(self) EditOnDragStop(self, EditDragType.Into) end)
+			end
+
+			local playerIndex = index + floor(self.playersScroll:GetValue() + 0.5)
+			if playerIndex > #available then playerIndex = index end
+			
+			Logging:Debug("UpdatePlayers() : index=%d, playerIndex=%d", index, playerIndex)
+			player:SetText(UIUtil.PlayerClassColorDecorator(available[playerIndex]:GetShortName()):decorate(available[playerIndex]:GetShortName()))
+			player:SetCursorPosition(1)
+			player:Show()
+		end
+
+		for index = #available + 1, #self.players do
+			self.players[index]:Hide()
+		end
+	end
+
+	tab.SetFieldsEnabled = function(self, enabled)
+		self.playersScroll:Hide()
+		self.playersInGuild:SetEnabled(enabled)
+		self.playersInRaid:SetEnabled(enabled)
+	end
+
+	tab.Update = function(self)
+		Logging:Debug("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
+		if self:IsVisible() or force then
+			local enabled = (configSupplier() and listSupplier())
+			self:SetFieldsEnabled(enabled)
+		end
+	end
+
+	tab:SetScript("OnShow", function(self) self:Update() end)
+end
+
+
+--[[
+
+tab.prioritiesList =
+		UI:New('ScrollFrame', tab)
+			:Size(PriorityListWidth, PriorityListHeight)
+			:Point("TOPLEFT", tab, "TOPLEFT", 0, 0)
+			:Point("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -(PriorityWidth * 2) + 30, 30)
+			:MouseWheelRange(50)
+	tab.prioritiesList:LayerBorder(0)
+	tab.prioritiesList.priorities = {}
+
+tab.prioritiesList.Update = function(self)
+	Logging:Debug("List.Priorities(Tab).ScrollList.Update()")
+	local scroll = self.ScrollBar:GetValue()
+	self:SetVerticalScroll(scroll % PriorityHeight)
+	local start = floor(scroll / PriorityHeight)  + 1
+
+	Logging:Debug("List.Priorities(Tab).ScrollList.Update() - start=%d", start)
+	local lineCount = 1
+	for current = start, MaxPriorities do
+		local priority = self.priorities[lineCount]
+		lineCount = lineCount + 1
+		if not priority then break end
+
+		priority:SetText(tostring(current))
+		Logging:Debug("List.Priorities(Tab).ScrollList.Update() - current=%d", current)
+	end
+
+	for i = lineCount, #self.priorities do
+		self.priorities[i]:Hide()
+	end
+
+	self:Height(PriorityHeight * MaxPriorities)
+end
+
+tab.prioritiesList.ScrollBar.slider:SetScript(
+		"OnValueChanged",
+		function(self)
+			self:GetParent():GetParent():Update()
+			self:UpdateButtons()
+		end
+)
+
+tab.Update = function(self)
+	Logging:Debug("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
+	if self:IsVisible() then
+		self.prioritiesList:Update()
+	end
+end
+--]]

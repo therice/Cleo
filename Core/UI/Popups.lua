@@ -140,6 +140,24 @@ Dialog:Register(C.Popups.ConfirmDeleteListConfig, {
     show_while_dead = true,
 })
 
+Dialog:Register(C.Popups.ConfirmDeleteListList, {
+    text = MachuPicchu,
+    on_show = AddOn:ListsModule().DeleteListOnShow,
+    width = 400,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = function(...) AddOn:ListsModule():DeleteListOnClickYes(...) end,
+        },
+        {
+            text = _G.NO,
+            on_click = Util.Functions.Noop
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})
+
 
 --[[
 Dialog:Register(C.Popups.ConfirmReannounceItems, {

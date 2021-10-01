@@ -20,6 +20,9 @@ end
 
 function DualListbox:Create()
 	local dlb = CreateFrame("Frame", self.name, self.parent)
+	dlb:SetSize(400, 250)
+
+	-- todo : sizing/positioning on these elements are not accounted for in subsequent calls
 
 	-- available options
 	dlb.available =
@@ -41,7 +44,7 @@ function DualListbox:Create()
 	dlb.add =
 		NativeUI:New('ButtonRightLarge', dlb)
 	        :Size(15,15)
-	        :Point("CENTER", dlb, "CENTER", 0, 38)
+			:Point("CENTER", dlb, "CENTER", 0, 38)
 			:OnClick(
 				function(self, button, down)
 					Logging:Debug("DualListbox.Add(OnClick) : %s, %s", tostring(button), tostring(down))
@@ -91,7 +94,11 @@ function DualListbox:Create()
 		'OptionsSorter', DualListbox.SetOptionsSorter,
 		'Refresh', DualListbox.Refresh,
 		'LineTextFormatter', DualListbox.SetLineTextFormatter,
-		'OnSelectedChanged', DualListbox.SetOnSelectedChange
+		'OnSelectedChanged', DualListbox.SetOnSelectedChange,
+		'SetEnabled', DualListbox.SetEnabled,
+		'Clear', DualListbox.Clear,
+		'AvailableTooltip', DualListbox.SetAvailableTooltip,
+		'SelectedTooltip', DualListbox.SetSelectedTooltip
 	)
 
 	return dlb
@@ -143,6 +150,26 @@ function DualListbox.Refresh(self)
 		self:Options(self.optionsSupplier())
 	end
 
+	return self
+end
+
+function DualListbox.SetEnabled(self, enabled)
+	self.add:SetEnabled(enabled)
+	self.remove:SetEnabled(enabled)
+end
+
+function DualListbox.Clear(self)
+	self.available:Clear()
+	self.selected:Clear()
+end
+
+function DualListbox.SetAvailableTooltip(self, title, ...)
+	self.available:Tooltip(title, ...)
+	return self
+end
+
+function DualListbox.SetSelectedTooltip(self, title, ...)
+	self.selected:Tooltip(title, ...)
 	return self
 end
 

@@ -474,7 +474,10 @@ function Self.Where(t, k, ...)
 end
 
 -- Filter by not having a set of key/value pairs in a table
-local Fn = function (...) return not Self.Matches(...) end
+local Fn = function (...)
+    print(Util.Objects.ToString({...}))
+    return not Self.Matches(...)
+end
 ---@param t table
 ---@param k boolean
 function Self.ExceptWhere(t, k, ...)
@@ -547,7 +550,7 @@ end
 -- Pick specific keys from a table
 function Self.CopySelect(t, ...)
     local u = Self.New()
-    for i,v in Util.Each(...) do u[v] = t[v] end
+    for _,v in Util.Each(...) do u[v] = t[v] end
     return u
 end
 
@@ -594,7 +597,7 @@ end
 function Self.CopyWhere(t, k, ...)
     local u = Self.New()
     for i,v in pairs(t) do
-        if Self.FindWhere(u, ...) then
+        if Util.In(v, ...) then
             Self.Insert(u, k and i, v, k)
         end
     end
@@ -607,7 +610,7 @@ end
 function Self.CopyExceptWhere(t, k, ...)
     local u = Self.New()
     for i,v in pairs(t) do
-        if not Self.FindWhere(u, ...) then
+        if not Util.In(v, ...) then
             Self.Insert(u, k and i, v, k)
         end
     end
@@ -886,7 +889,9 @@ end
 -- Merge two or more tables
 function Self.Merge(t, ...)
     t = t or Self.New()
-    for i=1,select("#", ...) do
+    local unique = select(select("#", ...), ...) == true
+
+    for i=1,select("#", ...) - (unique and 1 or 0) do
         local tbl, j = (select(i, ...)), 1
         if tbl then
             for k,v in pairs(tbl) do
@@ -895,7 +900,8 @@ function Self.Merge(t, ...)
             end
         end
     end
-    return t
+
+    return unique and Self.Unique(t) or t
 end
 
 -- OTHER
