@@ -126,7 +126,8 @@ function Self.List(t)
                 if type(i) == "number" then
                     l = math.min(l or i, i)
                 else
-                    l = i break
+                    l = i
+                    break
                 end
             end
             t[k], t[l] = t[l], nil

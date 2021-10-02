@@ -59,6 +59,7 @@ function ScrollList:Create()
 		'Add', ScrollList.Add,
 		'Insert', ScrollList.Insert,
 		'Remove', ScrollList.Remove,
+		'RemoveAll', ScrollList.RemoveAll,
 		'RemoveSelected', ScrollList.RemoveSelected,
 		'ClearSelection', ScrollList.ClearSelection,
 		'Clear', ScrollList.Clear,
@@ -265,6 +266,12 @@ function ScrollList.RemoveSelected(self)
 	end
 
 	return nil
+end
+
+function ScrollList.RemoveAll(self)
+	local all = Util.Tables.Copy(self.L)
+	self:Clear()
+	return all
 end
 
 function ScrollList.ClearSelection(self)

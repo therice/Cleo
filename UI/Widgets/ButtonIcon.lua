@@ -31,6 +31,7 @@ local ButtonLeftLarge = AddOn.Package('UI.Widgets'):Class('ButtonLeftLarge', But
 --- @class UI.Widgets.ButtonRightLarge
 local ButtonRightLarge = AddOn.Package('UI.Widgets'):Class('ButtonRightLarge', ButtonIcon)
 
+local cos, sin, rad = math.cos, math.sin, math.rad
 
 ---@type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
@@ -66,61 +67,64 @@ local TypeMetadata = {
     [ButtonIcon.Type.RightLarge] = { { 0.125 , 0.18359, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
 }
 
-
 ButtonIcon.TypeMetadata = TypeMetadata
 
-function ButtonIcon:initialize(parent, name, type)
+local DefaultTexture = BaseWidget.ResolveTexture("DiesalGUIcons16x256x128")
+
+function ButtonIcon:initialize(parent, name, type, texture)
     BaseWidget.initialize(self, parent, name)
-    self.type = type
+    self.metadata = Util.Objects.IsNumber(type) and TypeMetadata[type] or (Util.Objects.IsTable(type) and type or {})
+    self.texture = texture or DefaultTexture
 end
 
 function ButtonIcon:Create()
     local b = CreateFrame("Button", self.name, self.parent)
-
-    local metadata = ButtonIcon.TypeMetadata[self.type]
-    local iconsTexture = BaseWidget.ResolveTexture("DiesalGUIcons16x256x128")
-
     b.NormalTexture = b:CreateTexture(nil,"ARTWORK")
-    b.NormalTexture:SetTexture(iconsTexture)
+    b.NormalTexture:SetTexture(self.texture)
     b.NormalTexture:SetPoint("TOPLEFT")
     b.NormalTexture:SetPoint("BOTTOMRIGHT")
-    b.NormalTexture:SetVertexColor(unpack(metadata[2]))
-    b.NormalTexture:SetTexCoord(unpack(metadata[1]))
+    if self.metadata[2] and Util.Objects.IsTable(self.metadata[2]) then
+        b.NormalTexture:SetVertexColor(unpack(self.metadata[2]))
+    end
+    if self.metadata[1] and Util.Objects.IsTable(self.metadata[1]) then
+        b.NormalTexture:SetTexCoord(unpack(self.metadata[1]))
+    end
     b:SetNormalTexture(b.NormalTexture)
 
-    if Util.Objects.IsTable(metadata[3]) then
+    if Util.Objects.IsTable(self.metadata[3]) then
         b.HighlightTexture = b:CreateTexture(nil,"ARTWORK")
-        b.HighlightTexture:SetTexture(iconsTexture)
+        b.HighlightTexture:SetTexture(self.texture)
         b.HighlightTexture:SetPoint("TOPLEFT")
         b.HighlightTexture:SetPoint("BOTTOMRIGHT")
-        b.HighlightTexture:SetVertexColor(unpack(metadata[3]))
-        b.HighlightTexture:SetTexCoord(unpack(metadata[1]))
+        b.HighlightTexture:SetVertexColor(unpack(self.metadata[3]))
+        b.HighlightTexture:SetTexCoord(unpack(self.metadata[1]))
         b:SetHighlightTexture(b.HighlightTexture)
     end
 
-    if Util.Objects.IsTable(metadata[4]) then
+    if Util.Objects.IsTable(self.metadata[4]) then
         b.PushedTexture = b:CreateTexture(nil,"ARTWORK")
-        b.PushedTexture:SetTexture(iconsTexture)
+        b.PushedTexture:SetTexture(self.texture)
         b.PushedTexture:SetPoint("TOPLEFT")
         b.PushedTexture:SetPoint("BOTTOMRIGHT")
-        b.PushedTexture:SetVertexColor(unpack(metadata[4]))
-        b.PushedTexture:SetTexCoord(unpack(metadata[1]))
+        b.PushedTexture:SetVertexColor(unpack(self.metadata[4]))
+        b.PushedTexture:SetTexCoord(unpack(self.metadata[1]))
         b:SetPushedTexture(b.PushedTexture)
     end
 
-    if Util.Objects.IsTable(metadata[5]) then
+    if Util.Objects.IsTable(self.metadata[5]) then
         b.DisabledTexture = b:CreateTexture(nil,"ARTWORK")
-        b.DisabledTexture:SetTexture(iconsTexture)
+        b.DisabledTexture:SetTexture(self.texture)
         b.DisabledTexture:SetPoint("TOPLEFT")
         b.DisabledTexture:SetPoint("BOTTOMRIGHT")
-        b.DisabledTexture:SetVertexColor(unpack(metadata[5]))
-        b.DisabledTexture:SetTexCoord(unpack(metadata[1]))
+        b.DisabledTexture:SetVertexColor(unpack(self.metadata[5]))
+        b.DisabledTexture:SetTexCoord(unpack(self.metadata[1]))
         b:SetDisabledTexture(b.DisabledTexture)
     end
 
     BaseWidget.Mod(
         b,
-        'Tooltip', ButtonIcon.SetTooltip
+        'Tooltip', ButtonIcon.SetTooltip,
+        'Rotate', ButtonIcon.Rotate
     )
 
     return b
@@ -132,7 +136,7 @@ function ButtonIcon.SetTooltip(self, tooltip)
             "OnEnter",
             function(self)
                 if self.tooltip then
-                    UIUtil.ShowTooltip(self, nil, nil, self.tooltip)
+                    UIUtil.ShowTooltip(self, nil, self.tooltip)
                 end
             end
     )
@@ -140,9 +144,30 @@ function ButtonIcon.SetTooltip(self, tooltip)
     return self
 end
 
+-- key is CW
+local TextCoord = {
+    [true] = {0, 1, 1, 1, 0, 0, 1, 0},
+    [false] = {0, 0, 1, 0, 0, 1, 1, 1}
+}
 
-function ButtonIconBase:initialize(parent, name, type)
-    ButtonIcon.initialize(self, parent, name, type)
+function ButtonIcon.Rotate(self, cw)
+    local coords = TextCoord[Util.Objects.IsNil(cw) and true or cw]
+    self.NormalTexture:SetTexCoord(unpack(coords))
+    if self.HighlightTexture then
+        self.HighlightTexture:SetTexCoord(unpack(coords))
+    end
+    if self.PushedTexture then
+        self.PushedTexture:SetTexCoord(unpack(coords))
+    end
+    if self.DisabledTexture then
+        self.DisabledTexture:SetTexCoord(unpack(coords))
+    end
+    return self
+end
+
+
+function ButtonIconBase:initialize(parent, name, type, texture)
+    ButtonIcon.initialize(self, parent, name, type, texture)
 end
 
 function ButtonIconBase:Create()
@@ -159,20 +184,27 @@ function ButtonIconBase:Create()
     b.NormalTexture:SetPoint("TOPLEFT",-5,2)
     b.NormalTexture:SetPoint("BOTTOMRIGHT",5,-2)
 
-    b.PushedTexture:SetPoint("TOPLEFT",-5,1)
-    b.PushedTexture:SetPoint("BOTTOMRIGHT",5,-3)
+    if b.PushedTexture then
+        b.PushedTexture:SetPoint("TOPLEFT",-5,1)
+        b.PushedTexture:SetPoint("BOTTOMRIGHT",5,-3)
+    end
 
-    b.DisabledTexture:SetPoint("TOPLEFT",-5,2)
-    b.DisabledTexture:SetPoint("BOTTOMRIGHT",5,-2)
+    if b.DisabledTexture then
+        b.DisabledTexture:SetPoint("TOPLEFT",-5,2)
+        b.DisabledTexture:SetPoint("BOTTOMRIGHT",5,-2)
+    end
 
-    b.HighlightTexture = b:CreateTexture()
-    b.HighlightTexture:SetColorTexture(1,1,1,.3)
-    b.HighlightTexture:SetPoint("TOPLEFT")
-    b.HighlightTexture:SetPoint("BOTTOMRIGHT")
-    b:SetHighlightTexture(b.HighlightTexture)
+    if not b.HighlightTexture then
+        b.HighlightTexture = b:CreateTexture()
+        b.HighlightTexture:SetColorTexture(1,1,1,.3)
+        b.HighlightTexture:SetPoint("TOPLEFT")
+        b.HighlightTexture:SetPoint("BOTTOMRIGHT")
+        b:SetHighlightTexture(b.HighlightTexture)
+    end
 
     return b
 end
+
 
 function ButtonUp:initialize(parent, name)
     ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.Up)

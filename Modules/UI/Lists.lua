@@ -17,6 +17,8 @@ local Dialog = AddOn:GetLibrary("Dialog")
 local Player = AddOn.ImportPackage('Models').Player
 --- @type Models.List.Configuration
 local Configuration = AddOn.Package('Models.List').Configuration
+--- @type LibUtil.Lists.LinkedList
+local LinkedList = Util.Lists.LinkedList
 --- @type Lists
 local Lists = AddOn:GetModule("Lists", true)
 
@@ -480,7 +482,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 	tab.equipment =
 		UI:New('DualListbox', tab)
 			:Point("TOPLEFT", tab, "TOPLEFT", 20, -35)
-			:Point("TOPRIGHT", tab, "TOPRIGHT", -80, 0)
+			:Point("TOPRIGHT", tab, "TOPRIGHT", -350, 0)
 			:Height(210)
 			:AvailableTooltip(L["available"], L["equipment_type_avail_desc"])
 			:SelectedTooltip(L["equipment_types"], L["equipment_type_desc"])
@@ -540,7 +542,9 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 		if self:IsVisible() then
 			local enabled = (configSupplier() and listSupplier())
 			self:SetFieldsEnabled(enabled)
-			if enabled then self.equipment:Refresh() end
+			if enabled then
+				self.equipment:Refresh()
+			end
 		end
 	end
 
@@ -574,6 +578,9 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	local function EditOnDragStart(self)
 		if self:IsMovable() then
+			Logging:Debug("EditOnDragStart")
+			-- capture the original posisiton
+			 _, _, _, self.x, self.y = self:GetPoint()
 			self:StartMoving()
 		end
 	end
@@ -581,82 +588,107 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	local function EditOnDragStop(self, dragType)
 		self:StopMovingOrSizing()
 
-
 		local function SetText(edit, text, bgText)
 			edit:SetText(text)
 			if Util.Objects.IsEmpty(text) then
 				edit:BackgroundText(bgText)
-				edit.insideTexture:Hide()
+				edit.xButton:Hide()
 			else
 				edit:BackgroundText(nil)
-				edit.insideTexture:Show()
-
+				edit.xButton:Show()
 			end
 			edit:SetCursorPosition(1)
 		end
 
 		local function SwapText(from, to)
-			local bgTextFrom, textFrom = from:GetBackgroundText(), from:GetText()
-			local bgTextTo, textTo  = to:GetBackgroundText(), to:GetText()
-
-			SetText(to, textFrom, Util.Objects.IsSet(bgTextFrom) and bgTextFrom or tostring(from.index))
-			SetText(from, textTo, Util.Objects.IsSet(bgTextTo) and bgTextTo or tostring(from.index))
+			local textFrom, textTo = from:GetText(), to:GetText()
+			SetText(to, textFrom, tostring(to.index))
+			SetText(from, textTo, tostring(from.index))
 		end
 
 		local x, y
-		for i = 1, #tab.priorities do
-			local target = tab.priorities[i]
+		for i = 1, #tab.priorityEdits do
+			local target = tab.priorityEdits[i]
 			if target:IsMouseOver() and target ~= self then
 				if dragType == EditDragType.Within then
 					SwapText(self, target)
 					x, y = PriorityCoord(self)
 				elseif dragType == EditDragType.Into then
 					SetText(target, self:GetText(), nil)
-					self:Hide()
-					x, y = PriorityCoord(target)
+					x, y = self.x, self.y
 				end
 				break
 			end
 		end
 
+		-- not  match, send it back to where it came from
 		if not (x and y) then
-			x, y = PriorityCoord(self)
+			x, y = self.x, self.y
 		end
 
 		self:NewPoint("TOPLEFT", x, y)
 		self:ClearFocus()
 	end
 
+	local function EditOnChange(self, isPriority)
+		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
+		Logging:Debug("EditOnChange(%d) : %s", index, Util.Objects.Default(playerName, "nil"))
+		if Util.Strings.IsSet(playerName) then
+			self:SetTextColor(UIUtil.GetPlayerClassColor(playerName):GetRGBA())
+		end
+
+		if isPriority then
+			if Util.Strings.IsSet(playerName) then
+				priorities[index] = Player:Get(playerName)
+			else
+				priorities[index] = nil
+			end
+
+			Logging:Debug("Priorities => %s", Util.Objects.ToString(Util.Tables.Keys(priorities)))
+			self:GetParent():UpdateAvailablePlayers()
+		end
+	end
 
 	-- this tracks player's priority "edits" which are currently on the list (pure UI element)
-	tab.priorities = {}
+	tab.priorityEdits = {}
 	-- create individual priority slots (which can be dragged and dropped)
 	for index = 1, (columns * rowsPerColumn) do
-		local priority = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):AddXIcon()
-		tab.priorities[index] = priority
-		priority.index = index
-		priority:BackgroundText(tostring(index))
-		priority.insideTexture:Hide()
-		priority:SetMovable(true)
-		priority:SetEnabled(false)
-		priority:RegisterForDrag("LeftButton")
-		priority:SetScript("OnDragStart", EditOnDragStart)
-		priority:SetScript("OnDragStop", function(self) EditOnDragStop(self, EditDragType.Within) end)
-		priority:Point("TOPLEFT", PriorityCoord(priority))
+		local priorityEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight)
+								:AddXButton()
+								:OnChange(function(self) EditOnChange(self, true) end)
+		tab.priorityEdits[index] = priorityEdit
+		priorityEdit.index = index
+		priorityEdit:BackgroundText(tostring(index))
+		priorityEdit.xButton:Hide()
+		priorityEdit.xButton:SetScript(
+				"OnClick",
+				function(self)
+					local edit = self:GetParent()
+					edit:Text(nil)
+					edit:BackgroundText(tostring(edit.index))
+					edit.xButton:Hide()
+				end
+		)
+		priorityEdit:SetMovable(true)
+		priorityEdit:SetEnabled(false)
+		priorityEdit:RegisterForDrag("LeftButton")
+		priorityEdit:SetScript("OnDragStart", EditOnDragStart)
+		priorityEdit:SetScript("OnDragStop", function(self) EditOnDragStop(self, EditDragType.Within) end)
+		priorityEdit:Point("TOPLEFT", PriorityCoord(priorityEdit))
 	end
 
 	-- this tracks player "edits" which aren't currently on the list (pure UI element)
-	tab.players = {}
+	tab.playerEdits = {}
 	tab.playersScroll =
 		UI:New('ScrollBar', tab)
-			:Point("TOP", tab.priorities[1], 0, -(PriorityHeight * 1.5))
-			:Point("BOTTOM", tab.priorities[#tab.priorities], 0, (PriorityHeight * 2))
+			:Point("TOP", PriorityCoord(tab.priorityEdits[1], 0, -(PriorityHeight * 1.5)))
+			:Point("BOTTOM", 0, (columns * PriorityHeight) - 8)
 			:Point("RIGHT", tab, -135, 0)
 			:Size(12,558)
 			:SetMinMaxValues(0,1)
 			:SetValue(0)
 			:SetObey(true)
-			:OnChange(function(self) tab:UpdatePlayers() end)
+			:OnChange(function() tab:UpdateAvailablePlayers() end)
 	tab.playersScroll:SetShown(false)
 	tab.playersScroll:SetScript(
 			"OnMouseWheel",
@@ -675,48 +707,56 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	tab.playersInGuild =
 		UI:New('Checkbox', tab, L["guild"], false)
-			:Point("TOP", tab.priorities[1], (columns * PriorityWidth), 0)
+			:Point("TOPLEFT", PriorityCoord(tab.priorityEdits[1], (columns + 0.5) * PriorityWidth))
 		    :TextSize(10)
 		    :OnClick(
 				function(self)
 					self:GetParent().includeGuild = self:GetChecked()
- 					self:GetParent():UpdatePlayers()
+ 					self:GetParent():UpdateAvailablePlayers()
 				end
 			)
 	tab.playersInGuild:SetSize(12, 12)
 
-	tab.playersInRaid = 
+
+	tab.playersInRaid =
 		UI:New('Checkbox', tab, L["raid"], false)
 			:Point("LEFT", tab.playersInGuild, "RIGHT", 40, 0)
 			:TextSize(10)
 			:OnClick(
 				function(self)
 					self:GetParent().includeRaid = self:GetChecked()
-					self:GetParent():UpdatePlayers()
+					self:GetParent():UpdateAvailablePlayers()
 				end
 			)
 	tab.playersInRaid:SetSize(12, 12)
 
-	-- 1. capture current priority list
-	-- 2. handle edits in memory
-	-- 3. allow for revert
-	
+
+	tab.LoadPriorities = function(self)
+		local list = listSupplier()
+		-- capture current priority list, allows for in-memory manipulation and reverts
+		if list then
+			self.priorities = list:GetPlayers():toTable()
+		else
+			self.priorities = {}
+		end
+	end
+
 	-- todo : memoize this shit
-	tab.UpdatePlayers = function(self)
-		local list, displayRows = listSupplier(), (rowsPerColumn - 3) -- less 3 rows because of headers and footers
+	tab.UpdateAvailablePlayers = function(self)
+		-- less 3 rows because of headers and footers
+		local displayRows = (rowsPerColumn - 3)
 		--- @type  table<string, Models.Player>
 		local allPlayers = AddOn:Players(self.includeRaid, self.includeGuild, true)
-		--- @type  table<number, Models.Player>
-		local listPlayers = list and list:GetPlayers():toTable() or {}
-		Logging:Trace("UpdatePlayers() : all(%d) / list(%d)", Util.Tables.Count(allPlayers), Util.Tables.Count(listPlayers))
+		Logging:Trace("UpdateAvailablePlayers() : all(%d) / list(%d)", Util.Tables.Count(allPlayers), Util.Tables.Count(self.priorities))
+
 		local available =
 			Util(allPlayers)
-				:CopyExceptWhere(false, unpack(listPlayers))
+				:CopyFilter(function(player) return not Util.Tables.ContainsValue(self.priorities, player) end)
 				:Sort(function(p1, p2) return p1:GetName() < p2:GetName() end)()
 
 		-- update scroll (as needed)
 		local overflow = #available - displayRows
-		Logging:Trace("UpdatePlayers() : available(%d), rows(%d), overflow(%d)", Util.Tables.Count(available), displayRows, overflow)
+		Logging:Trace("UpdateAvailablePlayers() : available(%d), rows(%d), overflow(%d)", Util.Tables.Count(available), displayRows, overflow)
 		if overflow > 0 then
 			self.playersScroll:SetMinMaxValues(0, overflow)
 		else
@@ -726,32 +766,32 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		self.playersScroll:SetShown(overflow > 0 and true or false)
 
 		for index=1, min(displayRows, #available) do
-			local player = self.players[index]
+			local playerEdit = self.playerEdits[index]
 			-- create individual player slot (which can be dragged and dropped)
-			if not player then
-				player = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight)
-				self.players[index] = player
-				player.index = index
-				player:Point("TOPLEFT", PriorityCoord(player, (3.5*PriorityWidth), -(PriorityHeight * 1.5)))
-				player:SetFont(player:GetFont(), 12)
-				player:SetEnabled(false)
-				player:SetMovable(true)
-				player:RegisterForDrag("LeftButton")
-				player:SetScript("OnDragStart", EditOnDragStart)
-				player:SetScript("OnDragStop", function(self) EditOnDragStop(self, EditDragType.Into) end)
+			if not playerEdit then
+				playerEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):OnChange(function(self) EditOnChange(self, false) end)
+				self.playerEdits[index] = playerEdit
+				playerEdit.index = index
+				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (3.5*PriorityWidth), -(PriorityHeight * 1.5)))
+				playerEdit:SetFont(playerEdit:GetFont(), 12)
+				playerEdit:SetEnabled(false)
+				playerEdit:SetMovable(true)
+				playerEdit:RegisterForDrag("LeftButton")
+				playerEdit:SetScript("OnDragStart", EditOnDragStart)
+				playerEdit:SetScript("OnDragStop", function(self) EditOnDragStop(self, EditDragType.Into) end)
 			end
 
 			local playerIndex = index + floor(self.playersScroll:GetValue() + 0.5)
 			if playerIndex > #available then playerIndex = index end
 			
-			Logging:Debug("UpdatePlayers() : index=%d, playerIndex=%d", index, playerIndex)
-			player:SetText(UIUtil.PlayerClassColorDecorator(available[playerIndex]:GetShortName()):decorate(available[playerIndex]:GetShortName()))
-			player:SetCursorPosition(1)
-			player:Show()
+			Logging:Debug("UpdateAvailablePlayers() : index=%d, playerIndex=%d", index, playerIndex)
+			playerEdit:SetText(available[playerIndex]:GetShortName())
+			playerEdit:SetCursorPosition(1)
+			playerEdit:Show()
 		end
 
-		for index = #available + 1, #self.players do
-			self.players[index]:Hide()
+		for index = #available + 1, #self.playerEdits do
+			self.playerEdits[index]:Hide()
 		end
 	end
 
@@ -763,63 +803,20 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	tab.Update = function(self)
 		Logging:Debug("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
-		if self:IsVisible() or force then
+		if self:IsVisible() then
 			local enabled = (configSupplier() and listSupplier())
+
+			self:SetFieldsEnabled(true)
+			self:LoadPriorities()
+
+			--[[
 			self:SetFieldsEnabled(enabled)
+			if enabled then
+				self:LoadPriorities()
+			end
+			--]]
 		end
 	end
 
 	tab:SetScript("OnShow", function(self) self:Update() end)
 end
-
-
---[[
-
-tab.prioritiesList =
-		UI:New('ScrollFrame', tab)
-			:Size(PriorityListWidth, PriorityListHeight)
-			:Point("TOPLEFT", tab, "TOPLEFT", 0, 0)
-			:Point("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -(PriorityWidth * 2) + 30, 30)
-			:MouseWheelRange(50)
-	tab.prioritiesList:LayerBorder(0)
-	tab.prioritiesList.priorities = {}
-
-tab.prioritiesList.Update = function(self)
-	Logging:Debug("List.Priorities(Tab).ScrollList.Update()")
-	local scroll = self.ScrollBar:GetValue()
-	self:SetVerticalScroll(scroll % PriorityHeight)
-	local start = floor(scroll / PriorityHeight)  + 1
-
-	Logging:Debug("List.Priorities(Tab).ScrollList.Update() - start=%d", start)
-	local lineCount = 1
-	for current = start, MaxPriorities do
-		local priority = self.priorities[lineCount]
-		lineCount = lineCount + 1
-		if not priority then break end
-
-		priority:SetText(tostring(current))
-		Logging:Debug("List.Priorities(Tab).ScrollList.Update() - current=%d", current)
-	end
-
-	for i = lineCount, #self.priorities do
-		self.priorities[i]:Hide()
-	end
-
-	self:Height(PriorityHeight * MaxPriorities)
-end
-
-tab.prioritiesList.ScrollBar.slider:SetScript(
-		"OnValueChanged",
-		function(self)
-			self:GetParent():GetParent():Update()
-			self:UpdateButtons()
-		end
-)
-
-tab.Update = function(self)
-	Logging:Debug("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
-	if self:IsVisible() then
-		self.prioritiesList:Update()
-	end
-end
---]]

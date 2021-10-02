@@ -58,7 +58,7 @@ function EditBox:Create()
         'GetTextHighlight', EditBox.GetTextHighlight,
         'OnDatasourceConfigured',  EditBox.OnDatasourceConfigured,
         'OnDatasourceCleared',  EditBox.OnDatasourceCleared,
-        'AddXIcon', EditBox.AddXIcon
+        'AddXButton', EditBox.AddXButton
     )
 
     eb:SetFontObject(BaseWidget.FontNormal)
@@ -144,13 +144,9 @@ function EditBox.AddSearchIcon(self,size)
     return self:InsideIcon([[Interface\Common\UI-Searchbox-Icon]], size or 15)
 end
 
-function EditBox.AddXIcon(self, size)
-    return self:InsideTexture(
-        BaseWidget.ResolveTexture("DiesalGUIcons16x256x128"),
-        size,
-        {0.5, 0.5625, 0.5, 0.625} --,
-        --{ .8, 0, 0, 1 }
-    )
+function EditBox.AddXButton(self, size)
+    self.xButton = NativeUI:New('ButtonClose', self):Point("RIGHT", 2, 0):Size(size or 14,size or 14)
+    return self
 end
 
 function EditBox.AddLeftText(self,text,size)

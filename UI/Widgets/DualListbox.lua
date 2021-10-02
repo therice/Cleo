@@ -1,6 +1,6 @@
 --- @type AddOn
 local _, AddOn = ...
-local C = AddOn.Constants
+local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 -- @type LibLogging
@@ -14,9 +14,20 @@ local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 --- @class UI.Widgets.DualListbox
 local DualListbox = AddOn.Package('UI.Widgets'):Class('DualListbox', BaseWidget)
 
+local ColorAvailable, ColorSelected, ColorDisabled = C.Colors.ItemPoor, C.Colors.ItemPoor, C.Colors.ItemPoor
+
 function DualListbox:initialize(parent, name)
 	BaseWidget.initialize(self, parent, name)
 end
+
+-- {TexCoord, NormalTexture.VertexColor, HighlightTexture.VertexColor, PushedTexture.VertexColor, DisabledTexture.VertexColor}
+local ButtonMetadata = {
+	{ 1, 1, 1, 1 },
+	{ 1, 1, 1, 0.65 }, -- Util.Tables.New(C.Colors.White:GetRGBA()),
+	{ 0.25, 0.78, 0.92, 0.65 }, --Util.Tables.New(C.Colors.MageBlue:GetRGBA()),
+	{ 0.3, 0.35, 0.5, 1 }, -- Util.Tables.New(C.Colors.AdmiralBlue:GetRGBA()),
+	{ .3, .3, .3, .7 }
+}
 
 function DualListbox:Create()
 	local dlb = CreateFrame("Frame", self.name, self.parent)
@@ -32,6 +43,8 @@ function DualListbox:Create()
 	        :LinePaddingLeft(2)
 	        :ScrollWidth(22)
 			:LineTexture(15, UIUtil.ColorWithAlpha(C.Colors.White, 0.5), UIUtil.ColorWithAlpha(C.Colors.ItemArtifact, 0.6))
+			:HideBorders()
+
 	-- selected options
 	dlb.selected =
 		NativeUI:New('ScrollList', dlb)
@@ -40,11 +53,37 @@ function DualListbox:Create()
 			:LinePaddingLeft(2)
 			:ScrollWidth(22)
 			:LineTexture(15, UIUtil.ColorWithAlpha(C.Colors.White, 0.5), UIUtil.ColorWithAlpha(C.Colors.ItemArtifact, 0.6))
+			:HideBorders()
+
+	dlb.addAll =
+		NativeUI:New('ButtonIcon', dlb, ButtonMetadata, BaseWidget.ResolveTexture("Arrow1"))
+	        :Size(25,25)
+	        :Point("CENTER", dlb, "CENTER", 0, 28)
+	        :Rotate(true)
+			:Tooltip(L["add_all"])
+			:OnClick(
+				function(self, button, down)
+					Logging:Debug("DualListbox.AllAll(OnClick) : %s, %s", tostring(button), tostring(down))
+					if Util.Strings.Equal(C.Buttons.Left, button) then
+						local all = dlb.available:RemoveAll()
+						if all and #all >0 then
+							for _, selected in pairs(all) do
+								dlb.selected:Insert(selected, function(item) return selected < item end)
+								if dlb.selectedChangeFn then
+									dlb.selectedChangeFn(selected, true)
+								end
+							end
+						end
+					end
+				end
+			)
 
 	dlb.add =
-		NativeUI:New('ButtonRightLarge', dlb)
-	        :Size(15,15)
-			:Point("CENTER", dlb, "CENTER", 0, 38)
+		NativeUI:New('ButtonIcon', dlb, ButtonMetadata, BaseWidget.ResolveTexture("Arrow7"))
+			:Size(25,25)
+			:Point("CENTER", dlb, "CENTER", 0, 10)
+			:Rotate(true)
+			:Tooltip(L["add"])
 			:OnClick(
 				function(self, button, down)
 					Logging:Debug("DualListbox.Add(OnClick) : %s, %s", tostring(button), tostring(down))
@@ -62,9 +101,11 @@ function DualListbox:Create()
 			)
 
 	dlb.remove =
-		NativeUI:New('ButtonLeftLarge', dlb)
-			:Size(15,15)
-			:Point("CENTER", dlb, "CENTER", 0, -38)
+		NativeUI:New('ButtonIcon', dlb, ButtonMetadata, BaseWidget.ResolveTexture("Arrow7"))
+			:Size(25,25)
+			:Point("CENTER", dlb, "CENTER", 0, -10)
+			:Rotate(false)
+			:Tooltip(L["remove"])
 			:OnClick(
 				function(self, button, down)
 					Logging:Debug("DualListbox.Remove(OnClick) : %s, %s", tostring(button), tostring(down))
@@ -75,6 +116,30 @@ function DualListbox:Create()
 							dlb.available:Insert(selected, function(item) return selected < item end)
 							if dlb.selectedChangeFn then
 								dlb.selectedChangeFn(selected, false)
+							end
+						end
+					end
+				end
+			)
+
+
+	dlb.removeAll =
+		NativeUI:New('ButtonIcon', dlb, ButtonMetadata, BaseWidget.ResolveTexture("Arrow1"))
+			:Size(25,25)
+	        :Point("CENTER", dlb, "CENTER", 0, -28)
+	        :Rotate(false)
+			:Tooltip(L["remove_all"])
+			:OnClick(
+				function(self, button, down)
+					Logging:Debug("DualListbox.RemoveAll(OnClick) : %s, %s", tostring(button), tostring(down))
+					if Util.Strings.Equal(C.Buttons.Left, button) then
+						local all = dlb.selected:RemoveAll()
+						if all and #all >0 then
+							for _, selected in pairs(all) do
+								dlb.available:Insert(selected, function(item) return selected < item end)
+								if dlb.selectedChangeFn then
+									dlb.selectedChangeFn(selected, false)
+								end
 							end
 						end
 					end
@@ -100,6 +165,8 @@ function DualListbox:Create()
 		'AvailableTooltip', DualListbox.SetAvailableTooltip,
 		'SelectedTooltip', DualListbox.SetSelectedTooltip
 	)
+
+	dlb:SetEnabled(true)
 
 	return dlb
 end
@@ -154,8 +221,17 @@ function DualListbox.Refresh(self)
 end
 
 function DualListbox.SetEnabled(self, enabled)
+	local ac = enabled and ColorAvailable or ColorDisabled
+	local rc = enabled and ColorSelected or ColorDisabled
+
 	self.add:SetEnabled(enabled)
 	self.remove:SetEnabled(enabled)
+	self.addAll:SetEnabled(enabled)
+	self.removeAll:SetEnabled(enabled)
+	self.available:HideBorders()
+	self.available:Border(ac.r, ac.g, ac.b, ac.a, 1, 0, 0)
+	self.selected:HideBorders()
+	self.selected:Border(rc.r, rc.g, rc.b, rc.a, 1, 0, 0)
 end
 
 function DualListbox.Clear(self)
