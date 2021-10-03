@@ -11,6 +11,7 @@ function Entry:value(val) return self:set('value',val) end
 function Entry:disabled(val) return self:set('disabled', val) end
 function Entry:fn(fn) return self:set('func', fn)  end
 function Entry:hidden(val) return self:set('hidden', val) end
+function Entry:title(val) return self:set('isTitle', val) end
 
 --- @class UI.AceConfig.EntryBuilder
 local EntryBuilder = AddOn.Package('UI.DropDown'):Class('EntryBuilder', Builder)
@@ -87,18 +88,20 @@ function DropDown.RightClickMenu(predicate, entries, callback)
         for _, entry in ipairs(levelEntries) do
             info = MSA_DropDownMenu_CreateInfo()
             if not entry.special then
-                if not entry.onValue or entry.onValue == value or (Util.Objects.IsFunction(entry.onValue) and entry.onValue(name, el)) then
-                    if (entry.hidden and Util.Objects.IsFunction(entry.hidden) and not entry.hidden(name, el)) or not entry.hidden then
-                        for name, val in pairs(entry) do
+                local handle = (not entry.onValue or entry.onValue == value or (Util.Objects.IsFunction(entry.onValue) and entry.onValue(name, el)))
+                if handle then
+                    handle = ((entry.hidden and Util.Objects.IsFunction(entry.hidden) and not entry.hidden(name, el)) or not entry.hidden)
+                    if handle then
+                        for attr, val in pairs(entry) do
                             -- custom attributes with support for callbacks
                             -- the parameters are attributes on the menu itself, which must be manually specified
                             -- typically done in the OnClick event, see Standings.lua for example
-                            if name == "func" then
-                                info[name] = function() return val(name, el, module) end
+                            if attr == "func" then
+                                info[attr] = function() return val(name, el, module) end
                             elseif Util.Objects.IsFunction(val) then
-                                info[name] = val(name, el, module)
+                                info[attr] = val(name, el, module)
                             else
-                                info[name] = val
+                                info[attr] = val
                             end
                         end
                         MSA_DropDownMenu_AddButton(info, level)

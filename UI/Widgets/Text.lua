@@ -51,7 +51,7 @@ function Text.SetFont(self, ...)
     return self
 end
 
-function Text.Color(self, colR, colG, colB)
+function Text.Color(self, colR, colG, colB, colA)
     if Util.Objects.IsString(colR) then
         local r, g, b = colR:sub(-6, -5), colR:sub(-4, -3), colR:sub(-2, -1)
         colR, colG, colB = tonumber(r, 16), tonumber(g, 16), tonumber(b, 16)
@@ -59,7 +59,7 @@ function Text.Color(self, colR, colG, colB)
         colG = (colG or 255) / 255
         colB = (colB or 255) / 255
     end
-    self:SetTextColor(colR or 1, colG or 1, colB or 1, 1)
+    self:SetTextColor(colR or 1, colG or 1, colB or 1, colA or 1)
     return self
 end
 
@@ -99,15 +99,15 @@ function Text.Shadow(self,disable)
     return self
 end
 
-function Text.Outline(self,disable)
-    local filename,fontSize = self:GetFont()
-    self:SetFont(filename,fontSize,(not disable) and "OUTLINE")
+function Text.Outline(self, disable)
+    local filename, fontSize = self:GetFont()
+    self:SetFont(filename, fontSize, (not disable) and "OUTLINE")
     return self
 end
 
-function Text.FontSize(self,size)
-    local filename,_,fontParam1,fontParam2,fontParam3 = self:GetFont()
-    self:SetFont(filename,size,fontParam1,fontParam2,fontParam3)
+function Text.FontSize(self, size)
+    local filename, _, fontParam1, fontParam2, fontParam3 = self:GetFont()
+    self:SetFont(filename, size, fontParam1, fontParam2, fontParam3)
     return self
 end
 

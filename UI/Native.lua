@@ -100,8 +100,6 @@ function Widget.LayerBorder(parent, size, cR, cG, cB, cA, outside, layer)
     local textureOwner = parent.CreateTexture and parent or parent:GetParent()
 
     local function GetOrCreateLayerBorder(position)
-
-
         local border = GetLayerBorder(position)
         if not border then
             border = textureOwner:CreateTexture(nil, "BORDER")

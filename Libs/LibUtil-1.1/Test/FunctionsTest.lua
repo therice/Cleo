@@ -58,5 +58,31 @@ describe("LibUtil", function()
 			fn()
 			fn()
 		end)
+		it("Try/Finally", function()
+			local finalized = false
+			Util.Functions.try(
+				function()
+
+				end
+			).finally(
+				function()
+					finalized = true
+				end
+			)
+
+			assert(finalized)
+
+			Util.Functions.try(
+					function()
+						error("try error simulated")
+					end
+			).finally(
+					function()
+						finalized = false
+					end
+			)
+
+			assert(not finalized)
+		end)
 	end)
 end )

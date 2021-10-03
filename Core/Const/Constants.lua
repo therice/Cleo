@@ -94,7 +94,8 @@ AddOn.Constants = {
     },
 
     DropDowns = {
-
+        ListPriorityActions     = name .. "_ListPriorityActions",
+        ListPlayerActions       = name .. "_ListPlayerActions",
     },
 
     Events = {

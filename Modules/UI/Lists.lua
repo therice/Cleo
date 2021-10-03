@@ -19,6 +19,8 @@ local Player = AddOn.ImportPackage('Models').Player
 local Configuration = AddOn.Package('Models.List').Configuration
 --- @type LibUtil.Lists.LinkedList
 local LinkedList = Util.Lists.LinkedList
+--- @type UI.DropDown
+local DropDown = AddOn.Require('UI.DropDown')
 --- @type Lists
 local Lists = AddOn:GetModule("Lists", true)
 
@@ -313,14 +315,14 @@ function Lists:LayoutListTab(tab)
 	local function SelectedConfiguration()
 		local values = tab.config:Selected()
 		local config = #values == 1 and values[1].value or nil
-		Logging:Debug("SelectedConfiguration() : %s", tostring(config and config.id or nil))
+		-- Logging:Debug("SelectedConfiguration() : %s", tostring(config and config.id or nil))
 		return config
 	end
 
 	--- @return Models.List.List
 	local function SelectedList()
 		local list = tab.lists:Selected()
-		Logging:Debug("SelectedList() : %s", tostring(list and list.id or nil))
+		-- Logging:Debug("SelectedList() : %s", tostring(list and list.id or nil))
 		return list
 	end
 
@@ -549,6 +551,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 	end
 
 	tab:SetScript("OnShow", function(self) self:Update() end)
+	self.listEquipmentTab = tab
 end
 
 
@@ -556,11 +559,18 @@ local PriorityWidth, PriorityHeight = 150, 18
 local EditDragType = {
 	Within = 1, -- within existing priorities (reorder)
 	Into   = 2, -- new addition to existing priorities (insert)
-	Out    = 3, -- removal from existing priorities (delete)
 }
+local PriorityActionsMenu, PlayerActionsMenu
 
 function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	local module = self
+
+	PriorityActionsMenu = MSA_DropDownMenu_Create(C.DropDowns.ListPriorityActions, tab)
+	PlayerActionsMenu = MSA_DropDownMenu_Create(C.DropDowns.ListPlayerActions, tab)
+	MSA_DropDownMenu_Initialize(PriorityActionsMenu, self.PriorityActionsMenuInitializer, "MENU")
+	MSA_DropDownMenu_Initialize(PlayerActionsMenu, self.PlayerActionsMenuInitializer, "MENU")
+
+
 	local rowsPerColumn, columns = ceil(tab:GetHeight()/(PriorityHeight+6)), min(3, floor(tab:GetWidth()/(PriorityWidth + 25)))
 
 	local function PriorityCoord(self, xAdjust, yAdjust)
@@ -579,7 +589,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	local function EditOnDragStart(self)
 		if self:IsMovable() then
 			Logging:Debug("EditOnDragStart")
-			-- capture the original posisiton
+			-- capture the original position
 			 _, _, _, self.x, self.y = self:GetPoint()
 			self:StartMoving()
 		end
@@ -589,21 +599,13 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		self:StopMovingOrSizing()
 
 		local function SetText(edit, text, bgText)
-			edit:SetText(text)
-			if Util.Objects.IsEmpty(text) then
-				edit:BackgroundText(bgText)
-				edit.xButton:Hide()
-			else
-				edit:BackgroundText(nil)
-				edit.xButton:Show()
-			end
-			edit:SetCursorPosition(1)
+			edit:Set(text)
 		end
 
 		local function SwapText(from, to)
 			local textFrom, textTo = from:GetText(), to:GetText()
-			SetText(to, textFrom, tostring(to.index))
-			SetText(from, textTo, tostring(from.index))
+			SetText(to, textFrom)
+			SetText(from, textTo)
 		end
 
 		local x, y
@@ -614,7 +616,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 					SwapText(self, target)
 					x, y = PriorityCoord(self)
 				elseif dragType == EditDragType.Into then
-					SetText(target, self:GetText(), nil)
+					SetText(target, self:GetText())
 					x, y = self.x, self.y
 				end
 				break
@@ -630,32 +632,49 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		self:ClearFocus()
 	end
 
-	local function EditOnChange(self, isPriority)
+	local function EditOnChange(self, isPriority, userInput)
 		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
-		Logging:Debug("EditOnChange(%d) : %s", index, Util.Objects.Default(playerName, "nil"))
+		Logging:Debug("EditOnChange(%d - %s, %s) : %s", index, tostring(isPriority), tostring(userInput), Util.Objects.Default(playerName, "nil"))
 		if Util.Strings.IsSet(playerName) then
 			self:SetTextColor(UIUtil.GetPlayerClassColor(playerName):GetRGBA())
 		end
 
 		if isPriority then
+			Logging:Debug("EditOnChange() : %d => %s", index, tostring(playerName))
 			if Util.Strings.IsSet(playerName) then
 				priorities[index] = Player:Get(playerName)
 			else
 				priorities[index] = nil
 			end
 
-			Logging:Debug("Priorities => %s", Util.Objects.ToString(Util.Tables.Keys(priorities)))
-			self:GetParent():UpdateAvailablePlayers()
+			if tab:HasPendingChanges() then
+				tab.warning:Show()
+			else
+				tab.warning:Hide()
+			end
+
+			tab:UpdateAvailablePlayers()
 		end
 	end
+
+	tab.warning =
+		UI:New('Text', tab, L["warning_unsaved_changes"])
+			:Point("TOPRIGHT", tab, "TOPRIGHT", -70, 17)
+			:Color(0.99216, 0.48627, 0.43137, 0.8)
+			:Right()
+			:FontSize(14)
+			:Shadow(true)
+			:Outline(false)
+	tab.warning:Hide()
 
 	-- this tracks player's priority "edits" which are currently on the list (pure UI element)
 	tab.priorityEdits = {}
 	-- create individual priority slots (which can be dragged and dropped)
 	for index = 1, (columns * rowsPerColumn) do
-		local priorityEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight)
+		local priorityEdit = UI:New('EditBox', tab)
+								:Size(PriorityWidth, PriorityHeight)
 								:AddXButton()
-								:OnChange(function(self) EditOnChange(self, true) end)
+								:OnChange(function(self, userInput) EditOnChange(self, true, userInput) end)
 		tab.priorityEdits[index] = priorityEdit
 		priorityEdit.index = index
 		priorityEdit:BackgroundText(tostring(index))
@@ -663,10 +682,32 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		priorityEdit.xButton:SetScript(
 				"OnClick",
 				function(self)
-					local edit = self:GetParent()
-					edit:Text(nil)
-					edit:BackgroundText(tostring(edit.index))
-					edit.xButton:Hide()
+					self:GetParent():Set(nil)
+				end
+		)
+		priorityEdit.Reset = function(self)
+			local otcFn = self:GetScript("OnTextChanged")
+			self:OnChange(nil)
+			self:Set(nil)
+			self:OnChange(otcFn)
+		end
+		priorityEdit.Set = function(self, text)
+			self:SetText(text or "")
+			if Util.Objects.IsEmpty(text) then
+				self:BackgroundText(tostring(self.index))
+				self.xButton:Hide()
+			else
+				self:BackgroundText(nil)
+				self.xButton:Show()
+			end
+			self:SetCursorPosition(1)
+		end
+		priorityEdit:SetScript("OnMouseDown",
+				function(self, button)
+					if Util.Strings.Equal(C.Buttons.Right, button) then
+						PriorityActionsMenu.module = module
+						DropDown.ToggleMenu(1, PriorityActionsMenu, self)
+					end
 				end
 		)
 		priorityEdit:SetMovable(true)
@@ -730,18 +771,70 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			)
 	tab.playersInRaid:SetSize(12, 12)
 
+	tab.HasPendingChanges = function(self)
+		Logging:Debug("HasPendingChanges() : Orig(%d), Current(%d)", Util.Tables.Count(self.prioritiesOrig), Util.Tables.Count(self.priorities))
+		return not Util.Tables.Equals(self.prioritiesOrig, self.priorities, true)
+	end
 
-	tab.LoadPriorities = function(self)
+	tab.UpdatePriorities = function(self, reload)
+		reload = Util.Objects.IsNil(reload) and true or reload
 		local list = listSupplier()
-		-- capture current priority list, allows for in-memory manipulation and reverts
-		if list then
-			self.priorities = list:GetPlayers():toTable()
-		else
-			self.priorities = {}
+
+		Logging:Debug("UpdatePriorities(%s) : reload(%s)", list and list.id or 'nil', tostring(reload))
+
+		if reload then
+			self.prioritiesOrig, self.priorities = {}, {}
+			if list then
+				self.prioritiesOrig = list:GetPlayers():toTable(function(p) return p end)
+			end
+		end
+
+		local priorityCount = reload and #self.prioritiesOrig or table.maxn(self.priorities)
+		Logging:Debug("UpdatePriorities(%s) : Count(%d)",  list and list.id or 'nil', priorityCount)
+
+		for priority = 1, priorityCount do
+			-- reset it so potential change to previous value still fires the OnTextChanged event
+			self.priorityEdits[priority]:Reset()
+			local player = reload and self.prioritiesOrig[priority] or self.priorities[priority]
+			self.priorityEdits[priority]:Set(player and player:GetShortName() or nil)
+		end
+
+		for priority = priorityCount + 1, #self.priorityEdits do
+			self.priorityEdits[priority]:Set(nil)
 		end
 	end
 
-	-- todo : memoize this shit
+	tab.SavePriorities = function(self)
+		local list = listSupplier()
+		if list then
+			if self:HasPendingChanges() then
+				local compacted = Util.Tables.Compact(self.priorities)
+				list:SetPlayers(unpack(Util.Tables.Values(compacted)))
+				module.List:Update(list, "players")
+				self:UpdatePriorities()
+			end
+		end
+	end
+
+	tab.SetPriority = function(self, player, first)
+		local list = listSupplier()
+		if list then
+			local position
+			-- random
+			if Util.Objects.IsNil(first) then
+				position = math.random(1, table.maxn(self.priorities))
+				self.priorities = Util.Tables.Splice2(self.priorities, position, position + 1, {player})
+			elseif first then
+				Util.Tables.Insert(self.priorities, 1, player)
+			else
+				Util.Tables.Insert(self.priorities, table.maxn(self.priorities) + 1, player)
+			end
+
+			Logging:Debug("SetPriority(%s) : %d", tostring(first), Util.Tables.Count(self.priorities))
+			self:UpdatePriorities(false)
+		end
+	end
+
 	tab.UpdateAvailablePlayers = function(self)
 		-- less 3 rows because of headers and footers
 		local displayRows = (rowsPerColumn - 3)
@@ -769,7 +862,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local playerEdit = self.playerEdits[index]
 			-- create individual player slot (which can be dragged and dropped)
 			if not playerEdit then
-				playerEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):OnChange(function(self) EditOnChange(self, false) end)
+				playerEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):OnChange(function(self, userInput) EditOnChange(self, false, userInput) end)
 				self.playerEdits[index] = playerEdit
 				playerEdit.index = index
 				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (3.5*PriorityWidth), -(PriorityHeight * 1.5)))
@@ -787,6 +880,17 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			Logging:Debug("UpdateAvailablePlayers() : index=%d, playerIndex=%d", index, playerIndex)
 			playerEdit:SetText(available[playerIndex]:GetShortName())
 			playerEdit:SetCursorPosition(1)
+			playerEdit:SetScript(
+				"OnMouseDown",
+				function(self, button)
+					if Util.Strings.Equal(C.Buttons.Right, button) then
+						PlayerActionsMenu.name = self:GetText()
+						PlayerActionsMenu.entry = available[playerIndex]
+						PlayerActionsMenu.module = module
+						DropDown.ToggleMenu(1, PlayerActionsMenu, self)
+					end
+				end
+			)
 			playerEdit:Show()
 		end
 
@@ -807,7 +911,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local enabled = (configSupplier() and listSupplier())
 
 			self:SetFieldsEnabled(true)
-			self:LoadPriorities()
+			self:UpdatePriorities()
 
 			--[[
 			self:SetFieldsEnabled(enabled)
@@ -819,4 +923,64 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	end
 
 	tab:SetScript("OnShow", function(self) self:Update() end)
+	self.listPriorityTab = tab
+end
+
+do
+	local PriorityActionsEntryBuilder =
+		DropDown.EntryBuilder()
+			:nextlevel()
+				:add():text(L["priorities"]):checkable(false):title(true)
+				:add():text(L["save"]):checkable(false)
+					:disabled(function(_, _, self) return not self.listPriorityTab:HasPendingChanges() end)
+					:fn(
+						function(_, _, self)
+							self.listPriorityTab:SavePriorities()
+						end
+					)
+				:add():text(L["revert"]):checkable(false)
+					:disabled(function(_, _, self) return not self.listPriorityTab:HasPendingChanges() end)
+					:fn(
+						function(_, _, self)
+							self.listPriorityTab:UpdatePriorities()
+						end
+					)
+
+	Lists.PriorityActionsMenuInitializer = DropDown.RightClickMenu(
+		Util.Functions.True,
+		PriorityActionsEntryBuilder:build()
+	)
+
+	local PlayerActionsEntryBuilder =
+		DropDown.EntryBuilder()
+			:nextlevel()
+				:add():text(
+					function(name, entry, module)
+						return UIUtil.ClassColorDecorator(entry.class):decorate(name)
+					end
+				):checkable(false):title(true)
+				:add():text(L["insert"]):checkable(false):arrow(true)
+			:nextlevel()
+				:add():text(L["insert_first"]):checkable(false)
+					:fn(
+						function(_, player, self)
+							self.listPriorityTab:SetPriority(player, true)
+						end
+					)
+				:add():text(L["insert_last"]):checkable(false)
+					:fn(
+						function(_, player, self)
+							self.listPriorityTab:SetPriority(player, false)
+						end
+					)
+				:add():text(L["insert_random"]):checkable(false)
+					:fn(
+						function(_, player, self)
+							self.listPriorityTab:SetPriority(player, nil)
+						end
+					)
+	Lists.PlayerActionsMenuInitializer = DropDown.RightClickMenu(
+			Util.Functions.True,
+			PlayerActionsEntryBuilder:build()
+	)
 end

@@ -4,7 +4,7 @@
 ---
 --- https://www.curseforge.com/wow/addons/msa-dropdownmenu-10
 
-local name, version = "MSA-DropDownMenu-1.0", 11
+local name, version = "MSA-DropDownMenu-1.0", 12
 
 local lib, oldVersion = LibStub:NewLibrary(name, version)
 if not lib then return end
@@ -646,12 +646,12 @@ function MSA_DropDownMenu_AddSeparator(info, level)
     info.tSizeY = 8;
     info.tFitDropDownSizeX = true;
     info.iconInfo = { tCoordLeft = info.tCoordLeft,
-                      tCoordRight = info.tCoordRight,
-                      tCoordTop = info.tCoordTop,
-                      tCoordBottom = info.tCoordBottom,
-                      tSizeX = info.tSizeX,
-                      tSizeY = info.tSizeY,
-                      tFitDropDownSizeX = info.tFitDropDownSizeX };
+        tCoordRight = info.tCoordRight,
+        tCoordTop = info.tCoordTop,
+        tCoordBottom = info.tCoordBottom,
+        tSizeX = info.tSizeX,
+        tSizeY = info.tSizeY,
+        tFitDropDownSizeX = info.tFitDropDownSizeX };
 
     MSA_DropDownMenu_AddButton(info, level);
 
@@ -1443,6 +1443,26 @@ if ToggleDropDownMenu then
         local listFrameMSA = _G["MSA_DropDownList1"];
         if ( listFrameMSA:IsShown() ) then
             listFrameMSA:Hide();
+        end
+    end)
+end
+
+if UIDropDownMenu_HandleGlobalMouseEvent then
+    local function MSA_DropDownMenu_ContainsMouse()
+        for i = 1, MSA_DROPDOWNMENU_MAXLEVELS do
+            local dropdown = _G["MSA_DropDownList"..i];
+            if dropdown:IsShown() and dropdown:IsMouseOver() then
+                return true;
+            end
+        end
+        return false;
+    end
+
+    hooksecurefunc("UIDropDownMenu_HandleGlobalMouseEvent", function(button, event)
+        if event == "GLOBAL_MOUSE_DOWN" and (button == "LeftButton" or button == "RightButton") then
+            if not MSA_DropDownMenu_ContainsMouse() then
+                MSA_CloseDropDownMenus()
+            end
         end
     end)
 end

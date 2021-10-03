@@ -165,7 +165,25 @@ end
 ---@param e number
 ---@param u number
 function Self.Splice(t, s, e, u)
-    return Self.Merge(Self.Head(t, s), u or {}, Self.Sub(#t, e))
+    return Self.Merge(Self.Head(t, s), u or {}, Self.Sub(t, e))
+end
+
+-- "same" as Splice but handles sparse tables
+function Self.Splice2(t, s, e, u)
+    local spliced, u, size = {}, u or {}, table.maxn(t)
+    for index=1, math.min(s, size) do
+        spliced[index] = t[index]
+    end
+
+    for index=1, #u do
+       spliced[table.maxn(spliced)+ 1] = u[index]
+    end
+
+    for index=math.min(e, size), size do
+        spliced[index + #u] = t[index]
+    end
+
+    return spliced
 end
 
 -- ITERATE
@@ -390,7 +408,7 @@ function Self.FindFn(t, fn, index, notVal, ...)
     end
 end
 
--- Find the first element (optinally matching a fn)
+-- Find the first element (optionally matching a fn)
 ---@return any
 function Self.First(t, fn, index, notVal, ...)
     return Self.Nth(t, 2, fn, index, notVal, ...)

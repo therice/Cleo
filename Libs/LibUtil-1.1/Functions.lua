@@ -145,3 +145,38 @@ function Self.Debounce(fn, n, leading)
         end
     end
 end
+
+function Self.try(tryBlock)
+    local status, err = true, nil
+    if Util.Objects.IsFunction(tryBlock) then
+        status, err = xpcall(tryBlock,  (debug and debug.traceback) and debug.traceback or _G.debugstack)
+    end
+
+    local finally = function(finallyBlock, hasCatchBlock)
+        if Util.Objects.IsFunction(finallyBlock) then
+            finallyBlock()
+        end
+
+        if not hasCatchBlock and not status then
+            error(err)
+        end
+    end
+
+    local catch = function(catchBlock)
+        local hasCatchBlock = Util.Objects.IsFunction(catchBlock)
+
+        if not status and hasCatchBlock then
+            local ex = err or "unknown error occurred"
+            catchBlock(ex)
+        end
+
+        return {
+            finally = function(finallyBlock)  finally(finallyBlock, hasCatchBlock) end
+        }
+    end
+
+    return {
+        catch = catch,
+        finally = function(finallyBlock) finally(finallyBlock, false) end
+    }
+end

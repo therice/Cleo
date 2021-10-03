@@ -28,9 +28,9 @@ function List:initialize(configId, id, name)
 end
 
 --- we only want to serialize the player's stripped guid which is enough
-function List:toTable()
+function List:toTable(playerFn)
 	local t =  List.super.toTable(self)
-	t['players'] = self.players:toTable(function(p) return p:ForTransmit() end)
+	t['players'] = self.players:toTable(playerFn or function(p) return p:ForTransmit() end)
 	return t
 end
 
@@ -62,4 +62,27 @@ end
 
 function List:GetPlayers()
 	return self.players
+end
+
+function List:SetPlayers(...)
+	local count = select("#", ...)
+	Logging:Trace("SetPlayers(%d)", count)
+
+	if count > 0 then
+		local first = select(1, ...)
+		if count == 1 and (Util.Objects.IsTable(first) and first:isInstanceOf(LinkedList)) then
+			self.players = first
+		else
+			self.players = LinkedList()
+			for i=1, count do
+				local player = select(i, ...)
+				Logging:Debug("SetPlayers(%d) : %s", i, player:GetShortName())
+				if (Util.Objects.IsTable(player) and player:isInstanceOf(Player)) then
+					self.players:Add(player)
+				else
+					self.players:Add(Player:Get(player))
+				end
+			end
+		end
+	end
 end
