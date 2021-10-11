@@ -123,7 +123,7 @@ function Lists:LayoutConfigurationTab(tab)
 			:OnClick(
 				function(...)
 					-- create and persist new configuration
-					local config = module.listsService.Configuration.Create()
+					local config = module.listsService.Configuration:Create()
 					tab.configList:Add(config)
 					module.listsService.Configuration:Add(config)
 					-- select it in the list
@@ -144,6 +144,21 @@ function Lists:LayoutConfigurationTab(tab)
 	        :Size(425,20)
 	        :Point("LEFT", tab.delete, "RIGHT", 15, -35)
 	        :Tooltip(L["name"], L["list_config_name_desc"])
+			:OnChange(
+				Util.Functions.Debounce(
+					function(self, userInput)
+						Logging:Trace("Configuration[Name].OnChange(%s)", tostring(userInput))
+						if userInput then
+							local config = SelectedConfiguration()
+							config.name = self:GetText()
+							module.listsService.Configuration:Update(config, 'name')
+							tab.configList:Update()
+						end
+					end, -- function
+					1, -- seconds
+					true -- leading
+			)
+		)
 
 	tab.owner =
 		UI:New('Dropdown', tab)
@@ -235,25 +250,13 @@ function Lists:LayoutConfigurationTab(tab)
 
 	tab.Update = function(self)
 		local config = SelectedConfiguration()
-		Logging:Trace("Config(Tab).Update(%s)", tostring(config.id))
-
-		self:SetFieldsEnabled(true)
-
-		self.name:Datasource(
-			module,
-			module.db.factionrealm.configurations,
-			module.listsService.Configuration.Key(config, "name"),
-			function(value)
-				config.name = value
-				return value
-			end,
-			function(...)
-				tab.configList:Update()
-			end
-		)
-
-		self.owner:Refresh()
-		self.admins:Refresh()
+		if config then
+			Logging:Trace("Config(Tab).Update(%s)", tostring(config.id))
+			self:SetFieldsEnabled(true)
+			self.name:Text(config.name)
+			self.owner:Refresh()
+			self.admins:Refresh()
+		end
 	end
 
 	tab:SetFieldsEnabled(false)
@@ -271,6 +274,13 @@ function Lists.DeleteConfigurationOnShow(frame, config)
 end
 
 function Lists:DeleteConfigurationOnClickYes(_, config)
+	-- need to remove the associated lists as well
+	local lists = self.listsService.Lists(config.id)
+	if lists then
+		for _, list in pairs(lists) do
+			self.listsService.List:Remvoe(list)
+		end
+	end
 	self.listsService.Configuration:Remove(config)
 	self.configTab.configList:RemoveSelected()
 	self.configTab:Update()
@@ -280,7 +290,6 @@ local ListTabs = {
 	[L["priority"]]     = L["list_list_priority_desc"],
 	[L["equipment"]]    = L["list_list_equipment_desc"],
 }
-
 
 function Lists:LayoutListTab(tab)
 	local module = self
@@ -342,7 +351,7 @@ function Lists:LayoutListTab(tab)
 			:OnClick(
 				function(...)
 					local config = SelectedConfiguration()
-					local list = module.listsService.List.Create(config.id)
+					local list = module.listsService.List:Create(config.id)
 					tab.lists:Add(list)
 					module.listsService.List:Add(list)
 					-- select it in the list
@@ -382,9 +391,24 @@ function Lists:LayoutListTab(tab)
 
 	tab.name =
 		UI:New('EditBox', tab)
-		  :Size(425,20)
-		  :Point("LEFT", tab.delete, "RIGHT", 15, 2)
-		  :Tooltip(L["name"], L["list_list_name_desc"])
+		    :Size(425,20)
+		    :Point("LEFT", tab.delete, "RIGHT", 15, 2)
+		    :Tooltip(L["name"], L["list_list_name_desc"])
+			:OnChange(
+				Util.Functions.Debounce(
+						function(self, userInput)
+							Logging:Trace("List[Name].OnChange(%s)", tostring(userInput))
+							if userInput then
+								local list = SelectedList()
+								list.name = self:GetText()
+								module.listsService.List:Update(list, 'name')
+								tab.lists:Update()
+							end
+						end, -- function
+						1, -- seconds
+						true -- leading
+				)
+			)
 
 	tab.SetButtonsEnabled = function(self, enabled)
 		self.add:SetEnabled(enabled)
@@ -402,20 +426,9 @@ function Lists:LayoutListTab(tab)
 		self:SetButtonsEnabled(Util.Objects.IsSet(config))
 
 		if list then
-			self.name:Datasource(
-					module,
-					module.db.factionrealm.lists,
-					module.listsService.List.Key(list, "name"),
-					function(value)
-						list.name = value
-						return value
-					end,
-					function(...)
-						tab.lists:Update()
-					end
-			)
+			self.name:Text(list.name)
 		else
-			self.name:ClearDatasource()
+			self.name:Text(nil)
 		end
 
 		-- iterate and child tabs and update their fields
@@ -826,7 +839,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				Util.Tables.Insert(self.priorities, table.maxn(self.priorities) + 1, player)
 			end
 
-			Logging:Debug("SetPriority(%s) : %d", tostring(first), Util.Tables.Count(self.priorities))
+			Logging:Debug("SetPriority(%s, %s) : %d", tostring(player), tostring(first), Util.Tables.Count(self.priorities))
 			self:UpdatePriorities(false)
 		end
 	end

@@ -51,6 +51,13 @@ local function _createClass(name, super)
     local dict = {}
     dict.__index = dict
 
+    -- Weak Tables
+    --
+    -- If the __mode field is a string containing the character 'k', the keys in the table are weak
+    --
+    -- A table with weak keys and strong values is also called an ephemeron table.
+    -- In an ephemeron table, a value is considered reachable only if its key is reachable.
+    -- In particular, if the only reference to a key comes through its value, the pair is removed.
     local aClass = { name = name, super = super, static = {},
                      __instanceDict = dict, __declaredMethods = {},
                      subclasses = setmetatable({}, {__mode='k'})  }

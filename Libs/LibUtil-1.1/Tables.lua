@@ -120,7 +120,6 @@ end
 function Self.List(t)
     local n = Self.Count(t)
     for k=1, n do
-        print(k .. ' => ' .. tostring(t[k]))
         if not t[k] then
             local l
             for i,v in pairs(t) do
@@ -131,7 +130,6 @@ function Self.List(t)
                     break
                 end
             end
-            print(k .. ' => ' .. l)
             t[k], t[l] = t[l], nil
         end
     end
@@ -181,7 +179,7 @@ function Self.Splice2(t, s, e, u)
        spliced[table.maxn(spliced)+ 1] = u[index]
     end
 
-    for index=math.min(e, size), size do
+    for index=e, size do
         spliced[index + #u] = t[index]
     end
 
@@ -496,7 +494,6 @@ end
 
 -- Filter by not having a set of key/value pairs in a table
 local Fn = function (...)
-    print(Util.Objects.ToString({...}))
     return not Self.Matches(...)
 end
 ---@param t table
@@ -873,12 +870,10 @@ end
 -- sorts using OrderedPairs (this copies the passed table)
 function Self.Sort2(t, flip)
     flip = Util.Objects.Default(flip, false)
-    print(tostring(flip))
     local u = Self.New()
     local p = flip and Util.Tables.Flip(t) or t
 
     for k, v in Self.OrderedPairs(p) do
-        print(tostring(k) .. ' -> ' .. tostring(v))
         u[k] = v
     end
     return u

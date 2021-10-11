@@ -2,7 +2,7 @@
 -- into being LibClass compatible
 
 local _, AddOn = ...
-local Util, Logging = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging")
+local Util = AddOn:GetLibrary("Util")
 --- @class Models.SemanticVersion
 local SemanticVersion = AddOn.Package('Models'):Class('SemanticVersion')
 
@@ -188,10 +188,10 @@ function SemanticVersion:__lt(other)
     return smallerPrerelease(self.prerelease, other.prerelease)
 end
 
+-- the exponentiation (^) operation. Behavior similar to the addition operation.
 function SemanticVersion:__pow(other)
     if self.major == 0 then
         return self == other
     end
-    return self.major == other.major and
-            self.minor <= other.minor
+    return self.major == other.major and self.minor <= other.minor
 end

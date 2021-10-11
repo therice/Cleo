@@ -5,6 +5,10 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Util = AddOn:GetLibrary("Util")
 --- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
+--- @type Models.SemanticVersion
+local SemanticVersion = AddOn.Package('Models').SemanticVersion
+--- @type Models.Versioned
+local Versioned = AddOn.Package('Models').Versioned
 --- @type LibUtil.Bitfield.Bitfield
 local Bitfield = Util.Bitfield.Bitfield
 --- @type Models.Player
@@ -18,8 +22,8 @@ local Date = AddOn.Package('Models').Date
 local DateFormat = AddOn.Package('Models').DateFormat
 
 --- @class Models.List.Configuration
-local Configuration = AddOn.Package('Models.List'):Class('Configuration')
--- todo : do we really need 'None'?
+local Configuration = AddOn.Package('Models.List'):Class('Configuration', Versioned)
+-- todo : do we really need 'None'? its one use is tracking previous owner/admins who have been removed
 Configuration.Permissions = {
 	None        =   0x01,
 	Owner       =   0x02,
@@ -32,7 +36,10 @@ function Permission:initialize()
 	Bitfield.initialize(self,  Configuration.Permissions.None)
 end
 
+local Version = SemanticVersion(1, 0, 0)
+
 function Configuration:initialize(id, name)
+	Versioned.initialize(self, Version, "name", "permissions")
 	self.id = id
 	self.name = name
 	--- @type table<any, Models.List.Permission>
@@ -40,10 +47,10 @@ function Configuration:initialize(id, name)
 end
 
 function Configuration:afterReconstitute(instance)
+	instance = Configuration.super:afterReconstitute(instance)
 	instance.permissions = Util.Tables.Map(
 		Util.Tables.Copy(instance.permissions),
 		function(p)
-			-- Logging:Debug("afterReconstitute() : %s", Util.Objects.ToString(p))
 			return Permission:reconstitute(p)
 		end
 	)
@@ -51,10 +58,7 @@ function Configuration:afterReconstitute(instance)
 end
 
 local function PlayerId(player)
-	if Util.Objects.IsString(player) then
-		player = Player:Get(player)
-	end
-
+	player = Player.Resolve(player)
 	return player.guid
 end
 

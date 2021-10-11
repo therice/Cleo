@@ -5,6 +5,10 @@ local C = AddOn.Constants
 local Util = AddOn:GetLibrary("Util")
 --- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
+--- @type Models.Versioned
+local Versioned = AddOn.Package('Models').Versioned
+--- @type Models.SemanticVersion
+local SemanticVersion = AddOn.Package('Models').SemanticVersion
 
 --- @class Models.Dao
 local Dao = AddOn.Package('Models'):Class('Dao')
@@ -14,7 +18,7 @@ function Dao:initialize(module, db, entityClass)
 	self.entityClass = entityClass
 end
 
-function Dao.Create(...)
+function Dao:Create(...)
 	if self.entityClass.CreateInstance then
 		return self.entityClass.CreateInstance(...)
 	end
@@ -70,11 +74,43 @@ end
 -- U(pdate)
 function Dao:Update(entity, attr)
 	local key = self.Key(entity, attr)
+	local asTable = entity:toTable()
+
 	self.module:SetDbValue(
 			self.db,
 			key,
-			entity:toTable()[attr]
+			asTable[attr]
 	)
+
+	-- for versioned entities, trigger a new revision if attribute is marked as such
+	if Util.Objects.IsInstanceOf(entity, Versioned) then
+		if entity:TriggersNewRevision(attr) then
+			entity:NewRevision()
+			self.module:SetDbValue(
+					self.db,
+					self.Key(entity, 'revision'),
+					entity.revision
+			)
+		end
+
+		-- check on stored version vs current version
+		local version, storedVersion =
+			entity.version,
+			self.module:GetDbValue(self.db, self.Key(entity, 'version'))
+
+		if not Util.Objects.IsNil(storedVersion) then
+			_, storedVersion = SemanticVersion.Create(storedVersion)
+		end
+
+		-- if the version is not stored or it's less than current version, update it
+		if Util.Objects.IsNil(storedVersion) or (storedVersion < version) then
+			self.module:SetDbValue(
+					self.db,
+					self.Key(entity, 'version'),
+					version:toTable()
+			)
+		end
+	end
 end
 
 -- D(elete)

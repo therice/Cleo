@@ -16,34 +16,40 @@ local UUID = Util.UUID.UUID
 local Date = AddOn.Package('Models').Date
 --- @type Models.DateFormat
 local DateFormat = AddOn.Package('Models').DateFormat
+--- @type Models.SemanticVersion
+local SemanticVersion = AddOn.Package('Models').SemanticVersion
+--- @type Models.Versioned
+local Versioned = AddOn.Package('Models').Versioned
 
--- dumb, doing this for a workaround to get native LibClass toTable() functionality
-local B = Class("B")
+
+local Version = SemanticVersion(1, 0, 0)
+
 --- @class Models.List.List
-local List = AddOn.Package('Models.List'):Class('List', B)
+local List = AddOn.Package('Models.List'):Class('List', Versioned)
 function List:initialize(configId, id, name)
-	B.initialize(self)
+	Versioned.initialize(self, Version, "name", "equipment", "players")
 	self.configId = configId
 	self.id = id
 	self.name = name
 	--- @type table<number, string> equipment types/locations to which list applies (e.g. INVTYPE_HEAD)
 	self.equipment = {}
-	--- @type table<number, Models.Player>
 	-- a sparse array
+	--- @type table<number, Models.Player>
 	self.players = {}
 end
 
 local PlayerSerializer =  function(p) return p:ForTransmit() end
 
 --- we only want to serialize the player's stripped guid which is enough
-function List:toTable(playerFn)
-	local t =  List.super.toTable(self)
+function List:toTable()
+	local t = List.super.toTable(self)
 	t['players'] = self:GetPlayers(true, true)
 	return t
 end
 
 -- player's will be a table with stripped guids
 function List:afterReconstitute(instance)
+	instance = List.super:afterReconstitute(instance)
 	instance.players =
 		Util(instance.players)
 			:Copy():Map(function(p) return Player:Get(p) end)()
@@ -221,7 +227,7 @@ function List:SetPlayers(...)
 	end
 end
 
-function List.Create(configId)
+function List.CreateInstance(configId)
 	local uuid, name = UUID(), format("%s (%s)", L["list"], DateFormat.Full:format(Date()))
 	Logging:Trace("List.Create() : %s, %s, %s", tostring(configId), tostring(uuid), tostring(name))
 	return List(configId, uuid, name)

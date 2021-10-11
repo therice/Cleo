@@ -11,8 +11,6 @@ local UI = AddOn.Require('UI.Native')
 -- @type UI.Native.BaseWidget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 
------ @type Models.Award
---local Award = AddOn.Package('Models').Award
 
 -- generic build entry attributes
 --- @class UI.Util.Attributes
@@ -333,49 +331,6 @@ end
 function U.ItemQualityDecorator(rarity)
     return ColoredDecorator(GetItemQualityColor(rarity))
 end
-
---[[
-local GP = Util.Memoize.Memoize(function() return AddOn:GearPointsModule() end)
-
-function U.AwardReasonDecorator(award)
-    return ColoredDecorator(GP():GetAwardColor(award))
-end
-
-
-local Colors = {
-    ResourceTypes = {
-        [Award.ResourceType.Ep] = C.Colors.ItemArtifact,
-        [Award.ResourceType.Gp] = C.Colors.ItemLegendary,
-    },
-    SubjectTypes  = {
-        [Award.SubjectType.Character] = C.Colors.ItemCommon,
-        [Award.SubjectType.Guild]     = C.Colors.ItemUncommon,
-        [Award.SubjectType.Raid]      = C.Colors.ItemLegendary,
-        [Award.SubjectType.Standby]   = C.Colors.ItemRare,
-    },
-    ActionTypes   = {
-        [Award.ActionType.Add]      = C.Colors.Evergreen,
-        [Award.ActionType.Subtract] = C.Colors.PaladinPink,
-        [Award.ActionType.Reset]    = C.Colors.RogueYellow,
-        [Award.ActionType.Decay]    = C.Colors.Purple,
-    }
-}
-
-function U.GetSubjectTypeColor(subjectType)
-    if Util.Objects.IsString(subjectType) then subjectType = Award.SubjectType[subjectType] end
-    return Colors.SubjectTypes[subjectType]
-end
-
-function U.GetResourceTypeColor(resourceType)
-    if Util.Objects.IsString(resourceType) then resourceType = Award.ResourceType[resourceType] end
-    return Colors.ResourceTypes[resourceType]
-end
-
-function U.GetActionTypeColor(actionTYpe)
-    if Util.Objects.IsString(actionTYpe) then actionTYpe = Award.ActionType[actionTYpe] end
-    return Colors.ActionTypes[actionTYpe]
-end
---]]
 
 function U.ClassIconFn()
     return function(frame, class)

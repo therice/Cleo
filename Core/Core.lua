@@ -208,8 +208,17 @@ function AddOn:GetMasterLooter()
 
     -- always the player when testing alone
     if GetNumGroupMembers() == 0 and (self:TestModeEnabled() or self:DevModeEnabled()) then
-        -- todo
-        -- self:ScheduleTimer("Timer", 5, AddOn.Constants.Commands.MasterLooterDbCheck)
+        self:ScheduleTimer(
+                function()
+                    if Util.Objects.IsSet(self.masterLooter) then
+                        -- base check on an attribute that should be present
+                        if not self:HaveMasterLooterDb() then
+                            self:Send(self.masterLooter, C.Commands.MasterLooterDbRequest)
+                        end
+                    end
+                end,
+                5
+        )
         return true, self.player
     end
 
@@ -218,10 +227,10 @@ function AddOn:GetMasterLooter()
         -- Someone in raid
         if mlRaidId then
             name = self:UnitName("raid" .. mlRaidId)
-            -- Player in party
+        -- Player in party
         elseif mlPartyId == 0 then
             name = self.player:GetName()
-            -- Someone in party
+        -- Someone in party
         elseif mlPartyId then
             name = self:UnitName("party" .. mlPartyId)
         end
@@ -315,7 +324,7 @@ function AddOn:NewMasterLooterCheck()
     -- we're the ML and settings say to use when ML
     if isML and ML:GetDbValue('usage.state') == ML.UsageType.Always then
         self:StartHandleLoot()
-        -- we're the ML and settings say to ask
+    -- we're the ML and settings say to ask
     elseif isML and ML:GetDbValue('usage.state')  == ML.UsageType.Ask then
         return Dialog:Spawn(C.Popups.ConfirmUsage)
     end
@@ -342,6 +351,7 @@ function AddOn:StartHandleLoot()
     self:Send(C.group, C.Commands.HandleLootStart)
     self:CallModule("MasterLooter")
     self:MasterLooterModule():NewMasterLooter(self.masterLooter)
+    -- todo : locate sk configuration
 end
 
 
