@@ -110,7 +110,7 @@ end
 ---@return table
 function Self.Values(t)
     local u = Self.New()
-    for i,v in pairs(t) do tinsert(u, v) end
+    for _,v in pairs(t) do tinsert(u, v) end
     return u
 end
 
@@ -120,6 +120,7 @@ end
 function Self.List(t)
     local n = Self.Count(t)
     for k=1, n do
+        print(k .. ' => ' .. tostring(t[k]))
         if not t[k] then
             local l
             for i,v in pairs(t) do
@@ -130,6 +131,7 @@ function Self.List(t)
                     break
                 end
             end
+            print(k .. ' => ' .. l)
             t[k], t[l] = t[l], nil
         end
     end
@@ -656,7 +658,7 @@ function Self.MapKeys(t, fn, index, notVal, ...)
     fn = Util.Functions.New(fn)
     local u = Self.New()
     for i,v in pairs(t) do
-        u[Util.Functions.Call(fn, i, v, index, notVal, ...)] = v
+        u[Util.Functions.Call(fn, v, i, index, notVal, ...)] = v
     end
     return u
 end
@@ -868,6 +870,65 @@ function Self.Sort(t, fn)
     return t
 end
 
+-- sorts using OrderedPairs (this copies the passed table)
+function Self.Sort2(t, flip)
+    flip = Util.Objects.Default(flip, false)
+    print(tostring(flip))
+    local u = Self.New()
+    local p = flip and Util.Tables.Flip(t) or t
+
+    for k, v in Self.OrderedPairs(p) do
+        print(tostring(k) .. ' -> ' .. tostring(v))
+        u[k] = v
+    end
+    return u
+end
+
+local function GenOrderedIndex(t)
+    local orderedIndex = {}
+    for key in pairs(t) do
+        table.insert( orderedIndex, key )
+    end
+    table.sort(orderedIndex, Util.Functions.CompareMultitype)
+    return orderedIndex
+end
+
+
+-- Equivalent of the next function, but returns the keys in the alphabetic
+-- order. We use a temporary ordered key table that is stored in the
+-- table being iterated.
+local function OrderedNext(t, state)
+    local key
+    if state == nil then
+        -- the first time, generate the index
+        t.__orderedIndex = GenOrderedIndex(t)
+        key = t.__orderedIndex[1]
+    else
+        -- fetch the next value
+        for i = 1,table.getn(t.__orderedIndex) do
+            if t.__orderedIndex[i] == state then
+                key = t.__orderedIndex[i+1]
+            end
+        end
+    end
+
+    if key then
+        return key, t[key]
+    end
+
+    -- no more value to return, cleanup
+    t.__orderedIndex = nil
+    return
+end
+
+-- Equivalent of the pairs() function on tables, but allows to iterate
+-- in order
+function Self.OrderedPairs(t)
+    local u = Self.New()
+    Self.CopyInto(u, t)
+    return OrderedNext, u, nil
+end
+
 -- Sort a table which represents an associative array
 -- For example
 --[[
@@ -1031,6 +1092,33 @@ local Fn = function (t, ...) Self.Release(t) return ... end
 ---@param t table
 function Self.Unpack(t)
     return Fn(t, unpack(t))
+end
+
+Self.Sparse = {
+
+}
+
+function Self.Sparse.ipairs(t)
+    -- tmpIndex will hold sorted indices, otherwise
+    -- this iterator would be no different from pairs iterator
+    local tmpIndex = {}
+    local index, _ = next(t)
+    while index do
+        tmpIndex[#tmpIndex+1] = index
+        index, _ = next(t, index)
+    end
+    -- sort table indices
+    table.sort(tmpIndex)
+    local j = 1
+
+    return function()
+        -- get index value
+        local i = tmpIndex[j]
+        j = j + 1
+        if i then
+            return i, t[i]
+        end
+    end
 end
 
 -------------------------------------------------------

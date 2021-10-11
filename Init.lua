@@ -104,8 +104,20 @@ local ModulePrototype = {
         self.db.profile.enabled = v
         Logging:Trace("Module:SetEnabled(%s) : %s", self:GetName(), tostring(self.db.profile.enabled))
     end,
-    GetDbValue = GetDbValue,
-    SetDbValue = SetDbValue,
+    GetDbValue = function(self, db, ...)
+        if not Util.Objects.IsTable(db) then
+            return GetDbValue(self, self.db.profile, db, ...)
+        else
+            return GetDbValue(self, db, ...)
+        end
+    end,
+    SetDbValue = function(self, db, ...)
+        if not Util.Objects.IsTable(db) then
+            SetDbValue(self, self.db.profile, db, ...)
+        else
+            SetDbValue(self, db, ...)
+        end
+    end,
     -- will provide the default value used for bootstrapping a module's db
     -- will only return a value if the module has a 'Defaults' attribute
     GetDefaultDbValue = function(self, ...)

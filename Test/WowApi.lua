@@ -76,6 +76,7 @@ _G.strlower = string.lower
 _G.strupper = string.upper
 _G.mod = function(a,b) return a - math.floor(a/b) * b end
 _G.max = math.max
+_G.min = math.min
 _G.ceil = math.ceil
 _G.frexp = math.frexp
 _G.ldexp = math.ldexp

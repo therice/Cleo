@@ -187,7 +187,7 @@ function FrameClass:SetSize(x, y)
 end
 
 function FrameClass:GetHeight()
-    return 250
+    return 600
 end
 
 function FrameClass:SetFrameStrata(strata)
@@ -207,7 +207,7 @@ function FrameClass:SetWidth(width)
 end
 
 function FrameClass:GetWidth()
-    return 100
+    return 600
 end
 
 function FrameClass:SetHeight(width)
@@ -383,6 +383,8 @@ function FrameClass:SetShadowOffset(...) end
 
 function FrameClass:SetShown(...) end
 
+function FrameClass:SetDontSavePosition(...) end
+
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind
@@ -392,18 +394,26 @@ function CreateFrame(kind, name, parent, template)
     if kind == 'Button' then
         frame.Click = function(self)  end
         frame.SetEnabled = function(self, enabled)  end
+        frame.IsEnabled = function(self) return true end
     elseif kind == 'Slider' then
         frame.GetValue = function(self)  return 1 end
         frame.GetMinMaxValues = function(self)  return 0, 1 end
         frame.GetOrientation = function(...) return "HORIZONTAL" end
+        frame.SetObeyStepOnDrag = function(...)  end
+        frame.SetSize = function(...)  end
+        frame.SetEnabled = function(...)  end
     elseif kind == 'CheckButton' then
         frame.CreateTexture = function(...) return CreateTexture(...) end
         frame.SetCheckedTexture = function(...) end
         frame.SetChecked = function(...) end
         frame.GetChecked = function(...) return true end
         frame.IsEnabled = function(...) return true end
+        frame.SetEnabled = function(...)  end
     elseif kind == 'ScrollFrame' then
         frame.SetVerticalScroll = function(...)  end
+    elseif kind == 'EditBox' then
+        frame.SetEnabled = function(self, enabled)  end
+        frame.HasFocus = function(self) return true  end
     end
 
     if template then
@@ -507,6 +517,8 @@ function TextureClass:SetEnabled(enabled) end
 function TextureClass:SetCheckedTexture(...) end
 
 function TextureClass:GetWidth() return 100 end
+
+function TextureClass:SetShown(...)  end
 
 function CreateTexture(name, texture, texturePath, parent)
     local tex = TextureClass:New(name)

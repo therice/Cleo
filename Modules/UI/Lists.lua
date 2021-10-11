@@ -5,22 +5,18 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Logging = AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
---- @type LibItemUtil
-local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type UI.Native
 local UI = AddOn.Require('UI.Native')
 --- @type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
+--- @type UI.DropDown
+local DropDown = AddOn.Require('UI.DropDown')
 --- @type LibDialog
 local Dialog = AddOn:GetLibrary("Dialog")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
 --- @type Models.List.Configuration
 local Configuration = AddOn.Package('Models.List').Configuration
---- @type LibUtil.Lists.LinkedList
-local LinkedList = Util.Lists.LinkedList
---- @type UI.DropDown
-local DropDown = AddOn.Require('UI.DropDown')
 --- @type Lists
 local Lists = AddOn:GetModule("Lists", true)
 
@@ -52,7 +48,8 @@ function Lists:Players(mapFn, ...)
 	local players = AddOn:Players(true, true, true)
 	for _, p in pairs({...}) do
 		Logging:Debug("Players() : Evaluating %s", tostring(p))
-		local player = Player:Get((Util.Objects.IsTable(p) and p:isInstanceOf(Player)) and p:GetName() or p)
+		-- Player:Get((Util.Objects.IsTable(p) and p:isInstanceOf(Player)) and p:GetName() or p)
+		local player = Player.Resolve(p)
 		if player and not players[player:GetShortName()] then
 			players[player:GetShortName()] = player
 		else
@@ -126,9 +123,9 @@ function Lists:LayoutConfigurationTab(tab)
 			:OnClick(
 				function(...)
 					-- create and persist new configuration
-					local config = module.Configuration.Create()
+					local config = module.listsService.Configuration.Create()
 					tab.configList:Add(config)
-					module.Configuration:Add(config)
+					module.listsService.Configuration:Add(config)
 					-- select it in the list
 					tab.configList:SetToLast()
 					-- update fields to reflect the selected configuration
@@ -164,7 +161,7 @@ function Lists:LayoutConfigurationTab(tab)
 					local config = SelectedConfiguration()
 					Logging:Debug("Config.Owner.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
 					config:SetOwner(item.value)
-					module.Configuration:Update(config, "permissions")
+					module.listsService.Configuration:Update(config, "permissions")
 					return true
 				end
 			)
@@ -225,7 +222,7 @@ function Lists:LayoutConfigurationTab(tab)
 					else
 						config:RevokePermissions(player, Configuration.Permissions.Admin)
 					end
-					module.Configuration:Update(config, "permissions")
+					module.listsService.Configuration:Update(config, "permissions")
 				end
 			)
 
@@ -245,7 +242,7 @@ function Lists:LayoutConfigurationTab(tab)
 		self.name:Datasource(
 			module,
 			module.db.factionrealm.configurations,
-			module.Configuration.Key(config, "name"),
+			module.listsService.Configuration.Key(config, "name"),
 			function(value)
 				config.name = value
 				return value
@@ -274,7 +271,7 @@ function Lists.DeleteConfigurationOnShow(frame, config)
 end
 
 function Lists:DeleteConfigurationOnClickYes(_, config)
-	self.Configuration:Remove(config)
+	self.listsService.Configuration:Remove(config)
 	self.configTab.configList:RemoveSelected()
 	self.configTab:Update()
 end
@@ -345,9 +342,9 @@ function Lists:LayoutListTab(tab)
 			:OnClick(
 				function(...)
 					local config = SelectedConfiguration()
-					local list = module.List.Create(config.id)
+					local list = module.listsService.List.Create(config.id)
 					tab.lists:Add(list)
-					module.List:Add(list)
+					module.listsService.List:Add(list)
 					-- select it in the list
 					tab.lists:SetToLast()
 					-- update fields to reflect the selected list
@@ -408,7 +405,7 @@ function Lists:LayoutListTab(tab)
 			self.name:Datasource(
 					module,
 					module.db.factionrealm.lists,
-					module.List.Key(list, "name"),
+					module.listsService.List.Key(list, "name"),
 					function(value)
 						list.name = value
 						return value
@@ -473,7 +470,7 @@ function Lists.DeleteListOnShow(frame, list)
 end
 
 function Lists:DeleteListOnClickYes(_, list)
-	self.List:Remove(list)
+	self.listsService.List:Remove(list)
 	self.listTab.lists:RemoveSelected()
 	self.listTab:Update()
 end
@@ -528,7 +525,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 						else
 							list:RemoveEquipment(slot)
 						end
-						module.List:Update(list, "equipment")
+						module.listsService.List:Update(list, "equipment")
 					end
 				end
 			)
@@ -570,8 +567,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	MSA_DropDownMenu_Initialize(PriorityActionsMenu, self.PriorityActionsMenuInitializer, "MENU")
 	MSA_DropDownMenu_Initialize(PlayerActionsMenu, self.PlayerActionsMenuInitializer, "MENU")
 
-
 	local rowsPerColumn, columns = ceil(tab:GetHeight()/(PriorityHeight+6)), min(3, floor(tab:GetWidth()/(PriorityWidth + 25)))
+	Logging:Trace("rowsPerColumn=%d, columns=%d", rowsPerColumn, columns)
 
 	local function PriorityCoord(self, xAdjust, yAdjust)
 		xAdjust = Util.Objects.IsNumber(xAdjust) and xAdjust or 0
@@ -756,8 +753,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
  					self:GetParent():UpdateAvailablePlayers()
 				end
 			)
-	tab.playersInGuild:SetSize(12, 12)
-
+	tab.playersInGuild:SetSize(14, 14)
 
 	tab.playersInRaid =
 		UI:New('Checkbox', tab, L["raid"], false)
@@ -769,7 +765,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 					self:GetParent():UpdateAvailablePlayers()
 				end
 			)
-	tab.playersInRaid:SetSize(12, 12)
+	tab.playersInRaid:SetSize(14, 14)
 
 	tab.HasPendingChanges = function(self)
 		Logging:Debug("HasPendingChanges() : Orig(%d), Current(%d)", Util.Tables.Count(self.prioritiesOrig), Util.Tables.Count(self.priorities))
@@ -785,7 +781,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		if reload then
 			self.prioritiesOrig, self.priorities = {}, {}
 			if list then
-				self.prioritiesOrig = list:GetPlayers():toTable(function(p) return p end)
+				self.prioritiesOrig = list:GetPlayers()
 			end
 		end
 
@@ -810,7 +806,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			if self:HasPendingChanges() then
 				local compacted = Util.Tables.Compact(self.priorities)
 				list:SetPlayers(unpack(Util.Tables.Values(compacted)))
-				module.List:Update(list, "players")
+				module.listsService.List:Update(list, "players")
 				self:UpdatePriorities()
 			end
 		end
@@ -912,6 +908,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 			self:SetFieldsEnabled(true)
 			self:UpdatePriorities()
+
 
 			--[[
 			self:SetFieldsEnabled(enabled)

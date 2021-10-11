@@ -12,7 +12,6 @@ local UIUtil = AddOn.Require('UI.Util')
 
 local MachuPicchu = "text is missing, machu picchu!"
 
---[[
 Dialog:Register(C.Popups.ConfirmUsage, {
     text = L["confirm_usage_text"],
     on_show = function(self) UIUtil.DecoratePopup(self) end,
@@ -50,6 +49,7 @@ Dialog:Register(C.Popups.ConfirmAbort, {
     show_while_dead = true,
 })
 
+--[[
 Dialog:Register(C.Popups.ConfirmAdjustPoints, {
     text = MachuPicchu,
     on_show = AddOn:StandingsModule().AdjustOnShow,
@@ -159,7 +159,6 @@ Dialog:Register(C.Popups.ConfirmDeleteListList, {
 })
 
 
---[[
 Dialog:Register(C.Popups.ConfirmReannounceItems, {
     text = MachuPicchu,
     on_show = function(self, data)
@@ -185,7 +184,7 @@ Dialog:Register(C.Popups.ConfirmReannounceItems, {
     show_while_dead = true,
 })
 
-
+--[[
 Dialog:Register(C.Popups.ConfirmRevert, {
     text = MachuPicchu,
     on_show = AddOn:StandingsModule().RevertOnShow,

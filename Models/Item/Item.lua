@@ -118,8 +118,17 @@ end
 
 --- @return string
 function Item:GetLevelText()
-	if not self.ilvl then return "" end
-	return tostring(self.ilvl)
+	if ItemUtil:IsTokenBasedItem(self.id) then
+		local items = ItemUtil:GetTokenItems(self.id)
+		if items and #items > 0 then
+			-- they will all have the same item level, just grab the 1st one
+			local itemId, item = items[1], nil
+			ItemUtil.QueryItem(itemId, function(i) item = i end)
+			return tostring(item and item:GetCurrentItemLevel() or "")
+		end
+	end
+
+	return self.ilvl and tostring(self.ilvl) or ""
 end
 
 --- @return string
@@ -128,45 +137,25 @@ function Item:GetTypeText()
 		local typeId = self.typeId
 		local subTypeId = self.subTypeId
 		if self.equipLoc ~= "INVTYPE_CLOAK" and
-				(
-					not (typeId == LE_ITEM_CLASS_MISCELLANEOUS and subTypeId == LE_ITEM_MISCELLANEOUS_JUNK) and
-					not (typeId == LE_ITEM_CLASS_ARMOR and subTypeId == LE_ITEM_ARMOR_GENERIC) and
-					not (typeId == LE_ITEM_CLASS_WEAPON and subTypeId == LE_ITEM_WEAPON_GENERIC)
-				) then
+			(
+				not (typeId == LE_ITEM_CLASS_MISCELLANEOUS and subTypeId == LE_ITEM_MISCELLANEOUS_JUNK) and
+				not (typeId == LE_ITEM_CLASS_ARMOR and subTypeId == LE_ITEM_ARMOR_GENERIC) and
+				not (typeId == LE_ITEM_CLASS_WEAPON and subTypeId == LE_ITEM_WEAPON_GENERIC)
+			) then
 			return getglobal(self.equipLoc) .. (self.subType and (", " .. self.subType) or "")
 		else
 			return getglobal(self.equipLoc)
 		end
+	elseif ItemUtil:IsTokenBasedItem(self.id) then
+		local equipLocs = {}
+		for _, equipLoc in pairs(ItemUtil:GetTokenBasedItemLocations(self.id)) do
+			Util.Tables.Push(equipLocs, getglobal(Util.Strings.Upper(equipLoc)))
+		end
+		return Util.Tables.Concat(Util.Tables.Unique(equipLocs), ",")
 	else
 		return self.subType or ""
 	end
 end
-
-
---- @param awardReason string an (optional) value which will be used for calculating GP based upon reason
---- @return number, number BASE_GP, AWARD_GP
---function Item:GetGp(awardReason)
---	if not self.gp then
---		self.gp = GP:GetValue(self.link)
---	end
---
---	local awardGp
---	if self.gp and Util.Objects.IsSet(awardReason) then
---		local awardScale = AddOn:GearPointsModule():GetAwardScale(awardReason)
---		if awardScale then
---			awardGp = Util.Numbers.Round(self.gp * awardScale)
---		end
---	end
---
---	-- now apply any additional scaling required (such as raid reduction)
---	--
---	-- this also relies upon the award being completed in the instance where the item dropped
---	-- otherwise, it will not be able to infer the raid (map id) for which any scaling should be applied
---	--
---	awardGp = AddOn:EffortPointsModule():ScaleIfRequired(awardGp and awardGp or self.gp)
---
---	return self.gp or 0, awardGp or 0
---end
 
 -- accepts same input types (except itemName) as https://wow.gamepedia.com/API_GetItemInfo
 -- itemId : number - Numeric ID of the item. e.g. 30234 for  [Nordrassil Wrath-Kilt]
@@ -175,7 +164,7 @@ end
 -- itemLink : string - The full itemLink.
 function Item.Get(item)
 	-- cannot simply use the itemId as a number, as links could represent stuff
-	-- that the base item id wouldn't capture (e.g. sockets eventuall)
+	-- that the base item id wouldn't capture (e.g. sockets eventually)
 
 	-- see if it's a number as first pass
 	local itemId = (Util.Objects.IsNumber(item) and item) or (strmatch(item,"^%d+$") and tonumber(item)) or nil
@@ -245,7 +234,7 @@ end
 --- @return Models.Item.ItemRef if passed instance is an ItemRef, returns "as is". if the passed instance is a table and has a
 --- 'ref' attribute, it will return an new ItemRef  based upon that value. otherwise, returns nil
 function ItemRef.Resolve(i)
-	if i.clazz and i:isInstanceOf(ItemRef) then
+	if Util.Objects.IsInstanceOf(i, ItemRef) then
 		return i
 	end
 

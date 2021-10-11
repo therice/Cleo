@@ -4,6 +4,11 @@ local Util, Logging, GuildStorage = AddOn:GetLibrary("Util"), AddOn:GetLibrary("
 --- @class Models.Player
 local Player = AddOn.Package('Models'):Class('Player')
 
+--- @type Models.Date
+local Date = AddOn.Package('Models').Date
+--- @type Models.DateFormat
+local DateFormat = AddOn.Package('Models').DateFormat
+
 local GuidPatternPremable, GuidPatternRemainder = "Player%-", "%d?%d?%d?%d%-%x%x%x%x%x%x%x%x"
 local GuidPattern = GuidPatternPremable .. GuidPatternRemainder
 local cache
@@ -36,10 +41,14 @@ local function Get(guid)
         Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
         if GetServerTime() - player.timestamp <= CACHE_TIME then
             return Player:reconstitute(player)
+        else
+            Logging:Warn('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
         end
     else
         Logging:Trace("Get(%s) : No cached entry", tostring(guid))
     end
+
+    return nil
 end
 
 local function GUID(name)
@@ -99,6 +108,11 @@ function Player:__eq(o)
     return Util.Strings.Equal(self.guid, o.guid)
 end
 
+Player.Nobody = Player()
+Player.Nobody.name = "Nobody"
+Player.Nobody.class = "DEATHKNIGHT"
+Player.Nobody.guid = "Player-9999-XXXXXXXX"
+
 function Player.Create(guid, info)
     Logging:Trace("Create(%s) : info=%s", tostring(guid), tostring(Util.Objects.IsSet(info)))
     if Util.Strings.IsEmpty(guid) then return Player(nil, 'Unknown', nil, nil) end
@@ -108,13 +122,13 @@ function Player.Create(guid, info)
     -- the client has encountered the queried GUID.
     -- localizedClass, englishClass, localizedRace, englishRace, sex, name, realm
     local _, class, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
-    Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
+    --Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
     -- if the name is not set, means the query did not complete. likely because the player was not
     -- encountered. therefore, just return nil
     if Util.Objects.IsEmpty(name) then
-        Logging:Warn("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
+        --Logging:Warn("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
         if info and Util.Strings.IsSet(info.name) then
-            Logging:Trace("Create(%s) : Using provided player information", guid)
+            --Logging:Trace("Create(%s) : Using provided player information", guid)
             name = info.name
             class = info.classTag or info.class
         else
@@ -136,7 +150,7 @@ end
 function Player:Get(input)
     local guid, info
 
-    Logging:Trace("Get(%s)", tostring(input))
+    Logging:Debug("Get(%s)", tostring(input))
 
     if Util.Strings.IsSet(input) then
         if not strmatch(input, GuidPatternPremable) and strmatch(input, GuidPatternRemainder) then
@@ -170,6 +184,17 @@ function Player:Get(input)
     if Util.Strings.IsEmpty(guid) then Logging:Warn("Get(%s) : unable to determine GUID", tostring(input)) end
     return Get(guid) or Player.Create(guid, info)
 end
+
+function Player.Resolve(p)
+    if Util.Objects.IsInstanceOf(p, Player) then
+        return p
+    elseif Util.Objects.IsString(p) then
+        return Player:Get(p)
+    else
+        return nil
+    end
+end
+
 
 function Player.ClearCache()
     AddOn.db.global.cache.player = {}

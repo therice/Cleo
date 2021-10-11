@@ -36,6 +36,7 @@ lib.ReputationItems = {
     -- Wartorn ... ?
 }
 
+-- https://wowpedia.fandom.com/wiki/InventorySlotId
 lib.TokenEquipmentLocations = {
     -- AQ Tier 2.5 tokens
     -- AQ20
@@ -67,9 +68,9 @@ lib.TokenEquipmentLocations = {
     [22369] = { "WristSlot" },                  -- Desecrated Bindings (Priest, Mage, Warlock)
     [22362] = { "WristSlot" },                  -- Desecrated Wristguards (Paladin, Hunter, Shaman, Paladin)
     [22355] = { "WristSlot" },                  -- Desecrated Bracers (Warrior, Rogue)
-    [22371] = { "HandSlot" },                   -- Desecrated Gloves (Priest, Mage, Warlock)
-    [22364] = { "HandSlot" },                   -- Desecrated Handguards (Paladin, Hunter, Shaman, Paladin)
-    [22357] = { "HandSlot" },                   -- Desecrated Gauntlets (Warrior, Rogue)
+    [22371] = { "HandsSlot" },                   -- Desecrated Gloves (Priest, Mage, Warlock)
+    [22364] = { "HandsSlot" },                   -- Desecrated Handguards (Paladin, Hunter, Shaman, Paladin)
+    [22357] = { "HandsSlot" },                   -- Desecrated Gauntlets (Warrior, Rogue)
     [22372] = { "FeetSlot" },                   -- Desecrated Sandals (Priest, Mage, Warlock)
     [22365] = { "FeetSlot" },                   -- Desecrated Boots (Paladin, Hunter, Shaman, Paladin)
     [22358] = { "FeetSlot" },                   -- Desecrated Sabatons (Warrior, Rogue)
@@ -80,7 +81,7 @@ lib.TokenEquipmentLocations = {
     [22361] = { "ShoulderSlot" },               -- Desecrated Spaulders (Paladin, Hunter, Shaman, Paladin)
     [22354] = { "ShoulderSlot" },               -- Desecrated Pauldrons (Warrior, Rogue)
     [22520] = { "Trinket0Slot", "Trinket1Slot"},-- The Phylactery of Kel'Thuzad
-    -- TBC Classic P1
+    -- TBC Classic P1 (T4)
     [29761] = { "HeadSlot" },                   -- Helm of the Fallen Defender
     [29759] = { "HeadSlot" },                   -- Helm of the Fallen Hero
     [29760] = { "HeadSlot" },                   -- Helm of the Fallen Champion
@@ -90,15 +91,15 @@ lib.TokenEquipmentLocations = {
     [29753] = { "ChestSlot" },                  -- Chestguard of the Fallen Defender
     [29755] = { "ChestSlot" },                  -- Chestguard of the Fallen Hero
     [29754] = { "ChestSlot" },                  -- Chestguard of the Fallen Champion
-    [29758] = { "HandSlot" },                   -- Gloves of the Fallen Defender
-    [29756] = { "HandSlot" },                   -- Gloves of the Fallen Hero
-    [29757] = { "HandSlot" },                   -- Gloves of the Fallen Champion
+    [29758] = { "HandsSlot" },                   -- Gloves of the Fallen Defender
+    [29756] = { "HandsSlot" },                   -- Gloves of the Fallen Hero
+    [29757] = { "HandsSlot" },                   -- Gloves of the Fallen Champion
     [29767] = { "LegsSlot" },                   -- Leggings of the Fallen Defender
     [29765] = { "LegsSlot" },                   -- Leggings of the Fallen Hero
     [29766] = { "LegsSlot" },                   -- Leggings of the Fallen Champion
     [32385] = { "Finger0Slot", "Finger1Slot" }, -- Magtheridon's Head
     [32386] = { "Finger0Slot", "Finger1Slot" }, -- Magtheridon's Head
-    -- TBC Classic P2
+    -- TBC Classic P2 (T5)
     [30243] = { "HeadSlot" },                   -- Helm of the Vanquished Defender
     [30244] = { "HeadSlot" },                   -- Helm of the Vanquished Hero
     [30242] = { "HeadSlot" },                   -- Helm of the Vanquished Champion
@@ -108,11 +109,53 @@ lib.TokenEquipmentLocations = {
     [30237] = { "ChestSlot" },                  -- Chestguard of the Vanquished Defender
     [30238] = { "ChestSlot" },                  -- Chestguard of the Vanquished Hero
     [30236] = { "ChestSlot" },                  -- Chestguard of the Vanquished Champion
-    [30240] = { "HandSlot" },                   -- Gloves of the Vanquished Defender
-    [30241] = { "HandSlot" },                   -- Gloves of the Vanquished Hero
-    [30239] = { "HandSlot" },                   -- Gloves of the Vanquished Champion
+    [30240] = { "HandsSlot" },                  -- Gloves of the Vanquished Defender
+    [30241] = { "HandsSlot" },                  -- Gloves of the Vanquished Hero
+    [30239] = { "HandsSlot" },                  -- Gloves of the Vanquished Champion
     [30246] = { "LegsSlot" },                   -- Leggings of the Vanquished Defender
     [30247] = { "LegsSlot" },                   -- Leggings of the Vanquished Hero
     [30245] = { "LegsSlot" },                   -- Leggings of the Vanquished Champion
+    [32405] = { "NeckSlot"},                    -- Verdant Sphere
+    -- TBC Classic P3 (T6) TODO
 }
 
+-- mapping from token to items (id) which are rewarded from turning in
+-- currently only has TBC Classic P1 and on
+lib.TokenItems = {
+    -- TBC Classic P1 (T4)
+    [29761] = { 29011, 29021, 29049, 29058, 29086, 29093, 29098 },  -- Helm of the Fallen Defender
+    [29759] = { 29081, 29076, 28963 },                              -- Helm of the Fallen Hero
+    [29760] = { 29061, 29068, 29073, 29044, 29028, 29035, 29040 },  -- Helm of the Fallen Champion
+    [29764] = { 29016, 29023, 29054, 29060, 29100, 29095, 29089 },  -- Pauldrons of the Fallen Defender
+    [29762] = { 29084, 29079, 28967 },                              -- Pauldrons of the Fallen Hero
+    [29763] = { 29064, 29070, 29075, 29047, 29037, 29031, 29043 },  -- Pauldrons of the Fallen Champion
+    [29753] = { 29012, 29019, 29050, 29056, 29087, 29091, 29096 },  -- Chestguard of the Fallen Defender
+    [29755] = { 29082, 29077, 28964 },                              -- Chestguard of the Fallen Hero
+    [29754] = { 29071, 29066, 29062, 29045, 29038, 29033, 29029 },  -- Chestguard of the Fallen Champion
+    [29758] = { 29017, 29020, 29055, 29057, 29090, 29092, 29097 },  -- Gloves of the Fallen Defender
+    [29756] = { 29085, 29080, 28968 },                              -- Gloves of the Fallen Hero
+    [29757] = { 29065, 29067, 29072, 29048, 29032, 29034, 29039 },  -- Gloves of the Fallen Champion
+    [29767] = { 29022, 29015, 29059, 29053, 29094, 29099, 29088 },  -- Leggings of the Fallen Defender
+    [29765] = { 29083, 29078, 28966 },                              -- Leggings of the Fallen Hero
+    [29766] = { 29074, 29063, 29069, 29046, 29030, 29036, 29042 },  -- Leggings of the Fallen Champion
+    [32385] = { 28791, 28790, 28793, 28792 },                       -- Magtheridon's Head
+    [32386] = { 28791, 28790, 28793, 28792 },                       -- Magtheridon's Head
+    -- TBC Classic P2
+    [30243] = { 30120, 30115, 30161, 30152, 30228, 30219, 30233 },  -- Helm of the Vanquished Defender
+    [30244] = { 30141, 30206, 30212 },                              -- Helm of the Vanquished Hero
+    [30242] = { 30125, 30136, 30131, 30146, 30166, 30171, 30190 },  -- Helm of the Vanquished Champion
+    [30249] = { 30117, 30122, 30154, 30163, 30221, 30230, 30235 },  -- Pauldrons of the Vanquished Defender
+    [30250] = { 30143, 32047, 30215 },                              -- Pauldrons of the Vanquished Hero
+    [30248] = { 30127, 30133, 30138, 30149, 30168, 30173, 30194 },  -- Pauldrons of the Vanquished Champion
+    [30237] = { 30113, 30118, 30150, 30159, 30216, 30222, 30231 },  -- Chestguard of the Vanquished Defender
+    [30238] = { 30139, 30196, 30214 },                              -- Chestguard of the Vanquished Hero
+    [30236] = { 30123, 30129, 30134, 30144, 30164, 30169, 30185 },  -- Chestguard of the Vanquished Champion
+    [30240] = { 30114, 30119, 30160, 30151, 30223, 30217, 30232 },  -- Gloves of the Vanquished Defender
+    [30241] = { 30140, 30205, 30211 },                              -- Gloves of the Vanquished Hero
+    [30239] = { 30130, 30135, 30124, 30145, 30189, 30165, 30170 },  -- Gloves of the Vanquished Champion
+    [30246] = { 30121, 30116, 30153, 30162, 30229, 30220, 30234 },  -- Leggings of the Vanquished Defender
+    [30247] = { 30142, 30207, 30213 },                              -- Leggings of the Vanquished Hero
+    [30245] = { 30132, 30137, 30126, 30148, 30172, 30167, 30192 },  -- Leggings of the Vanquished Champion
+    [32405] = { 30018, 30017, 30007, 30015 },                       -- Verdant Sphere
+    -- TBC Classic P3 (T6) TODO
+}

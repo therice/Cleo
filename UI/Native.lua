@@ -54,8 +54,8 @@ function Widget.Border(self, cR, cG, cB, cA, size, offsetX, offsetY)
 
     self.BorderRight = self:CreateTexture(nil,"BACKGROUND")
     self.BorderRight:SetColorTexture(cR,cG,cB,cA)
-    self.BorderRight:SetPoint("BOTTOMRIGHT",size+offsetX,offsetY)
-    self.BorderRight:SetPoint("TOPLEFT",self,"TOPRIGHT",offsetX,-offsetY)
+    self.BorderRight:SetPoint("BOTTOMRIGHT",size+offsetX, -offsetY)
+    self.BorderRight:SetPoint("TOPLEFT",self,"TOPRIGHT",offsetX,offsetY)
 
     self.HideBorders = function(self)
         self.BorderTop:Hide()

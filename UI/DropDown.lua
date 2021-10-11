@@ -13,7 +13,7 @@ function Entry:fn(fn) return self:set('func', fn)  end
 function Entry:hidden(val) return self:set('hidden', val) end
 function Entry:title(val) return self:set('isTitle', val) end
 
---- @class UI.AceConfig.EntryBuilder
+--- @class UI.DropDown.EntryBuilder
 local EntryBuilder = AddOn.Package('UI.DropDown'):Class('EntryBuilder', Builder)
 function EntryBuilder:initialize(entries)
     Builder.initialize(self, entries or {})
@@ -30,7 +30,7 @@ function EntryBuilder:_InsertPending()
     tinsert(self.entries[self.level], self.pending.attrs)
 end
 
---- @return UI.AceConfig.EntryBuilder
+--- @return UI.DropDown.EntryBuilder
 function EntryBuilder:nextlevel()
     self:_CheckPending()
     self.level = self.level + 1
@@ -38,7 +38,7 @@ function EntryBuilder:nextlevel()
     return self
 end
 
---- @return UI.AceConfig.EntryBuilder
+--- @return UI.DropDown.EntryBuilder
 function EntryBuilder:add()
     return self:entry(Entry)
 end
@@ -64,7 +64,7 @@ local DropDown = AddOn.Instance(
         end
 )
 
---- @return UI.AceConfig.EntryBuilder
+--- @return UI.DropDown.EntryBuilder
 function DropDown.EntryBuilder()
     return EntryBuilder()
 end

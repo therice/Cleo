@@ -248,9 +248,8 @@ do
 			fs:SetAllPoints(col);
 			fs:SetPoint("LEFT", col, "LEFT", lrpadding, 0);
 			fs:SetPoint("RIGHT", col, "RIGHT", -lrpadding, 0);
-			local align = cols[i].align or "LEFT";
-			fs:SetJustifyH(align);
-
+			fs:SetPoint("BOTTOM", col, "BOTTOM", 0, 10);
+			fs:SetJustifyH(cols[i].align or "LEFT");
 			col:SetFontString(fs);
 			fs:SetText(cols[i].name);
 			fs:SetTextColor(1.0, 1.0, 1.0, 1.0);
@@ -655,6 +654,7 @@ do
 	end
 
 	function lib:CreateST(cols, numRows, rowHeight, highlight, parent, multiselection)
+		--- @class LibScrollingTable
 		local st = {};
 		self.framecount = self.framecount or 1;
 		local f = CreateFrame("Frame", "ScrollTable" .. self.framecount, parent or UIParent, BackdropTemplateMixin and "BackdropTemplate");
@@ -809,6 +809,8 @@ do
 		scrolltrough.background = scrolltrough:CreateTexture(nil, "BACKGROUND");
 		scrolltrough.background:SetAllPoints(scrolltrough);
 		scrolltrough.background:SetColorTexture(0.05, 0.05, 0.05, 1.0);
+		scrollframe.scrolltrough = scrolltrough
+
 		local scrolltroughborder = CreateFrame("Frame", f:GetName().."ScrollTroughBorder", scrollframe);
 		scrolltroughborder:SetWidth(1);
 		scrolltroughborder:SetPoint("TOPRIGHT", scrolltrough, "TOPLEFT");
@@ -816,10 +818,13 @@ do
 		scrolltroughborder.background = scrolltrough:CreateTexture(nil, "BACKGROUND");
 		scrolltroughborder.background:SetAllPoints(scrolltroughborder);
 		scrolltroughborder.background:SetColorTexture(0.5, 0.5, 0.5, 1.0);
+		scrollframe.scrolltroughborder = scrolltroughborder
 
 		st.Refresh = function(self)
+			-- print('st.Refresh (' .. #st.filtered .. ', ' .. st.displayRows .. ", " .. st.rowHeight .. ")")
 			FauxScrollFrame_Update(scrollframe, #st.filtered, st.displayRows, st.rowHeight);
 			local o = FauxScrollFrame_GetOffset(scrollframe);
+			-- print('st.Refresh (' .. o .. ")")
 			st.offset = o;
 
 			for i = 1, st.displayRows do
@@ -853,7 +858,9 @@ do
 		end
 
 		scrollframe:SetScript("OnVerticalScroll", function(self, offset)
-			FauxScrollFrame_OnVerticalScroll(self, offset, st.rowHeight, function() st:Refresh() end);					-- LS: putting st:Refresh() in a function call passes the st as the 1st arg which lets you reference the st if you decide to hook the refresh
+			-- print("OnVerticalScroll : " .. tostring(offset))
+			-- LS: putting st:Refresh() in a function call passes the st as the 1st arg which lets you reference the st if you decide to hook the refresh
+			FauxScrollFrame_OnVerticalScroll(self, offset, st.rowHeight, function() st:Refresh() end);
 		end);
 
 		st:SetFilter(Filter);

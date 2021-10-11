@@ -178,8 +178,21 @@ local GameTooltip = GameTooltip
 --    --]]
 --end
 
+--[[
+-- creates a tooltip anchored to cursor using the standard GameTooltip
+function U.CreateTooltip(...)
+    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
+    for i = 1, select("#", ...) do
+        GameTooltip:AddLine(select(i, ...),1,1,1)
+    end
+    GameTooltip:Show()
+end
+
+--]]
 function U.ShowTooltip(owner, anchor, title, ...)
     local x, y = 0, 0
+    owner = owner or UIParent
+
     if Util.Objects.IsTable(anchor) then
         x, y = anchor[2], anchor[3]
         anchor = anchor[1] or "ANCHOR_RIGHT"
@@ -202,6 +215,10 @@ function U.ShowTooltip(owner, anchor, title, ...)
     end
 
     GameTooltip:Show()
+end
+
+function U.ShowTooltipLines(...)
+    U.ShowTooltip(UIParent, "ANCHOR_RIGHT", nil, ...)
 end
 
 -- hides the tooltip created via CreateTooltip
@@ -230,7 +247,6 @@ function U:CreateHypertip(link, owner, anchor)
 
     -- this is to support shift click comparison on all tooltips
     local function hypertip()
-        --  UI:NewNamed("GameTooltip", UIParent, AddOn:Qualify("TooltipEventHandler"))
         local tip = U.CreateGameTooltip("TooltipEventHandler", owner or UIParent)
         tip:RegisterEvent("MODIFIER_STATE_CHANGED")
         tip:SetScript("OnEvent",
@@ -255,12 +271,6 @@ end
 
 function U.CreateGameTooltip(module, parent)
     return UI:NewNamed('GameTooltip', parent, AddOn:Qualify(module, "GameTooltip"))
-    --[[
-    local itemTooltip = CreateFrame("GameTooltip", AddOn:Qualify(module, "GameTooltip"), parent, "GameTooltipTemplate")
-    itemTooltip:SetClampedToScreen(false)
-    itemTooltip:SetScale(parent and parent:GetScale() * 0.95 or 1)
-    return itemTooltip
-    --]]
 end
 
 function U.GetClassColorRGB(class)

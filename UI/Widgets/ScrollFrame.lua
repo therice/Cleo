@@ -30,6 +30,7 @@ function ScrollFrame:Create()
 	sf:SetScript("OnMouseWheel", ScrollFrame.OnMouseWheel)
 	sf.SetNewHeight = ScrollFrame.SetNewHeight
 	sf.Height = ScrollFrame.SetNewHeight
+	sf.Width = ScrollFrame.SetNewWidth
 	sf.AddHorizontal = ScrollFrame.AddHorizontal
 	sf.HideScrollOnNoScroll = ScrollFrame.HideScrollOnNoScroll
 

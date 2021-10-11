@@ -2,6 +2,10 @@
     <Script file="Logging.lua" />
     <Script file="CustomItems.lua" />
     <Script file="Lists.lua" />
+    <Script file="LootSession.lua" />
+    <Script file="MasterLooter.lua" />
+    <Script file="Loot.lua" />
+    <Script file="LootAllocate.lua" />
     <Script file="VersionCheck.lua" />
     <Include file="UI\UI.xml"/>
 </Ui>

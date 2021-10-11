@@ -1,9 +1,8 @@
 -- @type AddOn
 local _, AddOn = ...
+local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
---- @type LibLogging
-local Logging = AddOn:GetLibrary("Logging")
 --- @type UI.Native
 local NativeUI = AddOn.Require('UI.Native')
 ---@type UI.Util
@@ -20,7 +19,10 @@ function Checkbox:initialize(parent, name, text, state)
 	self.state = state and true or false
 end
 
+local CheckedColor, DisabledColor = C.Colors.Marigold, C.Colors.ItemPoor
+
 function Checkbox:Create()
+
 	local cb = CreateFrame("CheckButton", self.name, self.parent)
 	cb:SetSize(20, 20)
 
@@ -28,7 +30,6 @@ function Checkbox:Create()
 	cb.text:SetPoint("TOPLEFT", cb, "TOPRIGHT", 4, 0)
 	cb.text:SetPoint("BOTTOMLEFT", cb, "BOTTOMRIGHT", 4, 0)
 	cb.text:SetJustifyV("MIDDLE")
-
 	cb:SetFontString(cb.text)
 
 	BaseWidget.Border(cb, 0.24, 0.25, 0.3, 1, 1)
@@ -39,23 +40,23 @@ function Checkbox:Create()
 	cb.Texture:SetPoint("BOTTOMRIGHT")
 
 	cb.CheckedTexture = cb:CreateTexture()
-	cb.CheckedTexture:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-	cb.CheckedTexture:SetPoint("TOPLEFT", -4, 4)
-	cb.CheckedTexture:SetPoint("BOTTOMRIGHT", 4, -4)
+	cb.CheckedTexture:SetPoint("TOPLEFT", 2, -2)
+	cb.CheckedTexture:SetPoint("BOTTOMRIGHT", -2, 2)
+	cb.CheckedTexture:SetColorTexture(CheckedColor.r, CheckedColor.g, CheckedColor.b, .9)
 	cb:SetCheckedTexture(cb.CheckedTexture)
 
 	cb.PushedTexture = cb:CreateTexture()
-	cb.PushedTexture:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-	cb.PushedTexture:SetPoint("TOPLEFT", -4, 4)
-	cb.PushedTexture:SetPoint("BOTTOMRIGHT", 4, -4)
+	cb.PushedTexture:SetPoint("TOPLEFT", 2, -2)
+	cb.PushedTexture:SetPoint("BOTTOMRIGHT", -2, 2)
+	cb.PushedTexture:SetColorTexture(CheckedColor.r, CheckedColor.g, CheckedColor.b, .9)
 	cb.PushedTexture:SetVertexColor(0.8, 0.8, 0.8, 0.5)
 	cb.PushedTexture:SetDesaturated(true)
 	cb:SetPushedTexture(cb.PushedTexture)
 
 	cb.DisabledTexture = cb:CreateTexture()
-	cb.DisabledTexture:SetTexture("Interface\\Buttons\\UI-CheckBox-Check-Disabled")
-	cb.DisabledTexture:SetPoint("TOPLEFT", -4, 4)
-	cb.DisabledTexture:SetPoint("BOTTOMRIGHT", 4, -4)
+	cb.DisabledTexture:SetColorTexture(DisabledColor.r, DisabledColor.g, DisabledColor.b, .25)
+	cb.DisabledTexture:SetPoint("TOPLEFT", 2, -2)
+	cb.DisabledTexture:SetPoint("BOTTOMRIGHT", -2, 2)
 	cb:SetDisabledTexture(cb.DisabledTexture)
 
 	cb.HighlightTexture = cb:CreateTexture()
@@ -74,14 +75,18 @@ function Checkbox:Create()
 			cb,
 			'Tooltip', Checkbox.Tooltip,
 			'Left', Checkbox.Left,
+			'Text', Checkbox.SetText,
 			'TextSize', Checkbox.TextSize,
 			'ColorState', Checkbox.ColorState,
 			'AddColorState', Checkbox.AddColorState,
 			'OnDatasourceConfigured', Checkbox.OnDatasourceConfigured
 	)
 
+	-- local AS = unpack(_G.AddOnSkins)
+	-- AS:SkinCheckBox(cb)
 	return cb
 end
+
 
 function Checkbox.OnDatasourceConfigured(self)
 	-- remove any currently configured click handler
@@ -95,6 +100,11 @@ function Checkbox.OnDatasourceConfigured(self)
 				self.ds:Set(self:GetChecked())
 			end
 	)
+end
+
+function Checkbox.SetText(self, text)
+	self.text:SetText(text or "")
+	return self
 end
 
 function Checkbox.Tooltip(self, text)

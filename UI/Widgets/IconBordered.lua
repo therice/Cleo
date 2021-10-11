@@ -15,12 +15,7 @@ function IconBordered:initialize(parent, name, texture)
 end
 
 function IconBordered:Create()
-    local b = CreateFrame(
-            "Button",
-            self.name,
-            self.parent,
-            BackdropTemplateMixin and "BackdropTemplate"
-    )
+    local b = CreateFrame("Button", self.name, self.parent, BackdropTemplateMixin and "BackdropTemplate")
     b:SetSize(40,40)
     b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
     b:GetHighlightTexture():SetBlendMode("ADD")

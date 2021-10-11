@@ -160,6 +160,33 @@ function AddOn:ExtractCreatureId(guid)
     return id and (id:gsub("-", "")) or nil
 end
 
+local BlacklistedItemClasses = {
+    [0]  = { -- Consumables
+        all = true
+    },
+    [5]  = { -- Reagents
+        all = true
+    },
+    [7]  = { -- Trade-skills
+        all = true
+    },
+    [15] = { -- Misc
+        [1] = true, -- Reagent
+    }
+}
+
+function AddOn:IsItemBlacklisted(item)
+    if not item then return false end
+    local _, _, _, _, _, itemClassId, itemsubClassId = GetItemInfoInstant(item)
+    if not (itemClassId and itemsubClassId) then return false end
+    if BlacklistedItemClasses[itemClassId] then
+        if BlacklistedItemClasses[itemClassId].all or BlacklistedItemClasses[itemClassId][itemsubClassId] then
+            return true
+        end
+    end
+    return false
+end
+
 local function GetAverageItemLevel()
     local sum, count = 0, 0
     for i = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
@@ -220,6 +247,92 @@ function AddOn:UpdatePlayerData()
     self:UpdatePlayerGear()
 end
 
+function AddOn:GetPlayersGear(link, equipLoc, current)
+    current = current or self.playerData.gear
+    Logging:Trace("GetPlayersGear(%s, %s)", tostring(link), tostring(equipLoc))
+
+    local GetInventoryItemLink = GetInventoryItemLink
+    if Util.Tables.Count(current) > 0 then
+        GetInventoryItemLink = function(_, slot) return current[slot] end
+    end
+
+    -- this is special casing for token based items, which require a different approach
+    local itemId = ItemUtil:ItemLinkToId(link)
+    if itemId and ItemUtil:IsTokenBasedItem(itemId) then
+        local equipLocs = ItemUtil:GetTokenBasedItemLocations(itemId)
+        Logging:Trace("GetPlayersGear(%d) : Token => %s", itemId, Util.Objects.ToString(equipLocs))
+        if #equipLocs > 1 then
+            local items = {true, true}
+            -- at most two equipment slots
+            for i = 1, 2 do
+                items[i] = GetInventoryItemLink(C.player, GetInventorySlotInfo(equipLocs[i]))
+            end
+            return unpack(items)
+        elseif equipLocs[1] == "Weapon" then
+            return
+            GetInventoryItemLink(C.player, GetInventorySlotInfo("MainHandSlot")),
+            GetInventoryItemLink(C.player, GetInventorySlotInfo("SecondaryHandSlot"))
+        else
+            return GetInventoryItemLink(C.player, GetInventorySlotInfo(equipLocs[1]))
+        end
+    end
+
+    local gearSlots = ItemUtil:GetGearSlots(equipLoc)
+    if not gearSlots then return nil, nil end
+    -- index 1 will always have a value if returned
+    local item1, item2 = GetInventoryItemLink(C.player, GetInventorySlotInfo(gearSlots[1])), nil
+    if not item1 and gearSlots['or'] then
+        item1 = GetInventoryItemLink(C.player, GetInventorySlotInfo(gearSlots['or']))
+    end
+    if gearSlots[2] then
+        item2 = GetInventoryItemLink(C.player, GetInventorySlotInfo(gearSlots[2]))
+    end
+    return item1, item2
+end
+
+
+function AddOn:GetItemLevelDifference(item, g1, g2)
+    if not g1 and g2 then error("You can't provide g2 without g1 in GetItemLevelDifference()") end
+    local _, link, _, ilvl, _, _, _, _, equipLoc = GetItemInfo(item)
+    if not g1 then
+        g1, g2 = self:GetPlayersGear(link, equipLoc, self.playerData.gear)
+    end
+
+    -- trinkets and rings have two slots
+    if Util.Objects.In(equipLoc, "INVTYPE_TRINKET", "INVTYPE_FINGER") then
+        local itemId = ItemUtil:ItemLinkToId(link)
+        if itemId == ItemUtil:ItemLinkToId(g1) then
+            local ilvl1 = select(4, GetItemInfo(g1))
+            return ilvl - ilvl1
+        elseif g2 and itemId == ItemUtil:ItemLinkToId(g2) then
+            local ilvl2 = select(4, GetItemInfo(g2))
+            return ilvl - ilvl2
+        end
+    end
+
+    local diff = 0
+    local g1diff, g2diff = g1 and select(4, GetItemInfo(g1)), g2 and select(4, GetItemInfo(g2))
+    if g1diff and g2diff then
+        diff = g1diff >= g2diff and ilvl - g2diff or ilvl - g1diff
+    elseif g1diff then
+        diff = ilvl - g1diff
+    end
+
+    return diff
+end
+
+function AddOn.GetItemTextWithCount(link, count)
+    return link .. (count and count > 1 and (" x" .. count) or "")
+end
+
+--- @param subscriptions table<number, rx.Subscription>
+function AddOn.Unsubscribe(subscriptions)
+    if Util.Objects.IsSet(subscriptions) then
+        for _, subscription in pairs(subscriptions) do
+            subscription:unsubscribe()
+        end
+    end
+end
 
 local Alarm = AddOn.Class('Alarm')
 function Alarm:initialize(interval, fn)

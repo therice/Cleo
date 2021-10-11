@@ -234,6 +234,7 @@ function ScrollBar.ButtonClick(self, up)
 	local val = scrollBar:GetValue()
 	local clickRange = self:GetParent().clickRange
 
+	Logging:Debug("ButtonClick(%s) : %d, %d / %d, %d", tostring(up), min, max, val, clickRange)
 	if up then
 		if (val - clickRange) < min then
 			scrollBar:SetValue(min)

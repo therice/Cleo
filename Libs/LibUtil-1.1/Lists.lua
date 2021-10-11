@@ -148,6 +148,18 @@ function LinkedList:_linkLast(e)
 	self.size = self.size + 1
 end
 
+function LinkedList:_linkBefore(e, succ)
+	local pred = succ.prev
+	local newNode = Node(pred, e, succ)
+	succ.prev = newNode
+	if pred == nil then
+		self.first = newNode
+	else
+		pred.next = newNode
+	end
+	self.size = self.size + 1
+end
+
 function LinkedList:_unlinkFirst(f)
 	local element = f.item
 	local next = f.next
@@ -235,7 +247,6 @@ function LinkedList:AddAt(index, e)
 	end
 end
 
-
 function LinkedList:AddFirst(e)
 	assert(e)
 	self:_linkFirst(e)
@@ -244,6 +255,31 @@ end
 function LinkedList:AddLast(e)
 	assert(e)
 	self:_linkLast(e)
+end
+
+function LinkedList:Set(index, e)
+	assert(e)
+	self:_checkIndex(index)
+	local x = self:_node(index)
+	local old = x.item
+	x.item = e
+	return old
+end
+
+function LinkedList:InsertAfter(at, e)
+	assert(e)
+	local index = self:IndexOf(at)
+	if index == -1 then
+		error("NoSuchElement")
+	else
+		if (index + 1 >= self.size) then
+			local l = self:RemoveLast()
+			self:Add(e)
+			self:Add(l)
+		else
+			self:AddAt(index + 1, e)
+		end
+	end
 end
 
 function LinkedList:Size()
@@ -266,6 +302,10 @@ end
 
 function LinkedList:Contains(o)
 	return self:IndexOf(o) ~= -1
+end
+
+function LinkedList:HasIndex(index)
+	return self:_isIndex(index)
 end
 
 function LinkedList:Get(index)

@@ -1,8 +1,6 @@
 --- @type AddOn
 local _, AddOn = ...
-local L, C = AddOn.Locale, AddOn.Constants
---- @type LibLogging
-local Logging = AddOn:GetLibrary("Logging")
+local L = AddOn.Locale
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 --- @type UI.Native
@@ -16,7 +14,7 @@ local function LayoutGeneralConfig(container)
 			:Tooltip(L['minimize_in_combat_desc'])
 			:Datasource(AddOn, AddOn.db.profile, "minimizeInCombat")
 	container.test =
-		UI:New("Button", container, L["Test"])
+		UI:New("Button", container, L["test"])
 			:Size(150, 20)
 			:Point("TOPLEFT", container.minimizeInCombat, "BOTTOMLEFT", 0, -20)
 			:Tooltip(L["test_desc"])
@@ -26,7 +24,7 @@ local function LayoutGeneralConfig(container)
 			:Size(150, 20)
 			:Point("TOPLEFT", container.test, "TOPRIGHT", 25, 0)
 			:Tooltip(L["version_check_desc"])
-			:OnClick(function() end)
+			:OnClick(function() AddOn:CallModule("VersionCheck") end)
 	container.sync =
 		UI:New("Button", container, L["sync"])
 			:Size(150, 20)
@@ -79,7 +77,7 @@ function AddOn:ApplyConfiguration(supplements)
 						-- being disabled and currently master looter
 						if not AddOn.enabled and AddOn:IsMasterLooter() then
 							AddOn.masterLooter = nil
-							-- AddOn:MasterLooterModule():Disable()
+							AddOn:MasterLooterModule():Disable()
 						else
 							AddOn:NewMasterLooterCheck()
 						end

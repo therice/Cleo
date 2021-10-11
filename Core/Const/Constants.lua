@@ -40,16 +40,16 @@ AddOn.Constants = {
     },
 
     ChannelDescriptions = {
-        NONE         = _G.NONE,
-        SAY          = _G.CHAT_MSG_SAY,
-        YELL         = _G.CHAT_MSG_YELL,
-        PARTY        = _G.CHAT_MSG_PARTY,
+        chat         = L['chat'],
+        group        = _G.GROUP,
         GUILD        = _G.CHAT_MSG_GUILD,
+        NONE         = _G.NONE,
         OFFICER      = _G.CHAT_MSG_OFFICER,
+        PARTY        = _G.CHAT_MSG_PARTY,
         RAID         = _G.CHAT_MSG_RAID,
         RAID_WARNING = _G.CHAT_MSG_RAID_WARNING,
-        group        = _G.GROUP,
-        chat         = L['chat']
+        SAY          = _G.CHAT_MSG_SAY,
+        YELL         = _G.CHAT_MSG_YELL,
     },
 
     Colors = {
@@ -84,9 +84,24 @@ AddOn.Constants = {
     },
     
     Commands = {
+        Awarded                 =   "awd",
+        ChangeResponse          =   "cr",
+        HandleLootStart         =   "hlst",
+        HandleLootStop          =   "hlstp",
+        LootAck                 =   "la",
+        LootSessionEnd          =   "lse",
+        LootTable               =   "lt",
+        LootTableAdd            =   "lta",
+        MasterLooterDb          =   "mldb",
+        MasterLooterDbRequest   =   "mldbr",
+        OfflineTimer            =   "ot",
         PlayerInfo              =   "pi",
         PlayerInfoRequest       =   "pir",
         Reconnect               =   "rct",
+        Response                =   "rsp",
+        ReRoll                  =   "rer",
+        Roll                    =   "roll",
+        Rolls                   =   "rolls",
         VersionCheck            =   "vc",
         VersionCheckReply       =   "vcr",
         VersionPing             =   "vp",
@@ -94,6 +109,9 @@ AddOn.Constants = {
     },
 
     DropDowns = {
+        AllocateRightClick      = name .. "_AllocateRightClick",
+        AllocateFilter          = name .. "_AllocateFilter",
+        Enchanters              = name .. "_AllocateEnchantersMenu",
         ListPriorityActions     = name .. "_ListPriorityActions",
         ListPlayerActions       = name .. "_ListPlayerActions",
     },
@@ -172,7 +190,11 @@ AddOn.Constants = {
     },
 
     Messages = {
+        AwardSuccess            =   name .. "_AwardFailed",
+        AwardFailed             =   name .. "_AwardSuccess",
         ConfigTableChanged      =   name .. "_ConfigTableChanged",
+        LootTableAddition       =   name .. "_LootTableAddition",
+        MasterLooterAddItem     =   name .. "_MasterLooterAddItem",
         PlayerNotFound          =   name .. "_PlayerNotFound",
     },
 
@@ -184,13 +206,28 @@ AddOn.Constants = {
     },
     
     Popups = {
+        ConfirmAbort            =   name .. "_ConfigAbort",
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
         ConfirmDeleteListConfig =   name .. "_ConfirmDeleteListConfig",
         ConfirmDeleteListList   =   name .. "_ConfirmDeleteListList",
+        ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
+        ConfirmUsage            =   name .. "_ConfirmUsage",
     },
 
     Responses = {
-
+        Announced    = "ANNOUNCED",
+        AutoPass     = "AUTOPASS",
+        Awarded      = "AWARDED",
+        Default      = "DEFAULT",
+        Disabled     = "DISABLED",
+        NotAnnounced = "NOTANNOUNCED",
+        Nothing      = "NOTHING",
+        NotInRaid    = "NOTINRAID",
+        Pass         = "PASS",
+        Removed      = "REMOVED",
+        Roll         = "ROLL",
+        Timeout      = "TIMEOUT",
+        Wait         = "WAIT",
     },
 
     VersionStatus = {

@@ -52,6 +52,8 @@ function VersionCheck:EnableOnStartup()
 end
 
 function VersionCheck:Query(target)
+	self:ClearEntries()
+
 	if Util.Strings.Equal(C.guild, target) then
 		GuildRoster()
 		for i = 1, GetNumGuildMembers() do
@@ -199,7 +201,7 @@ function VersionCheck:DisplayOutOfDateClients()
 		end
 	end
 
-	if Util.Tables.Count(outOfDate) > 0 then
+	if  Util.Tables.Count(outOfDate) > 0 then
 		AddOn:Print(L["the_following_versions_are_out_of_date"])
 		for _, v in pairs(outOfDate) do AddOn:Print(v) end
 	else

@@ -15,6 +15,35 @@ function Self.False() return false end
 function Self.Zero() return 0 end
 function Self.Noop() end
 
+function Self.CompareMultitype(op1, op2)
+    -- Inspired by http://lua-users.org/wiki/SortedIteration
+    local type1, type2 = type(op1), type(op2)
+    local num1,  num2  = tonumber(op1), tonumber(op2)
+
+    -- Number or numeric string
+    if (num1 ~= nil) and (num2 ~= nil) then
+        -- Numeric compare
+        return  num1 < num2
+        -- Different types
+    elseif type1 ~= type2 then
+        -- String compare of type name
+        return type1 < type2
+    -- From here on, types are known to match (need only single compare)
+    -- Non-numeric string
+    elseif type1 == "string"  then
+        -- Default compare
+        return op1 < op2
+    elseif type1 == "boolean" then
+        -- No compare needed!
+        return op1
+    -- Handled above: number, string, boolean
+    -- What's left: function, table, thread, userdata
+    else
+        -- String representation
+        return tostring(op1) < tostring(op2)
+    end
+end
+
 -- index and notVal = function(index, ...)
 -- index = function(value, index, ...)
 -- notVal = function(...)
@@ -146,10 +175,12 @@ function Self.Debounce(fn, n, leading)
     end
 end
 
+local traceback = (debug and debug.traceback) and debug.traceback or _G.debugstack
+
 function Self.try(tryBlock)
     local status, err = true, nil
     if Util.Objects.IsFunction(tryBlock) then
-        status, err = xpcall(tryBlock,  (debug and debug.traceback) and debug.traceback or _G.debugstack)
+        status, err = xpcall(tryBlock, traceback)
     end
 
     local finally = function(finallyBlock, hasCatchBlock)

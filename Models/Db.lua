@@ -48,109 +48,6 @@ local function decompress(data)
     return raw
 end
 
--- This doesn't work due to semantics of how things like table.insert works
--- e.g. using raw(get/set) vs access through functions overridden in setmetatable
---[[
-function CompressedDb.static:create(db)
-    local _db = db
-    local d = {}
-    
-    local mt = {
-        __newindex = function (d,k,v)
-            --error('__newindex')
-            Logging:Debug("__newindex %s", tostring(k))
-            _db[k] = CompressedDb:compress(v)
-        end,
-        __index = function(d, k)
-            Logging:Debug("__index %s", tostring(k))
-            return CompressedDb:decompress(_db[k])
-        end,
-        __pairs = function(d)
-            Logging:Debug("__pairs")
-            return pairs(_db)
-        end,
-        __len = function(d)
-            Logging:Debug("__len")
-            return #_db
-        end,
-        __tableinsert = function(db, v)
-            Logging:Debug("__tableinsert %s", tostring(k))
-            
-            return table.insert(_db, v)
-        end
-    }
-    
-    return setmetatable(d,mt)
-end
---]]
-
-
---[[
-local function compact(db)
-    local count, maxn = Util.Tables.Count(db), table.maxn(db)
-
-    if count ~= maxn and maxn ~= 0 then
-        Logging:Warn("compact() : count=%d ~= maxn=%d, compacting", count, maxn)
-
-        local seen, skipped = {}, {}
-        for row, _ in pairs(db) do
-            -- Logging:Trace("compact() : examining %s [%s]", tostring(row), type(row))
-            -- track numeric keys separately, as we want to sort them later and
-            -- re-add in ascending order
-            if Util.Objects.IsNumber(row) then
-                Util.Tables.Push(seen, row)
-            -- track non-numeric keys later, as will be appended
-            else
-                Util.Tables.Push(skipped, row)
-            end
-        end
-
-        -- only necessary if seen numeric indexes
-        -- todo : this ~= check may be dubious
-        if #seen > 0 and (#seen + #skipped ~= math.max(count, maxn)) then
-            -- sort them so we can easily take low an dhigh
-            Util.Tables.Sort(seen)
-            local low, high, remove = seen[1], seen[#seen], false
-            Logging:Trace("compact() : count=%d, skipped=%d, low=%d, high=%d, ",  #seen, #skipped, low, high)
-
-            -- search forward looking for a gap in the sequence
-            for idx=low, high, 1 do
-                if not Util.Tables.ContainsValue(seen, idx) then
-                    remove = true
-                    break
-                end
-            end
-
-            if remove then
-                Logging:Warn("compact() : rows present that need removed, processing...")
-
-                local index, inserted, retain = 1, 0, {}
-                for _, r in pairs(seen) do
-                    Logging:Trace("compact() : repositioning %d to %d", r, index)
-                    retain[index] = db[r]
-                    index = index + 1
-                end
-                Logging:Trace("compact() : collected %d entries", #retain)
-                for _, k in pairs(skipped) do
-                    retain[k] = db[k]
-                end
-                Logging:Trace("compact() : wiping data and re-inserting")
-                Util.Tables.Wipe(db)
-                for k, v in pairs(retain) do
-                    db[k] = v
-                    inserted = inserted + 1
-                end
-                Logging:Debug("compact() : re-inserted %d entries", inserted)
-            else
-                Logging:Debug("compact() : no additional processing required")
-            end
-        end
-    end
-
-    return db
-end
---]]
-
 -- be warned, everything under the namespace for DB passed to this constructor
 -- needs to be compressed, there is no mixing and matching
 -- exception to this is top-level table keys
@@ -257,52 +154,14 @@ function MasterLooterDb:ForTransmit()
     return self:toTable()
 end
 
-local _build = function(self, ml, ep, gp)
+local _build = function(self, ml)
     Logging:Trace("MasterLooterDb:_build(BEFORE) : %d", Util.Tables.Count(self.db))
 
     local mlSettings, mlDefaults =
         ml.db and ml.db.profile or {}, ml.defaults and ml.defaults.profile or {}
-    local epSettings, epDefaults =
-        ep.db and ep.db.profile or {}, ep.defaults and ep.defaults.profile or {}
-    local gpSettings, gpDefaults =
-        gp.db and gp.db.profile or {}, gp.defaults and gp.defaults.profile or {}
 
     -- do not support custom buttons and responses currently, only the default
     -- so don't send them unnecessarily
-
-    local raids = {}
-    for mapId, raidSettings in pairs(epSettings.raid and epSettings.raid.maps or {}) do
-        local default = Util.Tables.Get(epDefaults, 'raid.maps.' .. mapId)
-        if  not default or
-            not Util.Objects.Equals(default.scale, raidSettings.scale) or
-            not Util.Objects.Equals(default.scaling_pct, raidSettings.scaling_pct)
-        then
-            raids[mapId] = raidSettings
-        end
-    end
-
-    local award_scaling = {}
-    for award, scalingSettings in pairs(gpSettings.award_scaling or {}) do
-        local default = Util.Tables.Get(gpDefaults, 'award_scaling.' .. award)
-        if  not default or
-            not Util.Objects.Equals(default.scale, scalingSettings.scale)
-        then
-            local settings = Util.Tables.Copy(scalingSettings)
-            -- need to send raw data, not the object with function refs
-            settings.color = settings.color:GetRGBA()
-            award_scaling[award] = settings
-        end
-    end
-
-    local slot_scaling = {}
-    for slot, scale in pairs(gpSettings.slot_scaling or {}) do
-        local default = Util.Tables.Get(gpDefaults, 'slot_scaling.' .. slot)
-        if  not default or
-            not Util.Objects.Equals(default, scale)
-        then
-            slot_scaling[slot] = scale
-        end
-    end
 
     local numButtons =
             Util.Tables.Get(mlSettings, 'buttons.numButtons') or
@@ -313,17 +172,11 @@ local _build = function(self, ml, ep, gp)
         numButtons = numButtons
     }
 
-    -- there are additional settings we could consider sending for GP calcuation
-    -- which aren't currently included, such as slot_scaling
-
     self.db = {
         outOfRaid         = mlSettings.outOfRaid,
         timeout           = mlSettings.timeout,
         showLootResponses = mlSettings.showLootResponses,
         buttons           = buttons,
-        raid              = raids,
-        slot_scaling      = slot_scaling,
-        award_scaling     = award_scaling,
     }
 
     Logging:Trace("MasterLooterDb:_build(AFTER) : %d", Util.Tables.Count(self.db))
@@ -342,19 +195,11 @@ local MasterLooterDbSingleton = AddOn.Instance(
 )
 
 local _settings = function()
-    local ML, EP, GP = AddOn:MasterLooterModule(), AddOn:EffortPointsModule(), AddOn:GearPointsModule()
+    local ML = AddOn:MasterLooterModule()
     if not ML or not ML.db or not ML.db.profile then
         error("MasterLooter module DB is not available")
     end
-    if not EP or not EP.db or not EP.db.profile then
-        error("EffortPoints module DB is not available")
-    end
-
-    if not GP or not GP.db or not GP.db.profile then
-        error("GearPoints module DB is not available")
-    end
-
-    return ML, EP, GP
+    return ML
 end
 
 ---@return table
@@ -392,7 +237,7 @@ function MasterLooterDbSingleton:Send(target)
 end
 
 if AddOn._IsTestContext('Models_Db') then
-    function MasterLooterDb:Build(ml, ep, gp)
-        _build(self, ml, ep, gp)
+    function MasterLooterDb:Build(ml)
+        _build(self, ml)
     end
 end

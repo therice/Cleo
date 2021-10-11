@@ -88,7 +88,7 @@ describe("Lists", function()
 			)
 			lists = AddOn:ListsModule()
 			lists.db = db
-			lists:InitializeDao()
+			lists:InitializeService()
 		end)
 
 		teardown(function()
@@ -129,7 +129,6 @@ describe("Lists", function()
 			assert.equal(1, Util.Tables.Count(e))
 			assert.equal("INVTYPE_HEAD", e[1])
 		end)
-
 		it("provides unassigned equipment", function()
 			local ua = lists:UnassignedEquipmentLocations("614A4F87-AF52-34B4-E983-B9E8929D44AF")
 			assert.same(

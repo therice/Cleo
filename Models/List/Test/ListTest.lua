@@ -6,7 +6,7 @@ local List
 --- @type Models.Player
 local Player
 
-describe("Item Model", function()
+describe("List Model", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_List_List')
 		Util, List, Player =
@@ -22,21 +22,63 @@ describe("Item Model", function()
 	describe("List", function()
 		local uuid = Util.UUID.UUID
 
-		it("overrides toTable", function()
+		it("handles players", function()
 			local l1 = List(uuid(), uuid(), "ListName")
-			l1.players:Add(Player:Get('Player1'))
-			l1.players:AddFirst(Player:Get('Player2'))
+			l1:AddPlayer(Player:Get('Player1'))
+			l1:AddPlayer(Player:Get('Player3'), 100)
+			l1:AddPlayer(Player:Get('Eliovak'), 4)
+			l1:AddPlayer(Player:Get('Player2'), 1)
 
 			local t = l1:toTable()
+			print(Util.Objects.ToString(t.players))
 			assert.equal(t.players[1], '1-00000002')
 			assert.equal(t.players[2], '1-00000001')
+			assert.equal(t.players[3], '4372-00706FE5')
+			assert.equal(t.players[4], '1122-00000003')
 
 			local l2 = List:reconstitute(t)
-			-- print(Util.Objects.ToString(t))
-			--print(Util.Objects.ToString(l2:toTable()))
-			assert.equal(l2.players:Get(1).guid, 'Player-1-00000002')
-			assert.equal(l2.players:Get(2).guid, 'Player-1-00000001')
+			assert.equal(l2:GetPlayer(1), Player:Get('Player2'))
+			assert.equal(l2:GetPlayer(2), Player:Get('Player1'))
+			assert.equal(l2:GetPlayer(3), Player:Get('Eliovak'))
+			assert.equal(l2:GetPlayer(4), Player:Get('Player3'))
 			assert.same(t, l2:toTable())
+
+			assert.same(
+				{"1-00000002", "1-00000001", "4372-00706FE5", "1122-00000003"},
+				l2:GetPlayers(true)
+			)
+
+			local prio, player = l2:GetPlayerPriority("Player2"), nil
+			assert.equal(1, prio)
+
+			l2:SetPlayers("Eliovak", "Folsom", "Gnomechómsky")
+			assert.equal(l2:GetPlayer(1), Player:Get('Eliovak'))
+			assert.equal(l2:GetPlayer(2), Player:Get('Folsom'))
+			assert.equal(l2:GetPlayer(3), Player:Get('Gnomechómsky'))
+
+			prio, player = l2:RemovePlayer("Eliovak")
+			assert.equal(prio, 1)
+			assert.equal(player, Player:Get('Eliovak'))
+			assert.equal(2, Util.Tables.Count(l2.players))
+			-- the remove shifts everyone else up in priority
+			assert.equal(l2:GetPlayer(1), Player:Get('Folsom'))
+			assert.equal(l2:GetPlayer(2), Player:Get('Gnomechómsky'))
+
+			l1 = List(uuid(), uuid(), "ListName")
+			l1:AddPlayer(Player:Get('Player1'))
+			l1:AddPlayer(Player:Get('Player4'), 4)
+			l1:AddPlayer(Player:Get('Player3'), 100)
+			l1:AddPlayer(Player:Get('Eliovak'), 15)
+			l1:AddPlayer(Player:Get('Player2'), 1)
+			assert.equal(l1:GetPlayer(1), Player:Get('Player2'))
+			prio, player = l1:RemovePlayer("Player1", false)
+			assert.equal(1, l1:GetPlayerPriority('Player2'))
+			assert.equal(4, l1:GetPlayerPriority('Player4'))
+			assert.equal(100, l1:GetPlayerPriority('Player3'))
+			prio, player = l1:RemovePlayer("Player4", true)
+			assert.equal(1, l1:GetPlayerPriority('Player2'))
+			assert.equal(14, l1:GetPlayerPriority('Eliovak'))
+			assert.equal(99, l1:GetPlayerPriority('Player3'))
 		end)
 
 		it("handles equipment add/remove", function()
@@ -46,7 +88,6 @@ describe("Item Model", function()
 			assert.same({"INVTYPE_HEAD", "INVTYPE_FEET", "INVTYPE_WEAPON", "INVTYPE_WEAPONMAINHAND"}, l.equipment)
 			l:RemoveEquipment("INVTYPE_HEAD", "INVTYPE_WEAPONMAINHAND")
 			assert.same({"INVTYPE_FEET", "INVTYPE_WEAPON"}, l.equipment)
-			-- print(Util.Objects.ToString(l:toTable()))
 		end)
 	end)
 end)

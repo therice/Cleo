@@ -8,12 +8,7 @@ function GameTooltip:initialize(parent, name)
 end
 
 function GameTooltip:Create()
-    local tt = CreateFrame(
-            "GameTooltip",
-            self.name,
-            self.parent,
-            "GameTooltipTemplate"
-    )
+    local tt = CreateFrame("GameTooltip", self.name, self.parent, "GameTooltipTemplate")
     tt:SetClampedToScreen(false)
     tt:SetScale(self.parent:GetScale() * 0.95 or 1)
     if self.parent.content then

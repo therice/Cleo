@@ -63,6 +63,7 @@ end
 function AddOn:PartyEvent(event, ...)
     Logging:Debug("PartyEvent(%s)", event)
     self:NewMasterLooterCheck()
+    -- todo : maybe handle transmit of lists here?
     -- if event == C.Events.GroupLeft then self:StandbyModule():ResetRoster() end
 end
 
@@ -71,14 +72,14 @@ end
 -- Loot functions like GetNumLootItems will be available until LOOT_CLOSED is fired.
 function AddOn:LootReady(_, ...)
     Logging:Debug("LootReady()")
-    -- self:MasterLooterModule():OnLootReady(...)
+    self:MasterLooterModule():OnLootReady(...)
 end
 
 -- https://wow.gamepedia.com/LOOT_OPENED
 -- Fired when a corpse is looted, after LOOT_READY.
 function AddOn:LootOpened(_, ...)
     Logging:Debug("LootOpened()")
-    -- self:MasterLooterModule():OnLootOpened(...)
+    self:MasterLooterModule():OnLootOpened(...)
 end
 
 -- https://wow.gamepedia.com/LOOT_CLOSED
@@ -86,7 +87,7 @@ end
 -- Note that this will fire before the last CHAT_MSG_LOOT event for that loot.
 function AddOn:LootClosed(_, ...)
     Logging:Debug("LootClosed()")
-    -- self:MasterLooterModule():OnLootClosed(...)
+    self:MasterLooterModule():OnLootClosed(...)
 end
 
 --- https://wow.gamepedia.com/LOOT_SLOT_CLEARED
@@ -94,7 +95,7 @@ end
 --- lootSlot : number
 function AddOn:LootSlotCleared(_, ...)
     Logging:Debug("LootSlotCleared()")
-    -- self:MasterLooterModule():OnLootSlotCleared(...)
+    self:MasterLooterModule():OnLootSlotCleared(...)
 end
 
 -- https://wow.gamepedia.com/ENCOUNTER_START
@@ -122,7 +123,6 @@ end
 -- https://wow.gamepedia.com/RAID_INSTANCE_WELCOME
 function AddOn:RaidInstanceEnter(_, ...)
     Logging:Debug("RaidInstanceEnter()")
-    --[[
     local ML = self:MasterLooterModule()
     if not IsInRaid() and ML:GetDbValue('onlyUseInRaids') then return end
     if Util.Objects.IsEmpty(self.masterLooter) and UnitIsGroupLeader(C.player) then
@@ -133,7 +133,6 @@ function AddOn:RaidInstanceEnter(_, ...)
             Dialog:Spawn(C.Popups.ConfirmUsage)
         end
     end
-    --]]
 end
 
 local UIOptionsOldCancel = InterfaceOptionsFrameCancel:GetScript("OnClick")

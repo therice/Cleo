@@ -16,5 +16,6 @@
     <Script file="Tabs.lua"/>
     <Script file="CheckBox.lua"/>
     <Script file="DualListbox.lua"/>
+    <Script file="InlineGroup.lua"/>
     <Script file="GameTooltip.lua"/>
 </Ui>

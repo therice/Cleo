@@ -31,7 +31,11 @@ lib.ReputationItems = {
 -- mapping of item ids to equipment locations
 -- for items which are obained via tokens
 lib.TokenEquipmentLocations = {
+}
 
+-- mapping of item ids to item ids
+-- for items which are obained via tokens
+lib.TokenItems = {
 }
 
 -- https://wow.gamepedia.com/ItemType
@@ -468,6 +472,10 @@ end
 
 function lib:GetTokenBasedItemLocations(itemId)
     return lib.TokenEquipmentLocations[itemId]
+end
+
+function lib:GetTokenItems(itemId)
+    return lib.TokenItems[itemId]
 end
 
 function lib:IsReputationItem(itemId)

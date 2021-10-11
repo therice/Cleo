@@ -30,11 +30,12 @@ local ScrollColumns =
 
 function VersionCheck:GetFrame()
 	if not self.frame then
+		Logging:Trace("VersionCheck:GetFrame()")
 		local f = UI:NewNamed('Frame', UIParent, 'VersionCheck', self:GetName(), L['frame_version_check'], 350, 325, true)
 		local st = ST.New(ScrollColumns, 12, 20, nil, f)
 		st:RegisterEvents({
-			  ["OnEnter"] = function(_, _, data, _, row, realrow, ...)
-				  if row then VersionCheck.ModeTooltip(data[realrow].mode) end
+			  ["OnEnter"] = function(rowFrame, _, data, _, row, realrow, ...)
+				  if row then VersionCheck.ModeTooltip(data[realrow].mode, rowFrame.cols[3] --[[ always anchor at last column --]]) end
 				  return false
 			  end,
 			  ["OnLeave"] = function(...)
@@ -66,6 +67,13 @@ function VersionCheck:GetFrame()
 
 		f.rows = {}
 		self.frame = f
+	end
+end
+
+function VersionCheck:ClearEntries()
+	if self.frame then
+		self.frame.rows = {}
+		self.frame.st:SetData(self.frame.rows)
 	end
 end
 
@@ -122,7 +130,7 @@ end
 local ModeDecorator = UIUtil.ColoredDecorator(C.Colors.LuminousYellow)
 local ModeTooltipDecorator = UIUtil.ColoredDecorator(C.Colors.Green)
 
-function VersionCheck.ModeTooltip(mode)
+function VersionCheck.ModeTooltip(mode, parent)
 	if mode then
 		local modes = {}
 		for k, v in pairs(C.Modes) do
@@ -131,7 +139,7 @@ function VersionCheck.ModeTooltip(mode)
 			end
 		end
 
-		UIUtil.ShowTooltip(ModeTooltipDecorator:decorate(L['modes'] .. '\n'), unpack(modes))
+		UIUtil.ShowTooltip(parent, "ANCHOR_RIGHT", ModeTooltipDecorator:decorate(L['modes'] .. '\n'), unpack(modes))
 	else
 		UIUtil:HideTooltip()
 	end
@@ -140,8 +148,8 @@ end
 function VersionCheck.SetCellVersion(_, frame, data, _, _, realrow, column, ...)
 	local r = data[realrow]
 	local version, mode = r.version, r.mode
-	Logging:Debug("SetCellVersion() : %s / %s", tostring(version), tostring(mode))
-	frame.text:SetText(version and tostring(version) or L["waiting_for_response"])
+	Logging:Debug("SetCellVersion() : version=%s / mode=%s / value=%s", tostring(version), tostring(mode), tostring(r.cols[column].value))
+	frame.text:SetText(version and tostring(version) or r.cols[column].value)
 	frame.text:SetTextColor(VersionCheck.GetVersionColor(version, mode):GetRGBA())
 end
 
@@ -153,6 +161,7 @@ VersionCheck.SortByVersion =
 	)
 
 function VersionCheck:QueryTimer()
+	Logging:Trace("QueryTimer()")
 	if self.frame then
 		for k, _ in pairs(self.frame.rows) do
 			local cell = self.frame.st:GetCell(k, 3)

@@ -163,3 +163,25 @@ function AddOn:OnDisable()
     self:UnsubscribeFromEvents()
     SlashCommands:Unregister()
 end
+
+function AddOn:Test(count)
+    Logging:Debug("Test(%d)", count)
+    local items = Util.Tables.Temp()
+    for _ =1, count do
+        Util.Tables.Push(items, AddOn.TestItems[random(1, #AddOn.TestItems)])
+    end
+
+    self.mode:Enable(C.Modes.Test)
+    self.isMasterLooter, self.masterLooter = self:GetMasterLooter()
+
+    if not self.isMasterLooter then
+        self:Print(L["error_test_as_non_leader"])
+        self.mode:Disable(C.Modes.Test)
+        return
+    end
+
+    self:CallModule("MasterLooter")
+    local ML = self:MasterLooterModule()
+    ML:NewMasterLooter(self.masterLooter)
+    ML:Test(items)
+end

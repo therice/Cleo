@@ -30,8 +30,7 @@ function AddOn:SubscribeToPermanentComms()
               enchanterLvl = enchanterLvl,
               ilvl         = ilvl
             })
-        end --,
-        --[[
+        end,
         [C.Commands.LootTable] = function(data, sender)
             Logging:Debug("LootTable %s from %s", Util.Objects.ToString(data), tostring(sender))
             if not self.UnitIsUnit(sender, self.masterLooter) then
@@ -70,12 +69,6 @@ function AddOn:SubscribeToPermanentComms()
                 self:OnReRollReceived(sender, unpack(data))
             end
         end,
-        [C.Commands.StandbyPing] = function(data, sender)
-            if AddOn:IsMasterLooter(sender) then
-                self:Send(sender, C.Commands.StandbyPingAck, unpack(data))
-            end
-        end
-        --]]
     })
 end
 

@@ -183,7 +183,7 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
         function(...)
 
             local toSend = self:PrepareForSend(command, ...)
-            local isPlayer = (Util.Objects.IsTable(target) and target:isInstanceOf(Player))
+            local isPlayer = Util.Objects.IsInstanceOf(target, Player)
 
             Logging:Trace("SendComm(%s, %s, %s) : %s (%d)", prefix,
                           isPlayer and target:GetName() or Util.Objects.ToString(target),

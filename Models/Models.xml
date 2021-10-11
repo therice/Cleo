@@ -3,9 +3,12 @@
     <Script file="Date.lua"/>
     <Script file="Metrics.lua"/>
     <Script file="Db.lua"/>
+    <Script file="Dao.lua"/>
     <Script file="Player.lua"/>
     <Script file="Encounter.lua"/>
     <Script file="Item\Item.lua"/>
+    <Script file="Item\Loot.lua"/>
     <Script file="List\Configuration.lua"/>
     <Script file="List\List.lua"/>
+    <Script file="List\Service.lua"/>
 </Ui>

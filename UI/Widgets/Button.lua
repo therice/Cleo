@@ -17,8 +17,15 @@ end
 -- Button()
 function Button:Create()
     local b = CreateFrame("Button", self.name, self.parent)
-    b:SetText(self.text)
+    b:SetText("")
     b:SetSize(100, 20)
+
+    b.text = b:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    b.text:SetPoint("CENTER", b, "CENTER")
+    b.text:SetJustifyV("MIDDLE")
+    b.Text = b.text
+    b.Text:SetText(self.text)
+    b:SetFontString(b.Text)
 
     b.HighlightTexture = b:CreateTexture()
     b.HighlightTexture:SetColorTexture(1,1,1,.3)

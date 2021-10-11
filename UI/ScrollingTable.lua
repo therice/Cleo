@@ -13,6 +13,10 @@ local Package = AddOn.Package('UI.ScrollingTable')
 local Attributes = AddOn.Package('UI.Util').Attributes
 --- @type UI.Util.Builder
 local Builder = AddOn.Package('UI.Util').Builder
+--- @type UI.Native.Widget
+local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
+--- @type UI.Native
+local UI = AddOn.Require('UI.Native')
 
 --- @class UI.ScrollingTable
 local ScrollingTable = AddOn.Instance(
@@ -80,7 +84,7 @@ function DeleteButtonCell:initialize(fn)
                 -- todo : prevent repeated textures and OnEnter/OnLeave?
                 frame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
                 frame:SetScript("OnEnter", function()
-                    UIUtil.ShowTooltip(L['double_click_to_delete_this_entry'])
+                    UIUtil.ShowTooltip(frame, nil, format(L["double_click_to_delete_this_entry"], L["item"]))
                 end)
                 frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
                 frame:SetScript(
@@ -193,7 +197,78 @@ function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach)
         frame:SetWidth(st.frame:GetWidth() + 20)
     end
 
+    ScrollingTable.Decorate(st)
+
     return st
+end
+
+local STBackdrop = {
+    bgFile = BaseWidget.ResolveTexture('white'),
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 8, edgeSize = 2,
+    insets = { left = 2, right = 2, top = 2, bottom = 2 },
+}
+
+local STBackdropBorderColor = C.Colors.ItemPoor
+
+function ScrollingTable.Decorate(st)
+
+    st.ReSkin = function(self)
+        self.frame:SetBackdrop(STBackdrop)
+        self.frame:SetBackdropColor(0, 0, 0, 1)
+        self.frame:SetBackdropBorderColor(0, 0, 0, 1)
+        BaseWidget.Border(self.frame, STBackdropBorderColor.r, STBackdropBorderColor.g, STBackdropBorderColor.b, 1, 1, 2, 5)
+
+        local sf = self.scrollframe
+        local sb = sf.ScrollBar
+
+        if sf and sb then
+            sf.scrolltrough:Hide()
+            sf.scrolltrough.background:Hide()
+            sf.scrolltroughborder:Hide()
+            sf.scrolltroughborder.background:Hide()
+            sb:Hide()
+            sf:SetScript("OnVerticalScroll", nil)
+        end
+
+        self.scrollframe.ScrollBar =
+            UI:New('ScrollBar', st.frame)
+                :Size(16, 0)
+                :Point("TOPRIGHT",-3,-3)
+                :Point("BOTTOMRIGHT",-3,3)
+
+        return self
+    end
+
+    st.Hook = function(self)
+        self.scrollframe.ScrollBar:OnChange(
+                function(_, offset)
+                    FauxScrollFrame_OnVerticalScroll(self.scrollframe,  offset, st.rowHeight, function() st:Refresh() end)
+                end
+        )
+
+        -- todo : will need to hook DoFilter as well
+        self._SetData = self.SetData
+        self.SetData = function(self, ...)
+            self:_SetData(...)
+            -- Logging:Debug("SetData(): %d, %d, %d", #st.filtered, st.displayRows, st.rowHeight)
+            -- max =  (total height for all rows) - (total height for displayed rows)
+            local max = (#self.filtered * self.rowHeight) - (self.displayRows * self.rowHeight)
+            self.scrollframe.ScrollBar:Range(0, math.max(0, max), st.rowHeight)
+            self.scrollframe.ScrollBar:SetValue(0)
+            self.scrollframe.ScrollBar:UpdateButtons()
+            if not self.scrollframe.ScrollBar.buttonUp:IsEnabled() and not self.scrollframe.ScrollBar.buttonDown:IsEnabled() then
+                self.scrollframe.ScrollBar:Hide()
+            else
+                self.scrollframe.ScrollBar:Show()
+            end
+        end
+
+        return self
+    end
+
+
+    return st:ReSkin():Hook()
 end
 
 --- @return function

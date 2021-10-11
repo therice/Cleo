@@ -266,8 +266,14 @@ function Dropdown:SetList(list, order)
 	else
 		for i, key in ipairs(order) do
 			self.List[i] = DropdownItem(key, list[key])
+			-- Logging:Debug("SetList() : %d (%s) -> %s", i, tostring(key), tostring(list[key]))
 		end
 	end
+
+	if self.ds then
+		self:SetViaKey(self.ds:Get())
+	end
+
 	return self
 end
 
@@ -628,7 +634,6 @@ ReloadTemplates = function(level)
 					local text, icon = button.NormalText, button.Icon
 					local paddingLeft = item.padding or 0
 
-
 					if item.icon then
 						icon:SetTexture(item.icon)
 						paddingLeft = paddingLeft + 18
@@ -636,7 +641,6 @@ ReloadTemplates = function(level)
 					else
 						icon:Hide()
 					end
-
 
 					button:SetNormalFontObject(GameFontHighlightSmallLeft)
 					button:SetHighlightFontObject(GameFontHighlightSmallLeft)

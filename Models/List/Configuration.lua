@@ -1,5 +1,6 @@
 --- @type AddOn
 local _, AddOn = ...
+local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 --- @type LibLogging
@@ -8,6 +9,13 @@ local Logging = AddOn:GetLibrary("Logging")
 local Bitfield = Util.Bitfield.Bitfield
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
+--- @type Models.Dao
+local Dao = AddOn.Package('Models').Dao
+local UUID = Util.UUID.UUID
+--- @type Models.Date
+local Date = AddOn.Package('Models').Date
+--- @type Models.DateFormat
+local DateFormat = AddOn.Package('Models').DateFormat
 
 --- @class Models.List.Configuration
 local Configuration = AddOn.Package('Models.List'):Class('Configuration')
@@ -104,4 +112,18 @@ end
 
 function Configuration:__tostring()
 	return self.name
+end
+
+function Configuration.CreateInstance(...)
+	local uuid, name = UUID(), format("%s (%s)", L["configuration"], DateFormat.Full:format(Date()))
+	Logging:Trace("Configuration.Create() : %s, %s", tostring(uuid), tostring(name))
+	local configuration = Configuration(uuid, name)
+	configuration:GrantPermissions(Player:Get("player").guid, Configuration.Permissions.Owner)
+	return configuration
+end
+
+--- @class Models.List.ConfigurationDao
+local ConfigurationDao = AddOn.Package('Models.List'):Class('ConfigurationDao', Dao)
+function ConfigurationDao:initialize(module, db)
+	Dao.initialize(self, module, db, Configuration)
 end

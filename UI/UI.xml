@@ -2,8 +2,6 @@
     <Script file="Native.lua"/>
     <Script file="Util.lua"/>
     <Include file="Widgets\Widgets.xml"/>
-    <Script file="AceConfig.lua"/>
-    <Script file="Ace.lua"/>
     <Script file="ScrollingTable.lua"/>
     <Script file="DropDown.lua"/>
 </Ui>

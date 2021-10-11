@@ -51,14 +51,15 @@ function EditBox:Create()
         'InsideTexture', EditBox.InsideTexture,
         'AddSearchIcon',EditBox.AddSearchIcon,
         'LeftText', EditBox.AddLeftText,
-        'TopText', EditBox.AddLeftTop,
+        'TopText', EditBox.AddTopText,
         'BackgroundText',EditBox.AddBackgroundText,
         'GetBackgroundText',EditBox.GetBackgroundText,
         'ColorBorder', EditBox.ColorBorder,
         'GetTextHighlight', EditBox.GetTextHighlight,
         'OnDatasourceConfigured',  EditBox.OnDatasourceConfigured,
         'OnDatasourceCleared',  EditBox.OnDatasourceCleared,
-        'AddXButton', EditBox.AddXButton
+        'AddXButton', EditBox.AddXButton,
+        'Color', EditBox.Color
     )
 
     eb:SetFontObject(BaseWidget.FontNormal)
@@ -86,6 +87,18 @@ end
 function EditBox.OnDatasourceCleared(self)
     self:OnChange(Util.Functions.Noop)
     self:Text(nil)
+end
+
+function EditBox.Color(self, colR, colG, colB, colA)
+    if Util.Objects.IsString(colR) then
+        local r, g, b = colR:sub(-6, -5), colR:sub(-4, -3), colR:sub(-2, -1)
+        colR, colG, colB = tonumber(r, 16), tonumber(g, 16), tonumber(b, 16)
+        colR = (colR or 255) / 255
+        colG = (colG or 255) / 255
+        colB = (colB or 255) / 255
+    end
+    self:SetTextColor(colR or 1, colG or 1, colB or 1, colA or 1)
+    return self
 end
 
 function EditBox.SetText(self, text)
@@ -158,7 +171,7 @@ function EditBox.AddLeftText(self,text,size)
     return self
 end
 
-function EditBox.AddLeftTop(self,text,size)
+function EditBox.AddTopText(self,text,size)
     if self.leftText then
         self.leftText:SetText(text)
     else

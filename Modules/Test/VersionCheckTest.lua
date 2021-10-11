@@ -62,12 +62,14 @@ describe("VersionCheck", function()
 		end)
 
 		it("clears expired versions", function()
+			assert(vc.frame)
 			vc:ClearExpiredVersions()
 			assert.equal(Util.Tables.Count(vc.Versions()), 3)
 			vc:DisplayOutOfDateClients()
 		end)
 
 		it("handles version ping/reply", function()
+			assert(vc.frame)
 			local version = AddOn.version
 			_G.UnitIsUnit = function(unit1, unit2) return false end
 			AddOn.version = SemanticVersion('2020.1')
@@ -80,6 +82,7 @@ describe("VersionCheck", function()
 		end)
 
 		it("queries", function()
+			assert(vc.frame)
 			local s = spy.on(vc, "OnVersionCheckReceived")
 			vc:Query(C.guild)
 			WoWAPI_FireUpdate(GetTime() + 10)

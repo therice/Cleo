@@ -12,7 +12,6 @@ function Self.IsEmpty(obj)
     if Self.IsNil(obj) then return true end
     if Self.IsString(obj) then return Util.Strings.IsEmpty(obj) end
     if Self.IsTable(obj) then return Util.Tables.IsEmpty(obj) end
-
     return false
 end
 
@@ -46,6 +45,10 @@ end
 
 function Self.IsBoolean(obj)
     return type(obj) == 'boolean'
+end
+
+function Self.IsInstanceOf(obj, clazz)
+    return obj and Self.IsTable(obj) and (obj.clazz and obj.isInstanceOf) and obj:isInstanceOf(clazz)
 end
 
 -- Check if two values are equal
