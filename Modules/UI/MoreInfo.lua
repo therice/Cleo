@@ -59,7 +59,7 @@ function MI.EmbedWidgets(module, frame, fn)
                 frame.moreInfo.Update()
             end
     )
-    miButton:SetScript("OnEnter", function() UIUtil.CreateTooltip(L["click_more_info"]) end)
+    miButton:SetScript("OnEnter", function(self) UIUtil.ShowTooltip(self, nil, L["click_more_info"]) end)
     miButton:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
     miButton:HideTextures()
     frame.moreInfoBtn = miButton

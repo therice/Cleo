@@ -53,7 +53,7 @@ function DropdownProperties:DecorateText(item)
 end
 
 function DropdownProperties:SetValue(value)
-	-- Logging:Debug("SetValue(%s)", tostring(value))
+	-- Logging:Trace("SetValue(%s)", tostring(value))
 	self.value = { value }
 	self:OnValueChanged()
 end
@@ -63,7 +63,7 @@ function DropdownProperties:HasValue(value)
 end
 
 function DropdownProperties:HandleClick(button, down, item)
-	-- Logging:Debug("HandleClick(%s, %s) : %s", tostring(button), tostring(down), Util.Objects.ToString(item))
+	-- Logging:Trace("HandleClick(%s, %s) : %s", tostring(button), tostring(down), Util.Objects.ToString(item))
 	if self.clickHandler(button, down, item) then
 		self:DropDown():SetViaKey(item.key)
 		return true
@@ -158,7 +158,7 @@ function Dropdown:Create()
 end
 
 function Dropdown.OnDatasourceConfigured(self)
-	-- Logging:Debug("Dropdown.OnDatasourceConfigured(%s)", self.ds.key)
+	-- Logging:Trace("Dropdown.OnDatasourceConfigured(%s)", self.ds.key)
 	-- remove any currently configured click handler
 	self:SetClickHandler(Util.Functions.Noop)
 	self:SetViaKey(self.ds:Get())
@@ -266,7 +266,7 @@ function Dropdown:SetList(list, order)
 	else
 		for i, key in ipairs(order) do
 			self.List[i] = DropdownItem(key, list[key])
-			-- Logging:Debug("SetList() : %d (%s) -> %s", i, tostring(key), tostring(list[key]))
+			-- Logging:Trace("SetList() : %d (%s) -> %s", i, tostring(key), tostring(list[key]))
 		end
 	end
 
@@ -356,7 +356,7 @@ function Dropdown:SetSize(width)
 end
 
 function Dropdown.OnClick(self, ...)
-	Logging:Debug("Dropdown.OnClick()")
+	Logging:Trace("Dropdown.OnClick()")
 
 	local parent = self:GetParent()
 	if parent.PreUpdate then
@@ -367,7 +367,7 @@ function Dropdown.OnClick(self, ...)
 end
 
 function Dropdown.OnClickButton(self)
-	Logging:Debug("Dropdown.OnClickButton()")
+	Logging:Trace("Dropdown.OnClickButton()")
 	if Templates[1]:IsShown() then
 		Dropdown.Close()
 		return
@@ -584,7 +584,7 @@ end
 
 local function CreateTemplateButtons(index, level)
 	level = level or 1
-	Logging:Debug("CreateTemplateButton(index=%d, level=%d)", index, level)
+	Logging:Trace("CreateTemplateButton(index=%d, level=%d)", index, level)
 	local dd = Templates[level]
 	if dd.Buttons[index] then return end
 
@@ -621,7 +621,7 @@ end
 
 ReloadTemplates = function(level)
 	level = level or -1
-	Logging:Debug("ReloadTemplates(%d)", level)
+	Logging:Trace("ReloadTemplates(%d)", level)
 	for templateIndex = 1, #Templates do
 		local template = Templates[templateIndex]
 		if template:IsShown() or level == templateIndex then
@@ -766,7 +766,7 @@ for i = 1, 2 do
 	template.Slider:SetScript(
 			"OnValueChanged",
 			function(self, value)
-				Logging:Debug("Slider.OnValueChanged(%s)", tostring(value))
+				Logging:Trace("Slider.OnValueChanged(%s)", tostring(value))
 				value = Util.Numbers.Round2(value)
 				self:GetParent().Position = value
 				ReloadTemplates()
@@ -793,7 +793,7 @@ end
 
 function Dropdown.ToggleDropDownMenu(self, level)
 	level = level or 1
-	Logging:Debug("ToggleDropDownMenu(%d)", level)
+	Logging:Trace("ToggleDropDownMenu(%d)", level)
 	if self.ToggleUpadte then self:ToggleUpadte() end
 	for i = (level + 1), #Templates do Templates[i]:Hide() end
 

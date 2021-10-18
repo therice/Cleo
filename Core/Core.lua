@@ -17,7 +17,6 @@ local LootTableEntry = AddOn.Package('Models.Item').LootTableEntry
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Item.Item
 local Item = AddOn.Package('Models.Item').Item
-
 local Dialog = AddOn:GetLibrary("Dialog")
 
 local function ModeToggle(self, flag)
@@ -269,11 +268,14 @@ function AddOn:NewMasterLooterCheck()
     end
 
     -- is current ML unset
-    if Util.Objects.IsEmpty(self.masterLooter) then return end
+    if Util.Objects.IsEmpty(self.masterLooter) then
+        Logging:Warn("NewMasterLooterCheck() : Master Looter is empty")
+        return
+    end
 
     -- old ML is us, new ML is us (implied by check above) and loot method has not changed
     if self:UnitIsUnit(oldMl, self.masterLooter) and Util.Strings.Equal(oldLm, self.lootMethod) then
-        Logging:Debug("NewMasterLooterCheck() : No Master Looter change")
+        Logging:Debug("NewMasterLooterCheck() : No Master Looter change (%s / %s)", tostring(oldMl), tostring(self.masterLooter))
         return
     end
 
@@ -347,20 +349,20 @@ function AddOn:StartHandleLoot()
 
     self:Print(format(L["player_handles_looting"], self.player:GetName()))
     self.handleLoot = true
-    -- these are sent, but not actually consumed by addon
-    self:Send(C.group, C.Commands.HandleLootStart)
     self:CallModule("MasterLooter")
-    self:MasterLooterModule():NewMasterLooter(self.masterLooter)
-    -- todo : locate sk configuration
+    ML:NewMasterLooter(self.masterLooter)
+    ML:OnHandleLootStart()
+    -- this message is not currently used, so commented out
+    -- self:Send(C.group, C.Commands.HandleLootStart)
 end
-
 
 function AddOn:StopHandleLoot()
     Logging:Debug("StopHandleLoot()")
+    self:MasterLooterModule():OnHandleLootStop()
+    -- must set this after, or call to OnHandleLootStop() won't be handled
     self.handleLoot = false
-    self:MasterLooterModule():Disable()
-    -- these are sent, but not actually consumed by addon
-    self:Send(C.group, C.Commands.HandleLootStop)
+    -- this message is not currently used, so commented out
+    -- self:Send(C.group, C.Commands.HandleLootStop)
 end
 
 function AddOn:HaveMasterLooterDb()

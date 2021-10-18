@@ -20,14 +20,32 @@ local UUID = Util.UUID.UUID
 local Date = AddOn.Package('Models').Date
 --- @type Models.DateFormat
 local DateFormat = AddOn.Package('Models').DateFormat
+--- @type Models.Hashable
+local Hashable = AddOn.Require('Models.Hashable')
+--- @type Models.Referenceable
+local Referenceable = AddOn.Require('Models.Referenceable')
 
 --- @class Models.List.Configuration
-local Configuration = AddOn.Package('Models.List'):Class('Configuration', Versioned)
+local Configuration =
+	AddOn.Package('Models.List'):Class('Configuration', Versioned)
+		:include(Hashable.Includable('sha256'))
+		:include(Referenceable.Includable())
+Versioned.ExcludeAttrsInHash(Configuration)
+Versioned.IncludeAttrsInRef(Configuration)
+Configuration.static:AddTriggers("name", "permissions", "status", "default")
+Configuration.static:IncludeAttrsInRef("id", {hash = function(self) return self:hash() end})
+
+local Version = SemanticVersion(1, 0, 0)
 -- todo : do we really need 'None'? its one use is tracking previous owner/admins who have been removed
 Configuration.Permissions = {
 	None        =   0x01,
 	Owner       =   0x02,
 	Admin       =   0x04,
+}
+
+Configuration.Status = {
+	Active      =   1,
+	Inactive    =   2,
 }
 
 --- @class Models.List.Permission
@@ -36,14 +54,14 @@ function Permission:initialize()
 	Bitfield.initialize(self,  Configuration.Permissions.None)
 end
 
-local Version = SemanticVersion(1, 0, 0)
-
 function Configuration:initialize(id, name)
-	Versioned.initialize(self, Version, "name", "permissions")
+	Versioned.initialize(self, Version)
 	self.id = id
 	self.name = name
 	--- @type table<any, Models.List.Permission>
 	self.permissions = {}
+	self.status = self.Status.Inactive
+	self.default = false
 end
 
 function Configuration:afterReconstitute(instance)
@@ -93,6 +111,11 @@ function Configuration:PlayersWithPermission(p)
 		end
 	end
 	return players
+end
+
+function Configuration:IsAdminOrOwner(p)
+	p = Player.Resolve(p)
+	return (p == self:GetOwner()) or Util.Tables.ContainsValue(self:GetAdministrators(), p)
 end
 
 function Configuration:GetOwner()

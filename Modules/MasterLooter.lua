@@ -75,7 +75,8 @@ ML.AwardStringsDesc = {
 	L["announce_&r_desc"],
 	L["announce_&s_desc"],
 	L["announce_&t_desc"],
-	L["announce_&z_desc"],
+	L["announce_&ln_desc"],
+	L["announce_&lp_desc"],
 }
 
 ML.AnnounceItemStringsDesc = {
@@ -83,7 +84,7 @@ ML.AnnounceItemStringsDesc = {
 	L["announce_&l_desc"],
 	L["announce_&s_desc"],
 	L["announce_&t_desc"],
-	L["announce_&z_desc"],
+	L["announce_&ln_desc"],
 }
 
 ML.UsageType= {
@@ -92,14 +93,30 @@ ML.UsageType= {
 	Never   = 99,
 }
 
+-- available methods for selecting a list configuration to use when master looter
+ML.ListConfigSelectionMethod = {
+	Default = 1,
+	Ask     = 2,
+}
+
 ML.defaults = {
 	profile = {
 		usage = {
 			-- this applies when player is master looter
 			state       = ML.UsageType.Ask,
-			-- this applies when player is leader (should state setting be used then as well)
+			-- this applies when player is leader (should the 'state' setting be used then as well)
+			--
+			-- E.G. if whenLeader is true and state is 'Ask', the player will be prompted
+			-- whether to use cleo when they are leader
+			--
+			-- E.G. if whenLeader is true and state is 'Always', then it would automatically use cleo
+			-- when the player is the leader
+			--
+			-- if whenLeader is false, the state has no impact when player is the leader
 			whenLeader  = true,
 		},
+		-- what method should be used for selecting the active configuration (lists are attached to a config)
+		lcSelectionMethod = ML.ListConfigSelectionMethod.Ask,
 		-- should it only be enabled in raids
 		onlyUseInRaids = true,
 		-- is 'out of raid' support enabled (specifies auto-responses when user not in instance, but in raid)
@@ -123,17 +140,17 @@ ML.defaults = {
 		-- are awards announced via specified channel
 		announceAwards = true,
 		-- where awards are announced, channel + message
-		announceAwardText = { channel = "group", text = "&p was awarded &i for &r (&z)"},
+		announceAwardText = { channel = "group", text = "&p was awarded &i for &r (Priority #&lp : &ln)"},
 		-- are items under consideration announced via specified channel
 		announceItems = true,
 		-- the prefix/preamble to use for announcing items
 		announceItemPrefix = "Items under consideration:",
 		-- where items are announced, channel + message
-		announceItemText = { channel = "group", text = "&s: &i (&z)"},
+		announceItemText = { channel = "group", text = "&s: &i (&ln)"},
 		-- are player's responses to items announced via specified channel
 		announceResponses = true,
 		-- where player's responses to items are announced, channel + message
-		announceResponseText = { channel = "group", text = "&p specified &r for &i (&z)"},
+		announceResponseText = { channel = "group", text = "&p specified &r for &i (Priority #&lp : &ln)"},
 		-- enables the auto-awarding of items that meet specific criteria
 		autoAward = false,
 		-- what types of items should be auto-awarded, supports
@@ -198,12 +215,14 @@ do
 
 	-- establish the number of user visible buttons
 	DefaultButtons.numButtons = Util.Tables.Count(UserVisibleResponses)
+	-- the award_scale stuff below is dubious, it would be valuable if you wanted to assign different
+	-- strategies for suiciding by response. however, that defeats the entire purposes of dropping to end
 	local index = 1
 	for response, value in pairs(UserVisibleResponses) do
 		-- these are entries that represent buttons available to player at time of loot decision
-		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response]})
+		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response], award_scale = response})
 		-- the are entries of the universe of possible responses, which are a super set of ones presented to the player
-		Util.Tables.Push(DefaultResponses, {color = value.color, sort = index, text = L[response]})
+		Util.Tables.Push(DefaultResponses, {color = value.color, sort = index, text = L[response], award_scale = response})
 		index = index + 1
 	end
 
@@ -282,6 +301,7 @@ function ML:SubscribeToComms()
 		end,
 		[C.Commands.Reconnect] = function(_, sender)
 			Logging:Debug("Reconnect from %s", tostring(sender))
+			-- only handle for other players, not ourselves
 			if not AddOn.UnitIsUnit(sender, AddOn.player) then
 				self:OnReconnectReceived(sender)
 			end
@@ -293,6 +313,12 @@ function ML:SubscribeToComms()
 				-- this signals a reasonable amount of time has passed for a response to be received
 				-- and to transition response from announced after session has started
 				self:ScheduleTimer("OnLootTableReceived", 15 + 0.5 * #self.lootTable)
+			end
+		end,
+		[C.Commands.HandleLootStart] = function(_, sender)
+			Logging:Debug("HandleLootStart from %s", tostring(sender))
+			if AddOn:IsMasterLooter() then
+				self:OnHandleLootStart()
 			end
 		end,
 	})
@@ -516,7 +542,18 @@ ML.AnnounceItemStrings = {
 		return item and item:GetLevelText() or "" end,
 	["&t"] = function(_, item)
 		return item and item:GetTypeText() or "" end,
-	["&z"] = function(_, item) return "UNKNOWN" end,
+	["&ln"] = function(_, item)
+		if item then
+			local LM = AddOn:ListsModule()
+			if LM:HasActiveConfiguration() then
+				local _, list =
+					LM:GetActiveConfiguration():GetActiveListByEquipment(item:GetEquipmentLocation())
+				if list then return list.name end
+			end
+		end
+
+		return L['unknown']
+	end
 }
 
 function ML:AnnounceItems(items)
@@ -558,41 +595,159 @@ ML.AwardStrings = {
 		return item and item:GetLevelText() or "" end,
 	["&t"] = function(_, item)
 		return item and item:GetTypeText() or "" end,
-	["&z"] = function(...) return "UNKNOWN" end,
+	["&ln"] = function(_, item)
+		if item then
+			local LM = AddOn:ListsModule()
+			if LM:HasActiveConfiguration() then
+				local _, list =
+				LM:GetActiveConfiguration():GetActiveListByEquipment(item:GetEquipmentLocation())
+				if list then return list.name end
+			end
+		end
+
+		return L['unknown']
+	end,
+	["&lp"] = function(name, item, ...)
+		if item then
+			local LM = AddOn:ListsModule()
+			if LM:HasActiveConfiguration() then
+				local _, priority =
+					LM:GetActiveListAndPriority(item:GetEquipmentLocation(), name)
+				if priority then return tostring(priority) end
+			end
+		end
+
+		return "?"
+	end,
 }
 
---
---
------ @param changeAward boolean if the item is being re-awarded (changed)
------
---function ML:AnnounceAward(winner, link, response, roll, session, changeAward, gp)
---	if not self:GetDbValue('announceAwards') then return end
---
---	Logging:Debug("AnnounceAward(%d) : winner=%s, item=%s", session, winner, tostring(link))
---
---	for _, announceSettings in pairs(self:GetDbValue('announceAwardText')) do
---		local msg = announceSettings.text
---		for repl, fn in pairs(self.AwardStrings) do
---			msg = gsub(msg, repl,
---			           escapePatternSymbols(
---				           tostring(
---								fn(
---									winner,
---									ItemRef(link):GetItem(),
---									response,
---									roll,
---									session,
---									gp
---								)
---							)
---			           )
---					)
---		end
---
---		if changeAward then msg = "(" .. L["change_award"] .. ") " .. msg end
---		AddOn:SendAnnouncement(msg, announceSettings.channel)
---	end
---end
+
+--- @param changeAward boolean if the item is being re-awarded (changed)
+---
+function ML:AnnounceAward(winner, link, response, roll, session, changeAward)
+	if not self:GetDbValue('announceAwards') then return end
+
+	Logging:Trace("AnnounceAward(%d) : winner=%s, item=%s", session, winner, tostring(link))
+
+	local channel, announcement = self:GetDbValue('announceAwardText.channel'), self:GetDbValue('announceAwardText.text')
+	for repl, fn in pairs(self.AwardStrings) do
+		announcement =
+			gsub(announcement, repl,
+	           escapePatternSymbols(
+		           tostring(
+						fn(
+							winner,
+							ItemRef(link):GetItem(),
+							response,
+							roll,
+							session
+						)
+					)
+	           )
+			)
+	end
+
+	if changeAward then announcement = "(" .. L["change_award"] .. ") " .. announcement end
+	AddOn:SendAnnouncement(announcement, channel)
+end
+
+function ML:OnHandleLootStart(...)
+	Logging:Debug("OnHandleLootStart")
+
+	if self:IsHandled() then
+		-- always grab the list service, it wouldn't affect any active configuration
+		local listService = AddOn:ListsModule():GetService()
+		local SelectionEnum = self.ListConfigSelectionMethod
+		local configSelectionMethod = self:GetDbValue('lcSelectionMethod')
+
+		if configSelectionMethod == SelectionEnum.Ask then
+			-- this will callback into ActivateConfiguration()
+			self:PromptForConfigSelection()
+		elseif configSelectionMethod == SelectionEnum.Default then
+			local configs = listService:Configurations(true, true)
+			local count = configs and Util.Tables.Count(configs) or -1
+			Logging:Debug("OnHandleLootStart() : %d viable configurations (should be 1)", count)
+			local config = (count == 1) and Util.Tables.Values(configs)[1] or nil
+			self:ActivateConfiguration(config)
+		else
+			Logging:Error("OnHandleLootStart() : Specified configuration selection method '%d' is not supported", configSelectionMethod)
+			local errMsg = format("Specified configuration selection method '%d' is not supported", configSelectionMethod)
+			AddOn:PrintError(errMsg)
+			error(errMsg)
+		end
+	end
+end
+
+--- @param config Models.List.Configuration
+function ML:ActivateConfiguration(config)
+	Logging:Trace("ActivateConfiguration(%s)", config and config.id or "NIL")
+
+	if self:IsHandled() then
+		if not config then
+			Logging:Warn("ActivateConfiguration() : No configuration specified")
+			AddOn:Print(L["invalid_configuration_ml"])
+			AddOn:StopHandleLoot()
+		else
+
+			-- make sure we're an admin or owner, otherwise cannot mutate it
+			if not config:IsAdminOrOwner(AddOn.player) then
+				Logging:Warn("ActivateConfiguration(%s) : Not an admin or owner, cannot activate configuration", config.id)
+				AddOn:Print(format(L["invalid_configuration_ml_owner_admin"], config.name))
+				AddOn:StopHandleLoot()
+				return
+			end
+
+			-- dispatch the config activation message to group
+			-- include information about the associated lists as well
+			-- this is necessary to make sure what we are activating is aligned with the master looter's view
+			local toSend = {
+				config = {},
+				lists = {}
+			}
+
+			Util.Tables.Set(toSend, 'config', config:ToRef())
+			local lists = AddOn:ListsModule():GetService():Lists(config.id)
+			for _, list in pairs(lists) do
+				Util.Tables.Push(toSend.lists, list:ToRef())
+			end
+
+			AddOn:Send(C.group, C.Commands.ActivateConfig, toSend)
+
+			-- if this looks strange, it's because it is
+			-- there is an issue with C_Timer (which AceTimer leverages) being used in close proximity to a login
+			-- where the specified time is not obeyed (it fires much sooner). wrapping it in a 0 second delay
+			-- resolves the issue
+			--
+			-- this may not always be called in close proximity to login, but the extra 'schedule' does not
+			-- have a regressive impact in those cases
+			AddOn.Timer.After(0, function()
+				self:ScheduleTimer(
+						function()
+							Logging:Trace("ActivateConfiguration(%s) : Callback", config.id )
+							-- wait for message the be received and handled, then verify activation occurred
+							if not AddOn:ListsModule():HasActiveConfiguration() then
+								Logging:Warn("ActivateConfiguration() : No active configuration, stopping the handling of loot")
+								AddOn:Print(L["invalid_configuration_ml"])
+								AddOn:StopHandleLoot()
+							end
+						end,
+						5
+				)
+			end)
+
+		end
+	end
+end
+
+function ML:OnHandleLootStop(...)
+	Logging:Debug("OnHandleLootStop")
+	-- don't proceed if not in a state to handle
+	if self:IsHandled() then
+		-- todo : may need to check that active configuration is persisted and broadcast
+		-- todo : however, that should have been kept up to date as events occurred
+		self:Disable()
+	end
+end
 
 function ML:OnLootReady(...)
 	if self:IsHandled() then
@@ -673,8 +828,10 @@ end
 
 function ML:OnReconnectReceived(sender)
 	Logging:Trace("OnReconnectReceived(%s)", sender)
+	-- send the requesting player the ML Db
 	local player = Player:Get(sender)
 	MasterLooterDb:Send(player)
+	-- if currently running, send the loot table
 	if self.running then
 		self:ScheduleTimer("Send", 4, player, C.Commands.LootTable, self:_GetLootTableForTransmit(true))
 	end
@@ -927,84 +1084,84 @@ function ML:ShouldAddItem(item, quality)
 	return addItem
 end
 
---ML.AwardStatus = {
---	Failure = {
---		LootGone                  = "LootGone",
---		LootNotOpen               = "LootNotOpen",
---		MLInventoryFull           = "MLInventoryFull",
---		MLNotInInstance           = "MLNotInInstance",
---		NotBop                    = "NotBop",
---		NotInGroup                = "NotInGroup",
---		NotMLCandidate            = "NotMLCandidate",
---		Offline                   = "Offline",
---		OutOfInstance             = "OutOfInstance",
---		QualityBelowThreshold     = "QualityBelowThreshold",
---		Timeout                   = "Timeout",
---	},
---	Success = {
---		ManuallyAdded = "ManuallyAdded",
---		Normal        = "Normal",
---	},
---	Neutral = {
---		TestMode = "TestMode",
---	}
---}
---
---function ML:CanGiveLoot(slot, item, winner)
---	local AS, lootSlotInfo = self.AwardStatus, self:_GetLootSlot(slot)
---	if not self.lootOpen then
---		return false, AS.Failure.LootNotOpen
---	elseif not lootSlotInfo or not AddOn.ItemIsItem(lootSlotInfo.item, item) then
---		return false, AS.Failure.LootGone
---	elseif AddOn.UnitIsUnit(winner, C.player) and not self:HaveFreeSpaceForItem(item) then
---		return false, AS.Failure.MLInventoryFull
---	elseif not AddOn.UnitIsUnit(winner, C.player) then
---		-- item quality below loot threshold
---		if lootSlotInfo.quality < GetLootThreshold() then
---			return false, AS.Failure.QualityBelowThreshold
---		end
---
---		local shortName = Ambiguate(winner, "short"):lower()
---		-- winner is not in the group
---		if not UnitInParty(shortName) and not UnitInRaid(shortName) then
---			return false, AS.Failure.NotInGroup
---		end
---
---		-- winner is offline
---		if not UnitIsConnected(shortName) then
---			return false, AS.Failure.Offline
---		end
---
---		-- ML leaves the instance during a session
---		if not IsInInstance() then
---			return false, AS.Failure.MLNotInInstance
---		end
---
---		-- winner not in the same instance as ML
---		if select(4, UnitPosition(Ambiguate(winner, "short"))) ~= select(4, UnitPosition("player")) then
---			return false, AS.Failure.OutOfInstance
---		end
---
---		local found = false
---		for i = 1, _G.MAX_RAID_MEMBERS do
---			if AddOn.UnitIsUnit(GetMasterLootCandidate(slot, i), winner) then
---				found = true
---				break
---			end
---		end
---
---		if not found then
---			local bindType = select(14, GetItemInfo(item))
---			if bindType ~= LE_ITEM_BIND_ON_ACQUIRE then
---				return false, AS.Failure.NotBop
---			else
---				return false, AS.Failure.NotMLCandidate
---			end
---		end
---	end
---
---	return true, nil
---end
+ML.AwardStatus = {
+	Failure = {
+		LootGone                  = "LootGone",
+		LootNotOpen               = "LootNotOpen",
+		MLInventoryFull           = "MLInventoryFull",
+		MLNotInInstance           = "MLNotInInstance",
+		NotBop                    = "NotBop",
+		NotInGroup                = "NotInGroup",
+		NotMLCandidate            = "NotMLCandidate",
+		Offline                   = "Offline",
+		OutOfInstance             = "OutOfInstance",
+		QualityBelowThreshold     = "QualityBelowThreshold",
+		Timeout                   = "Timeout",
+	},
+	Success = {
+		ManuallyAdded = "ManuallyAdded",
+		Normal        = "Normal",
+	},
+	Neutral = {
+		TestMode = "TestMode",
+	}
+}
+
+function ML:CanGiveLoot(slot, item, winner)
+	local AS, lootSlotInfo = self.AwardStatus, self:_GetLootSlot(slot)
+	if not self.lootOpen then
+		return false, AS.Failure.LootNotOpen
+	elseif not lootSlotInfo or not AddOn.ItemIsItem(lootSlotInfo.item, item) then
+		return false, AS.Failure.LootGone
+	elseif AddOn.UnitIsUnit(winner, C.player) and not self:HaveFreeSpaceForItem(item) then
+		return false, AS.Failure.MLInventoryFull
+	elseif not AddOn.UnitIsUnit(winner, C.player) then
+		-- item quality below loot threshold
+		if lootSlotInfo.quality < GetLootThreshold() then
+			return false, AS.Failure.QualityBelowThreshold
+		end
+
+		local shortName = Ambiguate(winner, "short"):lower()
+		-- winner is not in the group
+		if not UnitInParty(shortName) and not UnitInRaid(shortName) then
+			return false, AS.Failure.NotInGroup
+		end
+
+		-- winner is offline
+		if not UnitIsConnected(shortName) then
+			return false, AS.Failure.Offline
+		end
+
+		-- ML leaves the instance during a session
+		if not IsInInstance() then
+			return false, AS.Failure.MLNotInInstance
+		end
+
+		-- winner not in the same instance as ML
+		if select(4, UnitPosition(Ambiguate(winner, "short"))) ~= select(4, UnitPosition("player")) then
+			return false, AS.Failure.OutOfInstance
+		end
+
+		local found = false
+		for i = 1, _G.MAX_RAID_MEMBERS do
+			if AddOn.UnitIsUnit(GetMasterLootCandidate(slot, i), winner) then
+				found = true
+				break
+			end
+		end
+
+		if not found then
+			local bindType = select(14, GetItemInfo(item))
+			if bindType ~= LE_ITEM_BIND_ON_ACQUIRE then
+				return false, AS.Failure.NotBop
+			else
+				return false, AS.Failure.NotMLCandidate
+			end
+		end
+	end
+
+	return true, nil
+end
 
 -- Do we have free space in our bags to hold this item?
 function ML:HaveFreeSpaceForItem(item)
@@ -1022,411 +1179,353 @@ function ML:HaveFreeSpaceForItem(item)
 	return false
 end
 
------ @param award Models.Item.ItemAward
---function ML:RegisterAndAnnounceAward(session, winner, response, reason, gp)
---	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
---	local ltEntry = self:_GetLootTableEntry(session)
---	local previousWinner = ltEntry.awarded
---	ltEntry.awarded = winner
---
---	self:Send(C.group, C.Commands.Awarded, session, winner)
---	self:AnnounceAward(
---			winner,
---			ltEntry.item,
---			reason and reason.text or response,
---			AddOn:LootAllocateModule():GetCandidateData(session, winner, LAR.Roll),
---			session,
---			previousWinner,
---			gp
---	)
---
---	-- not more items to award, end the session
---	if not self:HaveUnawardedItems() then
---		AddOn:Print(L["all_items_have_been_awarded"])
---		self:ScheduleTimer('EndSession', 2)
---	end
---
---	return true
---end
---
---function ML:PrintLootError(cause, item, winner)
---	local AS = self.AwardStatus
---
---	if Util.Objects.Equals(cause, AS.Failure.LootNotOpen) then
---		AddOn:Print(L["unable_to_give_loot_without_loot_window_open"])
---	elseif Util.Objects.Equals(cause, AS.Failure.Timeout) then
---		AddOn:Print(
---			format(L["timeout_giving_item_to_player"], item, UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner))),
---			" - ",
---			_G.ERR_INV_FULL
---		)
---	else
---		local prefix =
---			format(
---				L["unable_to_give_item_to_player'"],
---				item,
---				UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner)) .. " - "
---			)
---
---		if Util.Objects.Equals(cause, AS.Failure.LootGone) then
---			AddOn:Print(prefix, _G.LOOT_GONE)
---		elseif Util.Objects.Equals(cause, AS.Failure.MLInventoryFull) then
---			AddOn:Print(prefix, _G.ERR_INV_FULL)
---		elseif Util.Objects.Equals(cause, AS.Failure.QualityBelowThreshold) then
---			AddOn:Print(prefix, L["item_quality_below_threshold"])
---		elseif Util.Objects.Equals(cause, AS.Failure.NotInGroup) then
---			AddOn:Print(prefix, L["player_not_in_group"])
---		elseif Util.Objects.Equals(cause, AS.Failure.Offline) then
---			AddOn:Print(prefix, L["player_offline"])
---		elseif Util.Objects.Equals(cause, AS.Failure.MLNotInInstance) then
---			AddOn:Print(prefix, L["you_are_not_in_instance"])
---		elseif Util.Objects.Equals(cause, AS.Failure.OutOfInstance) then
---			AddOn:Print(prefix, L["player_not_in_instance"])
---		elseif Util.Objects.Equals(cause, AS.Failure.NotMLCandidate) then
---			AddOn:Print(prefix, L["player_ineligible_for_item"])
---		elseif Util.Objects.Equals(cause, AS.Failure.NotBop) then
---			AddOn:Print(prefix, L["item_only_able_to_be_looted_by_you_bop"])
---		else
---			AddOn:Print(prefix)
---		end
---	end
---end
---
---function ML:AwardResult(success, session, winner, status, callback, ...)
---	AddOn:SendMessage(success and C.Messages.AwardSuccess or C.Messages.AwardFailed, session, winner, status)
---	if callback then
---		callback(success, session, winner, status, ...)
---	end
---end
---
---function ML:OnGiveLootTimeout(lqEntry)
---	-- remove entry from queue
---	for k, v in pairs(self.lootQueue) do
---		if Util.Objects.Equals(v, lqEntry) then
---			tremove(self.lootQueue, k)
---		end
---	end
---
---	lqEntry:Cleared(false, self.AwardStatus.Failure.Timeout)
---end
---
---function ML:GiveLoot(slot, winner, callback, ...)
---	Logging:Debug("GiveLoot() : slot=%d, winner=%s", slot, tostring(winner))
---	if self.lootOpen then
---		local lqEntry = LootQueueEntry(slot, callback, {...})
---		if not AddOn._IsTestContext() then
---			lqEntry.timer = self:ScheduleTimer(function() self:OnGiveLootTimeout(lqEntry) end, 5)
---		end
---
---		Util.Tables.Push(self.lootQueue, lqEntry)
---
---		for i = 1, MAX_RAID_MEMBERS do
---			if AddOn.UnitIsUnit(GetMasterLootCandidate(slot, i), winner) then
---				Logging:Debug("GiveLoot(%d, %d)", slot, i)
---				GiveMasterLoot(slot, i)
---				break
---			end
---		end
---
---		if AddOn.UnitIsUnit(winner, C.player) then
---			Logging:Debug("GiveLoot(%d) : Giving to ML", slot)
---			LootSlot(slot)
---		end
---	end
---end
---
---
------@param callback function This function will be called as callback(awarded, session, winner, status, ...)
------@return boolean true if award is success. false if award is failed. nil if we don't know the result yet.
----- function ML:Award(award, callback, ...)
---function ML:Award(session, winner, response, reason, callback, ...)
---	Logging:Debug("Award(%d) : winner=%s", session, tostring(winner))
---	if not self.lootTable or #self.lootTable == 0 then
---		if self.oldLootTable and #self.oldLootTable > 0 then
---			self.lootTable = self.oldLootTable
---		else
---			Logging:Error("Award() : neither loot table (current or old) is populated")
---			return false
---		end
---	end
---
---	assert(Util.Objects.IsSet(winner), "No winner specified for item award")
---
---	local AS = self.AwardStatus
---	local args = {...}
---	local award, ltEntry = args[1], self:_GetLootTableEntry(session)
---	local link, gp, slot = award.link, award:GetGp(), ltEntry.slot
---
---	Logging:Debug("Award() : award=%s, lte=%s, slot=%d, item=%s",
---	              Util.Objects.ToString(award and award:toTable() or {}),
---	              Util.Objects.ToString(ltEntry:toTable()),
---	              slot,
---	              tostring(link)
---	)
---
---	-- previously awarded
---	if ltEntry.awarded then
---		self:RegisterAndAnnounceAward(session, winner, response, reason, gp)
---		-- the entry could be missing a loot slot if not added from a loot table
---		if not ltEntry.slot then
---			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
---		else
---			self:AwardResult(true, session, winner, AS.Success.Normal, callback, ...)
---		end
---		return true
---	end
---
---	-- not previously awarded
---	-- the entry could be missing a loot slot if not added from a loot table
---	if not slot then
---		self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
---		self:RegisterAndAnnounceAward(session, winner, response, reason, gp)
---		return true
---	end
---
---	if self.lootOpen and not AddOn.ItemIsItem(link, GetLootSlotLink(slot)) then
---		Logging:Debug("Award(%d) : Loot slot changed before award completed", session)
---		self:_UpdateLootSlots()
---	end
---
---	local ok, cause = self:CanGiveLoot(slot, link, winner or AddOn.player:GetName())
---	Logging:Debug("Award(%d) : canGiveLoot=%s, cause=%s", award.session, tostring(ok), tostring(cause))
---	if not ok then
---		self:AwardResult(false, session, winner, cause, callback, ... )
---		self:PrintLootError(cause, link, winner or AddOn.player:GetName())
---		return false
---	else
---		self:GiveLoot(
---			slot,
---			winner,
---			function(awarded, cause)
---				if awarded then
---					self:RegisterAndAnnounceAward(session, winner, response, reason, award:GetGp())
---					self:AwardResult(awarded, session, winner, AS.Success.Normal, callback, unpack(args))
---					return true
---				else
---					self:AwardResult(awarded, session, winner, cause, callback, unpack(args))
---					self:PrintLootError(cause, link, winner)
---					return false
---				end
---            end
---		)
---	end
---end
---
----- Modes for distinguising between types of auto awards
---local AutoAwardMode = {
---	Normal          =   "normal",
---	ReputationItem  =   "rep_item",
---}
---
------@param item any
------@param quality number
------@return boolean
------@return string
------@return string
---function ML:ShouldAutoAward(item, quality)
---	if not item then return false end
---	Logging:Debug("ShouldAutoAward() : item=%s, quality=%d", tostring(item), quality)
---
---	local db = self.db.profile
---
---	local function IsEligibleUnit(unit)
---		return UnitInRaid(unit) or UnitInParty(unit)
---	end
---
---	local function IsEligibleItem(item)
---		local itemId = ItemUtil:ItemLinkToId(item)
---		-- reputation items are handled separately, always false
---		if itemId and ItemUtil:IsReputationItem(itemId) then
---			return false
---		end
---
---		local isEquippable = IsEquippableItem(item)
---		return  (db.autoAwardType == AutoAwardType.All) or
---				(db.autoAwardType == AutoAwardType.Equippable and isEquippable) or
---				(db.autoAwardType == AutoAwardType.NotEquippable and not isEquippable)
---	end
---
---	if db.autoAward and
---		quality >= db.autoAwardLowerThreshold and
---		quality <= db.autoAwardUpperThreshold and
---		IsEligibleItem(item)
---	then
---		if db.autoAwardLowerThreshold >= GetLootThreshold() or db.autoAwardLowerThreshold < 2 then
---			-- E.G. ["autoAwardTo"] = "Zùùl"
---			if IsEligibleUnit(db.autoAwardTo) then
---				return true, AutoAwardMode.Normal, db.autoAwardTo
---			else
---				AddOn:Print(L["cannot_auto_award"])
---				AddOn:Print(format(L["could_not_find_player_in_group"], db.autoAwardTo))
---				return false
---			end
---		else
---			AddOn:Print(format(L["could_not_auto_award_item"], tostring(item)))
---		end
---	end
---
---	if db.autoAwardRepItems then
---		local itemId = ItemUtil:ItemLinkToId(item)
---		if itemId and ItemUtil:IsReputationItem(itemId) then
---			-- E.G. ["autoAwardRepItemsTo"] = "Zùùl"
---			local awardTo = db.autoAwardRepItemsTo
---			-- todo
---			--[[
---			if db.autoAwardRepItemsMode == AutoAwardRepItemsMode.RoundRobin then
---                if not self.repItemsRR then
---                    Logging:Warn("ShouldAutoAward() : Round-robin awarding enabled, but no tracked state. Attempting to use 'autoAwardRepItemsTo'")
---                else
---                    -- we return the next person to which award should be made
---                    -- state mutation and persistence will only occur after award
---                    --
---                    -- there is a window of opportunity here that returned person may have
---                    -- left the raid, but it's very small so not accounting for ATM
---                    awardTo = Ambiguate(self.repItemsRR:peek().id, "short")
---                end
---			end
---			--]]
---
---			if IsEligibleUnit(awardTo) then
---				return true, AutoAwardMode.ReputationItem, awardTo
---			else
---				AddOn:Print(L["cannot_auto_award"])
---				AddOn:Print(format(L["could_not_find_player_in_group"], awardTo))
---				return false
---			end
---		end
---	end
---
---	return false
---end
---
------ @return boolean
---function ML:AutoAward(slot, item, quality, winner, mode)
---	winner = AddOn:UnitName(winner)
---	Logging:Debug(
---			"AutoAward() : slot=%d, item=%s, quality=%d, winner=%s, mode=%s",
---			tonumber(slot), tostring(item), tonumber(quality), winner, tostring(mode)
---	)
---
---	local db = self.db.profile
---	if Util.Strings.Equal(mode, AutoAwardMode.Normal) then
---		-- Perform an extra check for normal auto-awards, as Blizzard prevents you from
---		-- looting items below a specific quality threshold to anyone except yourself
---		-- 0 == Poor
---		-- 1 == Common
---		-- 2 == Uncommon
---		if db.autoAwardLowerThreshold < 2 and quality < 2 and not AddOn:UnitIsUnit(winner, "player") then
---			AddOn:Print(
---					format(
---							L["cannot_auto_award_quality"],
---							_G.ITEM_QUALITY_COLORS[2].hex .. _G.ITEM_QUALITY2_DESC .. "|r"
---					)
---			)
---			return false
---		end
---	end
---
---	local function PostAutoAward(success)
---		-- in face of boolean not being specified, just exit
---		if not Util.Objects.IsBoolean(success) then return end
---
---		-- todo : rr rep items
---		--[[
---		if Util.Strings.Equal(mode, AutoAwardMode.ReputationItem) and self:AutoAwardRepItemsIsRR() then
---			if success then
---				-- updates the award count and sends them back of line for next award
---				Logging:Debug("AutoAward() : Success, updating number of awards and moving %s to back of the line", winner)
---				self.repItemsRR:next()
---			else
---				-- not a success, maybe the candidate isn't online or has full bags
---				-- skip over them for now, considering next candidate
---				Logging:Warn("AutoAward() : Failure, skipping %s", winner)
---				self.repItemsRR:skip()
---			end
---
---			self:AutoAwardRepItemsPersist()
---		end
---		--]]
---	end
---
---
---	local canGiveLoot, cause = self:CanGiveLoot(slot, item, winner)
---	if not canGiveLoot then
---		AddOn:Print(L["cannot_auto_award"])
---		self:PrintLootError(cause, item, winner)
---		PostAutoAward(false)
---		return false
---	else
---		local awardReasonIdx
---		if Util.Strings.Equal(mode, AutoAwardMode.Normal) then
---			awardReasonIdx = db.autoAwardReason
---		elseif Util.Strings.Equal(mode, AutoAwardMode.ReputationItem) then
---			awardReasonIdx = db.autoAwardRepItemsReason
---		else
---			AddOn:Print(L["cannot_auto_award"])
---			AddOn:Print(format(L["auto_award_invalid_mode"], mode))
---			return false
---		end
---
---		local awardReason = AddOn:LootAllocateModule().db.profile.awardReasons[awardReasonIdx]
---		self:GiveLoot(
---				slot,
---				winner,
---				function(awarded, cause)
---					if awarded then
---						self:AnnounceAward(winner, item, awardReason.text)
---						PostAutoAward(true)
---						-- todo : track history
---						return true
---					else
---						AddOn:Print(L["cannot_auto_award"])
---						self:PrintLootError(cause, item, winner)
---						PostAutoAward(false)
---						return false
---					end
---				end
---		)
---		return true
---	end
---end
---
---function ML.AwardOnShow(frame, award)
---	UIUtil.DecoratePopup(frame)
---	frame.text:SetText(
---			format(L["confirm_award_item_to_player"],
---			       award.link,
---			       UIUtil.ClassColorDecorator(award.class):decorate(AddOn.Ambiguate(award.winner))
---			)
---	)
---	frame.icon:SetTexture(award.texture)
---end
---
------ @param award Models.Item.ItemAward
------ @param callback function
---function ML.AwardOnClickYes(_, award, callback, ...)
---	Logging:Debug('AwardOnClickYes() : %s', Util.Objects.ToString(award:toTable()))
---	local function PostAward(awarded, session, winner, status, award, callback, ...)
---		if callback and Util.Objects.IsFunction(callback) then
---			callback(awarded, session, winner, status, award, ...)
---		end
---
---		if awarded then
---			AddOn:GearPointsModule():OnAwardItem(award)
---		end
---	end
---
---	ML:Award(
---		award.session,
---		award.winner,
---		award:NormalizedReason().text,
---		award.reason,
---		PostAward,
---		award,
---		callback,
---		...)
---end
---
+function ML:RegisterAndAnnounceAward(session, winner, response, reason)
+	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
+	local ltEntry = self:_GetLootTableEntry(session)
+	local previousWinner = ltEntry.awarded
+	ltEntry.awarded = winner
+
+	self:Send(C.group, C.Commands.Awarded, session, winner)
+	self:AnnounceAward(
+			winner,
+			ltEntry.item,
+			reason and reason.text or response,
+			AddOn:LootAllocateModule():GetCandidateData(session, winner, LAR.Roll),
+			session,
+			previousWinner
+	)
+
+	-- not more items to award, end the session
+	if not self:HaveUnawardedItems() then
+		AddOn:Print(L["all_items_have_been_awarded"])
+		self:ScheduleTimer('EndSession', 2)
+	end
+
+	return true
+end
+
+function ML:PrintLootError(cause, item, winner)
+	local AS = self.AwardStatus
+
+	if Util.Objects.Equals(cause, AS.Failure.LootNotOpen) then
+		AddOn:Print(L["unable_to_give_loot_without_loot_window_open"])
+	elseif Util.Objects.Equals(cause, AS.Failure.Timeout) then
+		AddOn:Print(
+			format(L["timeout_giving_item_to_player"], item, UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner))),
+			" - ",
+			_G.ERR_INV_FULL
+		)
+	else
+		local prefix =
+			format(
+				L["unable_to_give_item_to_player'"],
+				item,
+				UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner)) .. " - "
+			)
+
+		if Util.Objects.Equals(cause, AS.Failure.LootGone) then
+			AddOn:Print(prefix, _G.LOOT_GONE)
+		elseif Util.Objects.Equals(cause, AS.Failure.MLInventoryFull) then
+			AddOn:Print(prefix, _G.ERR_INV_FULL)
+		elseif Util.Objects.Equals(cause, AS.Failure.QualityBelowThreshold) then
+			AddOn:Print(prefix, L["item_quality_below_threshold"])
+		elseif Util.Objects.Equals(cause, AS.Failure.NotInGroup) then
+			AddOn:Print(prefix, L["player_not_in_group"])
+		elseif Util.Objects.Equals(cause, AS.Failure.Offline) then
+			AddOn:Print(prefix, L["player_offline"])
+		elseif Util.Objects.Equals(cause, AS.Failure.MLNotInInstance) then
+			AddOn:Print(prefix, L["you_are_not_in_instance"])
+		elseif Util.Objects.Equals(cause, AS.Failure.OutOfInstance) then
+			AddOn:Print(prefix, L["player_not_in_instance"])
+		elseif Util.Objects.Equals(cause, AS.Failure.NotMLCandidate) then
+			AddOn:Print(prefix, L["player_ineligible_for_item"])
+		elseif Util.Objects.Equals(cause, AS.Failure.NotBop) then
+			AddOn:Print(prefix, L["item_only_able_to_be_looted_by_you_bop"])
+		else
+			AddOn:Print(prefix)
+		end
+	end
+end
+
+function ML:AwardResult(success, session, winner, status, callback, ...)
+	AddOn:SendMessage(success and C.Messages.AwardSuccess or C.Messages.AwardFailed, session, winner, status)
+	if callback then
+		callback(success, session, winner, status, ...)
+	end
+end
+
+--- @param lqEntry Models.Item.LootQueueEntry
+function ML:OnGiveLootTimeout(lqEntry)
+	-- remove entry from queue
+	for k, v in pairs(self.lootQueue) do
+		if Util.Objects.Equals(v, lqEntry) then
+			tremove(self.lootQueue, k)
+		end
+	end
+
+	lqEntry:Cleared(false, self.AwardStatus.Failure.Timeout)
+end
+
+function ML:GiveLoot(slot, winner, callback, ...)
+	Logging:Debug("GiveLoot() : slot=%d, winner=%s", slot, tostring(winner))
+	if self.lootOpen then
+		local lqEntry = LootQueueEntry(slot, callback, {...})
+		if not AddOn._IsTestContext() then
+			lqEntry.timer = self:ScheduleTimer(function() self:OnGiveLootTimeout(lqEntry) end, 5)
+		end
+
+		Util.Tables.Push(self.lootQueue, lqEntry)
+
+		for i = 1, MAX_RAID_MEMBERS do
+			if AddOn.UnitIsUnit(GetMasterLootCandidate(slot, i), winner) then
+				Logging:Debug("GiveLoot(%d, %d)", slot, i)
+				GiveMasterLoot(slot, i)
+				break
+			end
+		end
+
+		if AddOn.UnitIsUnit(winner, C.player) then
+			Logging:Debug("GiveLoot(%d) : Giving to ML", slot)
+			LootSlot(slot)
+		end
+	end
+end
+
+
+---@param callback function This function will be called as callback(awarded, session, winner, status, ...)
+---@return boolean true if award is success. false if award is failed. nil if we don't know the result yet.
+function ML:Award(session, winner, response, reason, callback, ...)
+	Logging:Debug("Award(%d) : winner=%s", session, tostring(winner))
+	if not self.lootTable or #self.lootTable == 0 then
+		if self.oldLootTable and #self.oldLootTable > 0 then
+			self.lootTable = self.oldLootTable
+		else
+			Logging:Error("Award() : neither loot table (current or old) is populated")
+			return false
+		end
+	end
+
+	assert(Util.Objects.IsSet(winner), "No winner specified for item award")
+
+	local AS = self.AwardStatus
+	local args = {...}
+	local award, ltEntry = args[1], self:_GetLootTableEntry(session)
+	local link, slot = award.link, ltEntry.slot
+
+	Logging:Debug("Award() : award=%s, lte=%s, slot=%d, item=%s",
+	              Util.Objects.ToString(award and award:toTable() or {}),
+	              Util.Objects.ToString(ltEntry:toTable()),
+	              slot,
+	              tostring(link)
+	)
+
+	-- previously awarded
+	if ltEntry.awarded then
+		self:RegisterAndAnnounceAward(session, winner, response, reason)
+		-- the entry could be missing a loot slot if not added from a loot table
+		if not ltEntry.slot then
+			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
+		else
+			self:AwardResult(true, session, winner, AS.Success.Normal, callback, ...)
+		end
+		return true
+	end
+
+	-- not previously awarded
+	-- the entry could be missing a loot slot if not added from a loot table
+	if not slot then
+		self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
+		self:RegisterAndAnnounceAward(session, winner, response, reason)
+		return true
+	end
+
+	if self.lootOpen and not AddOn.ItemIsItem(link, GetLootSlotLink(slot)) then
+		Logging:Debug("Award(%d) : Loot slot changed before award completed", session)
+		self:_UpdateLootSlots()
+	end
+
+	local ok, cause = self:CanGiveLoot(slot, link, winner or AddOn.player:GetName())
+	Logging:Debug("Award(%d) : canGiveLoot=%s, cause=%s", award.session, tostring(ok), tostring(cause))
+	if not ok then
+		self:AwardResult(false, session, winner, cause, callback, ... )
+		self:PrintLootError(cause, link, winner or AddOn.player:GetName())
+		return false
+	else
+		self:GiveLoot(
+			slot,
+			winner,
+			function(awarded, cause)
+				if awarded then
+					self:RegisterAndAnnounceAward(session, winner, response, reason)
+					self:AwardResult(awarded, session, winner, AS.Success.Normal, callback, unpack(args))
+					return true
+				else
+					self:AwardResult(awarded, session, winner, cause, callback, unpack(args))
+					self:PrintLootError(cause, link, winner)
+					return false
+				end
+            end
+		)
+	end
+end
+
+-- Modes for distinguishing between types of auto awards
+local AutoAwardMode = {
+	Normal          =   "normal",
+	-- not currently used
+	-- ReputationItem  =   "rep_item",
+}
+
+---@param item any
+---@param quality number
+---@return boolean
+---@return string
+---@return string
+function ML:ShouldAutoAward(item, quality)
+	if not item then return false end
+	Logging:Debug("ShouldAutoAward() : item=%s, quality=%d", tostring(item), quality)
+
+	local db = self.db.profile
+
+	local function IsEligibleUnit(unit)
+		return UnitInRaid(unit) or UnitInParty(unit)
+	end
+
+	local function IsEligibleItem(item)
+		local itemId = ItemUtil:ItemLinkToId(item)
+		-- reputation items are handled separately, always false
+		if itemId and ItemUtil:IsReputationItem(itemId) then
+			return false
+		end
+
+		local isEquippable = IsEquippableItem(item)
+		return  (db.autoAwardType == ML.AutoAwardType.All) or
+				(db.autoAwardType == ML.AutoAwardType.Equippable and isEquippable) or
+				(db.autoAwardType == ML.AutoAwardType.NotEquippable and not isEquippable)
+	end
+
+	if db.autoAward and
+		quality >= db.autoAwardLowerThreshold and
+		quality <= db.autoAwardUpperThreshold and
+		IsEligibleItem(item)
+	then
+		if db.autoAwardLowerThreshold >= GetLootThreshold() or db.autoAwardLowerThreshold < 2 then
+			-- E.G. ["autoAwardTo"] = "Zùùl"
+			if IsEligibleUnit(db.autoAwardTo) then
+				return true, AutoAwardMode.Normal, db.autoAwardTo
+			else
+				AddOn:Print(L["cannot_auto_award"])
+				AddOn:Print(format(L["could_not_find_player_in_group"], db.autoAwardTo))
+				return false
+			end
+		else
+			AddOn:Print(format(L["could_not_auto_award_item"], tostring(item)))
+		end
+	end
+
+	return false
+end
+
+--- @return boolean
+function ML:AutoAward(slot, item, quality, winner, mode)
+	winner = AddOn:UnitName(winner)
+	Logging:Debug(
+			"AutoAward() : slot=%d, item=%s, quality=%d, winner=%s, mode=%s",
+			tonumber(slot), tostring(item), tonumber(quality), winner, tostring(mode)
+	)
+
+	local db = self.db.profile
+	if Util.Strings.Equal(mode, AutoAwardMode.Normal) then
+		-- Perform an extra check for normal auto-awards, as Blizzard prevents you from
+		-- looting items below a specific quality threshold to anyone except yourself
+		-- 0 == Poor
+		-- 1 == Common
+		-- 2 == Uncommon
+		if db.autoAwardLowerThreshold < 2 and quality < 2 and not AddOn:UnitIsUnit(winner, "player") then
+			AddOn:Print(
+				format(
+					L["cannot_auto_award_quality"],
+					_G.ITEM_QUALITY_COLORS[2].hex .. _G.ITEM_QUALITY2_DESC .. "|r"
+				)
+			)
+			return false
+		end
+	end
+
+
+	local canGiveLoot, cause = self:CanGiveLoot(slot, item, winner)
+	if not canGiveLoot then
+		AddOn:Print(L["cannot_auto_award"])
+		self:PrintLootError(cause, item, winner)
+		return false
+	else
+		local awardReasonIdx
+		if Util.Strings.Equal(mode, AutoAwardMode.Normal) then
+			awardReasonIdx = db.autoAwardReason
+		else
+			AddOn:Print(L["cannot_auto_award"])
+			AddOn:Print(format(L["auto_award_invalid_mode"], mode))
+			return false
+		end
+
+		local awardReason = AddOn:LootAllocateModule().db.profile.awardReasons[awardReasonIdx]
+		self:GiveLoot(
+				slot,
+				winner,
+				function(awarded, cause)
+					if awarded then
+						self:AnnounceAward(winner, item, awardReason.text)
+						-- todo : track history
+						return true
+					else
+						AddOn:Print(L["cannot_auto_award"])
+						self:PrintLootError(cause, item, winner)
+						return false
+					end
+				end
+		)
+		return true
+	end
+end
+
+function ML.AwardOnShow(frame, award)
+	UIUtil.DecoratePopup(frame)
+	frame.text:SetText(
+		format(L["confirm_award_item_to_player"],
+		       award.link,
+		       UIUtil.ClassColorDecorator(award.class):decorate(AddOn.Ambiguate(award.winner))
+		)
+	)
+	frame.icon:SetTexture(award.texture)
+end
+
+--- @param award Models.Item.ItemAward
+--- @param callback function
+function ML.AwardOnClickYes(_, award, callback, ...)
+	Logging:Debug('AwardOnClickYes() : %s', Util.Objects.ToString(award:toTable()))
+	local function PostAward(awarded, session, winner, status, award, callback, ...)
+		if callback and Util.Objects.IsFunction(callback) then
+			callback(awarded, session, winner, status, award, ...)
+		end
+
+		if awarded then
+			-- todo
+			-- AddOn:GearPointsModule():OnAwardItem(award)
+		end
+	end
+
+	ML:Award(
+		award.session,
+		award.winner,
+		award:NormalizedReason().text,
+		award.reason,
+		PostAward,
+		award,
+		callback,
+		...
+	)
+end
+
 function ML:Test(items)
 	Logging:Debug("Test(%d)", #items)
 
@@ -1436,6 +1535,11 @@ function ML:Test(items)
 
 	if self.db.profile.autoStart then
 		AddOn:Print("Auto start isn't supported when testing")
+	end
+
+	-- if not in a group or raid, simulate a player joined event
+	if not IsInGroup() and not IsInRaid() then
+		AddOn:ListsModule():GetActiveConfiguration():OnPlayerEvent(AddOn.player, true)
 	end
 
 	AddOn:CallModule("LootSession")

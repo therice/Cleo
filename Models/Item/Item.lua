@@ -116,6 +116,35 @@ function Item:IsValid()
 	return ((self.id and self.id > 0) and Util.Strings.IsSet(self.link))
 end
 
+function Item:GetEquipmentLocation()
+	if Util.Strings.IsSet(self.equipLoc)then
+		return self.equipLoc
+	else
+
+		local customItem = ItemUtil:GetCustomItem(self.id)
+		if customItem then
+			local equipLoc = customItem[3]
+			if not Util.Strings.StartsWith(equipLoc, "CUSTOM_") then
+				return equipLoc
+			end
+		end
+
+		-- this uses an item which is a reward from the token for determining equipment location
+		-- this works because all rewards are like items (shoulders, chest, etc.)
+		if ItemUtil:IsTokenBasedItem(self.id) then
+			local items = ItemUtil:GetTokenItems(self.id)
+			if items and #items > 0 then
+				-- they will all have the same equipment location, just grab the 1st one
+				local _, _, _, equipLoc  = GetItemInfoInstant(items[1])
+				return equipLoc
+			end
+		end
+	end
+
+	return nil
+
+end
+
 --- @return string
 function Item:GetLevelText()
 	if ItemUtil:IsTokenBasedItem(self.id) then

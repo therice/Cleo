@@ -5,12 +5,18 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Util = AddOn:GetLibrary("Util")
 --- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
+--- @type Models.List.Configuration
+local Configuration = AddOn.Package('Models.List').Configuration
 --- @type Models.List.ConfigurationDao
 local ConfigurationDao = AddOn.Package('Models.List').ConfigurationDao
+--- @type Models.List.List
+local List = AddOn.Package('Models.List').List
 --- @type Models.List.ListDao
 local ListDao = AddOn.Package('Models.List').ListDao
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
+--- @type Models.Referenceable
+local Referenceable = AddOn.Require('Models.Referenceable')
 --- @class Models.List.ActiveConfiguration
 local ActiveConfiguration = AddOn.Package('Models.List'):Class('ActiveConfiguration')
 
@@ -26,8 +32,28 @@ function Service:initialize(configDb, listDb)
 end
 
 --- @return table<string, Models.List.Configuration>
-function Service:Configurations()
-	return self.Configuration:GetAll()
+function Service:Configurations(active, default)
+	return self.Configuration:GetAll(
+		function(config)
+			local select = true
+
+			-- nil means ignore the filter
+			if not Util.Objects.IsNil(active) then
+				if active then
+					select = (config.status == Configuration.Status.Active)
+				else
+					select = (config.status == Configuration.Status.Inactive)
+				end
+			end
+
+			-- nil means ignore the filter
+			if not Util.Objects.IsNil(default) then
+				select = select and (config.default == default)
+			end
+
+			return select
+		end
+	)
 end
 
 --- @return table<string, Models.List.List>
@@ -54,14 +80,99 @@ function Service:UnassignedEquipmentLocations(configId)
 	return Util(C.EquipmentLocations):Keys():CopyExceptWhere(false, unpack(assigned))()
 end
 
-function Service:Activate(configId)
-	local config = self.Configuration:Get(configId)
-	if not config then
-		error(format("No configuration found with id ='%d'", configId))
+function Service:ToggleDefaultConfiguration(configId, default)
+	local configs = self:Configurations()
+	local config = configs[configId]
+
+	if config then
+		-- only flip state (and others) if not the specified value
+		if config.default ~= default then
+			-- update the specified configuration to specified value
+			config.default = default
+			self.Configuration:Update(config, 'default')
+
+			-- only need to continue if default was set to true
+			if default then
+				-- flip the current default configuration to not
+				for id, c in pairs(configs) do
+					if not Util.Strings.Equal(id, configId) and c.default then
+						c.default = false
+						self.Configuration:Update(c, 'default')
+					end
+				end
+			end
+		end
 	end
-	local lists = self:Lists(configId)
+
+	return configs
+end
+
+-- there are a bunch of assumptions in this function. if violated, you're going to have a bad time
+-- specifically, the reference is to an instance of a class which is handled by this service and
+-- supports Referenceable (along with expected attributes)
+--
+-- if there are keys (number or not) in the passed refs table, they are retained in the returned result and the
+-- resolved references will be their value
+--
+-- if a reference cannot be found, a nil object will be inserted instead. if there are keys, this will result
+-- in a sparse table (e.g. reference at index 3 cannot be found => {ref_1, ref_2, [4]=ref_3})
+function Service:LoadRefs(refs)
+	Logging:Trace("LoadRefs() : %s", Util.Objects.ToString(refs))
+
+	local function resolveRef(ref)
+		Logging:Trace("resolveRef() : %s", Util.Objects.ToString(ref))
+		if ref then
+			local instance = Referenceable.FromRef(ref)
+			Logging:Trace("resolveRef(%s)", tostring(ref.id))
+			if instance then
+				Logging:Trace("resolveRef(%s) : resolved to %s", instance.id, instance.clazz.name)
+				if Util.Objects.IsInstanceOf(instance, Configuration) then
+					return self.Configuration:Get(instance.id)
+				elseif Util.Objects.IsInstanceOf(instance, List) then
+					return self.List:Get(instance.id)
+				else
+					Logging:Warn("resolveRef(%s) : referenced class is not supported", instance.id, instance.clazz.name)
+				end
+			else
+				Logging:Warn("resolveRef(%s) : reference could not be resolved", tostring(ref.id))
+			end
+		end
+
+		return nil
+	end
+
+	local loaded = {}
+
+	for key, ref in pairs(refs) do
+		if Util.Objects.IsTable(ref) then
+			-- if it's a list, it's the actual reference
+			if not Util.Tables.IsList(ref) then
+				Util.Tables.Insert(loaded, key, resolveRef(ref))
+			-- otherwise it is a collection of references
+			else
+				Util.Tables.Insert(loaded, key, self:LoadRefs(ref))
+			end
+		end
+	end
+
+	return loaded
+end
+
+-- idOrConfig can be an instance of Configuration or Configuration Id (string)
+--- @return Models.List.ActiveConfiguration
+function Service:Activate(idOrConfig)
+	local config =
+		Util.Objects.IsInstanceOf(idOrConfig, Configuration) and
+			idOrConfig or
+			self.Configuration:Get(idOrConfig)
+
+	if not config then
+		error(format("No configuration found with id ='%d'", tostring(idOrConfig)))
+	end
+
+	local lists = self:Lists(config.id)
 	if not lists or Util.Tables.Count(lists) == 0 then
-		error(format("No lists found with configuration id ='%s'", configId))
+		error(format("No lists found with configuration id ='%s'", config.id))
 	end
 
 	return ActiveConfiguration(self, config, lists)
@@ -88,6 +199,9 @@ function ActiveConfiguration:initialize(service, config, lists)
 			)()
 end
 
+function ActiveConfiguration:__tostring()
+	return format("%s (%s)", self.config.name, self.config.id)
+end
 --- @return table<string, Models.List.List> the list in it's original state when activated
 function ActiveConfiguration:GetOriginalList(listId)
 	return self.lists[listId]
@@ -96,6 +210,52 @@ end
 --- @return table<string, Models.List.List> the list in it's current form as a result of mutations (players add, loot given, etc.)
 function ActiveConfiguration:GetActiveList(listId)
 	return self.listsActive[listId]
+end
+
+-- returns a table with following contents, with the following potential attributes
+-- v (table) => {verified = result (boolean), ah = active hash (string), ch = comparison hash (string)}
+-- lid (string) => id for the list
+--
+-- [1] = 'v' for configuration
+-- [2] = lists results (table with 3 entries)
+--  [1] (present)   = table of 'lid' => 'v'
+--  [2] (missing)   = table of 'lid' => list ids present in active config, but missing in passed lists
+--  [3] (extra)     = table of 'lid' => list ids present in passed lists, but missing in active config
+function ActiveConfiguration:Verify(config, lists)
+	local verification = {}
+	-- configuration 1st
+	-- {verified, active hash (ah), comparison hash (ch)}
+	local verified, ah, ch = self.config:Verify(config)
+	Util.Tables.Push(verification, {verified = verified, ah = ah, ch = ch})
+	-- only go through lists if configuration was verified
+	-- as lists are bound to a configuration and all bets are off if config
+	-- is not verified
+	if verified then
+		-- lvs - id(s) to verification of ones which are present in both self.lists and lists
+		-- missing - id(s) of ones which are present in self.lists, but missing in lists
+		-- extra - id(s) of ones which are present in lists, but missing in self.lists
+		local lvs, missing, extra = {}, {}, {}
+
+		for _, lref in pairs(lists) do
+			local alist = self.lists[lref.id]
+			if not alist then
+				Util.Tables.Push(extra, lref.id)
+			else
+				verified, ah, ch = alist:Verify(lref)
+				Util.Tables.Insert(lvs, alist.id, { verified = verified, ah = ah, ch = ch})
+			end
+		end
+
+		for id, _ in pairs(self.lists) do
+			if not Util.Tables.FindFn(lists, function(r) return r.id == id end) then
+				Util.Tables.Push(missing, id)
+			end
+		end
+
+		Util.Tables.Push(verification, {lvs, missing, extra})
+	end
+
+	return verification
 end
 
 local function EnsurePresent(lists, player)
@@ -109,12 +269,12 @@ local function EnsurePresent(lists, player)
 	end
 end
 
-
 function ActiveConfiguration:OnPlayerEvent(player, joined)
 	player = Player.Resolve(player)
 	Logging:Trace("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
 
 	-- make sure player is present on original list(s)
+	-- todo : allow for setting how to insert them
 	if joined then EnsurePresent(self.lists, player) end
 
 	local prios = {}
@@ -175,18 +335,35 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 	player = Player.Resolve(player)
 	Logging:Debug("OnLootEvent(%s, %s)", tostring(player), tostring(equipment))
 
-	local listId, list =
-		Util.Tables.FindFn(
-			self.listsActive,
-				function(list) return list:AppliesToEquipment(equipment)
-			end
-		)
+	-- locate the current active list for the equipment
+	local listId, list = self:GetActiveListByEquipment(equipment)
 
 	if (listId and list) then
 		Logging:Debug("OnLootEvent(%s, %s) : Located List(%s, '%s'), 'suiciding' player", tostring(player), tostring(equipment), tostring(listId), list.name)
+		-- 'suicide' the player on active list and then apply to master list
 		list:DropPlayer(player)
 		self.lists[listId]:ApplyPlayerPriorities(list:GetPlayers())
 	else
 		Logging:Error("OnLootEvent(%s, %s) : No applicable list found", player.guid, tostring(equipment))
 	end
 end
+
+local function GetListByEquipment(lists, equipment)
+	return Util.Tables.FindFn(
+			lists,
+			function(list)
+				return list:AppliesToEquipment(equipment)
+			end
+	)
+end
+
+--- @return Models.List.List
+function ActiveConfiguration:GetOverallListByEquipment(equipment)
+	return GetListByEquipment(self.lists, equipment)
+end
+
+--- @return Models.List.List
+function ActiveConfiguration:GetActiveListByEquipment(equipment)
+	return GetListByEquipment(self.listsActive, equipment)
+end
+

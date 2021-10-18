@@ -161,7 +161,7 @@ function Checkbox.AddColorState(self, isBorderInsteadText)
 	self:ColorState(isBorderInsteadText)
 	self._SetChecked = self.SetChecked
 	self.SetChecked  = function(self, ...)
-		self._SetChecked(...)
+		self:_SetChecked(...)
 		self:ColorState(isBorderInsteadText)
 	end
 	return self

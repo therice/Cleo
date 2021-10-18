@@ -301,9 +301,24 @@ describe("LibUtil", function()
             assert.is.same(s, {{'b'}, {'c'}})
         end)
         it("head", function()
-            local s = Util.Tables.Head({ [1] = {'a'},  [2] = {'b'}, [3] = {'c'}, [4] = {'d'}, [5] = {'e'}}, 2)
+            local t = { [1] = {'a'},  [2] = {'b'}, [3] = {'c'}, [4] = {'d'}, [5] = {'e'}}
+            local s = Util.Tables.Head(t, 2)
             assert.is.same(s, {{'a'}, {'b'}})
         end)
+        --it("nth value", function()
+        --    local t = { [1] = {'a'},  [2] = {'b'}, [3] = {'c'}, [4] = {'d'}, [5] = {'e'}}
+        --    assert.is.same({'a'}, Util.Tables.NthValue(t, 1))
+        --    assert.is.same({'e'}, Util.Tables.NthValue(t, 5))
+        --    assert(Util.Tables.NthValue(t, 6) == nil)
+        --    t = { [99] = {'aa'},  [2] = {'b'}, [3] = {'c'}, [4] = {'d'}, [5] = {'ee'}}
+        --    assert.is.same({'aa'}, Util.Tables.NthValue(t, 1))
+        --    assert.is.same({'ee'}, Util.Tables.NthValue(t, 5))
+        --    assert(Util.Tables.NthValue(t, 6) == nil)
+        --    t = { a = {'zz'},  b = {'bb'}, c = {'ff'}, d = {'dd'}, e = {'ee'}}
+        --    assert.is.same({'zz'}, Util.Tables.NthValue(t, 1))
+        --    assert.is.same({'ff'}, Util.Tables.NthValue(t, 3))
+        --    assert(Util.Tables.NthValue(t, 6) == nil)
+        --end)
         it("tail", function()
             local s = Util.Tables.Tail({ [1] = {'a'},  [2] = {'b'}, [3] = {'c'}, [4] = {'d'}, [5] = {'e'}}, 1)
             assert.is.same(s, {{'d'}, {'e'}})
@@ -330,25 +345,5 @@ describe("LibUtil", function()
             Util.Tables.Insert(t, 1, "aa")
             assert.is.same(t, {"aa", "a", "b", "c", "d", "e", "z"})
         end)
-
-        --it("sparse table operations", function()
-        --    local t = {
-        --        [1] = "T",
-        --        [2] = "X",
-        --        [60] = "7",
-        --        [5] = "Y",
-        --        [40] = "N",
-        --        [99] = "ZZ",
-        --    }
-        --
-        --    for k, v in Util.Tables.Sparse.ipairs(t) do
-        --        print (k .. ' = ' .. v)
-        --    end
-        --
-        --    local i, v = Util.Tables.Find(t, "Y")
-        --    print(i)
-        --    i, v = Util.Tables.Find(t, "7")
-        --    print(i)
-        --end)
     end)
 end )

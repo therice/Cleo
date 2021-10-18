@@ -38,14 +38,14 @@ local CACHE_TIME = 60 * 60 * 24 * 2 -- 2 days
 local function Get(guid)
     local player = cache[guid]
     if player  then
-        Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
+        -- Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
         if GetServerTime() - player.timestamp <= CACHE_TIME then
             return Player:reconstitute(player)
         else
             Logging:Warn('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
         end
     else
-        Logging:Trace("Get(%s) : No cached entry", tostring(guid))
+        -- Logging:Trace("Get(%s) : No cached entry", tostring(guid))
     end
 
     return nil
@@ -150,7 +150,7 @@ end
 function Player:Get(input)
     local guid, info
 
-    Logging:Debug("Get(%s)", tostring(input))
+    -- Logging:Debug("Get(%s)", tostring(input))
 
     if Util.Strings.IsSet(input) then
         if not strmatch(input, GuidPatternPremable) and strmatch(input, GuidPatternRemainder) then
@@ -179,7 +179,7 @@ function Player:Get(input)
         error(format("%s is an invalid player", tostring(input)), 2)
     end
 
-    Logging:Trace("Get(%s) : GUID=%s", tostring(input), tostring(guid))
+    -- Logging:Trace("Get(%s) : GUID=%s", tostring(input), tostring(guid))
 
     if Util.Strings.IsEmpty(guid) then Logging:Warn("Get(%s) : unable to determine GUID", tostring(input)) end
     return Get(guid) or Player.Create(guid, info)

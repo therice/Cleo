@@ -23,7 +23,6 @@ local Modules = {
     "Compression",
     "Memoize",
     "UUID",
-    "MD5",
     "Bitfield",
     "Lists",
 }

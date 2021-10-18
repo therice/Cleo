@@ -84,7 +84,7 @@ function Lists:LayoutConfigurationTab(tab)
 		Logging:Trace("Config(Tab).ConfigList.SetListValue(%d)", index)
 		self:GetParent():Update()
 	end
-	tab.configList:SetList(module:Configurations())
+	tab.configList:SetList(module:GetService():Configurations())
 
 	-- returns the currently selected configuration
 	--- @return Models.List.Configuration
@@ -98,10 +98,12 @@ function Lists:LayoutConfigurationTab(tab)
         :Point("BOTTOMRIGHT",tab.configList,"TOPRIGHT",0, 0)
 
 	-- background (colored) which extends beyond the previous one
-	UI:New('DecorationLine', tab, true, "BACKGROUND",-5)
-		:Point("TOPLEFT", tab.configList, "TOPRIGHT", 0, 0)
-		:Point("BOTTOMRIGHT", tab, "TOPRIGHT", -2, -46)
-		:Color(0.25, 0.78, 0.92, 1, 0.50)
+	tab.banner =
+		UI:New('DecorationLine', tab, true, "BACKGROUND",-5)
+			:Point("TOPLEFT", tab.configList, "TOPRIGHT", 0, 0)
+			:Point("BOTTOMRIGHT", tab, "TOPRIGHT", -2, -46)
+			:Color(0.25, 0.78, 0.92, 1, 0.50)
+
 
 	-- delete configuration
 	tab.delete =
@@ -123,9 +125,9 @@ function Lists:LayoutConfigurationTab(tab)
 			:OnClick(
 				function(...)
 					-- create and persist new configuration
-					local config = module.listsService.Configuration:Create()
+					local config = module:GetService().Configuration:Create()
 					tab.configList:Add(config)
-					module.listsService.Configuration:Add(config)
+					module:GetService().Configuration:Add(config)
 					-- select it in the list
 					tab.configList:SetToLast()
 					-- update fields to reflect the selected configuration
@@ -151,7 +153,7 @@ function Lists:LayoutConfigurationTab(tab)
 						if userInput then
 							local config = SelectedConfiguration()
 							config.name = self:GetText()
-							module.listsService.Configuration:Update(config, 'name')
+							module:GetService().Configuration:Update(config, 'name')
 							tab.configList:Update()
 						end
 					end, -- function
@@ -160,10 +162,46 @@ function Lists:LayoutConfigurationTab(tab)
 			)
 		)
 
+	tab.default =
+		UI:New('Checkbox', tab, L["default"])
+			:Point("TOPRIGHT", tab.banner, "TOPRIGHT", -45, -2.5)
+			:Tooltip(L["list_config_default_desc"])
+			:Size(14,14):AddColorState()
+			:OnClick(
+				function(self)
+					local config = SelectedConfiguration()
+					if config then
+						Logging:Debug("Config.Default.OnClick(%s) : %s", tostring(config.id), tostring(self:GetChecked()))
+						-- this will mutate the configurations (only one default)
+						-- so set the list to the returned list
+						tab.configList:SetList(
+							module:GetService():ToggleDefaultConfiguration(config.id, self:GetChecked())
+						)
+					end
+				end
+			)
+
+	tab.status =
+		UI:New('Dropdown', tab)
+	        :Size(175)
+			:Point("TOPLEFT", tab.name, "BOTTOMLEFT", 0, -10)
+	        :Tooltip(L["status"], L["list_config_status_desc"])
+			:MaxLines(3)
+			:SetList(Util.Tables.Flip(Configuration.Status))
+			:SetClickHandler(
+				function(_, _, item)
+					local config = SelectedConfiguration()
+					Logging:Debug("Config.Status.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
+					config.status = item.key
+					module:GetService().Configuration:Update(config, "status")
+					return true
+				end
+			)
+
 	tab.owner =
 		UI:New('Dropdown', tab)
-			:SetWidth(150)
-			:Point("TOPLEFT", tab.name, "BOTTOMLEFT", 0, -10)
+			:SetWidth(175)
+			:Point("TOPRIGHT", tab.name, "BOTTOMRIGHT", 0, -10)
 			:Tooltip(L["owner"], L["list_config_owner_desc"])
 			:MaxLines(10)
 			:SetTextDecorator(
@@ -176,14 +214,13 @@ function Lists:LayoutConfigurationTab(tab)
 					local config = SelectedConfiguration()
 					Logging:Debug("Config.Owner.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
 					config:SetOwner(item.value)
-					module.listsService.Configuration:Update(config, "permissions")
+					module:GetService().Configuration:Update(config, "permissions")
 					return true
 				end
 			)
 	tab.owner.Refresh = function(self)
 		local config = SelectedConfiguration()
 		local owner = config:GetOwner()
-
 		local players =
 			module:Players(
 				function(t) return Util.Tables.Sort(Util.Tables.Keys(t)) end,
@@ -198,11 +235,11 @@ function Lists:LayoutConfigurationTab(tab)
 	-- admin selection start
 	tab.admins =
 		UI:New('DualListbox', tab)
-			:Point("TOPLEFT", tab.owner, "BOTTOMLEFT", 0, -10)
+			:Point("TOPLEFT", tab.status, "BOTTOMLEFT", 0, -10)
 			:Point("TOPRIGHT", tab.name, "BOTTOMRIGHT", 0, -10)
 			:Height(210)
-			:AvailableTooltip(L["available"], L["administrators_avail_desc"])
-			:SelectedTooltip(L["administrators"], L["administrators_desc"])
+			:AvailableTooltip(L["available"], L["list_config_administrators_avail_desc"])
+			:SelectedTooltip(L["administrators"], L["list_config_administrators_desc"])
 			:LineTextFormatter(
 				function(player)
 					return UIUtil.ClassColorDecorator(player.class):decorate(player:GetShortName())
@@ -237,13 +274,16 @@ function Lists:LayoutConfigurationTab(tab)
 					else
 						config:RevokePermissions(player, Configuration.Permissions.Admin)
 					end
-					module.listsService.Configuration:Update(config, "permissions")
+					module:GetService().Configuration:Update(config, "permissions")
 				end
 			)
 
 
 	tab.SetFieldsEnabled = function(self, enabled)
+		-- todo : check that current user is owner
 		self.name:SetEnabled(enabled)
+		self.default:SetEnabled(enabled)
+		self.status:SetEnabled(enabled)
 		self.owner:SetEnabled(enabled)
 		self.admins:SetEnabled(enabled)
 	end
@@ -254,6 +294,8 @@ function Lists:LayoutConfigurationTab(tab)
 			Logging:Trace("Config(Tab).Update(%s)", tostring(config.id))
 			self:SetFieldsEnabled(true)
 			self.name:Text(config.name)
+			self.default:SetChecked(config.default)
+			self.status:SetViaKey(config.status)
 			self.owner:Refresh()
 			self.admins:Refresh()
 		end
@@ -275,13 +317,13 @@ end
 
 function Lists:DeleteConfigurationOnClickYes(_, config)
 	-- need to remove the associated lists as well
-	local lists = self.listsService.Lists(config.id)
+	local lists = self:GetService().Lists(config.id)
 	if lists then
 		for _, list in pairs(lists) do
-			self.listsService.List:Remvoe(list)
+			self:GetService().List:Remvoe(list)
 		end
 	end
-	self.listsService.Configuration:Remove(config)
+	self:GetService().Configuration:Remove(config)
 	self.configTab.configList:RemoveSelected()
 	self.configTab:Update()
 end
@@ -351,9 +393,9 @@ function Lists:LayoutListTab(tab)
 			:OnClick(
 				function(...)
 					local config = SelectedConfiguration()
-					local list = module.listsService.List:Create(config.id)
+					local list = module:GetService().List:Create(config.id)
 					tab.lists:Add(list)
-					module.listsService.List:Add(list)
+					module:GetService().List:Add(list)
 					-- select it in the list
 					tab.lists:SetToLast()
 					-- update fields to reflect the selected list
@@ -375,19 +417,20 @@ function Lists:LayoutListTab(tab)
 			:SetTextDecorator(function(item) return item.value.name end)
 			:Tooltip(L["configuration"], L["list_config_dd_desc"])
 			:OnShow(
-				function(self) self:SetList(module:Configurations()) end, false
+				function(self) self:SetList(module:GetService():Configurations()) end, false
 			)
 			:OnValueChanged(
 				function(item)
 					local config = item.value
 					Logging:Debug("List.Config.OnValueChanged(%s)", tostring(config.id))
-					tab.lists:SetList(module:Lists(config.id))
+					tab.lists:SetList(module:GetService():Lists(config.id))
 					tab.lists:ClearSelection()
 					tab:Update()
 					tab:SetButtonsEnabled(true)
 					return true
 				end
 			)
+
 
 	tab.name =
 		UI:New('EditBox', tab)
@@ -401,7 +444,7 @@ function Lists:LayoutListTab(tab)
 							if userInput then
 								local list = SelectedList()
 								list.name = self:GetText()
-								module.listsService.List:Update(list, 'name')
+								module:GetService().List:Update(list, 'name')
 								tab.lists:Update()
 							end
 						end, -- function
@@ -483,7 +526,7 @@ function Lists.DeleteListOnShow(frame, list)
 end
 
 function Lists:DeleteListOnClickYes(_, list)
-	self.listsService.List:Remove(list)
+	self:GetService().List:Remove(list)
 	self.listTab.lists:RemoveSelected()
 	self.listTab:Update()
 end
@@ -514,7 +557,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 				function()
 					local config, list = configSupplier(), listSupplier()
 					Logging:Debug("List.Equipment(OptionsSupplier) : %s ", tostring(list and list.id or nil))
-					local unassigned = config and module:UnassignedEquipmentLocations(config.id) or {}
+					local unassigned = config and module:GetService():UnassignedEquipmentLocations(config.id) or {}
 					--[[
 					Logging:Debug("%s - %s",
 					              Util.Objects.ToString(unassigned),
@@ -538,7 +581,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 						else
 							list:RemoveEquipment(slot)
 						end
-						module.listsService.List:Update(list, "equipment")
+						module:GetService().List:Update(list, "equipment")
 					end
 				end
 			)
@@ -819,7 +862,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			if self:HasPendingChanges() then
 				local compacted = Util.Tables.Compact(self.priorities)
 				list:SetPlayers(unpack(Util.Tables.Values(compacted)))
-				module.listsService.List:Update(list, "players")
+				module:GetService().List:Update(list, "players")
 				self:UpdatePriorities()
 			end
 		end
@@ -917,12 +960,10 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	tab.Update = function(self)
 		Logging:Debug("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
 		if self:IsVisible() then
+			-- todo : fix
 			local enabled = (configSupplier() and listSupplier())
-
 			self:SetFieldsEnabled(true)
 			self:UpdatePriorities()
-
-
 			--[[
 			self:SetFieldsEnabled(enabled)
 			if enabled then

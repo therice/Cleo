@@ -49,24 +49,6 @@ Dialog:Register(C.Popups.ConfirmAbort, {
     show_while_dead = true,
 })
 
---[[
-Dialog:Register(C.Popups.ConfirmAdjustPoints, {
-    text = MachuPicchu,
-    on_show = AddOn:StandingsModule().AdjustOnShow,
-    buttons = {
-        {
-            text = _G.YES,
-            on_click = AddOn:StandingsModule().AdjustOnClickYes,
-        },
-        {
-            text = _G.NO,
-            on_click = Util.Functions.Noop
-        },
-    },
-    hide_on_escape = true,
-    show_while_dead = true,
-})
-
 Dialog:Register(C.Popups.ConfirmAward, {
     text = MachuPicchu,
     icon = "",
@@ -84,24 +66,6 @@ Dialog:Register(C.Popups.ConfirmAward, {
     hide_on_escape = true,
     show_while_dead = true,
 })
-
-Dialog:Register(C.Popups.ConfirmDecayPoints, {
-    text = MachuPicchu,
-    on_show = AddOn:StandingsModule().DecayOnShow,
-    buttons = {
-        {
-            text = _G.YES,
-            on_click = AddOn:StandingsModule().DecayOnClickYes,
-        },
-        {
-            text = _G.NO,
-            on_click = Util.Functions.Noop
-        },
-    },
-    hide_on_escape = true,
-    show_while_dead = true,
-})
---]]
 
 Dialog:Register(C.Popups.ConfirmDeleteItem, {
     text = MachuPicchu,
@@ -219,3 +183,26 @@ Dialog:Register(C.Popups.ConfirmSync, {
     show_while_dead = true,
 })
 --]]
+
+Dialog:Register(C.Popups.SelectConfiguration, {
+    text = format("%s : |cfffcd400%s|r", L['addon_name_colored'], L['select_configuration']),
+    height = 60,
+    on_show = function(...) AddOn:MasterLooterModule():LayoutConfigSelectionPopup(...) end,
+    buttons = {
+        {
+            text = L["select"],
+            on_click = function(frame, ...)
+                AddOn:MasterLooterModule():NeuterConfigSelectionPopup(frame)
+                AddOn:MasterLooterModule():ActivateConfiguration(...)
+            end,
+        },
+        {
+            text = _G.CANCEL,
+            on_click = function(frame, ...)
+                AddOn:MasterLooterModule():NeuterConfigSelectionPopup(frame)
+            end
+        },
+    },
+    hide_on_escape = false,
+    show_while_dead = true,
+})

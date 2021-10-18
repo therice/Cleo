@@ -11,6 +11,7 @@ local UI = AddOn.Require('UI.Native')
 local UIUtil = AddOn.Require('UI.Util')
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
+local Dialog = AddOn:GetLibrary("Dialog")
 
 --- @type MasterLooter
 local ML = AddOn:GetModule("MasterLooter", true)
@@ -396,6 +397,11 @@ local UsageTypeDesc = {
 	[ML.UsageType.Never]   = L["usage_never"],
 }
 
+local ListConfigSelectionMethodDesc = {
+	[ML.ListConfigSelectionMethod.Ask]      = L["list_config_select_ask"],
+	[ML.ListConfigSelectionMethod.Default]  = L["list_config_select_default"],
+}
+
 function ML:LayoutGeneralTab(tab)
 	local module = self
 
@@ -474,10 +480,35 @@ function ML:LayoutGeneralTab(tab)
 			)
 	tab.outOfRaid:SetSize(14, 14)
 
+	tab.listConfigGroup =
+		UI:New('InlineGroup',tab)
+	        :Point("TOPLEFT", tab.usageGroup, "BOTTOMLEFT", 0, -5)
+	        :Point("TOPRIGHT", tab.usageGroup, "BOTTOMRIGHT", 0, 0)
+	        :SetHeight(87)
+	        :Title(L["list_configuration"])
+
+	content = tab.listConfigGroup.content
+	tab.lcSelectionDesc =
+		UI:New('Text', content, L["list_configuration_desc"])
+		    :Color(C.Colors.White.r, C.Colors.White.g, C.Colors.White.b, C.Colors.White.a)
+		    :Point("TOPLEFT", content, "TOPLEFT", 5, -5)
+			:Point("RIGHT", content, "RIGHT", 0, 0)
+
+	tab.lcSelectionMethod =
+		UI:New('Dropdown', tab, nil, tab.usageGroup:GetWidth() / 2, 3)
+			:Tooltip(L["list_configuration_selection_desc"])
+			:Point("TOPLEFT", tab.lcSelectionDesc, "BOTTOMLEFT", 0, -7)
+			:SetList(Util.Tables.Copy(ListConfigSelectionMethodDesc))
+			:Datasource(
+				module,
+				module.db.profile,
+				'lcSelectionMethod'
+			)
+
 	tab.lootGroup =
 		UI:New('InlineGroup',tab)
-			:Point("TOPLEFT", tab.usageGroup, "BOTTOMLEFT", 0, -5)
-			:Point("TOPRIGHT", tab.usageGroup, "BOTTOMRIGHT", 0, 0)
+			:Point("TOPLEFT", tab.listConfigGroup, "BOTTOMLEFT", 0, -5)
+			:Point("TOPRIGHT", tab.listConfigGroup, "BOTTOMRIGHT", 0, 0)
 	        :SetHeight(87)
 	        :Title(L["loot"])
 	content = tab.lootGroup.content
@@ -720,4 +751,50 @@ function ML:LayoutResponsesTab(tab)
 	)
 
 	self.responsesTab = tab
+end
+
+function ML:PromptForConfigSelection()
+	Dialog:Spawn(C.Popups.SelectConfiguration)
+end
+
+function ML:LayoutConfigSelectionPopup(frame, ...)
+	UIUtil.DecoratePopup(frame)
+
+	local module = self
+
+	-- a bunch of mumbo jumbo to add widgets to LibDialog popup
+	-- and then not have them show up on later reuse
+	if not frame.csContainer then
+		frame.csContainer = CreateFrame("Frame", "ConfigSelectContainer", frame)
+		frame.csContainer:SetSize(30, 250)
+		frame.csContainer:SetPoint("CENTER", frame, "CENTER")
+
+		frame.configSelection =
+			UI:New('Dropdown', frame.csContainer)
+				:Size(250)
+			    :Point("CENTER", frame.csContainer, "CENTER")
+				:Tooltip(L["configuration"], L['active_configs_desc'])
+				:OnShow(
+					function(self, ...)
+						local configs = AddOn:ListsModule():GetService():Configurations(true)
+						Util.Tables.Filter(configs, function(c) return c:IsAdminOrOwner(AddOn.player) end)
+						self:SetList(configs)
+					end,
+					false
+				)
+				:OnValueChanged(
+					function(item)
+						frame.data = item.value
+					end
+				)
+	else
+		frame.csContainer:Show()
+	end
+end
+
+-- neuter the dialog we added to previously
+function ML:NeuterConfigSelectionPopup(frame)
+	if frame.csContainer then
+		frame.csContainer:Hide()
+	end
 end

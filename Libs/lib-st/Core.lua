@@ -316,7 +316,6 @@ do
 				self.sorttable[i] = i;
 			end
 		end
-
 		-- go on sorting
 		local i, sortby = 1, nil;
 		while i <= #self.cols and not sortby do

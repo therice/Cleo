@@ -38,10 +38,3 @@ function AddOn:ConfigChanged(moduleName, val)
     -- need to serialize the values, as AceBucket (if used on other end) only groups by a single value
     self:SendMessage(C.Messages.ConfigTableChanged, AddOn:Serialize(moduleName, val))
 end
-
---[[
-if AddOn._IsTestContext('Core_Config') then
-    AddOn.BuildConfigOptions = BuildConfigOptions
-    AddOn.ConfigOptions = ConfigOptions
-end
---]]

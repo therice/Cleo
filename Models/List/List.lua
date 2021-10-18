@@ -5,8 +5,6 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Util = AddOn:GetLibrary("Util")
 --- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
---- @type LibClass
-local Class = LibStub("LibClass-1.0")
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
 --- @type Models.Dao
@@ -20,14 +18,25 @@ local DateFormat = AddOn.Package('Models').DateFormat
 local SemanticVersion = AddOn.Package('Models').SemanticVersion
 --- @type Models.Versioned
 local Versioned = AddOn.Package('Models').Versioned
-
+--- @type Models.Hashable
+local Hashable = AddOn.Require('Models.Hashable')
+--- @type Models.Referenceable
+local Referenceable = AddOn.Require('Models.Referenceable')
 
 local Version = SemanticVersion(1, 0, 0)
 
 --- @class Models.List.List
-local List = AddOn.Package('Models.List'):Class('List', Versioned)
+local List =
+	AddOn.Package('Models.List'):Class('List', Versioned)
+		:include(Hashable.Includable('sha256'))
+		:include(Referenceable.Includable())
+Versioned.ExcludeAttrsInHash(List)
+Versioned.IncludeAttrsInRef(List)
+List.static:AddTriggers("name", "equipment", "players")
+List.static:IncludeAttrsInRef("id", {hash = function(self) return self:hash() end})
+
 function List:initialize(configId, id, name)
-	Versioned.initialize(self, Version, "name", "equipment", "players")
+	Versioned.initialize(self, Version)
 	self.configId = configId
 	self.id = id
 	self.name = name
@@ -57,14 +66,15 @@ function List:afterReconstitute(instance)
 end
 
 function List:AddEquipment(...)
-	self.equipment = Util(self.equipment):Merge({...}, true)()
+	self.equipment = Util(self.equipment):Merge({...}, true):Sort()()
 end
 
 function List:RemoveEquipment(...)
-	self.equipment = Util(self.equipment):CopyExceptWhere(false, ...)()
+	self.equipment = Util(self.equipment):CopyExceptWhere(false, ...):Sort()()
 end
 
 function List:AppliesToEquipment(equipment)
+	-- Logging:Trace("AppliesToEquipment(%s)", tostring(equipment))
 	return Util.Tables.ContainsValue(self.equipment, equipment)
 end
 
@@ -112,9 +122,37 @@ function List:GetPlayer(priority)
 	return self.players[priority]
 end
 
-function List:GetPlayerPriority(player)
-	-- return self.players:IndexOf(Player.Resolve(player))
-	return Util.Tables.Find(self.players, Player.Resolve(player))
+function List:GetPlayerPriority(player, relative)
+	player = Player.Resolve(player)
+	relative = Util.Objects.Default(relative, false)
+
+	local priority
+
+	if relative then
+		local index = 1
+		local flipped =
+			Util(self.players)
+				:Flip(
+					function()
+						local key = index
+						index = index + 1
+						return key
+					end
+				)()
+
+		_, priority =
+			Util.Tables.FindFn(
+				flipped,
+				function(prio, prioPlayer)
+					return prioPlayer == player
+				end,
+				true
+			)
+	else
+		priority, _ = Util.Tables.Find(self.players, Player.Resolve(player))
+	end
+
+	return priority, player
 end
 
 function List:AddPlayer(player, priority)
@@ -122,7 +160,7 @@ function List:AddPlayer(player, priority)
 	-- if an associated priority and no one in that slot, just set it directly
 	if priority and not self.players[priority] then
 		self.players[priority] = player
-	-- otherwise, insert with respect to existing prioirties (potentially shifting others)
+	-- otherwise, insert with respect to existing priorities (potentially shifting others)
 	else
 		Util.Tables.Insert(self.players, priority, player)
 	end

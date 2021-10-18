@@ -59,12 +59,10 @@ function AddOn:PlayerEnteringWorld(_, isLogin, isReload)
     end
 end
 
---  PartyLootMethodChanged, PartyLeaderChanged, GroupLeft
+--  PartyLootMethodChanged, PartyLeaderChanged
 function AddOn:PartyEvent(event, ...)
     Logging:Debug("PartyEvent(%s)", event)
     self:NewMasterLooterCheck()
-    -- todo : maybe handle transmit of lists here?
-    -- if event == C.Events.GroupLeft then self:StandbyModule():ResetRoster() end
 end
 
 -- https://wow.gamepedia.com/LOOT_READY

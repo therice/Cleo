@@ -107,8 +107,8 @@ function Loot:OnChatMessage(msg)
 	)
 
 	if name and low == 1 and high == 100 and
-			AddOn.UnitIsUnit(Ambiguate(name, "short"), "player") and
-			self.awaitingRolls[1]
+		AddOn.UnitIsUnit(Ambiguate(name, "short"), "player") and
+		self.awaitingRolls[1]
 	then
 		local el = self.awaitingRolls[1]
 		tremove(self.awaitingRolls, 1)

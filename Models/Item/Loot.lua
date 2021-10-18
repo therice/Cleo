@@ -217,7 +217,7 @@ function ItemAward:initialize(entry, candidate, reason)
 		{ responseId = 1, reason = nil, awardReason = 'ms_need', ...
 	--]]
 	local cr = entry:GetCandidateResponse(candidate)
-	local awardReason, baseGp, awardGp = nil, nil, nil
+	local awardReason
 	-- if reason is provided, it overrides candidate's response
 	-- it will be entry from ML's responses table
 	--
@@ -228,8 +228,6 @@ function ItemAward:initialize(entry, candidate, reason)
 	else
 		awardReason = AddOn:GetResponse(cr.response).award_scale
 	end
-
-	baseGp, awardGp = entry:GetGp(awardReason)
 
 	self.session = entry.session
 	self.winner = candidate
@@ -242,6 +240,8 @@ function ItemAward:initialize(entry, candidate, reason)
 	-- the reason for the award, if not the player's response
 	-- this does not need to be provided
 	self.reason = reason
+	-- the name of the award reason
+	self.awardReason = awardReason
 	self.texture = entry.texture
 
 	-- normalize the response/reason divergence for consistent access

@@ -27,11 +27,11 @@ LA.defaults = {
 	}
 }
 
--- Copy defaults from GearPoints into our defaults for buttons/responses
+-- Copy defaults from MasterLooter into our defaults for buttons/responses
 -- This actually should be done via the AddOn's DB once it's initialized, but we currently
--- don't allow users to change these values (either here or from GearPoints) so we can
+-- don't allow users to change these values (either here or from MasterLooter) so we can
 -- do it before initialization. If we allow for these to be configured by user, then will
--- need to copy from DB
+-- need to be copied from DB
 do
 	local ML = AddOn:GetModule("MasterLooter")
 	local AwardReasons = LA.defaults.profile.awardReasons
@@ -48,6 +48,7 @@ do
 			                   color       = ML.AwardReasons[award].color,
 			                   sort        = sortLevel,
 			                   text        = L[award],
+			                   -- dubious, see MasterLooter for more detail
 			                   award_scale = award,
 			                   disenchant  = Util.Strings.StartsWith(Util.Strings.Lower(award), 'disenchant')
 		                   }
@@ -143,7 +144,7 @@ end
 
 ---@param lt table<number, Models.Item.ItemRef>
 function LA:ReceiveLootTable(lt)
-	Logging:Debug("ReceiveLootTable(%d)", #lt)
+	Logging:Debug("ReceiveLootTable(%d) : START", #lt)
 	self.active = true
 	self.lootTable =
 		Util(lt):Copy()
@@ -156,6 +157,7 @@ function LA:ReceiveLootTable(lt)
 	self:Setup(self.lootTable)
 	if not AddOn.enabled then return end
 	self:Show()
+	Logging:Debug("ReceiveLootTable(%d) : END", #lt)
 end
 
 function LA:NextUnawardedSession()
@@ -296,7 +298,7 @@ function LA:AnnounceResponse(session, candidate)
 				local announceSettings = ML:GetDbValue('announceResponseText')
 				local channel, announcement = announceSettings.channel, announceSettings.text
 
-				-- "&p specified &r for &i (&z)
+				-- "&p specified &r for &i (&ln - &lp)
 				for repl, fn in pairs(ML.AwardStrings) do
 					announcement =
 						gsub(announcement, repl,

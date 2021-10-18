@@ -5,7 +5,6 @@ local E = AddOn.Constants.Events
 AddOn.Events = {
     [E.EncounterEnd]                = "EncounterEnd",
     [E.EncounterStart]              = "EncounterStart",
-    [E.GroupLeft]                   = "PartyEvent",
     [E.PlayerEnteringWorld]         = "PlayerEnteringWorld",
     [E.PartyLeaderChanged]          = "PartyEvent",
     [E.PartyLootMethodChanged]      = "PartyEvent",

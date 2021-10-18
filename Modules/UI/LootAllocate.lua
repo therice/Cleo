@@ -35,26 +35,25 @@ local ScrollColumns, ScrollColumnCells =
 		:column(_G.NAME):set("col", "name"):defaultsort(STColumnBuilder.Ascending):width(120)   -- 2
 		:column(_G.RANK):set("col", "rank"):sortnext(4):width(95)                               -- 3
 			:comparesort(function(...) return LA.SortByRank(...) end)
-		:column(L["response"]):set("col", "response"):sortnext(7):width(240)                    -- 4
+		:column(L["response"]):set("col", "response"):sortnext(5):width(240)                    -- 4
 			:comparesort(function(...) return LA.SortByResponse(...) end)
-		:column(L["ep_abbrev"]):set("col", "ep"):sortnext(6):width(45)                          -- 5
+		:column(L["priority_active"]):set("col", "pa"):sortnext(6):width(100)                   -- 5
 			--:comparesort(function(...) return LA.SortByEp(...) end)
-		:column(L["gp_abbrev"]):set("col", "gp"):sortnext(9):width(45)                          -- 6
+		:column(L["priority_overall"]):set("col", "po"):sortnext(11):width(100)                 -- 6
 			--:comparesort(function(...) return LA.SortByGp(...) end)
-		:column(L["pr_abbrev"]):set("col", "pr"):sortnext(12):width(45)                         -- 7
-			--:comparesort(function(...) return LA.SortByPr(...) end)
-		:column(_G.ITEM_LEVEL_ABBR):set("col", "ilvl"):sortnext(9):width(45)                    -- 8
-		:column(L["diff"]):set("col", "diff"):width(40)                                         -- 9
-		:column(L["g1"]):set("col", "gear1"):width(20):align('CENTER')                          -- 10
-		:column(L["g2"]):set("col", "gear2"):width(20):align('CENTER')                          -- 11
-		:column(_G.ROLL):set("col", "roll"):sortnext(5):width(50):align('CENTER')               -- 12
+		:column(_G.ITEM_LEVEL_ABBR):set("col", "ilvl"):sortnext(8):width(45)                    -- 7
+		:column(L["diff"]):set("col", "diff"):width(40)                                         -- 8
+		:column(L["g1"]):set("col", "gear1"):width(20):align('CENTER')                          -- 9
+		:column(L["g2"]):set("col", "gear2"):width(20):align('CENTER')                          -- 10
+		:column(_G.ROLL):set("col", "roll"):sortnext(8):width(50):align('CENTER')               -- 11
 	:build()
 
 
 function LA:GetFrame()
 	if not self.frame then
 		local f = UI:NewNamed('Frame', UIParent, 'LootAllocate', self:GetName(), L['frame_loot_allocate'], 450, 450, false)
-		-- override default behavior for ESC to not close the loot window
+		f.close:Hide()
+		-- override default behavior for ESC to not close the loot allocation window
 		-- too easy to make mistakes and not get an opportunity to allocate loot
 		f:SetScript(
 			"OnKeyDown",
@@ -145,25 +144,23 @@ function LA:GetFrame()
 		itemText:SetText("")
 		f.itemText = itemText
 
+		local itemList  = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+		itemList:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 5, -5)
+		itemList:SetTextColor(0.90, 0.80, 0.50, 1)
+		itemList:SetText("IT")
+		f.itemList = itemList
+
 		local ilvl = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		ilvl:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -4)
+		ilvl:SetPoint("TOPLEFT", itemList, "BOTTOMLEFT", 0, -4)
 		ilvl:SetTextColor(1, 1, 1)
 		ilvl:SetText("")
 		f.itemLvl = ilvl
-
-		--[[
-		local gp  = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		gp:SetPoint("LEFT", ilvl, "RIGHT", 5, 0)
-		gp:SetTextColor(0, 1, 0, 1)
-		gp:SetText("")
-		f.gp = gp
-		--]]
 
 		local state = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		state:SetPoint("LEFT", ilvl, "RIGHT", 5, 0)
 		state:SetTextColor(0, 1, 0, 1)
 		state:SetText("")
-		f.state = state
+		f.itemState = state
 
 		local type = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		type:SetPoint("TOPLEFT", ilvl, "BOTTOMLEFT", 0, -4)
@@ -228,30 +225,8 @@ function LA:GetFrame()
 		sessionToggle:SetPoint("TOPRIGHT", f, "TOPLEFT", -2, 0)
 		f.sessionToggleFrame = sessionToggle
 
-		-- this function's primary purposes is to update EP value based upon
-		-- the selected candidate's response
-		f.Update = function(name, useResponse)
-			--[[
+		f.Update = function(name, userResponse)
 
-			if Util.Strings.IsEmpty(name)then
-				local selection = f.st:GetSelection()
-				local r = f.st:GetRow()
-				if selection and r then name = r.name end
-			end
-
-			if name then
-				local entry = self:CurrentEntry()
-				 local entry, awardScale = self:CurrentEntry(), nil
-				if useResponse then
-					local cresponse = entry:GetCandidateResponse(name)
-					local response = AddOn:GetResponse(cresponse.response)
-					awardScale = response.award_scale
-				end
-
-				local gpText = AddOn:GearPointsModule():GetGpTextColored(entry, awardScale)
-				f.gp:SetText("GP: " .. (gpText and gpText or "UNKNOWN"))
-			end
-			--]]
 		end
 
 		self.sessionButtons = {}
@@ -292,11 +267,30 @@ function LA:UpdateSessionButton(session, texture, link, awarded)
 		btn:SetBorderColor("green")
 		tinsert(lines, L["item_has_been_awarded"])
 	else
-		btn:SetBorderColor("white") -- white
+		btn:SetBorderColor("white")
 	end
 	btn:SetScript("OnEnter", function(self) UIUtil.ShowTooltip(self, nil, nil, unpack(lines)) end)
 	return btn
 end
+
+
+function LA:GetItemStatus(item)
+	if not item then return "" end
+	GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
+	GameTooltip:SetHyperlink(item)
+	local text = ""
+	if GameTooltip:NumLines() > 1 then
+		local line = getglobal('GameTooltipTextLeft2')
+		local t = line:GetText()
+		-- Logging:Debug("GetItemStatus() : %s", t)
+		if t and strfind(t, "cFF 0FF 0") then
+			text = t
+		end
+	end
+	GameTooltip:Hide()
+	return text
+end
+
 
 function LA:Hide()
 	if self.frame then
@@ -305,6 +299,7 @@ function LA:Hide()
 end
 
 function LA:Show()
+	Logging:Trace("Show()")
 	if self.frame and self.lootTable[self.session] then
 		if self:HaveUnawardedItems() then self.active = true end
 		self.frame:Show()
@@ -315,13 +310,16 @@ function LA:Show()
 end
 
 function LA:SwitchSession(session)
+	Logging:Trace("SwitchSession(%d)", session)
 	local entry = self:GetEntry(session)
 	self.session = session
 	self.frame.itemIcon:SetNormalTexture(entry.texture)
-	self.frame.itemIcon:SetBorderColor("purple") -- todo : really?
+	self.frame.itemIcon:SetBorderColor("purple")
 	self.frame.itemText:SetText(entry.link)
+	self.frame.itemState:SetText(self:GetItemStatus(entry.link))
+	local itemList = AddOn:ListsModule():GetActiveListAndPriority(entry:GetEquipmentLocation())
+	self.frame.itemList:SetText((itemList and itemList.name or L['unknown']))
 	self.frame.itemLvl:SetText(_G.ITEM_LEVEL_ABBR..": " .. entry:GetLevelText())
-	-- self.frame.gp:SetText("GP: " .. AddOn:GearPointsModule():GetGpTextColored(entry))
 	self.frame.itemType:SetText(entry:GetTypeText())
 
 	self:UpdateSessionButtons()
@@ -356,7 +354,7 @@ end
 
 function LA:BuildScrollingTable()
 	if self.frame then
-		Logging:Debug("%s", Util.Objects.ToString(ScrollColumnCells))
+		Logging:Trace("BuildScrollingTable()")
 
 		local rows, row = {}, 1
 		for name in AddOn:GroupIterator() do
@@ -401,14 +399,6 @@ LA.SortByGp =
        function(row)
 	       local _, gp = AddOn:StandingsModule().Points(row.name)
 	       return gp
-       end
-	)
-
-LA.SortByPr =
-	ST.SortFn(
-       function(row)
-	       local _, _, pr = AddOn:StandingsModule().Points(row.name)
-	       return pr
        end
 	)
 --]]
@@ -458,29 +448,21 @@ function LA:SetCellResponse(_, frame, data, _, _, realrow, _, _, _, ...)
 	frame.text:SetTextColor(response.color:GetRGBA())
 end
 
---[[
-function LA:SetCellEp(_, frame, data, _, _, realrow, column, _, _, ...)
-	local name = data[realrow].name
-	local ep = AddOn:StandingsModule().Points(name)
-	frame.text:SetText(ep)
-	data[realrow].cols[column].value = ep
+-- Priority (Active)
+function LA:SetCellPa(_, frame, data, _, _, realrow, column, _, _, ...)
+	local name, entry = data[realrow].name, self:CurrentEntry()
+	local _, priority = AddOn:ListsModule():GetActiveListAndPriority(entry:GetEquipmentLocation(), name)
+	frame.text:SetText(tostring(priority and priority or '?'))
+	data[realrow].cols[column].value = priority
 end
 
-function LA:SetCellGp(_, frame, data, _, _, realrow, column, _, _, ...)
-	local name = data[realrow].name
-	local _, gp = AddOn:StandingsModule().Points(name)
-	frame.text:SetText(gp)
-	data[realrow].cols[column].value = gp
+-- Priority (Overall)
+function LA:SetCellPo(_, frame, data, _, _, realrow, column, _, _, ...)
+	local name, entry = data[realrow].name, self:CurrentEntry()
+	local _, priority = AddOn:ListsModule():GetOverallListAndPriority(entry:GetEquipmentLocation(), name)
+	frame.text:SetText(tostring(priority and priority or '?'))
+	data[realrow].cols[column].value = priority
 end
-
-function LA:SetCellPr(_, frame, data, _, _, realrow, column, _, _, ...)
-	local name = data[realrow].name
-	local _, _, pr = AddOn:StandingsModule().Points(name)
-	frame.text:SetText(pr)
-	data[realrow].cols[column].value = pr
-end
-
---]]
 
 function LA:SetCellIlvl(_, frame, data, _, _, realrow, column, _, _, ...)
 	local name = data[realrow].name

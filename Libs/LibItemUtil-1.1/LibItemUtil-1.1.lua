@@ -319,7 +319,7 @@ end
 function lib:SetCustomItems(data)
     CustomItems = {}
     for k, v in pairs(data) do
-        CustomItems[k] = v
+        CustomItems[tonumber(k)] = v
     end
 end
 

@@ -24,8 +24,9 @@ AddOn.Constants = {
 
     CommPrefixes = {
       Main      =   name,
-      Version   =   name .. 'v',
-      Sync      =   name .. 's',
+      Lists     =   name .. "_l",
+      Version   =   name .. '_v',
+      Sync      =   name .. '_s',
     },
 
     Channels = {
@@ -52,6 +53,8 @@ AddOn.Constants = {
         YELL         = _G.CHAT_MSG_YELL,
     },
 
+    -- https://www.easyrgb.com/en/convert.php
+    -- https://wowpedia.fandom.com/wiki/Quality
     Colors = {
         AdmiralBlue    = CreateColor(0.3, 0.35, 0.5, 1),
         Aluminum       = CreateColor(0.7, 0.7, 0.7, 1),
@@ -84,6 +87,7 @@ AddOn.Constants = {
     },
     
     Commands = {
+        ActivateConfig          =   "alc",
         Awarded                 =   "awd",
         ChangeResponse          =   "cr",
         HandleLootStart         =   "hlst",
@@ -207,11 +211,13 @@ AddOn.Constants = {
     
     Popups = {
         ConfirmAbort            =   name .. "_ConfigAbort",
+        ConfirmAward            =   name .. "_ConfirmAward",
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
         ConfirmDeleteListConfig =   name .. "_ConfirmDeleteListConfig",
         ConfirmDeleteListList   =   name .. "_ConfirmDeleteListList",
         ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
         ConfirmUsage            =   name .. "_ConfirmUsage",
+        SelectConfiguration     =   name .. "_SelectConfiguration",
     },
 
     Responses = {

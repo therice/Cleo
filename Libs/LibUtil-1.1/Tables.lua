@@ -56,7 +56,9 @@ function Self.Set(t, ...)
         if k == nil then
             break
         elseif j then
-            if u[j] == nil then u[j] = Self.New() end
+            if u[j] == nil then
+                u[j] = Self.New()
+            end
             u = u[j]
         end
         j = k
@@ -113,6 +115,30 @@ function Self.Values(t)
     for _,v in pairs(t) do tinsert(u, v) end
     return u
 end
+
+--[[
+function Self.FirstValue(t)
+    return Self.NthValue(t, 1)
+end
+
+function Self.NthValue(t, n)
+    if Self.IsList(t) then
+        return t[n]
+    else
+        local index, count = 1, Self.Count(t)
+        if index <= count then
+            for _, value in pairs(t) do
+                if index == n then
+                    return value
+                end
+                index = index + 1
+            end
+        end
+    end
+
+    return nil
+end
+--]]
 
 -- Turn a table into a continuously indexed list (in-place)
 ---@param t table

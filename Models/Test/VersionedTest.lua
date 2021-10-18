@@ -1,11 +1,11 @@
-local AddOn, Util, Versioned, SemanticVersion, Date
+local AddOn, Util, Versioned, SemanticVersion, Date, Class
 
 describe("Versioned", function()
 	setup(function()
 		_, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Versioned')
 		local p = AddOn.Package('Models')
 		Versioned, SemanticVersion, Date = p.Versioned, p.SemanticVersion, p.Date
-		Util = AddOn:GetLibrary('Util')
+		Util, Class = AddOn:GetLibrary('Util'), AddOn:GetLibrary('Class')
 	end)
 
 	teardown(function()
@@ -31,7 +31,14 @@ describe("Versioned", function()
 			print(Util.Objects.ToString(v:toTable()))
 		end)
 		it("supports triggers", function()
-			local v = Versioned("1.0.1", "one", "two")
+			local Test = Class('Test', Versioned)
+			Test.static:AddTriggers( "one", "two")
+
+			function Test:initialize()
+				Versioned.initialize(self, "1.0.1")
+			end
+
+			local v = Test()
 			assert(v:TriggersNewRevision("one"))
 			assert(v:TriggersNewRevision("two"))
 			assert(not v:TriggersNewRevision("three"))

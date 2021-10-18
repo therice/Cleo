@@ -12,7 +12,7 @@ local UIUtil = AddOn.Require('UI.Util')
 --- @type Loot
 local Loot = AddOn:GetModule('Loot')
 
-local ENTRY_HEIGHT, MAX_ENTRIES, MIN_BUTTON_WIDTH = 80, 6, 40
+local ENTRY_HEIGHT, MAX_ENTRIES, MIN_BUTTON_WIDTH = 90, 6, 40
 local GameTooltip = GameTooltip
 
 ---@class Loot.Entry
@@ -67,14 +67,20 @@ function Entry:Create(id, parent)
 	-- buttons
 	self.buttons = {}
 
-	-- item level
+	-- item text
 	self.itemText = self.frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	self.itemText:SetPoint("TOPLEFT", self.icon, "TOPRIGHT", 6, -1)
 	self.itemText:SetText("")
 
+	-- the associated list for equipment and player's priority
+	self.listWithPrio = self.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	self.listWithPrio:SetPoint("TOPLEFT", self.itemText, "BOTTOMLEFT", 1, -4)
+	self.listWithPrio:SetTextColor(1, 1, 1)
+	self.listWithPrio:SetText("")
+
 	-- item level
 	self.itemLvl = self.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	self.itemLvl:SetPoint("TOPLEFT", self.itemText, "BOTTOMLEFT", 1, -4)
+	self.itemLvl:SetPoint("TOPLEFT", self.listWithPrio, "BOTTOMLEFT", 1, -2)
 	self.itemLvl:SetTextColor(1, 1, 1)
 	self.itemLvl:SetText("")
 
@@ -135,6 +141,7 @@ function Entry:Update(item)
 	self.icon:SetNormalTexture(self.item.texture or "Interface\\InventoryItems\\WoWUnknownItem01")
 	self.itemCount:SetText(#self.item.sessions > 1 and tostring(#self.item.sessions) or "")
 	Loot.UpdateItemText(self)
+	Loot.UpdateListAndPriority(self)
 
 	if AddOn:MasterLooterDbValue('timeout.enabled') then
 		self.timeoutBar:SetMinMaxValues(
@@ -161,7 +168,8 @@ function Entry:UpdateButtons()
 		-- todo : color them buttons
 		if i > numButtons then
 			b[i] = b[i] or UI:New('Button', self.frame)
-			b[i]:SetText(_G.PASS)
+			-- b[i]:SetText(_G.PASS)
+			b[i]:SetText(UIUtil.ColoredDecorator(C.Colors.Salmon):decorate(_G.PASS))
 			b[i]:SetMultipleScripts({
                 OnEnter = function() Loot.UpdateItemResponders(self, C.Responses.Pass) end,
                 OnLeave = function() UIUtil:HideTooltip() end,
@@ -169,9 +177,9 @@ function Entry:UpdateButtons()
             })
 		else
 			b[i] = b[i] or UI:New('Button', self.frame)
-			-- todo : this is kind of ugly, but maybe bring back
-			-- b[i]:SetText(UIUtil.ColoredDecorator(buttons[i].color):decorate(buttons[i].text))
-			b[i]:SetText(buttons[i].text)
+			-- b[i]:SetText(buttons[i].text)
+			-- this is kind of ugly, but ...
+			b[i]:SetText(UIUtil.ColoredDecorator(buttons[i].color):decorate(buttons[i].text))
 			b[i]:SetMultipleScripts({
                 OnEnter = function()
                     Loot.UpdateItemResponders(self, i)
@@ -442,6 +450,17 @@ function Loot.UpdateItemText(entry)
 	local item = entry.item
 	entry.itemLvl:SetText(
 		"Level " .. item:GetLevelText() .." |cff7fffff".. item:GetTypeText() .. "|r"
+	)
+end
+
+function Loot.UpdateListAndPriority(entry)
+	local list, prio =
+		AddOn:ListsModule():GetActiveListAndPriority(
+			entry.item:GetEquipmentLocation()
+		)
+
+	entry.listWithPrio:SetText(
+		format("|cFFE6CC80%s|r (|cFFE6CC80%s|r)", (list and list.name or L['unknown']), prio and tostring(prio) or "?")
 	)
 end
 

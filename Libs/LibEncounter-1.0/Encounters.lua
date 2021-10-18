@@ -14,6 +14,15 @@ local lib = LibStub("LibEncounter-1.0", true)
 --  Ancient Zul'Gurub
 --  Ruins of Ahn'Qiraj
 --
+-- (10 person)
+--  Karazhan
+--
+-- (25 person)
+--  Gruul's Lair
+--  Magtheridon's Lair
+--  Serpentshrine Cavern
+--  Tempest Keep'
+
 -- Mapping from map id to details (name will be used as index for localization)
 lib.Maps = {
     [309] = {
@@ -358,6 +367,48 @@ lib.Creatures = {
     [15690] = {
         name = 'Prince Malchezaar'
     },
+    [21216] = {
+        name = 'Hydross the Unstable'
+    },
+    [21217] = {
+        name = 'The Lurker Below'
+    },
+    [21215] = {
+        name = 'Leotheras the Blind'
+    },
+    [21214] = {
+        name = 'Fathom-Lord Karathress'
+    },
+    [21964] = {
+        name = 'Fathom-Guard Caribdis'
+    },
+    [21965] = {
+        name = 'Fathom-Guard Tidalvess'
+    },
+    [21966] = {
+        name = 'Fathom-Guard Sharkkis'
+    },
+    [21213] = {
+        name = 'Morogrim Tidewalker'
+    },
+    [21212] = {
+        name = 'Lady Vashj'
+    },
+    [19514] = {
+        name = 'Al\'ar'
+    },
+    [19516] = {
+        name = 'Void Reaver'
+    },
+    [18805] = {
+        name = 'High Astromancer Solarian'
+    },
+    [19622] = {
+        name = 'Kael\'thas Sunstrider'
+    },
+    --[] = {
+    --    name = ''
+    --},
 }
 
 -- Mapping from encounter id to details
@@ -728,7 +779,56 @@ lib.Encounters = {
         map_id = 532,
         creature_id = {15690},
     },
-
+    -- Hydross the Unstable
+    [623] = {
+        map_id = 548,
+        creature_id = {21216},
+    },
+    -- The Lurker Below
+    [624] = {
+        map_id = 548,
+        creature_id = {21217},
+    },
+    -- Leotheras the Blind
+    [625] = {
+        map_id = 548,
+        creature_id = {21215},
+    },
+    -- Fathom-Lord Karathress
+    [626] = {
+        map_id = 548,
+        creature_id = {21214, 21964, 21965, 21966},
+    },
+    -- Morogrim Tidewalker
+    [627] = {
+        map_id = 548,
+        creature_id = {21213},
+    },
+    -- Lady Vashj
+    [628] = {
+        map_id = 548,
+        creature_id = {21212},
+    },
+    -- A'lar
+    [730] = {
+        map_id = 550,
+        creature_id = {19514},
+    },
+    -- Void Reaver
+    [731] = {
+        map_id = 550,
+        creature_id = {19516},
+    },
+    -- High Astromancer Solarian
+    [732] = {
+        map_id = 550,
+        creature_id = {19516},
+    },
+    -- Kael'thas Sunstrider
+    [733] = {
+        map_id = 550,
+        creature_id = {19622},
+    },
     --[] = {
     --    map_id = ,
     --    creature_id = {},

@@ -4,7 +4,7 @@
 ## Notes: Cleo - SK AddOn for World of Warcraft (TBC Classic)
 ## Author: Jackburtón-Atiesh
 ## Version: @project-version@
-## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_Traffic, Cleo_Loot
+## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit
 ## X-AddonName: Cleo
 ## X-InterfaceName: Cleo (TBC Classic)
 

@@ -72,7 +72,6 @@ describe("LootAllocate", function()
 			-- this will trigger LA to receive loot table as well
 			AddOn:OnLootTableReceived(lt)
 			assert.equal(#la.lootTable, 2)
-
 		end)
 		it("adds to loot table", function()
 			WoWAPI_FireUpdate(GetTime() + 10)

@@ -17,9 +17,13 @@ if AddOn.version == '@project-version@' then
 end
 --@end-debug@
 
+AddOn.Timer = C_Timer
+
 do
+    AddOn:AddLibrary('CallbackHandler', 'CallbackHandler-1.0')
     AddOn:AddLibrary('Class', 'LibClass-1.0')
     AddOn:AddLibrary('Logging', 'LibLogging-1.0')
+    AddOn:AddLibrary('SHA', 'LibSHA-1.0')
     AddOn:AddLibrary('Util', 'LibUtil-1.1')
     AddOn:AddLibrary('Deflate', 'LibDeflate')
     AddOn:AddLibrary('Base64', 'LibBase64-1.0')

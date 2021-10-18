@@ -47,7 +47,13 @@ end
 
 -- R(ead)
 function Dao:Get(id)
-	return self:Reconstitute(id, self.db[id])
+	local attrs = self.db[id]
+	if attrs then
+		return self:Reconstitute(id, self.db[id])
+	else
+		Logging:Warn("Dao.Get[%s](%s) : No instance found", tostring(self.entityClass), id)
+		return nil
+	end
 end
 
 -- YES, you need to copy the backing db elements... otherwise, mutations occur without explicit persistence

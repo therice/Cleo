@@ -21,6 +21,7 @@ function Package:Class(name, super)
     if self.classes[name] then error(format("Class '%s' already defined in Package '%s'", name, self.name)) end
     local class = AddOn.Class(name, super)
     self.classes[name] = class
+    class.static.package = self.name
     return class
 end
 

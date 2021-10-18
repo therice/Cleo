@@ -1,3 +1,4 @@
+--- @type LibItemUtil
 local lib = LibStub("LibItemUtil-1.1", true)
 local Logging = LibStub("LibLogging-1.0", true)
 local Util = LibStub("LibUtil-1.1", true)

@@ -180,11 +180,26 @@ function AddOn:IsItemBlacklisted(item)
     local _, _, _, _, _, itemClassId, itemsubClassId = GetItemInfoInstant(item)
     if not (itemClassId and itemsubClassId) then return false end
     if BlacklistedItemClasses[itemClassId] then
-        if BlacklistedItemClasses[itemClassId].all or BlacklistedItemClasses[itemClassId][itemsubClassId] then
+        if  BlacklistedItemClasses[itemClassId].all or
+            BlacklistedItemClasses[itemClassId][itemsubClassId] then
             return true
         end
     end
     return false
+end
+
+
+function AddOn.IsItemBindType(item, bindType)
+    if not item then return false end
+    return select(14, GetItemInfo(item)) == bindType
+end
+
+function AddOn.IsItemBoe(item)
+    return AddOn.IsItemBindType(item, LE_ITEM_BIND_ON_EQUIP)
+end
+
+function AddOn.IsItemBop(item)
+    return AddOn.IsItemBindType(item, LE_ITEM_BIND_ON_ACQUIRE)
 end
 
 local function GetAverageItemLevel()
@@ -334,6 +349,11 @@ function AddOn.Unsubscribe(subscriptions)
     end
 end
 
+function AddOn:PrintError(msg)
+    AddOn:Print(format(L["error_x"], msg))
+end
+
+-- user C_Timer
 local Alarm = AddOn.Class('Alarm')
 function Alarm:initialize(interval, fn)
     self.interval = interval

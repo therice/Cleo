@@ -96,7 +96,7 @@ describe("Lists", function()
 		end)
 
 		it("provides configurations", function()
-			local configs = lists:Configurations()
+			local configs = lists:GetService():Configurations()
 			assert(configs)
 			assert.equal(1, Util.Tables.Count(configs))
 			local config = Util.Tables.Values(configs)[1]
@@ -110,7 +110,7 @@ describe("Lists", function()
 		end)
 
 		it("provides lists", function()
-			local ls = lists:Lists("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+			local ls = lists:GetService():Lists("614A4F87-AF52-34B4-E983-B9E8929D44AF")
 			assert(ls)
 			assert.equal(2, Util.Tables.Count(ls))
 			local l = Util.Tables.Values(ls)[1]
@@ -130,7 +130,7 @@ describe("Lists", function()
 			assert.equal("INVTYPE_HEAD", e[1])
 		end)
 		it("provides unassigned equipment", function()
-			local ua = lists:UnassignedEquipmentLocations("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+			local ua = lists:GetService():UnassignedEquipmentLocations("614A4F87-AF52-34B4-E983-B9E8929D44AF")
 			assert.same(
 				{"INVTYPE_SHIELD", "INVTYPE_WEAPONOFFHAND", "INVTYPE_RANGED", "INVTYPE_WEAPON", "INVTYPE_2HWEAPON", "INVTYPE_WRIST", "INVTYPE_TRINKET", "INVTYPE_NECK", "INVTYPE_WAND", "INVTYPE_CLOAK", "INVTYPE_FEET", "INVTYPE_RELIC", "INVTYPE_THROWN", "INVTYPE_FINGER", "INVTYPE_HOLDABLE", "INVTYPE_HAND", "INVTYPE_WAIST", "INVTYPE_WEAPONMAINHAND"},
 				ua

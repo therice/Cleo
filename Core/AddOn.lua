@@ -16,6 +16,7 @@ local Util =  AddOn:GetLibrary("Util")
 --- @type LibGuildStorage
 local GuildStorage =  AddOn:GetLibrary('GuildStorage')
 
+
 function AddOn:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
     -- convert to a semantic version
@@ -61,6 +62,7 @@ function AddOn:OnInitialize()
     -- setup comms
     Comm:Register(C.CommPrefixes.Main)
     Comm:Register(C.CommPrefixes.Version)
+    Comm:Register(C.CommPrefixes.Lists)
     self.Send = Comm:GetSender(C.CommPrefixes.Main)
     self:SubscribeToPermanentComms()
 end
@@ -76,6 +78,7 @@ function AddOn:OnEnable()
     -- this enables flag for persistence of stuff like points to officer's notes, history, and sync payloads
     -- it can be disabled as needed through /cleo pm
     self.mode:Disable(AddOn.Constants.Modes.Persistence)
+    --- @type Models.Player
     self.player = Player:Get("player")
 
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))

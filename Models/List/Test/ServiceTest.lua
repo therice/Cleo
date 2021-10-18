@@ -4,7 +4,6 @@ local Util
 --- @type Models.List.Service
 local Service
 
-
 describe("Service Model", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_List_Service')
@@ -38,6 +37,14 @@ describe("Service Model", function()
 										["bitfield"] = 1,
 									},
 								},
+								["revision"] = 1634059874,
+								["version"] = {
+									["minor"] = 0,
+									["patch"] = 0,
+									["major"] = 1,
+								},
+								["status"] = 1,
+								["default"] = true,
 								["name"] = "Tempest Keep",
 							},
 						},
@@ -57,6 +64,12 @@ describe("Service Model", function()
 									"4372-0004FD18",
 									"1-00000001",
 								},
+								["version"] = {
+									["minor"] = 0,
+									["patch"] = 0,
+									["major"] = 1,
+								},
+								["revision"] = 1633983642,
 								["name"] = "Head, Feet, Wrist",
 								["equipment"] = {
 									"INVTYPE_HEAD", -- [1]
@@ -84,6 +97,12 @@ describe("Service Model", function()
 								},
 								["name"] = "Misc",
 								["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
+								["revision"] = 1633983813,
+								["version"] = {
+									["minor"] = 0,
+									["patch"] = 0,
+									["major"] = 1,
+								},
 							},
 							["6154C601-3450-00C4-6D98-D3BF57AB9FA4"] = {
 								["players"] = {
@@ -108,6 +127,12 @@ describe("Service Model", function()
 								},
 								["name"] = "Weapon",
 								["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
+								["revision"] = 1633983647,
+								["version"] = {
+									["minor"] = 0,
+									["patch"] = 0,
+									["major"] = 1,
+								},
 							},
 						},
 					}
@@ -159,7 +184,111 @@ describe("Service Model", function()
 				assert.equal(0, list:GetPlayerCount())
 			end
 		end)
+		it("handles refs", function()
+			local cs = S:Configurations(true, true)
+			assert(cs and Util.Tables.Count(cs) == 1)
+			local c = Util.Tables.Values(cs)[1]
+			local ls = S:Lists(c.id)
+			assert(ls and Util.Tables.Count(ls) == 3)
+			local refs, subRefs = {}, {}
+			Util.Tables.Push(refs, c:ToRef())
+			for _, l in pairs(ls) do
+				Util.Tables.Push(subRefs, l:ToRef())
+			end
+			Util.Tables.Push(refs, subRefs)
+			local loaded = S:LoadRefs(refs)
+			assert.same(loaded[1]:toTable(), c:toTable())
+			assert(type(loaded[2]) == 'table')
+			for _, ll in pairs(loaded[2]) do
+				assert.same(ls[ll.id]:toTable(), ll:toTable())
+			end
 
+			refs = { }
+			Util.Tables.Push(refs, c:ToRef())
+			Util.Tables.Set(refs, 'lists', subRefs)
+
+			loaded = S:LoadRefs(refs)
+			assert.same(loaded[1]:toTable(), c:toTable())
+			assert(type(loaded['lists']) == 'table')
+			assert(#loaded['lists'] == 3)
+
+			local subRefsSparse = Util.Tables.Copy(subRefs)
+			subRefsSparse[2].id = 'WILL-NOT-BE-FOUND'
+			refs = { }
+			Util.Tables.Push(refs, c:ToRef())
+			Util.Tables.Push(refs, subRefsSparse)
+			loaded = S:LoadRefs(refs)
+			assert(type(loaded[2]) == 'table')
+			-- ref at index 2 was given a bogus id, it won't be resolved
+			-- this means the returned list will be sparse
+			assert(#loaded[2] == 1)
+			assert(Util.Tables.Count(loaded) == 2)
+		end)
+		it("verifies activated", function()
+			local cs = S:Configurations(true, true)
+			local c = Util.Tables.Values(cs)[1]
+			local ls = S:Lists(c.id)
+			local refs, subRefs = {}, {}
+			Util.Tables.Push(refs, c:ToRef())
+			for _, l in pairs(ls) do
+				Util.Tables.Push(subRefs, l:ToRef())
+			end
+			Util.Tables.Push(refs, subRefs)
+
+			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+			local vs = ac:Verify(refs[1], refs[2])
+			assert(vs)
+			assert(#vs == 2)
+			local v, l = vs[1], vs[2]
+			assert(v)
+			assert(v.verified)
+			assert(l)
+			assert(#l == 3)
+
+			local subRefsSparse = Util.Tables.Copy(subRefs)
+			subRefsSparse[2].id = 'WILL-NOT-BE-FOUND'
+			refs = { }
+			Util.Tables.Push(refs, c:ToRef())
+			Util.Tables.Push(refs, subRefsSparse)
+			--[[ Example
+			{
+				{verified = true, ah = c1593923b6bc76e4ab3b45bd2ac9282c16eac93280c68b61647b1cbefdaa1556, ch = c1593923b6bc76e4ab3b45bd2ac9282c16eac93280c68b61647b1cbefdaa1556},
+				{
+					{
+						6154C601-3450-00C4-6D98-D3BF57AB9FA4 = {verified = true, ah = 49a04b4c41a7c93784973b94cc1703b365d79d1aa1c8796a91d9879fd2b7c5ba, ch = 49a04b4c41a7c93784973b94cc1703b365d79d1aa1c8796a91d9879fd2b7c5ba},
+						6154C617-5A91-7304-3DAD-EBE283795429 = {verified = true, ah = c5bf108803dac6fecd179578f613731be442f85f710cfaa2ca44d876dfe1f8be, ch = c5bf108803dac6fecd179578f613731be442f85f710cfaa2ca44d876dfe1f8be}
+					},
+					{
+						61534E26-36A0-4F24-51D7-BE511B88B834
+					},
+					{
+						WILL-NOT-BE-FOUND
+					}
+				}
+			} --]]
+			vs = ac:Verify(refs[1], refs[2])
+			assert(vs)
+			assert(#vs == 2)
+			v, l = vs[1], vs[2]
+			assert(v)
+			assert(v.verified)
+			assert(l)
+			--print(Util.Objects.ToString(l, 4))
+			assert(#l == 3)
+			assert.equal(2, Util.Tables.Count(l[1]))
+			local lv = l[1]
+			assert(Util.Tables.ContainsKey(lv, '6154C601-3450-00C4-6D98-D3BF57AB9FA4'))
+			assert(lv['6154C601-3450-00C4-6D98-D3BF57AB9FA4'].verified)
+			assert.equal(1, Util.Tables.Count(l[2]))
+			lv = l[2]
+			assert.equal('61534E26-36A0-4F24-51D7-BE511B88B834', lv[1])
+			assert.equal(1, Util.Tables.Count(l[3]))
+			lv = l[3]
+			assert.equal('WILL-NOT-BE-FOUND', lv[1])
+
+			--print( AddOn.Package('Models.List').Configuration.name)
+			--print( AddOn.Package('Models.List').List.name)
+		end)
 		it("handles player joined event", function()
 			--- @type  Models.List.ActiveConfiguration
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
@@ -208,8 +337,11 @@ describe("Service Model", function()
 		end)
 
 		it("handles player joined event (duplicate)", function()
+			local cs = S:Configurations(true, true)
+			local c = Util.Tables.Values(cs)[1]
 			--- @type  Models.List.ActiveConfiguration
-			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+			local ac = S:Activate(c)
+
 			ac:OnPlayerEvent("4372-01C6940A", true)
 			ac:OnPlayerEvent("4372-01C6940A", true)
 			local list = ac:GetActiveList("61534E26-36A0-4F24-51D7-BE511B88B834")

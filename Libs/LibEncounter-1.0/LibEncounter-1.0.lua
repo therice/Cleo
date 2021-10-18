@@ -70,10 +70,10 @@ function lib:GetCreatureId(creatureName)
     if creatureName then
         creatureId, _ = Util.Tables.FindFn(
             lib.Creatures,
-                function(creature)
-                    return Util.Strings.Equal(creatureName, creature.name)
-                end,
-                true
+            function(creature)
+                return Util.Strings.Equal(creatureName, creature.name)
+            end,
+            true
         )
     end
 
@@ -110,7 +110,6 @@ function lib:GetEncounterId(creatureId)
             end
     )
 end
-
 
 function lib:GetCreatureDetail(creatureId)
     local map_id = self:GetCreatureMapId(creatureId)
