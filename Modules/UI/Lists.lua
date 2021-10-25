@@ -317,7 +317,11 @@ end
 
 function Lists:DeleteConfigurationOnClickYes(_, config)
 	-- need to remove the associated lists as well
-	local lists = self:GetService().Lists(config.id)
+	local lists = self:GetService().List:GetAll(
+			function(list)
+				return list.configId == config.id
+			end
+	)
 	if lists then
 		for _, list in pairs(lists) do
 			self:GetService().List:Remvoe(list)
@@ -500,15 +504,15 @@ function Lists:LayoutListTab(tab)
 		:Color(0.25, 0.78, 0.92, 1, 0.50)
 
 	self:LayoutListEquipmentTab(
-			tab.listSettings:GetByName(L["equipment"]),
-			SelectedConfiguration,
-			SelectedList
+		tab.listSettings:GetByName(L["equipment"]),
+		SelectedConfiguration,
+		SelectedList
 	)
 
 	self:LayoutListPriorityTab(
-			tab.listSettings:GetByName(L["priority"]),
-			SelectedConfiguration,
-			SelectedList
+		tab.listSettings:GetByName(L["priority"]),
+		SelectedConfiguration,
+		SelectedList
 	)
 
 

@@ -139,13 +139,18 @@ function AddOn:ApplyModules(moduleSuppliers)
 			local metadata = moduleSuppliers[name]
 			Logging:Trace("ApplyModules(%s) : %s, %s, %s", tostring(name), metadata[1]:GetName(), Util.Objects.ToString(metadata[2]), tostring(metadata[3]))
 
-			local _, moduleFrame = self.launchpad:AddModule(metadata[1]:GetName(), name, true)
+			local index, moduleFrame = self.launchpad:AddModule(metadata[1]:GetName(), name, true)
 			moduleFrame:SetWide()
+			moduleFrame.moduleIndex = index
 			moduleFrame.module = metadata[1]
 			moduleFrame.banner =
 				UI:New('DecorationLine', moduleFrame, true,"BACKGROUND",-5)
 						:Point("TOPLEFT",moduleFrame,0,-16)
 						:Point("BOTTOMRIGHT",moduleFrame,"TOPRIGHT", -2,-36)
+
+			moduleFrame.GetLaunchPad = function(self)
+				return self:GetParent():GetParent()
+			end
 
 			-- enableDisableSupport (as button with callbacks through module prototype)
 			if metadata[3] then

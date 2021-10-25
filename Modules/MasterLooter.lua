@@ -17,6 +17,8 @@ local LootSlotInfo = AddOn.Package('Models.Item').LootSlotInfo
 local LootTableEntry = AddOn.Package('Models.Item').LootTableEntry
 --- @type Models.Item.LootQueueEntry
 local LootQueueEntry = AddOn.Package('Models.Item').LootQueueEntry
+--- @type Models.Audit.LootRecord
+local LootRecord = AddOn.Package('Models.Audit').LootRecord
 local LAR = AddOn.Package('Models.Item').LootAllocateResponse.Attributes
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
@@ -45,22 +47,27 @@ ML.AutoAwardRepItemsMode = {
 ML.AwardReasons = {
 	ms_need = {
 		user_visible = true,
+		suicide      = true,
 		color        = C.Colors.Evergreen,
 	},
 	os_greed = {
 		user_visible = true,
+		suicide      = false,
 		color        = C.Colors.RogueYellow,
 	},
 	disenchant = {
 		user_visible = false,
+		suicide      = false,
 		color        = C.Colors.MageBlue,
 	},
 	bank = {
 		user_visible = false,
+		suicide      = false,
 		color        = C.Colors.Purple,
 	},
 	free = {
 		user_visible = false,
+		suicide      = false,
 		color        = C.Colors.Blue,
 	}
 }
@@ -215,14 +222,12 @@ do
 
 	-- establish the number of user visible buttons
 	DefaultButtons.numButtons = Util.Tables.Count(UserVisibleResponses)
-	-- the award_scale stuff below is dubious, it would be valuable if you wanted to assign different
-	-- strategies for suiciding by response. however, that defeats the entire purposes of dropping to end
 	local index = 1
 	for response, value in pairs(UserVisibleResponses) do
 		-- these are entries that represent buttons available to player at time of loot decision
-		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response], award_scale = response})
+		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response], key = response})
 		-- the are entries of the universe of possible responses, which are a super set of ones presented to the player
-		Util.Tables.Push(DefaultResponses, {color = value.color, sort = index, text = L[response], award_scale = response})
+		Util.Tables.Push(DefaultResponses, {color = value.color, sort = index, text = L[response], key = response})
 		index = index + 1
 	end
 
@@ -798,11 +803,10 @@ function ML:OnLootClosed(...)
 	end
 end
 
-function ML:OnLootSlotCleared(...)
+function ML:OnLootSlotCleared(slot)
 	if self:IsHandled() then
-		local slot = ...
-		local loot = self:_GetLootSlot(slot)
 		Logging:Debug("OnLootSlotCleared(%d)", slot)
+		local loot = self:_GetLootSlot(slot)
 		if loot and not loot.looted then
 			loot.looted = true
 
@@ -891,7 +895,8 @@ function ML:_AddLootSlot(slot, ...)
 			Logging:Debug("_AddLootSlot(%d) : ignoring %s as it's currency", slot, tostring(link))
 		elseif not AddOn:IsItemBlacklisted(link) then
 			Logging:Debug("_AddLootSlot(%d) : adding %s from creature %s to loot table", slot, tostring(link), tostring(guid))
-			self.lootSlots[slot] = LootSlotInfo(
+			self.lootSlots[slot] =
+				LootSlotInfo(
 					slot,
 					name,
 					link,
@@ -899,7 +904,7 @@ function ML:_AddLootSlot(slot, ...)
 					quality,
 					guid,
 					GetUnitName("target") -- we're looting a creature, so the target will be that creature
-			)
+				)
 		end
 
 		return true
@@ -1179,20 +1184,32 @@ function ML:HaveFreeSpaceForItem(item)
 	return false
 end
 
-function ML:RegisterAndAnnounceAward(session, winner, response, reason)
+---@param award Models.Item.ItemAward
+function ML:RegisterAndAnnounceAward(award)
+	local session, winner, response, reason =
+		award.session, award.winner, award:NormalizedReason().text, award.reason
+
 	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
 	local ltEntry = self:_GetLootTableEntry(session)
 	local previousWinner = ltEntry.awarded
 	ltEntry.awarded = winner
 
 	self:Send(C.group, C.Commands.Awarded, session, winner)
-	self:AnnounceAward(
-			winner,
-			ltEntry.item,
-			reason and reason.text or response,
-			AddOn:LootAllocateModule():GetCandidateData(session, winner, LAR.Roll),
-			session,
-			previousWinner
+	Util.Functions.try(
+		function()
+			self:AnnounceAward(
+				winner,
+				ltEntry.item,
+				reason and reason.text or response,
+				AddOn:LootAllocateModule():GetCandidateData(session, winner, LAR.Roll),
+				session,
+				previousWinner
+			)
+		end
+	).finally(
+		function()
+			AddOn:ListsModule():OnAwardItem(award)
+		end
 	)
 
 	-- not more items to award, end the session
@@ -1292,9 +1309,13 @@ function ML:GiveLoot(slot, winner, callback, ...)
 end
 
 
+---@param award Models.Item.ItemAward
 ---@param callback function This function will be called as callback(awarded, session, winner, status, ...)
 ---@return boolean true if award is success. false if award is failed. nil if we don't know the result yet.
-function ML:Award(session, winner, response, reason, callback, ...)
+function ML:Award(award, callback, ...)
+	local session, winner, response, reason =
+		award.session, award.winner, award:NormalizedReason().text, award.reason
+
 	Logging:Debug("Award(%d) : winner=%s", session, tostring(winner))
 	if not self.lootTable or #self.lootTable == 0 then
 		if self.oldLootTable and #self.oldLootTable > 0 then
@@ -1309,7 +1330,7 @@ function ML:Award(session, winner, response, reason, callback, ...)
 
 	local AS = self.AwardStatus
 	local args = {...}
-	local award, ltEntry = args[1], self:_GetLootTableEntry(session)
+	local ltEntry = self:_GetLootTableEntry(session)
 	local link, slot = award.link, ltEntry.slot
 
 	Logging:Debug("Award() : award=%s, lte=%s, slot=%d, item=%s",
@@ -1321,7 +1342,7 @@ function ML:Award(session, winner, response, reason, callback, ...)
 
 	-- previously awarded
 	if ltEntry.awarded then
-		self:RegisterAndAnnounceAward(session, winner, response, reason)
+		self:RegisterAndAnnounceAward(award)
 		-- the entry could be missing a loot slot if not added from a loot table
 		if not ltEntry.slot then
 			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
@@ -1334,8 +1355,8 @@ function ML:Award(session, winner, response, reason, callback, ...)
 	-- not previously awarded
 	-- the entry could be missing a loot slot if not added from a loot table
 	if not slot then
+		self:RegisterAndAnnounceAward(award)
 		self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
-		self:RegisterAndAnnounceAward(session, winner, response, reason)
 		return true
 	end
 
@@ -1356,7 +1377,7 @@ function ML:Award(session, winner, response, reason, callback, ...)
 			winner,
 			function(awarded, cause)
 				if awarded then
-					self:RegisterAndAnnounceAward(session, winner, response, reason)
+					self:RegisterAndAnnounceAward(award)
 					self:AwardResult(awarded, session, winner, AS.Success.Normal, callback, unpack(args))
 					return true
 				else
@@ -1475,7 +1496,10 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 				function(awarded, cause)
 					if awarded then
 						self:AnnounceAward(winner, item, awardReason.text)
-						-- todo : track history
+
+						local audit = LootRecord.FromAutoAward(item, winner, awardReason)
+						AddOn:LootAuditModule():Broadcast(audit)
+
 						return true
 					else
 						AddOn:Print(L["cannot_auto_award"])
@@ -1500,30 +1524,9 @@ function ML.AwardOnShow(frame, award)
 end
 
 --- @param award Models.Item.ItemAward
---- @param callback function
-function ML.AwardOnClickYes(_, award, callback, ...)
+function ML.AwardOnClickYes(_, award)
 	Logging:Debug('AwardOnClickYes() : %s', Util.Objects.ToString(award:toTable()))
-	local function PostAward(awarded, session, winner, status, award, callback, ...)
-		if callback and Util.Objects.IsFunction(callback) then
-			callback(awarded, session, winner, status, award, ...)
-		end
-
-		if awarded then
-			-- todo
-			-- AddOn:GearPointsModule():OnAwardItem(award)
-		end
-	end
-
-	ML:Award(
-		award.session,
-		award.winner,
-		award:NormalizedReason().text,
-		award.reason,
-		PostAward,
-		award,
-		callback,
-		...
-	)
+	ML:Award(award)
 end
 
 function ML:Test(items)

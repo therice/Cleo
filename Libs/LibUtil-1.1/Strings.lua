@@ -147,3 +147,6 @@ function Self.Escape(s)
     return (s:gsub('[%-%.%+%[%]%(%)%$%^%%%?%*]','%%%1'))
 end
 
+function Self.RPad(s, l, c)
+    return s .. string.rep(c or ' ', l - #s)
+end

@@ -108,6 +108,16 @@ function AddOn:LootModule()
     return self:GetModule("Loot")
 end
 
+--- @return LootAudit
+function AddOn:LootAuditModule()
+    return self:GetModule("LootAudit")
+end
+
+--- @return TrafficAudit
+function AddOn:TrafficAuditModule()
+    return self:GetModule("TrafficAudit")
+end
+
 
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
@@ -735,3 +745,13 @@ function AddOn:OnReRollReceived(sender, lt)
     self:CallModule("Loot")
     self:LootModule():ReRoll(processed)
 end
+
+AddOn.NonUserVisibleResponse = Util.Memoize.Memoize(
+    function(responseId)
+        local _, response = Util.Tables.FindFn(
+            AddOn:LootAllocateModule().db.profile.awardReasons,
+            function(e) return e.sort == responseId end
+        )
+        return response
+    end
+)

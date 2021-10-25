@@ -267,6 +267,10 @@ function Self.Mul(t)
     return Self.FoldL(t, Util.Functions.Mul, 1)
 end
 
+function Self.Incr(t)
+    return Self.FoldL(t, Util.Functions.Inc, 1)
+end
+
 ---@param t table
 ---@param start number
 ---@return number
@@ -370,6 +374,102 @@ end
 function Self.Equals(a, b, deep)
     return type(a) == "table" and type(b) == "table" and Self.Contains(a, b, deep) and Self.Contains(b, a, deep)
 end
+
+--function Self.Compare (s1,s2,symm)
+--    local res = {}
+--    for k,v in pairs(s1) do
+--        if s2[k] == nil then res[k] = v end
+--    end
+--    if symm then
+--        for k,v in pairs(s2) do
+--            if s1[k] == nil then res[k] = v end
+--        end
+--    end
+--    return res
+--end
+--
+--
+function Self.Compare(a, b)
+    local resA, resB = {}, {}
+
+    local function Difference(t1, t2, k, v)
+        if t2[k] ~= nil and Util.Objects.IsTable(t1[k]) and Util.Objects.IsTable(t2[k]) then
+            return Self.Compare(t1[k], t2[k])
+        elseif t2[k] == nil then
+            return {}
+        elseif t2[k] ~= v then
+            return t2[k]
+        end
+    end
+
+    for k,v in pairs(a) do
+        local diff = Difference(a, b, k, v)
+        if not resA[k] then
+            resA[k] = diff
+        else
+            tinsert(resA[k], diff)
+        end
+    end
+
+    for k,v in pairs(b) do
+        local diff = Difference(b, a, k, v)
+        if not resB[k] then
+            resB[k] = diff
+        else
+            tinsert(resB[k], diff)
+        end
+    end
+
+    return resA, resB
+end
+
+-- https://github.com/martinfelis/luatablediff/blob/master/ltdiff.lua
+--function Self.Compare(A, B)
+--    local mod, del = {}, {}
+--
+--    for k,v in pairs(A) do
+--        if B[k] ~= nil and type(A[k]) == "table" and type(B[k]) == "table" then
+--            local a, b = Self.Compare(A[k], B[k])
+--            mod[k] = a
+--            del[k] = b
+--        elseif B[k] == nil then
+--            del[#del + 1] = k
+--            --diff.del[#(diff.del) + 1] = k
+--        elseif B[k] ~= v then
+--            mod[k] = B[k]
+--            --diff.mod[k] = B[k]
+--        end
+--    end
+--
+--    for k,v in pairs(B) do
+--        if mod[k] ~= nil then
+--            -- skip
+--        elseif A[k] ~= nil and type(A[k]) == "table" and type(B[k]) == "table" then
+--            local a, b = Self.Compare(A[k], B[k])
+--            mod[k] = a
+--            del[k] = b
+--        elseif B[k] ~= A[k] then
+--            mod[k] = v
+--        end
+--    end
+--
+--    --if next(diff.sub) == nil then
+--    --    diff.sub = nil
+--    --end
+--    --
+--    --if next(diff.mod) == nil then
+--    --    diff.mod = nil
+--    --end
+--    --
+--    --if next(diff.del) == nil then
+--    --    diff.del = nil
+--    --end
+--
+--    print('Mod -> ' .. Util.Objects.ToString(mod))
+--    print('Del -> ' .. Util.Objects.ToString(del))
+--    return mod, del
+--end
+
 
 -- Check if a table matches the given key-value pairs
 ---@param t table

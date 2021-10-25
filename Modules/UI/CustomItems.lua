@@ -42,7 +42,7 @@ function CustomItems:CreateItemWidgets(parent)
 end
 
 function CustomItems:LayoutInterface(container)
-	Logging:Debug("CustomItems:LayoutInterface(%s)", tostring(container:GetName()))
+	Logging:Debug("LayoutInterface(%s)", tostring(container:GetName()))
 
 	-- grab a reference to self for later use
 	local module = self

@@ -143,7 +143,7 @@ function List:GetPlayerPriority(player, relative)
 		_, priority =
 			Util.Tables.FindFn(
 				flipped,
-				function(prio, prioPlayer)
+				function(_, prioPlayer)
 					return prioPlayer == player
 				end,
 				true
@@ -209,6 +209,7 @@ end
 --- @param player Models.Player player to drop
 function List:DropPlayer(player)
 	local priority, _ = self:RemovePlayer(player, false)
+
 	if priority then
 		ReorderPlayers(
 				self,

@@ -183,7 +183,7 @@ function Entry:UpdateButtons()
 			b[i]:SetMultipleScripts({
                 OnEnter = function()
                     Loot.UpdateItemResponders(self, i)
-                    Loot.UpdateItemText(self, buttons[i].award_scale)
+                    Loot.UpdateItemText(self)
                 end,
                 OnLeave = function()
                     UIUtil:HideTooltip()

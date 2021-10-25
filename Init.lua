@@ -62,7 +62,6 @@ local Logging = AddOn:GetLibrary("Logging")
 ---@type LibUtil
 local Util = AddOn:GetLibrary("Util")
 
-
 --@debug@
 Logging:SetRootThreshold(AddOn._IsTestContext() and Logging.Level.Trace or Logging.Level.Debug)
 --@end-debug@
@@ -165,7 +164,6 @@ local ModulePrototype = {
         AddOn:GetLibrary('AceConfigRegistry'):NotifyChange(AddOnName)
         AddOn:Print(format(AddOn.Locale['import_successful'], AddOn.GetDateTime(), self:GetName()))
     end,
-
     ModuleSettings = function(self)
         return AddOn:ModuleSettings(self:GetName())
     end

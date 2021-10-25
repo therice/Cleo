@@ -13,8 +13,15 @@ local ListsService = AddOn.Package('Models.List').Service
 local Configuration = AddOn.Package('Models.List').Configuration
 --- @type Models.List.List
 local List = AddOn.Package('Models.List').List
+--- @type Models.Dao
+local Dao = AddOn.Package('Models').Dao
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
+--- @type Models.Audit.LootRecord
+local LootRecord = AddOn.Package('Models.Audit').LootRecord
+--- @type Models.Audit.TrafficRecord
+local TrafficRecord = AddOn.Package('Models.Audit').TrafficRecord
+
 
 --- @class Lists
 local Lists = AddOn:NewModule('Lists', "AceEvent-3.0", "AceBucket-3.0", "AceTimer-3.0", "AceHook-3.0")
@@ -36,11 +43,20 @@ Lists.defaults = {
 function Lists:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('Lists'), self.defaults)
+	-- this is used for holding on to loot audit records temporarily
+	-- so they can be associated with a traffic record that was a result of
+	-- a loot allocation. it's used for nothing else and has weak values
+	-- in case they are not properly removed when consumed
+	self.laTemp = {}
+	setmetatable(self.laTemp, { __mode = "v" }) -- give table weak values
+
 	self:InitializeService()
 	self.Send = Comm():GetSender(C.CommPrefixes.Lists)
 end
 
 function Lists:InitializeService()
+	-- if it's being re-initialized - clear out callbacks
+	self:UnregisterCallbacks()
 	--- @type Models.List.Service
 	self.listsService = ListsService(
 			{self, self.db.factionrealm.configurations},
@@ -48,15 +64,18 @@ function Lists:InitializeService()
 	)
 	--- @type Models.List.ActiveConfiguration
 	self.activeConfig = nil
+	self:RegisterCallbacks()
 end
 
 function Lists:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
+	self:RegisterCallbacks()
 	self:SubscribeToComms()
 end
 
 function Lists:OnDisable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
+	self:UnregisterCallbacks()
 	self:UnsubscribeFromComms()
 end
 
@@ -73,6 +92,7 @@ function Lists:SubscribeToComms()
 		end,
 	})
 	self.commSubscriptionsLists = Comm():BulkSubscribe(C.CommPrefixes.Lists, {
+		-- todo : change this
 		[C.Commands.ActivateConfig] = function(data, sender)
 
 		end,
@@ -83,7 +103,29 @@ function Lists:UnsubscribeFromComms()
 	Logging:Debug("UnsubscribeFromComms(%s)", self:GetName())
 	AddOn.Unsubscribe(self.commSubscriptionsLists)
 	AddOn.Unsubscribe(self.commSubscriptionsMain)
+	self.commSubscriptionsLists = nil
 	self.commSubscriptionsMain = nil
+end
+
+function Lists:RegisterCallbacks()
+	self.listsService:RegisterCallbacks({
+        [Configuration] = {
+	        [Dao.Events.EntityCreated] = function(...) self:ConfigurationDaoEvent(...) end,
+	        [Dao.Events.EntityDeleted] = function(...) self:ConfigurationDaoEvent(...) end,
+	        [Dao.Events.EntityUpdated] = function(...) self:ConfigurationDaoEvent(...) end,
+        },
+        [List] = {
+	        [Dao.Events.EntityCreated] = function(...) self:ListDaoEvent(...) end,
+	        [Dao.Events.EntityDeleted] = function(...) self:ListDaoEvent(...) end,
+	        [Dao.Events.EntityUpdated] = function(...) self:ListDaoEvent(...) end,
+        },
+    })
+end
+
+function Lists:UnregisterCallbacks()
+	if self.listsService then
+		self.listsService:UnregisterAllCallbacks()
+	end
 end
 
 function Lists:GetService()
@@ -98,6 +140,151 @@ function Lists:GetActiveConfiguration()
 	return self.activeConfig
 end
 
+local function EventsQueue()
+	return {
+		timer = nil,
+		events = {}
+	}
+end
+
+--- this is entirely about batching events together in order to
+--- (1) prevent excessive transmissions and (2) squash related events (i.e. name changes twice in window, add/remove)
+---
+--- @param queue table the queue in which to insert the event
+--- @param event string the event name
+--- @param entity any the instance of the entity which generated the event
+--- @param attr string the attribute name if the event is an update
+--- @param diff any the delta between attribute values if the event is an update
+--- @param ref table the Referencable instance (as a table), which reflects the pre-update state
+function Lists:_EnqueueEvent(queue, event, entity, attr, diff, ref)
+	-- cancel any pending timer firing, as new events have been received
+	if queue.timer then
+		self:CancelTimer(queue.timer)
+		queue.timer = nil
+	end
+
+	local path = Util.Tables.New()
+	-- the queues are by class/type, no need to add it to path
+	-- [id][event]
+	Util.Tables.Push(path, entity.id)
+	Util.Tables.Push(path, event)
+
+	-- these two events are mutually exclusive, just overwrite any previous one
+	if Util.Objects.In(event, Dao.Events.EntityCreated, Dao.Events.EntityDeleted) then
+		-- insert new one
+		-- [id][event] = {} [detail]
+		Util.Tables.Set(queue.events, path, {entity=entity})
+		-- remove corollary
+		Util.Tables.Pop(path)
+		Util.Tables.Push(
+			path,
+			Util.Objects.Equals(event, Dao.Events.EntityCreated) and
+			Dao.Events.EntityDeleted or Dao.Events.EntityCreated
+		)
+		Util.Tables.Set(queue.events, path, nil)
+	-- any updates for the same attribute supplant previous ones
+	elseif Util.Strings.Equal(event, Dao.Events.EntityUpdated) then
+		-- [id][event][attr] = {} [detail]
+		Util.Tables.Push(path, attr)
+		-- [61730289-1315-8CD4-5D3B-E8EFB75A5601, EntityUpdated, name]
+		Util.Tables.Set(queue.events, path, {entity=entity, attr=attr, diff=diff, ref=ref})
+	end
+
+
+	Util.Tables.Release(path)
+
+	if not AddOn._IsTestContext() then
+		queue.timer = self:ScheduleTimer(function() self:_ProcessEvents(queue) end, 5)
+	end
+end
+
+local EventToAction = {
+	[Dao.Events.EntityCreated] = TrafficRecord.ActionType.Create,
+	[Dao.Events.EntityDeleted] = TrafficRecord.ActionType.Delete,
+	[Dao.Events.EntityUpdated] = TrafficRecord.ActionType.Modify,
+}
+
+function Lists:_ProcessEvents(queue)
+
+	Logging:Trace("_ProcessEvents(%d)", Util.Tables.Count(queue.events))
+
+	local function ProcessEvent(id, event, detail)
+		Logging:Trace("ProcessEvent(%s)[%s] : %s", id, tostring(detail.entity.clazz.name), event)
+		local entity = detail.entity
+		if not entity then
+			return
+		end
+
+		--- @type Models.Audit.TrafficRecord
+		local record
+
+		if Util.Objects.IsInstanceOf(entity, Configuration) then
+			record = TrafficRecord.For(entity)
+		elseif Util.Objects.IsInstanceOf(entity, List) then
+			record = TrafficRecord.For(self:GetService().Configuration:Get(entity.configId), entity)
+		end
+
+		record:SetAction(EventToAction[event])
+
+		if Util.Objects.Equals(event, Dao.Events.EntityUpdated) then
+			record:SetReference(detail.ref)
+			record:SetModification(detail.attr, detail.diff)
+
+			-- if it's a list record and associated with priority change
+			-- attach any available loot audit record
+			if Util.Objects.IsInstanceOf(entity, List) and Util.Objects.In(detail.attr, 'players') then
+				local lootRecord = self.laTemp[entity.id]
+				if lootRecord then
+					record:SetLootRecord(lootRecord)
+					self.laTemp[entity.id] = nil
+				end
+			end
+		end
+
+		-- Logging:Trace("ProcessEvent(%s)[%s] : %s", id, tostring(detail.entity.clazz.name), Util.Objects.ToString(record:toTable()))
+		AddOn:TrafficAuditModule():Broadcast(record)
+	end
+
+	-- string, table (of events)
+	for id, events in pairs(queue.events) do
+		--- event type (string), detail (either the detail (table) or attribute names (table))
+		for event, detail in pairs(events) do
+			if Util.Objects.In(event, Dao.Events.EntityCreated, Dao.Events.EntityDeleted) then
+				ProcessEvent(id, event, detail)
+			else
+				-- EntityUpdated : additional level of keys which is the attribute name
+				for _, attrDetail in pairs(detail) do
+					ProcessEvent(id, event, attrDetail)
+				end
+			end
+		end
+	end
+
+	queue.events = {}
+	queue.timer = nil
+end
+
+local ConfigurationEvents = EventsQueue()
+function Lists:ConfigurationDaoEvent(event, entity, attr, diff, ref)
+	Logging:Debug("ConfigurationDaoEvent(%s) : %s (%s)", event, entity.clazz.name, entity.id)
+	self:_EnqueueEvent(ConfigurationEvents, event, entity, attr, diff, ref)
+end
+
+local ListEvents = EventsQueue()
+function Lists:ListDaoEvent(event, entity, attr, diff, ref)
+	Logging:Debug("ListDaoEvent(%s) : %s (%s)", event, entity.clazz.name, entity.id)
+	self:_EnqueueEvent(ListEvents, event, entity, attr, diff, ref)
+end
+
+if AddOn._IsTestContext() then
+	function Lists:GetConfigurationEvents()
+		return ConfigurationEvents
+	end
+
+	function Lists:GetListEvents()
+		return ListEvents
+	end
+end
 
 --- @param self Lists
 local function GetListAndPriority(self, equipment, player, active, relative)
@@ -170,9 +357,9 @@ function Lists:OnActivateConfigReceived(sender, activation)
 		else
 			local activate = resolved[1]
 			local result, activated = pcall(
-					function()
-						return self.listsService:Activate(activate)
-					end
+				function()
+					return self.listsService:Activate(activate)
+				end
 			)
 
 			--Logging:Trace("OnActivateConfigReceived(%s) => %s/%s", tostring(activate.id), tostring(result), Util.Objects.ToString(activated))
@@ -244,6 +431,65 @@ function Lists:OnActivateConfigReceived(sender, activation)
 	else
 		Logging:Warn("OnActivateConfigReceived() : No active configuration")
 		AddOn:Print(L["invalid_configuration"])
+	end
+end
+
+--- @param itemAward Models.Item.ItemAward
+function Lists:OnAwardItem(itemAward)
+	Logging:Trace("OnAwardItem() : %s", Util.Objects.ToString(itemAward and itemAward:toTable() or {}))
+	if not itemAward then error('No item award provided') end
+
+	-- the exceptional case should never occur as this is only invoked by Master Looter who implicitly needs
+	-- an active configuration to do an award
+	if self:HasActiveConfiguration() then
+
+		-- only apply if the associated award reason dictate a suicide occur
+		local reason, list = AddOn:MasterLooterModule().AwardReasons[itemAward.awardReason], nil
+		if reason.suicide then
+			local lid, apb, apa, opb, opa =
+				self:GetActiveConfiguration():OnLootEvent(
+						itemAward.winner,
+						itemAward.equipLoc
+				)
+			list = self:GetActiveConfiguration():GetActiveList(lid)
+
+			AddOn:SendAnnouncement(
+				format(
+					L["list_priority_announcement"],
+			        list and list.name or L['unknown'],
+					AddOn.Ambiguate(itemAward.winner),
+					tostring(apb or '?'),
+					tostring(apa or '?'),
+					tostring(opb or '?'),
+					tostring(opa or '?')
+				),
+				C.group
+			)
+		end
+
+		if not list then
+			list = self:GetActiveConfiguration():GetActiveListByEquipment(itemAward.equipLoc)
+		end
+
+		local audit = LootRecord.FromItemAward(itemAward)
+		Util.Functions.try(
+			function()
+				audit.configuration = self:GetActiveConfiguration().config.name
+				audit.list = list and list.name or L['unknown']
+				AddOn:LootAuditModule():Broadcast(audit)
+			end
+		).finally(
+			-- track the loot audit record for association with traffic record
+			function()
+				if list then
+					self.laTemp[list.id] = audit
+				end
+			end
+		)
+	else
+		Logging:Error("OnAwardItem() : No active configuration, cannot handle item award")
+		-- error out here, we don't want this to go unnoticed
+		error("No active configuration, cannot handle item award")
 	end
 end
 

@@ -10,4 +10,5 @@
     <Script file="Tables.lua"/>
     <Script file="Lists.lua"/>
     <Script file="UUID.lua"/>
+    <Script file="Patch.lua"/>
 </Ui>

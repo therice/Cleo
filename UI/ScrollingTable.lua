@@ -17,6 +17,8 @@ local Builder = AddOn.Package('UI.Util').Builder
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 --- @type UI.Native
 local UI = AddOn.Require('UI.Native')
+--- @type Models.Player
+local Player = AddOn.Package('Models').Player
 
 --- @class UI.ScrollingTable
 local ScrollingTable = AddOn.Instance(
@@ -110,6 +112,13 @@ function ItemIconCell:initialize(link, texture)
     self:DoCellUpdate(function(_, frame) UIUtil.ItemIconFn()(frame, link, texture) end)
 end
 
+--- @class IconCell
+local IconCell = AddOn.Class('IconCell', Cell)
+function IconCell:initialize(texture)
+    Cell.initialize(self, nil)
+    self:DoCellUpdate(function(_, frame) UIUtil.IconFn()(frame,  texture) end)
+end
+
 --- @class TextCell
 local TextCell = AddOn.Class('TextCell', Cell)
 function TextCell:initialize(fn)
@@ -142,6 +151,16 @@ function CellBuilder:cell(value)
     return self:entry(Cell, value)
 end
 
+function CellBuilder:playerIconAndColoredNameCell(player)
+    local p = Player:Get(player)
+    return self:classIconCell(p.class):classColoredCell(p:GetShortName(), p.class)
+end
+
+function CellBuilder:playerColoredCell(player)
+    local p = Player:Get(player)
+    return self:classColoredCell(p:GetShortName(), p.class)
+end
+
 --- @return ClassIconCell
 function CellBuilder:classIconCell(class)
     return self:entry(ClassIconCell, class, class)
@@ -155,6 +174,11 @@ end
 --- @return DeleteButtonCell
 function CellBuilder:deleteCell(fn)
     return self:entry(DeleteButtonCell, fn)
+end
+
+--- @return IconCell
+function CellBuilder:iconCell(texture)
+    return self:entry(IconCell, texture)
 end
 
 --- @return ItemIconCell
@@ -182,7 +206,7 @@ end
 
 --- @param attach boolean should the scrolling table be attached to frame at 'st'
 --- @return table
-function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach)
+function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach, multiSelect)
     cols = cols or {}
     rows = rows or DefaultRowCount
     rowHeight = rowHeight or DefaultRowHeight
@@ -190,7 +214,7 @@ function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach)
     attach = Util.Objects.Default(attach, true)
 
     local parent = (frame and frame.content) and frame.content or frame
-    local st = ST:CreateST(cols, rows, rowHeight, highlight, parent)
+    local st = ST:CreateST(cols, rows, rowHeight, highlight, parent, Util.Objects.Default(multiSelect, false))
     if frame and attach then
         st.frame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
         frame.st = st

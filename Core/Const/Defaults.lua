@@ -38,8 +38,8 @@ AddOn.defaults = {
                     member_of = {
                         ['*'] = false,
                     },
-                    minimums = {
-                        ['*'] = false,
+                    response = {
+                        ['*'] = true,
                     }
                 },
                 alwaysShowTooltip = false,

@@ -25,6 +25,7 @@ local Modules = {
     "UUID",
     "Bitfield",
     "Lists",
+    "Patch"
 }
 
 local Module = {

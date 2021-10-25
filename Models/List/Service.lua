@@ -31,6 +31,40 @@ function Service:initialize(configDb, listDb)
 	self.List = ListDao(listDb[1], listDb[2])
 end
 
+local function Dao(self, class)
+	if class == Configuration then
+		return self.Configuration
+	elseif class == List then
+		return self.List
+	else
+		error(format("Invalid '%s' for registering callbacks", tostring(class)))
+	end
+end
+
+function Service:RegisterCallbacks(callbacks)
+	for class, eventFns in pairs(callbacks) do
+		local dao = Dao(self, class)
+		for event, fn in pairs(eventFns) do
+			dao.RegisterCallback(self, event, fn)
+		end
+	end
+end
+
+function Service:UnregisterCallbacks(callbacks)
+	for class, events in pairs(callbacks) do
+		local dao = Dao(self, class)
+		for _, event in pairs(events) do
+			dao.UnregisterCallback(self, event)
+		end
+	end
+end
+
+function Service:UnregisterAllCallbacks()
+	for _, class in pairs({Configuration, List}) do
+		Dao(self, class).UnregisterAllCallbacks(self)
+	end
+end
+
 --- @return table<string, Models.List.Configuration>
 function Service:Configurations(active, default)
 	return self.Configuration:GetAll(
@@ -158,6 +192,19 @@ function Service:LoadRefs(refs)
 	return loaded
 end
 
+function Service:LoadAuditRefs(auditRef)
+	local config, list = nil, nil
+	if Util.Objects.IsInstanceOf(auditRef, AddOn.Package('Models.Audit').TrafficRecord) then
+		config = self.Configuration:Get(auditRef.config.id)
+		if auditRef.list then
+			list = self.List:Get(auditRef.list.id)
+		end
+
+	end
+
+	return config, list
+end
+
 -- idOrConfig can be an instance of Configuration or Configuration Id (string)
 --- @return Models.List.ActiveConfiguration
 function Service:Activate(idOrConfig)
@@ -179,12 +226,14 @@ function Service:Activate(idOrConfig)
 end
 
 function ActiveConfiguration:initialize(service, config, lists)
+	--- @type Models.List.Service
 	self.service = service
+	--- @type Models.List.Configuration
 	self.config = config
 	-- Players who are not currently in the raid do not move up or down in the lists.
 	--- @type table<string, Models.List.List>
 	self.lists = lists
-	-- create a copy of each list and clear the players
+	-- create a copy of each list and clear the players priority
 	-- as players enter the raid they will be added based upon position in original list
 	--- @type table<string, Models.List.List>
 	self.listsActive =
@@ -258,24 +307,43 @@ function ActiveConfiguration:Verify(config, lists)
 	return verification
 end
 
+--- @param lists table<string,Models.List.List>
 local function EnsurePresent(lists, player)
+	local addedTo = {}
+
 	for listId, list in pairs(lists) do
 		if not list:ContainsPlayer(player) then
 			Logging:Warn(
-					"EnsurePresent(%s, %s) : Missing from original on list - Adding",
-					tostring(player), listId)
+				"EnsurePresent(%s, %s) : Missing from original on list - Adding",
+				tostring(player), listId
+			)
 			list:AddPlayer(player)
+			Util.Tables.Push(addedTo, listId)
 		end
 	end
+
+	return addedTo
 end
 
+-- this handles events related top players joining and leaving the party
+-- only time this mutates the priority list is if the player is not present on a list
+-- and configuration dictates that they are added
 function ActiveConfiguration:OnPlayerEvent(player, joined)
 	player = Player.Resolve(player)
 	Logging:Trace("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
 
 	-- make sure player is present on original list(s)
-	-- todo : allow for setting how to insert them
-	if joined then EnsurePresent(self.lists, player) end
+	-- todo : (maybe) allow for a configuration setting on how to insert them
+	if joined then
+		local addedTo = EnsurePresent(self.lists, player)
+		-- persist any lists were the player was added
+		for _, listId in pairs(addedTo) do
+			self.service.List:Update(
+				self.lists[listId],
+				'players'
+			)
+		end
+	end
 
 	local prios = {}
 	-- based upon joining or leaving, capture current priority from appropriate lists
@@ -285,6 +353,7 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 
 	Logging:Trace("OnPlayerEvent(%s, %s) : Working Priorities %s",  tostring(player), tostring(joined), Util.Objects.ToString(prios))
 
+	--- @type Models.List.List
 	local list
 
 	for listId, priority in pairs(prios) do
@@ -325,12 +394,13 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 					tostring(player), tostring(joined), listId
 			)
 
-
 			list:RemovePlayer(player, false)
 		end
 	end
 end
 
+--- @return string, number, number, number, number :
+---     list id, active prio (before), active prio (after), original prio (before), orginal prio (after)
 function ActiveConfiguration:OnLootEvent(player, equipment)
 	player = Player.Resolve(player)
 	Logging:Debug("OnLootEvent(%s, %s)", tostring(player), tostring(equipment))
@@ -339,21 +409,53 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 	local listId, list = self:GetActiveListByEquipment(equipment)
 
 	if (listId and list) then
-		Logging:Debug("OnLootEvent(%s, %s) : Located List(%s, '%s'), 'suiciding' player", tostring(player), tostring(equipment), tostring(listId), list.name)
+		Logging:Trace(
+			"OnLootEvent(%s, %s) : Located List(%s, '%s'), 'suiciding' player",
+			tostring(player), tostring(equipment), tostring(listId), list.name
+		)
 		-- 'suicide' the player on active list and then apply to master list
+		local apb = list:GetPlayerPriority(player, true)
 		list:DropPlayer(player)
-		self.lists[listId]:ApplyPlayerPriorities(list:GetPlayers())
+		local apa = list:GetPlayerPriority(player, true)
+		-- apply the adjusted priorities back to master (original) list
+		local origList = self.lists[listId]
+		local opb, opa
+
+		Util.Functions.try(
+			function()
+				opb = origList:GetPlayerPriority(player, true)
+				origList:ApplyPlayerPriorities(list:GetPlayers())
+				opa = origList:GetPlayerPriority(player, true)
+			end
+		).finally(
+			function()
+				-- persist the list now
+				self.service.List:Update(
+					origList,
+					'players'
+				)
+			end
+		)
+
+		Logging:Trace(
+			"OnLootEvent(%s) : %s -> %s [Active] %s -> %s [Original]",
+			listId,
+			tostring(apb), tostring(apa),
+			tostring(opb), tostring(opa)
+		)
+
+		return listId, apb, apa, opb, opa
 	else
-		Logging:Error("OnLootEvent(%s, %s) : No applicable list found", player.guid, tostring(equipment))
+		Logging:Error("OnLootEvent(%s, %s) : No applicable list found - no change in priority will be applied", player.guid, tostring(equipment))
 	end
 end
 
 local function GetListByEquipment(lists, equipment)
 	return Util.Tables.FindFn(
-			lists,
-			function(list)
-				return list:AppliesToEquipment(equipment)
-			end
+		lists,
+		function(list)
+			return list:AppliesToEquipment(equipment)
+		end
 	)
 end
 
@@ -362,7 +464,7 @@ function ActiveConfiguration:GetOverallListByEquipment(equipment)
 	return GetListByEquipment(self.lists, equipment)
 end
 
---- @return Models.List.List
+--- @return string, Models.List.List
 function ActiveConfiguration:GetActiveListByEquipment(equipment)
 	return GetListByEquipment(self.listsActive, equipment)
 end

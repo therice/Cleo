@@ -27,7 +27,7 @@ LA.defaults = {
 	}
 }
 
--- Copy defaults from MasterLooter into our defaults for buttons/responses
+-- Copy defaults from MasterLooter into our defaults for award reasons
 -- This actually should be done via the AddOn's DB once it's initialized, but we currently
 -- don't allow users to change these values (either here or from MasterLooter) so we can
 -- do it before initialization. If we allow for these to be configured by user, then will
@@ -36,7 +36,9 @@ do
 	local ML = AddOn:GetModule("MasterLooter")
 	local AwardReasons = LA.defaults.profile.awardReasons
 	local NonUserVisibleAwards =
-		Util(ML.AwardReasons):CopyFilter(function (v) return not v.user_visible end, true, nil, true):Keys()()
+		Util(ML.AwardReasons)
+			:CopyFilter(function (v) return not v.user_visible end, true, nil, true)
+			:Keys()()
 
 	AwardReasons.numAwardReasons = Util.Tables.Count(NonUserVisibleAwards)
 	-- insert them at sort indexes after visible ones, but before ones that are boiler plate
@@ -48,8 +50,7 @@ do
 			                   color       = ML.AwardReasons[award].color,
 			                   sort        = sortLevel,
 			                   text        = L[award],
-			                   -- dubious, see MasterLooter for more detail
-			                   award_scale = award,
+			                   key          = award,
 			                   disenchant  = Util.Strings.StartsWith(Util.Strings.Lower(award), 'disenchant')
 		                   }
 		)

@@ -226,7 +226,7 @@ function LA:GetFrame()
 		f.sessionToggleFrame = sessionToggle
 
 		f.Update = function(name, userResponse)
-
+			-- todo : may not need this if we don't alter stuff based upon response
 		end
 
 		self.sessionButtons = {}
@@ -238,7 +238,8 @@ end
 
 function LA:UpdateSessionButtons()
 	for session, entry in pairs(self.lootTable) do
-		self.sessionButtons[session] = self:UpdateSessionButton(session, entry.texture, entry.link, entry.awarded)
+		self.sessionButtons[session] =
+			self:UpdateSessionButton(session, entry.texture, entry.link, entry.awarded)
 	end
 end
 
@@ -273,7 +274,6 @@ function LA:UpdateSessionButton(session, texture, link, awarded)
 	return btn
 end
 
-
 function LA:GetItemStatus(item)
 	if not item then return "" end
 	GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
@@ -290,7 +290,6 @@ function LA:GetItemStatus(item)
 	GameTooltip:Hide()
 	return text
 end
-
 
 function LA:Hide()
 	if self.frame then
@@ -327,7 +326,9 @@ function LA:SwitchSession(session)
 	local j = 1
 	for i in ipairs(self.frame.st.cols) do
 		self.frame.st.cols[i].sort = nil
-		if self.frame.st.cols[i].col == "response" then j = i end
+		if self.frame.st.cols[i].col == "response" then
+			j = i
+		end
 	end
 	self.frame.st.cols[j].sort = 1
 	-- Reset scrolling to 0
@@ -592,7 +593,7 @@ do
 	end
 
 	local function StartsWithRegEx(value, find)
-		return  value:find('^' .. find)
+		return value:find('^' .. find)
 	end
 
 	function LA.SolicitResponseText(candidate, category, self)
@@ -712,9 +713,9 @@ do
 			        :add():text(L["reannounce"]):value(RG.Reannounce):checkable(false):arrow(true)
 			        :add():text(L["add_rolls"]):checkable(false)
 				        :fn(
-								function(_)
-									AddOn:LootAllocateModule():DoRandomRolls()
-								end
+							function(_)
+								AddOn:LootAllocateModule():DoRandomRolls()
+							end
 						)
 			        :add():text(_G.REQUEST_ROLL):value(RG.RequestRoll):checkable(false):arrow(true)
 			        :add():text(L["remove_from_consideration"]):checkable(false)
@@ -976,7 +977,7 @@ function LA:EnchantersMenu(_, level)
 			if player.enchanter then
 				info.text =
 					UIUtil.ClassColorDecorator(player.class):decorate(AddOn.Ambiguate(player:GetName())) ..
-							"(" .. tostring(player.enchanterLvl) .. ")"
+					"(" .. tostring(player.enchanterLvl) .. ")"
 				info.notCheckable = true
 				info.func = function()
 					for _, reason in ipairs(self.db.profile.awardReasons) do

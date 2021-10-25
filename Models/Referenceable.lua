@@ -3,7 +3,6 @@ local _, AddOn = ...
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 
-
 --- @class Models.Referenceable
 local Referenceable = AddOn.Instance(
 		'Models.Referenceable',
@@ -38,7 +37,8 @@ function Referenceable.Includable()
 		included = function(_, clazz)
 			clazz.isReferenceable = true
 		end,
-		ToRef = function(self)
+		ToRef = function(self, includeClass)
+			includeClass = Util.Objects.Default(includeClass, true)
 			local ref, asTable = {}, self:toTable()
 			for attrn, attr in pairs(self.clazz.static.attrs) do
 				if Util.Objects.IsFunction(attr) then
@@ -48,9 +48,15 @@ function Referenceable.Includable()
 					Util.Tables.Insert(ref, attr, asTable[attr])
 				end
 			end
+
+			if not includeClass then
+				ref['pkg'] = nil
+				ref['clz'] = nil
+			end
+
 			return ref
 		end,
-		-- this will not return a fully populated instance from passed ref
+		-- this will NOT return a fully populated instance from passed ref
 		-- only sufficient attributes to load it (as necessary)
 		FromRef = function(self, ref)
 			local r = self:reconstitute(ref)
@@ -78,4 +84,8 @@ function Referenceable.FromRef(ref)
 		end
 	end
 	return nil
+end
+
+function Referenceable.IsReferenceable(obj)
+	return obj and Util.Objects.IsTable(obj) and obj.clazz and obj.clazz.isReferenceable
 end

@@ -24,6 +24,17 @@ function Encounter:initialize(...)
         self[field] = t[index]
     end
     Util.Tables.ReleaseTemp(t)
+
+    --
+    -- https://wow.gamepedia.com/API_GetInstanceInfo
+    -- name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic,
+    --  instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo()
+    --
+    -- only set the instance id if there is an encounter id
+    if self.id then
+        local _, _, _, _, _, _, _, instanceId = GetInstanceInfo()
+        self.instanceId = tonumber(instanceId)
+    end
 end
 
 --- @return boolean
@@ -31,4 +42,4 @@ function Encounter:IsSuccess()
     return self.success and (self.success == 1) or false
 end
 
-Encounter.None = Encounter(nil, _G.UNKNOWN, nil, nil)
+Encounter.None = Encounter(0, _G.UNKNOWN, nil, nil)

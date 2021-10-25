@@ -5,8 +5,6 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
---- @type LibGuildStorage
-local GuildStorage = AddOn:GetLibrary("GuildStorage")
 --- @type LibItemUtil
 local ItemUtil =  AddOn:GetLibrary("ItemUtil")
 --- @type Models.Item.Item
@@ -45,7 +43,7 @@ function CustomItems:OnEnable()
 	self:AddDefaultCustomItems()
 	self:ConfigureItemUtil()
 	self:RegisterBucketMessage(C.Messages.ConfigTableChanged, 5, "ConfigTableChanged")
-	Logging:Debug("PerformEnable(%s) : custom item count = %d", self:GetName(), Util.Tables.Count(self.db.factionrealm.custom_items))
+	Logging:Debug("OnEnable(%s) : custom item count = %d", self:GetName(), Util.Tables.Count(self.db.factionrealm.custom_items))
 end
 
 function CustomItems:OnDisable()

@@ -195,38 +195,38 @@ end
 
 --- @return Models.Item.LootAllocateEntry
 function LootAllocateEntry.FromItemRef(itemRef, session)
-	return itemRef:Embed(LootAllocateEntry, Util.Objects.Check(itemRef.session, itemRef.session, session))
+	return itemRef:Embed(
+			LootAllocateEntry,
+			Util.Objects.Check(itemRef.session, itemRef.session, session)
+	)
 end
 
 --- @param entry Models.Item.LootAllocateEntry
 --- @param candidate string
 --- @param reason string|table if award is for a reason other than candidates' response, this will be provided
 function ItemAward:initialize(entry, candidate, reason)
-	if not entry or not Util.Objects.IsInstanceOf(entry, LootAllocateEntry) --[[entry:isInstanceOf(LootAllocateEntry)--]] then
+	if not entry or not Util.Objects.IsInstanceOf(entry, LootAllocateEntry) then
 		Logging:Warn("%s", tostring(entry))
 		error("the provided 'entry' instance was not of type LootAllocateEntry : " .. type(entry))
 	end
-
 	--[[
 	Examples of response/reason permutations
 
 	Candidate responded with MS/Need, but awarded for 'Bank'
-		{ responseId = 1, reason = { color = {...}, text = 'Bank', sort = 403, award_scale = 'bank', ...}, awardReason = 'bank', ...
+		{ responseId = 1, reason = { color = {...}, text = 'Bank', sort = 403, key = 'bank', ...}, awardReason = 'bank', ...
 
 	Candidate responded with MS/Need and awarded for that reason
 		{ responseId = 1, reason = nil, awardReason = 'ms_need', ...
+
 	--]]
 	local cr = entry:GetCandidateResponse(candidate)
 	local awardReason
 	-- if reason is provided, it overrides candidate's response
 	-- it will be entry from ML's responses table
-	--
-	-- award_scale is the name of the entry in
-	-- the GearPoints module's award_scaling table
 	if reason and Util.Objects.IsTable(reason) then
-		awardReason = reason.award_scale
+		awardReason = reason.key
 	else
-		awardReason = AddOn:GetResponse(cr.response).award_scale
+		awardReason = AddOn:GetResponse(cr.response).key
 	end
 
 	self.session = entry.session
@@ -235,14 +235,16 @@ function ItemAward:initialize(entry, candidate, reason)
 	self.gear1 = cr.gear1
 	self.gear2 = cr.gear2
 	self.link = entry.link
+	-- needed for selecting appropriate list
+	self.equipLoc = entry:GetEquipmentLocation()
+	self.texture = entry.texture
 	-- the actual player's response
 	self.responseId = cr.response
 	-- the reason for the award, if not the player's response
 	-- this does not need to be provided
 	self.reason = reason
-	-- the name of the award reason
+	-- the name (key) of the award reason
 	self.awardReason = awardReason
-	self.texture = entry.texture
 
 	-- normalize the response/reason divergence for consistent access
 	local r = AddOn:GetResponse(self.responseId)

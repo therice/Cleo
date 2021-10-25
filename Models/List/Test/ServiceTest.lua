@@ -3,11 +3,19 @@ local AddOnName, AddOn
 local Util
 --- @type Models.List.Service
 local Service
+--- @type Models.Dao
+local Dao
+--- @type Models.List.Configuration
+local Configuration
+--- @type Models.List.List
+local List
 
 describe("Service Model", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_List_Service')
 		Util, Service = AddOn:GetLibrary('Util'), AddOn.Package('Models.List').Service
+		Dao =  AddOn.Package('Models').Dao
+		Configuration, List = AddOn.Package('Models.List').Configuration, AddOn.Package('Models.List').List
 	end)
 
 	teardown(function()
@@ -15,144 +23,154 @@ describe("Service Model", function()
 	end)
 
 	describe("Service", function()
-		local db = NewAceDb(
-				{
-					factionrealm = {
-						configurations = {
-							["614A4F87-AF52-34B4-E983-B9E8929D44AF"] = {
-								["permissions"] = {
-									["Player-4372-01D08047"] = {
-										["bitfield"] = 5,
-									},
-									["Player-4372-011C6125"] = {
-										["bitfield"] = 5,
-									},
-									["Player-4372-01FC8D1A"] = {
-										["bitfield"] = 3,
-									},
-									["Player-4372-0000835A"] = {
-										["bitfield"] = 1,
-									},
-									["Player-4372-000054BB"] = {
-										["bitfield"] = 1,
-									},
+		function newdb()
+			return NewAceDb(
+			{
+				factionrealm = {
+					configurations = {
+						["614A4F87-AF52-34B4-E983-B9E8929D44AF"] = {
+							["permissions"] = {
+								["Player-4372-01D08047"] = {
+									["bitfield"] = 5,
 								},
-								["revision"] = 1634059874,
-								["version"] = {
-									["minor"] = 0,
-									["patch"] = 0,
-									["major"] = 1,
+								["Player-4372-011C6125"] = {
+									["bitfield"] = 5,
 								},
-								["status"] = 1,
-								["default"] = true,
-								["name"] = "Tempest Keep",
+								["Player-4372-01FC8D1A"] = {
+									["bitfield"] = 3,
+								},
+								["Player-4372-0000835A"] = {
+									["bitfield"] = 1,
+								},
+								["Player-4372-000054BB"] = {
+									["bitfield"] = 1,
+								},
+							},
+							["revision"] = 1634059874,
+							["version"] = {
+								["minor"] = 0,
+								["patch"] = 0,
+								["major"] = 1,
+							},
+							["status"] = 1,
+							["default"] = true,
+							["name"] = "Tempest Keep",
+						},
+					},
+					lists = {
+						["61534E26-36A0-4F24-51D7-BE511B88B834"] = {
+							["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
+							["players"] = {
+								"4372-00706FE5",
+								"4372-01C6940A",
+								"4372-01642E85",
+								"1-00000031",
+								"4372-011C6125",
+								"4372-00C1D806",
+								"1-00000045",
+								"4372-000054BB",
+								"4372-0034311C",
+								"4372-0004FD18",
+								"1-00000001",
+							},
+							["version"] = {
+								["minor"] = 0,
+								["patch"] = 0,
+								["major"] = 1,
+							},
+							["revision"] = 1633983642,
+							["name"] = "Head, Feet, Wrist",
+							["equipment"] = {
+								"INVTYPE_HEAD", -- [1]
+								"INVTYPE_FEET", -- [2]
+								"INVTYPE_WRIST", -- [3]
 							},
 						},
-						lists = {
-							["61534E26-36A0-4F24-51D7-BE511B88B834"] = {
-								["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
-								["players"] = {
-									"4372-00706FE5",
-									"4372-01C6940A",
-									"4372-01642E85",
-									"1-00000031",
-									"4372-011C6125",
-									"4372-00C1D806",
-									"1-00000045",
-									"4372-000054BB",
-									"4372-0034311C",
-									"4372-0004FD18",
-									"1-00000001",
-								},
-								["version"] = {
-									["minor"] = 0,
-									["patch"] = 0,
-									["major"] = 1,
-								},
-								["revision"] = 1633983642,
-								["name"] = "Head, Feet, Wrist",
-								["equipment"] = {
-									"INVTYPE_HEAD", -- [1]
-									"INVTYPE_FEET", -- [2]
-									"INVTYPE_WRIST", -- [3]
-								},
+						["6154C617-5A91-7304-3DAD-EBE283795429"] = {
+							["players"] = {
+								"1-00000031",
+								"1-00000045",
+								"4372-01C6940A",
+								"4372-01642E85",
+								"4372-00C1D806",
+								"4372-000054BB",
+								"4372-0034311C",
+								"4372-00706FE5",
+								"4372-0004FD18",
+								"1-00000001",
+								"4372-011C6125",
 							},
-							["6154C617-5A91-7304-3DAD-EBE283795429"] = {
-								["players"] = {
-									"1-00000031",
-									"1-00000045",
-									"4372-01C6940A",
-									"4372-01642E85",
-									"4372-00C1D806",
-									"4372-000054BB",
-									"4372-0034311C",
-									"4372-00706FE5",
-									"4372-0004FD18",
-									"1-00000001",
-									"4372-011C6125",
-								},
-								["equipment"] = {
-									"INVTYPE_RELIC", -- [1]
-									"INVTYPE_HOLDABLE", -- [2]
-								},
-								["name"] = "Misc",
-								["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
-								["revision"] = 1633983813,
-								["version"] = {
-									["minor"] = 0,
-									["patch"] = 0,
-									["major"] = 1,
-								},
+							["equipment"] = {
+								"INVTYPE_RELIC", -- [1]
+								"INVTYPE_HOLDABLE", -- [2]
 							},
-							["6154C601-3450-00C4-6D98-D3BF57AB9FA4"] = {
-								["players"] = {
-									"1-00000031",
-									"1-00000045",
-									"4372-01642E85",
-									"4372-00C1D806",
-									"4372-000054BB",
-									"4372-0034311C",
-									"4372-00706FE5",
-									"4372-0004FD18",
-									"1-00000001",
-									"4372-011C6125",
-								},
-								["equipment"] = {
-									"INVTYPE_WEAPONMAINHAND", -- [1]
-									"INVTYPE_WEAPONOFFHAND", -- [2]
-									"INVTYPE_WEAPON", -- [3]
-									"INVTYPE_RANGED", -- [4]
-									"INVTYPE_2HWEAPON", -- [5]
-									"INVTYPE_TRINKET", -- [6]
-								},
-								["name"] = "Weapon",
-								["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
-								["revision"] = 1633983647,
-								["version"] = {
-									["minor"] = 0,
-									["patch"] = 0,
-									["major"] = 1,
-								},
+							["name"] = "Misc",
+							["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
+							["revision"] = 1633983813,
+							["version"] = {
+								["minor"] = 0,
+								["patch"] = 0,
+								["major"] = 1,
 							},
 						},
-					}
+						["6154C601-3450-00C4-6D98-D3BF57AB9FA4"] = {
+							["players"] = {
+								"1-00000031",
+								"1-00000045",
+								"4372-01642E85",
+								"4372-00C1D806",
+								"4372-000054BB",
+								"4372-0034311C",
+								"4372-00706FE5",
+								"4372-0004FD18",
+								"1-00000001",
+								"4372-011C6125",
+							},
+							["equipment"] = {
+								"INVTYPE_WEAPONMAINHAND", -- [1]
+								"INVTYPE_WEAPONOFFHAND", -- [2]
+								"INVTYPE_WEAPON", -- [3]
+								"INVTYPE_RANGED", -- [4]
+								"INVTYPE_2HWEAPON", -- [5]
+								"INVTYPE_TRINKET", -- [6]
+							},
+							["name"] = "Weapon",
+							["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
+							["revision"] = 1633983647,
+							["version"] = {
+								["minor"] = 0,
+								["patch"] = 0,
+								["major"] = 1,
+							},
+						},
+					},
 				}
-		)
+			})
+		end
 
-		local StubModule, S
+		local StubModule
+		--- @type Models.List.Service
+		local S
 
 		setup(function()
 			StubModule = AddOn:NewModule('Stub')
 
 			function StubModule:OnEnable()
-				self.db = db
+				self.db = newdb()
+			end
+
+			function StubModule:OnDisable()
+				self.db = nil
 			end
 
 			function StubModule:EnableOnStartup()
-				return true
+				return false
 			end
+		end)
 
+		before_each(function()
 			AddOnLoaded(AddOnName, true)
+			AddOn:CallModule('Stub')
 
 			S = Service(
 					{StubModule, StubModule.db.factionrealm.configurations},
@@ -160,9 +178,9 @@ describe("Service Model", function()
 			)
 		end)
 
-		teardown(function()
+		--teardown(function()
+		after_each(function()
 			AddOn:YieldModule('Stub')
-			StubModule = nil
 		end)
 
 		it("is initialized", function()
@@ -174,7 +192,121 @@ describe("Service Model", function()
 			assert(lists)
 			assert.equal(3, Util.Tables.Count(lists))
 		end)
+		it("provides callbacks", function()
 
+			assert.error(
+					function()
+						S:RegisterCallbacks({
+							[Configuration] = {},
+							[List] = {},
+							[Dao] = {},
+			            })
+					end
+			)
+
+			S:RegisterCallbacks({
+                [Configuration] = {
+	                [Dao.Events.EntityCreated] = function() end,
+	                [Dao.Events.EntityDeleted] = function() end,
+                },
+                [List] = {
+	                [Dao.Events.EntityUpdated] = function() end,
+                },
+			})
+
+			S:UnregisterCallbacks({
+				[Configuration] = { Dao.Events.EntityCreated, Dao.Events.EntityDeleted },
+				[List]          = { Dao.Events.EntityUpdated }
+			})
+
+			S:UnregisterAllCallbacks()
+
+
+			local C = Configuration.CreateInstance()
+			local L = List.CreateInstance(C.id)
+
+			local events = {
+				[C] = {
+					[Dao.Events.EntityCreated] = 0,
+					[Dao.Events.EntityDeleted] = 0,
+					[Dao.Events.EntityUpdated] = {
+
+					},
+				},
+				[L] = {
+					[Dao.Events.EntityCreated] = 0,
+					[Dao.Events.EntityDeleted] = 0,
+					[Dao.Events.EntityUpdated] = {
+
+					},
+				}
+			}
+
+			local function IncrementEventCount(entity, event, attr)
+				if attr then
+					if not events[entity][event][attr] then
+						events[entity][event][attr] = 0
+					end
+					events[entity][event][attr] = events[entity][event][attr] + 1
+				else
+					events[entity][event] = events[entity][event] + 1
+				end
+			end
+
+			local x = {
+				EntityCreated = function(self, event, entity)
+					print('EntityCreated')
+					IncrementEventCount(entity, event)
+				end,
+				EntityDeleted = function(self, event, entity)
+					print('EntityDeleted')
+					IncrementEventCount(entity, event)
+				end,
+				EntityUpdated = function(self, event, entity, attr, diff, asRef)
+					print(format('EntityUpdated (%s) => %s', attr, Util.Objects.ToString(diff)))
+					IncrementEventCount(entity, event, attr)
+				end
+			}
+
+			S:RegisterCallbacks({
+                [Configuration] = {
+                    [Dao.Events.EntityCreated] = function(...) x:EntityCreated(...) end,
+                    [Dao.Events.EntityDeleted] = function(...) x:EntityDeleted(...) end,
+                    [Dao.Events.EntityUpdated] = function(...) x:EntityUpdated(...) end,
+                },
+                [List] = {
+	                [Dao.Events.EntityCreated] = function(...) x:EntityCreated(...) end,
+	                [Dao.Events.EntityDeleted] = function(...) x:EntityDeleted(...) end,
+	                [Dao.Events.EntityUpdated] = function(...) x:EntityUpdated(...) end,
+                },
+            })
+
+			S.Configuration:Add(C)
+			S.List:Add(L)
+			assert.equal(1, events[C][Dao.Events.EntityCreated])
+			assert.equal(1, events[L][Dao.Events.EntityCreated])
+
+			C.name = "An Updated Name"
+			S.Configuration:Update(C, 'name')
+			C.status = Configuration.Status.Inactive
+			S.Configuration:Update(C, 'status')
+			assert.equal(1, events[C][Dao.Events.EntityUpdated]['name'])
+			assert.equal(1, events[C][Dao.Events.EntityUpdated]['status'])
+
+			L:AddEquipment("INVTYPE_WEAPONOFFHAND")
+			S.List:Update(L, 'equipment')
+			L:AddPlayer("Player2")
+			S.List:Update(L, 'players')
+			assert.equal(1, events[L][Dao.Events.EntityUpdated]['equipment'])
+			assert.equal(1, events[L][Dao.Events.EntityUpdated]['players'])
+
+			S.List:Remove(L)
+			S.Configuration:Remove(C)
+			assert.equal(1, events[C][Dao.Events.EntityDeleted])
+			assert.equal(1, events[L][Dao.Events.EntityDeleted])
+
+			S:UnregisterAllCallbacks()
+		end)
 		it("is activated", function()
 			--- @type  Models.List.ActiveConfiguration
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
@@ -359,7 +491,7 @@ describe("Service Model", function()
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
 
 			local allPlayers = {}
-			for _, list in pairs(db.factionrealm.lists) do
+			for _, list in pairs(StubModule.db.factionrealm.lists) do
 				Util.Tables.CopyInto(allPlayers, list.players)
 			end
 
@@ -372,7 +504,7 @@ describe("Service Model", function()
 			end
 
 			local list, players
-			for listId, origList in pairs(db.factionrealm.lists) do
+			for listId, origList in pairs(StubModule.db.factionrealm.lists) do
 				list = ac:GetActiveList(listId)
 				players = list:GetPlayers(true, true)
 

@@ -8,4 +8,5 @@
     <Script file="LootAllocate.lua" />
     <Script file="VersionCheck.lua" />
     <Include file="UI\UI.xml"/>
+    <Include file="Audit\Audit.xml"/>
 </Ui>

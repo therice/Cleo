@@ -344,6 +344,17 @@ function U.ClassIconFn()
     end
 end
 
+function U.IconFn()
+    return function(frame, texture)
+        if texture then
+            frame:SetNormalTexture(texture)
+            frame:GetNormalTexture():SetTexCoord(0,1,0,1)
+        else
+            frame:SetNormalTexture(nil)
+        end
+    end
+end
+
 function U.ItemIconFn()
     return function(frame, link, texture)
         if not texture and link then
@@ -353,19 +364,41 @@ function U.ItemIconFn()
         if link then
             frame:SetScript("OnEnter", function() U:CreateHypertip(link, frame, "ANCHOR_RIGHT") end)
             frame:SetScript("OnLeave", function() U:HideTooltip() end)
-            -- todo
-            --[[
             frame:SetScript("OnClick", function()
                 if IsModifiedClick() then
                     HandleModifiedItemClick(link)
                 end
             end)
-            --]]
         else
             frame:SetScript("OnEnter", nil)
             frame:SetScript("OnLeave", nil)
-            -- todo
-            -- frame:SetScript("OnClick", nil)
+            frame:SetScript("OnClick", nil)
         end
     end
 end
+
+--- @type Models.Audit.TrafficRecord
+local TrafficRecord = AddOn.ImportPackage('Models.Audit').TrafficRecord
+
+local Colors = {
+    ResourceTypes = {
+        [TrafficRecord.ResourceType.Configuration]  = C.Colors.Salmon,
+        [TrafficRecord.ResourceType.List]           = C.Colors.MageBlue,
+    },
+    ActionTypes   = {
+        [TrafficRecord.ActionType.Create]   = C.Colors.Evergreen,
+        [TrafficRecord.ActionType.Delete]   = C.Colors.DeathKnightRed,
+        [TrafficRecord.ActionType.Modify]   = C.Colors.RogueYellow,
+    }
+}
+
+function U.GetResourceTypeColor(resourceType)
+    if Util.Objects.IsString(resourceType) then resourceType = TrafficRecord.ResourceType[resourceType] end
+    return Colors.ResourceTypes[resourceType]
+end
+
+function U.GetActionTypeColor(actionTYpe)
+    if Util.Objects.IsString(actionTYpe) then actionTYpe = TrafficRecord.ActionType[actionTYpe] end
+    return Colors.ActionTypes[actionTYpe]
+end
+

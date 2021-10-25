@@ -23,6 +23,7 @@ AddOn.Constants = {
     },
 
     CommPrefixes = {
+      Audit     =   name .. "_a",
       Main      =   name,
       Lists     =   name .. "_l",
       Version   =   name .. '_v',
@@ -92,6 +93,7 @@ AddOn.Constants = {
         ChangeResponse          =   "cr",
         HandleLootStart         =   "hlst",
         HandleLootStop          =   "hlstp",
+        LootAuditAdd            =   "laa",
         LootAck                 =   "la",
         LootSessionEnd          =   "lse",
         LootTable               =   "lt",
@@ -106,6 +108,7 @@ AddOn.Constants = {
         ReRoll                  =   "rer",
         Roll                    =   "roll",
         Rolls                   =   "rolls",
+        TrafficAuditAdd         =   "taa",
         VersionCheck            =   "vc",
         VersionCheckReply       =   "vcr",
         VersionPing             =   "vp",
@@ -118,6 +121,7 @@ AddOn.Constants = {
         Enchanters              = name .. "_AllocateEnchantersMenu",
         ListPriorityActions     = name .. "_ListPriorityActions",
         ListPlayerActions       = name .. "_ListPlayerActions",
+        LootAuditFilter         = name .. "_LootAuditFilter",
     },
 
     Events = {

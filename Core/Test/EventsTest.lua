@@ -15,7 +15,6 @@ describe("Events", function()
 		After()
 	end)
 
-	--[[
 	describe("basics", function()
 		before_each(function()
 			_G.IsInRaidVal = true
@@ -61,7 +60,6 @@ describe("Events", function()
 			assert.equal(AddOn.encounter.id, 100)
 			assert.equal(AddOn.encounter:IsSuccess(), false)
 		end)
-		-- some portions of this is handled directly in EffortPointsTest
 		it("ENCOUNTER_END", function()
 			WoWAPI_FireEvent("ENCOUNTER_END", 100, "AnEncounter", 1, 40, 0)
 			assert(AddOn.encounter)
@@ -82,5 +80,4 @@ describe("Events", function()
 			WoWAPI_FireEvent("PLAYER_REGEN_ENABLED")
 		end)
 	end)
-	--]]
 end)

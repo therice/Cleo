@@ -35,7 +35,6 @@ local B = Class("B")
 --- @class Models.Versioned
 local Versioned = AddOn.Package('Models'):Class('Versioned', B):include(Triggerable)
 
---- varags are attributes which trigger a new revision
 function Versioned:initialize(version)
 	B.initialize(self)
 	--- @type Models.SemanticVersion
@@ -77,7 +76,7 @@ function Versioned:NewRevision(revision)
 end
 
 function Versioned:RevisionAsDate()
-	return Date(self.timestamp, true)
+	return Date(self.revision, true)
 end
 
 function Versioned:__tostring()

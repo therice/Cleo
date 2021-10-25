@@ -434,7 +434,6 @@ function GetRaidRosterInfo(i)
     -- name, rank, subgroup, level, class, fileName, zone, online
     -- return name, nil, nil, nil, nil, nil, classInfo.classFile, 1
     return name, nil, nil, nil, nil, classInfo.classFile, 'ZONE', 1
-
 end
 
 -- _, _, _, _, _, _, _, mapId

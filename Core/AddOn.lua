@@ -63,6 +63,7 @@ function AddOn:OnInitialize()
     Comm:Register(C.CommPrefixes.Main)
     Comm:Register(C.CommPrefixes.Version)
     Comm:Register(C.CommPrefixes.Lists)
+    Comm:Register(C.CommPrefixes.Audit)
     self.Send = Comm:GetSender(C.CommPrefixes.Main)
     self:SubscribeToPermanentComms()
 end
@@ -127,7 +128,6 @@ function AddOn:OnEnable()
     -- register events
     self:SubscribeToEvents()
     self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
-
 
     -- track launchpad (UI) supplements for application as needed
     -- will only be applied the first time the UI is displayed

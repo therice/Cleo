@@ -46,30 +46,32 @@ local Type = {
     Minus = 7,
     Left  = 8,
     Right = 9,
-    LeftLarge = 10,
+    LeftLarge  = 10,
     RightLarge = 11,
-
+    DotDotDot  = 12,
 }
 
 ButtonIcon.Type = Type
 
+-- [1] => {left, right, top, bottom
 local TypeMetadata = {
-    [ButtonIcon.Type.Close] = { { 0.5, 0.5625, 0.5, 0.625 }, { 1, 1, 1, .7 }, { .8, 0, 0, 1 } },
-    [ButtonIcon.Type.Home]  = { { 0.1875, 0.25, 0.5, 0.625 }, { 1, 1, 1, .7 }, { 0.9, 0.75, 0, 1 } },
-    [ButtonIcon.Type.Up]    = { { 0.3125, 0.375, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
-    [ButtonIcon.Type.Down]  = { { 0.25, 0.3125, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
-    [ButtonIcon.Type.Trash] = { { 0.7568, 0.81176, 0.5, 0.625 }, { 1, 1, 1, .7 }, { .8, 0, 0, 1 } },
-    [ButtonIcon.Type.Plus]  = { { 0.0039, 0.0588, 0.625, 0.75 }, { 0, 1, 0, 0.3 }, { 0, 1, 0, 1 } },
-    [ButtonIcon.Type.Minus] = { { 0.0667, 0.1216, 0.625, 0.75 }, { 0.8, 0, 0, 0.3 }, { .8, 0, 0, 1 } },
-    [ButtonIcon.Type.Left]  = { { 0.4414, 0.5, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
-    [ButtonIcon.Type.Right] = { { 0.375, 0.4414, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
-    [ButtonIcon.Type.LeftLarge] = { { 0.18359, 0.25, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
-    [ButtonIcon.Type.RightLarge] = { { 0.125 , 0.18359, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.Close]      = { { 0.5, 0.5625, 0.5, 0.625 }, { 1, 1, 1, .7 }, { .8, 0, 0, 1 } },
+    [ButtonIcon.Type.Home]       = { { 0.1875, 0.25, 0.5, 0.625 }, { 1, 1, 1, .7 }, { 0.9, 0.75, 0, 1 } },
+    [ButtonIcon.Type.Up]         = { { 0.3125, 0.375, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.Down]       = { { 0.25, 0.3125, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.Trash]      = { { 0.7568, 0.81176, 0.5, 0.625 }, { 1, 1, 1, .7 }, { .8, 0, 0, 1 } },
+    [ButtonIcon.Type.Plus]       = { { 0.0039, 0.0588, 0.625, 0.75 }, { 0, 1, 0, 0.3 }, { 0, 1, 0, 1 } },
+    [ButtonIcon.Type.Minus]      = { { 0.0667, 0.1216, 0.625, 0.75 }, { 0.8, 0, 0, 0.3 }, { .8, 0, 0, 1 } },
+    [ButtonIcon.Type.Left]       = { { 0.4414, 0.5, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.Right]      = { { 0.375, 0.4414, 0.5, 0.625 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.LeftLarge]  = { { 0.18359, 0.25, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.RightLarge] = { { 0.125, 0.18359, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
+    [ButtonIcon.Type.DotDotDot]  = { { 0.871, 0.9375, 0.5, 0.625 } },
 }
-
 ButtonIcon.TypeMetadata = TypeMetadata
 
 local DefaultTexture = BaseWidget.ResolveTexture("DiesalGUIcons16x256x128")
+ButtonIcon.DefaultTexture = DefaultTexture
 
 function ButtonIcon:initialize(parent, name, type, texture)
     BaseWidget.initialize(self, parent, name)
