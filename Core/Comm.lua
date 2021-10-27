@@ -181,7 +181,6 @@ end
 function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ...)
     self.metricsSend:Timer(Util.Strings.Join(':', prefix, command or "")):Time(
         function(...)
-
             local toSend = self:PrepareForSend(command, ...)
             local isPlayer = Util.Objects.IsInstanceOf(target, Player)
 

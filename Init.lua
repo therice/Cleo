@@ -84,7 +84,9 @@ local function SetDbValue(self, db, i, v)
     local path = Util.Objects.IsTable(i) and tostring(i[#i]) or i
     Logging:Trace("SetDbValue(%s, %s, %s, %s)", self:GetName(), tostring(db), tostring(path), Util.Objects.ToString(v))
     Util.Tables.Set(db, path, v)
-    AddOn:ConfigChanged(self:GetName(), path)
+    if self:GenerateConfigChangedEvents() then
+        AddOn:ConfigChanged(self:GetName(), path)
+    end
 end
 
 AddOn.GetDbValue = GetDbValue
@@ -119,6 +121,9 @@ local ModulePrototype = {
         else
             SetDbValue(self, db, ...)
         end
+    end,
+    GenerateConfigChangedEvents = function(self)
+        return false
     end,
     -- will provide the default value used for bootstrapping a module's db
     -- will only return a value if the module has a 'Defaults' attribute

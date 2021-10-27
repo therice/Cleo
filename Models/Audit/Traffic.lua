@@ -1,6 +1,6 @@
 --- @type AddOn
 local _, AddOn = ...
-local L = AddOn.Locale
+local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 --- @type Models.Date
@@ -11,6 +11,13 @@ local Referenceable = AddOn.Require('Models.Referenceable')
 local AuditPkg = AddOn.ImportPackage('Models.Audit')
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
+--- @type Models.List.Configuration
+local Configuration = AddOn.Package('Models.List').Configuration
+--- @type Models.List.Permission
+local Permission = AddOn.Package('Models.List').Permission
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+
 --- @type Models.Audit.Audit
 local Audit = AuditPkg.Audit
 
@@ -23,6 +30,11 @@ local ActionType = {
 local ResourceType = {
 	Configuration = 1,
 	List          = 2,
+}
+
+local DeltaParsers = {
+	[ResourceType.Configuration] = {},
+	[ResourceType.List]          = {},
 }
 
 --- @class Models.Audit.TrafficRecord
@@ -66,6 +78,36 @@ end
 function TrafficRecord:GetModifiedAttributeValue()
 	if self.delta then
 		return self.delta[self:GetModifiedAttribute()]
+	end
+
+	return nil
+end
+
+function TrafficRecord:ParseableModification()
+	return self:_GetModificationParser() ~= nil
+end
+
+function TrafficRecord:ParseModification(callback)
+	if self.delta then
+		local parser = self:_GetModificationParser()
+		if parser then
+			parser:Parse(self:GetModifiedAttributeValue(), callback)
+		end
+	end
+end
+
+function TrafficRecord:_GetModificationParser()
+	if self.delta then
+		local parsers = DeltaParsers[self:GetResourceType()]
+		if parsers then
+			local attr = self:GetModifiedAttribute()
+			local _, parser =
+				Util.Tables.FindFn(
+					parsers,
+					function(p) return Util.Strings.Equal(p.field, attr) end
+				)
+			return parser
+		end
 	end
 
 	return nil
@@ -154,3 +196,57 @@ function TrafficRecord.For(config, list)
 	return record
 end
 
+local DeltaParser = AddOn.Class('DeltaParser')
+function DeltaParser:initialize(resourceType, field)
+	self.resourceType = resourceType
+	self.field = field
+	Util.Tables.Push(DeltaParsers[self.resourceType], self)
+end
+
+function DeltaParser:Parse(delta, callback)
+	-- delta parser is only applicable to tables
+	if Util.Objects.IsTable(delta) then
+		Logging:Trace("Parse(%s) : %s", self.field, Util.Objects.ToString(delta))
+		for k, v in Util.Tables.Sparse.ipairs(delta) do
+			-- an empty value means placeholder for the
+			-- delta patch, it assists with re-applying
+			if self:HandleEmpty() or not Util.Tables.IsEmpty(v) then
+				callback(self:Resolve(k, v))
+			end
+		end
+	end
+end
+
+function DeltaParser:HandleEmpty()
+	return false
+end
+
+-- return the 'v' value of the 'from'
+-- this is a special key used in generating delta patches
+function DeltaParser:V(from)
+	return from['v']
+end
+
+function DeltaParser:Resolve(key, value)
+	assert(false, 'resolve not implemented')
+end
+
+local PermissionsParser = DeltaParser(ResourceType.Configuration, 'permissions')
+function PermissionsParser:Resolve(player, permissions)
+	player = Player.Resolve(player)
+	local perm = Permission:reconstitute(self:V(permissions))
+	return player, tostring(perm)
+end
+
+local EquipmentParser = DeltaParser(ResourceType.List, 'equipment')
+function EquipmentParser:Resolve(index, equipment)
+	return index, Util.Objects.IsEmpty(equipment) and nil or C.EquipmentLocations[self:V(equipment)]
+end
+function EquipmentParser:HandleEmpty()
+	return true
+end
+
+local PriorityParser = DeltaParser(ResourceType.List, 'players')
+function PriorityParser:Resolve(priority, player)
+	return priority, Player.Resolve(self:V(player))
+end

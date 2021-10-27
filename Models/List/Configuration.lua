@@ -36,9 +36,10 @@ Configuration.static:AddTriggers("name", "permissions", "status", "default")
 Configuration.static:IncludeAttrsInRef("id", {hash = function(self) return self:hash() end})
 
 local Version = SemanticVersion(1, 0, 0)
+local None = "None"
 -- todo : do we really need 'None'? its one use is tracking previous owner/admins who have been removed
 Configuration.Permissions = {
-	None        =   0x01,
+	[None]      =   0x01,
 	Owner       =   0x02,
 	Admin       =   0x04,
 }
@@ -51,7 +52,23 @@ Configuration.Status = {
 --- @class Models.List.Permission
 local Permission = AddOn.Package('Models.List'):Class('Permission', Bitfield)
 function Permission:initialize()
-	Bitfield.initialize(self,  Configuration.Permissions.None)
+	Bitfield.initialize(self, Configuration.Permissions.None)
+end
+
+function Permission:__tostring()
+	local perms = {}
+
+	for p, bit in pairs(Configuration.Permissions) do
+		if p ~= None and self:Enabled(bit) then
+			Util.Tables.Push(perms, p)
+		end
+	end
+
+	if Util.Tables.Count(perms) == 0 then
+		Util.Tables.Push(perms, None)
+	end
+
+	return Util.Strings.Join(',', perms)
 end
 
 function Configuration:initialize(id, name)

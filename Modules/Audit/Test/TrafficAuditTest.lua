@@ -103,21 +103,44 @@ describe("Traffic Audit", function()
 
 			assert.equal(4, count)
 		end)
-
 		--[[
 		it("scratch", function()
 			NewTrafficAuditDb(ta, TrafficAuditTestData_1)
 			local history = ta:GetHistory()
 			for i, r in cpairs(history) do
 				local record = TrafficRecord:reconstitute(r)
-
-				if record.lr then
-					record.lr[1] = "4372-011C6125"
-					print(Util.Objects.ToString(CDB.static:compress(record:toTable())))
+				local n, v = record:GetModifiedAttribute(), record:GetModifiedAttributeValue()
+				if Util.Objects.In(n, 'permissions') then
+					record:ParseModification(
+						function(player, permissions)
+							print(tostring(player) .. ' -> ' .. tostring(permissions))
+						end
+					)
+				elseif Util.Objects.In(n, 'equipment') then
+					record:ParseModification(
+						function(index, equipment)
+							print(tostring(index) .. ' -> ' .. tostring(equipment))
+						end
+					)
+				elseif Util.Objects.In(n, 'players') then
+					record:ParseModification(
+						function(priority, player)
+							print(tostring(priority) .. ' -> ' .. tostring(player))
+						end
+					)
 				end
+				print('------------------------------')
 
+				--if Util.Objects.IsTable(v) then
+				--	print(n .. ' -> ' .. Util.Objects.ToString(v))
+				--
+				--	for k, v in Util.Tables.Sparse.ipairs(v) do
+				--		print(tostring(k) .. ' -> ' .. Util.Objects.ToString(v))
+				--	end
+				--end
 			end
 		end)
 		--]]
+
 	end)
 end)

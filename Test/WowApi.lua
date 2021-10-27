@@ -460,7 +460,7 @@ function GetMasterLootCandidate(slot, i) return "Player" ..  i end
 
 function GetNumPartyMembers() return 5 end
 
-function GetNumGroupMembers() return 40 end
+function GetNumGroupMembers() return 25 end
 
 function UnitIsDeadOrGhost(name) return false end
 

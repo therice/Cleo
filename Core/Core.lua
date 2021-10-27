@@ -182,24 +182,6 @@ function AddOn:RegisterChatCommands()
     )
 end
 
-
-function AddOn:UpdateGroupMembers()
-    Logging:Trace("UpdateGroupMembers()")
-    for i = 1, GetNumGroupMembers() do
-        self.group[self:UnitName(GetRaidRosterInfo(i))] = true
-    end
-    -- make sure we are present
-    self.group[self.player.name] = true
-
-    --in test mode, add some other players to help with testing
-    --if AddOn:TestModeEnabled() then
-    --    self.group['Gnomechómsky-Atiesh'] = true
-    --    self.group['Cerrendel-Atiesh'] = true
-    --end
-
-    return self.group
-end
-
 function AddOn:IsMasterLooter(unit)
     unit = Util.Objects.Default(unit, self.player)
     Logging:Trace("IsMasterLooter() : unit=%s, ml=%s", tostring(unit), tostring(self.masterLooter))
@@ -397,20 +379,58 @@ function AddOn:OnMasterLooterDbReceived(mlDb)
     setmetatable(self.mlDb.buttons, {__index = ML:GetDefaultDbValue('profile.buttons')})
 end
 
+local groupCopy
 
 function AddOn:UpdateGroupMembers()
     Logging:Trace("UpdateGroupMembers()")
-    for i = 1, GetNumGroupMembers() do
-        self.group[self:UnitName(GetRaidRosterInfo(i))] = true
+
+    -- if we are missing a copy of current state of group, copy it
+    if Util.Objects.IsNil(groupCopy) then
+        groupCopy = Util(self.group):Copy()()
     end
+
+    -- wipe out current group
+    Util.Tables.Wipe(self.group)
+
+    local name
+    for i = 1, GetNumGroupMembers() do
+        name = GetRaidRosterInfo(i)
+        if not name then
+            Logging:Warn("UpdateGroupMembers(%d) : information not yet available, rescheduling")
+            self:ScheduleTimer("UpdateGroupMembers", 1)
+            return
+        end
+
+        self.group[self:UnitName(name)] = true
+    end
+
     -- make sure we are present
     self.group[self.player.name] = true
-
     --in test mode, add some other players to help with testing
     --if AddOn:TestModeEnabled() then
     --    self.group['Gnomechómsky-Atiesh'] = true
     --    self.group['Cerrendel-Atiesh'] = true
     --end
+
+    Util.Functions.try(
+        function()
+            -- go through previous copy and dispatch left messages (as necessary)
+            for player, _ in pairs(groupCopy) do
+                if not self.group[player] then
+                    self:SendMessage(C.Messages.PlayerLeftGroup, player)
+                end
+            end
+
+            for player, _ in pairs(self.group) do
+                if not groupCopy[player] then
+                    self:SendMessage(C.Messages.PlayerJoinedGroup, player)
+                end
+            end
+        end
+    ).finally(
+        -- we're done now, we can let go of copy
+        function() groupCopy = nil end
+    )
 
     return self.group
 end

@@ -1008,7 +1008,7 @@ end
 local function GenOrderedIndex(t)
     local orderedIndex = {}
     for key in pairs(t) do
-        table.insert( orderedIndex, key )
+        table.insert(orderedIndex, key)
     end
     table.sort(orderedIndex, Util.Functions.CompareMultitype)
     return orderedIndex

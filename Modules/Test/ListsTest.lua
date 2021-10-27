@@ -8,9 +8,11 @@ local List
 describe("Lists", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_Lists')
-		AddOnLoaded(AddOnName, true)
 		Util, C = AddOn:GetLibrary('Util'), AddOn.Constants
 		Configuration, List = AddOn.Package('Models.List').Configuration, AddOn.Package('Models.List').List
+		AddOnLoaded(AddOnName, true)
+		SetTime()
+		-- PlayerEnteredWorld()
 	end)
 
 	teardown(function()
@@ -40,6 +42,7 @@ describe("Lists", function()
 	describe("functional", function()
 		--- @type Lists
 		local lists
+		local Send
 
 		setup(function()
 			local db = NewAceDb(
@@ -95,9 +98,15 @@ describe("Lists", function()
 			lists = AddOn:ListsModule()
 			lists.db = db
 			lists:InitializeService()
+			Send = lists.Send
+			lists.Send = function(...)
+				Send(...)
+				WoWAPI_FireUpdate(GetTime()+10)
+			end
 		end)
 
 		teardown(function()
+			lists.Send = Send
 			lists = nil
 		end)
 
@@ -225,6 +234,31 @@ describe("Lists", function()
 			assert.equal(0, records[TrafficRecord.ResourceType.List][TrafficRecord.ActionType.Delete])
 			assert.equal(1, records[TrafficRecord.ResourceType.List][TrafficRecord.ActionType.Modify]['equipment'])
 			assert.equal(1, records[TrafficRecord.ResourceType.List][TrafficRecord.ActionType.Modify]['players'])
+		end)
+		it("handles resource requests", function()
+			local OnResourceResponse = lists.OnResourceResponse
+			local response
+			lists.OnResourceResponse = function(self, sender, payload)
+				OnResourceResponse(self, sender, payload)
+				response = lists:ReconstructResponse(payload)
+			end
+
+			lists:_SendRequest(AddOn.player, lists:CreateRequest(Configuration.name, "614A4F87-AF52-34B4-E983-B9E8929D44AF"))
+
+			assert(response)
+			local config = response:ResolvePayload()
+			assert(config)
+			assert.equal("614A4F87-AF52-34B4-E983-B9E8929D44AF", config.id)
+
+			response = nil
+			lists:_SendRequest(AddOn.player, lists:CreateRequest(List.name, "615247A9-311F-57E4-0503-CC3F53E61597"))
+			assert(response)
+			local list = response:ResolvePayload()
+			assert(list)
+			assert.equal("615247A9-311F-57E4-0503-CC3F53E61597", list.id)
+
+
+			finally(function() lists.OnResourceResponse =  OnResourceResponse end)
 		end)
 	end)
 end)

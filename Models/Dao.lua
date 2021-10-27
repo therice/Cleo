@@ -56,14 +56,18 @@ end
 
 
 -- C(reate)
-function Dao:Add(entity)
+function Dao:Add(entity, fireCallbacks)
+	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
 	local asTable = entity:toTable()
 	asTable['id'] = nil
 	Logging:Trace("Dao.Add[%s](%s) : %s", tostring(self.entityClass), entity.id, Util.Objects.ToString(asTable))
 	if self:ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, asTable)
 	end
-	self.callbacks:Fire(Events.EntityCreated, entity)
+
+	if fireCallbacks then
+		self.callbacks:Fire(Events.EntityCreated, entity)
+	end
 end
 
 -- R(ead)
@@ -99,7 +103,9 @@ function Dao:GetAll(filter, sort)
 end
 
 -- U(pdate)
-function Dao:Update(entity, attr)
+function Dao:Update(entity, attr, fireCallbacks)
+	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
+
 	local key = self.Key(entity, attr)
 	local asTable, asRef = entity:toTable(), nil
 	local curVal, prevVal, diff = asTable[attr], nil, nil
@@ -168,15 +174,22 @@ function Dao:Update(entity, attr)
 		end
 	end
 
-	self.callbacks:Fire(Events.EntityUpdated, entity, attr, diff, asRef)
+	if fireCallbacks then
+		self.callbacks:Fire(Events.EntityUpdated, entity, attr, diff, asRef)
+	end
 end
 
 -- D(elete)
-function Dao:Remove(entity)
+function Dao:Remove(entity, fireCallbacks)
+	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
+
 	Logging:Trace("Dao.Remove[%s](%s)", tostring(self.entityClass), entity.id)
 	if self:ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, nil)
 	end
-	self.callbacks:Fire(Events.EntityDeleted, entity)
+
+	if fireCallbacks then
+		self.callbacks:Fire(Events.EntityDeleted, entity)
+	end
 end
 

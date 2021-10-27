@@ -341,6 +341,31 @@ function ML:UnsubscribeFromComms()
 	self.commSubscriptions = nil
 end
 
+-- the are unregistered in OnDisable()
+function ML:RegisterPlayerMessages()
+	if self:IsHandled() then
+		Logging:Trace("RegisterPlayerMessages()")
+		self:RegisterMessage(C.Messages.PlayerJoinedGroup, function(...) self:OnPlayerEvent(...) end)
+		self:RegisterMessage(C.Messages.PlayerLeftGroup, function(...) self:OnPlayerEvent(...) end)
+	end
+end
+
+
+function ML:OnPlayerEvent(event, player)
+	if self:IsHandled() then
+		Logging:Trace("OnPlayerEvent(%s) : %s", tostring(event), tostring(player))
+		local ac = AddOn:ListsModule():GetActiveConfiguration()
+		ac:OnPlayerEvent(player, Util.Strings.Equal(event, C.Messages.PlayerJoinedGroup))
+		if Util.Strings.Equal(event, C.Messages.PlayerJoinedGroup) then
+			self:SendActiveConfig(player, ac.config)
+		end
+	end
+end
+
+function ML:GenerateConfigChangedEvents()
+	return true
+end
+
 -- when the db is changed, need to check if we must broadcast the new MasterLooter Db
 -- the msg will be in the format of 'ace serialized message' = 'count of event'
 -- where the deserialized message will be a tuple of 'module of origin' (e.g MasterLooter), 'db key name' (e.g. outOfRaid)
@@ -683,6 +708,26 @@ function ML:OnHandleLootStart(...)
 	end
 end
 
+function ML:SendActiveConfig(target, config)
+	if self:IsHandled() then
+		-- dispatch the config activation message to group
+		-- include information about the associated lists as well
+		-- this is necessary to make sure what we are activating is aligned with the master looter's view
+		local toSend = {
+			config = {},
+			lists = {}
+		}
+
+		Util.Tables.Set(toSend, 'config', config:ToRef())
+		local lists = AddOn:ListsModule():GetService():Lists(config.id)
+		for _, list in pairs(lists) do
+			Util.Tables.Push(toSend.lists, list:ToRef())
+		end
+
+		AddOn:Send(target, C.Commands.ActivateConfig, toSend)
+	end
+end
+
 --- @param config Models.List.Configuration
 function ML:ActivateConfiguration(config)
 	Logging:Trace("ActivateConfiguration(%s)", config and config.id or "NIL")
@@ -702,21 +747,7 @@ function ML:ActivateConfiguration(config)
 				return
 			end
 
-			-- dispatch the config activation message to group
-			-- include information about the associated lists as well
-			-- this is necessary to make sure what we are activating is aligned with the master looter's view
-			local toSend = {
-				config = {},
-				lists = {}
-			}
-
-			Util.Tables.Set(toSend, 'config', config:ToRef())
-			local lists = AddOn:ListsModule():GetService():Lists(config.id)
-			for _, list in pairs(lists) do
-				Util.Tables.Push(toSend.lists, list:ToRef())
-			end
-
-			AddOn:Send(C.group, C.Commands.ActivateConfig, toSend)
+			self:SendActiveConfig(C.group, config)
 
 			-- if this looks strange, it's because it is
 			-- there is an issue with C_Timer (which AceTimer leverages) being used in close proximity to a login
@@ -734,6 +765,15 @@ function ML:ActivateConfiguration(config)
 								Logging:Warn("ActivateConfiguration() : No active configuration, stopping the handling of loot")
 								AddOn:Print(L["invalid_configuration_ml"])
 								AddOn:StopHandleLoot()
+							else
+								Logging:Debug("ActivateConfiguration() : Configuration activated")
+								local ac = AddOn:ListsModule():GetActiveConfiguration()
+								-- this will generate player joined/left messages but we don't
+								-- register for those messages until after
+								for name, _ in AddOn:GroupIterator() do
+									ac:OnPlayerEvent(name, true)
+								end
+								self:RegisterPlayerMessages()
 							end
 						end,
 						5

@@ -34,7 +34,7 @@ end
 -- but can be invoked directly as needed (for instance if you don't use the standard set definition
 -- for an option)
 function AddOn:ConfigChanged(moduleName, val)
-    Logging:Debug("ConfigChanged(%s) : %s", moduleName, Util.Objects.ToString(val))
+    Logging:Trace("ConfigChanged(%s) : %s", moduleName, Util.Objects.ToString(val))
     -- need to serialize the values, as AceBucket (if used on other end) only groups by a single value
     self:SendMessage(C.Messages.ConfigTableChanged, AddOn:Serialize(moduleName, val))
 end

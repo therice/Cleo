@@ -74,6 +74,7 @@ ListDataConfigAdminNoLists = {
 	}
 }
 
+
 ListDataComplete = {
 	factionrealm = {
 		configurations = {

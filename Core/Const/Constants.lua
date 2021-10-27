@@ -88,9 +88,11 @@ AddOn.Constants = {
     },
     
     Commands = {
-        ActivateConfig          =   "alc",
+        ActivateConfig          =   "alc",      -- sent when a configuration should be activated (for loot priorities)
         Awarded                 =   "awd",
         ChangeResponse          =   "cr",
+        ConfigResourceRequest   =   "crr",      -- this is a request for a configuration or a list
+        ConfigResourceResponse  =   "crrsp",    -- this is a response for a configuration or a list
         HandleLootStart         =   "hlst",
         HandleLootStop          =   "hlstp",
         LootAuditAdd            =   "laa",
@@ -203,6 +205,8 @@ AddOn.Constants = {
         ConfigTableChanged      =   name .. "_ConfigTableChanged",
         LootTableAddition       =   name .. "_LootTableAddition",
         MasterLooterAddItem     =   name .. "_MasterLooterAddItem",
+        PlayerJoinedGroup       =   name .. "_PlayerJoinedGroup",
+        PlayerLeftGroup         =   name .. "_PlayerLeftGroup",
         PlayerNotFound          =   name .. "_PlayerNotFound",
     },
 

@@ -76,7 +76,7 @@ function AddOn:OnEnable()
     self.mode:Enable(AddOn.Constants.Modes.Develop)
     --@end-debug@
 
-    -- this enables flag for persistence of stuff like points to officer's notes, history, and sync payloads
+    -- this enables flag for persistence of stuff like lists, history, and sync payloads
     -- it can be disabled as needed through /cleo pm
     self.mode:Disable(AddOn.Constants.Modes.Persistence)
     --- @type Models.Player

@@ -52,6 +52,10 @@ function CustomItems:OnDisable()
 	ItemUtil:ResetCustomItems()
 end
 
+function CustomItems:GenerateConfigChangedEvents()
+	return true
+end
+
 function CustomItems:ConfigTableChanged(msg)
 	Logging:Trace("ConfigTableChanged() : '%s", Util.Objects.ToString(msg))
 	for serializedMsg, _ in pairs(msg) do

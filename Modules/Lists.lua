@@ -40,6 +40,10 @@ Lists.defaults = {
 	}
 }
 
+local Base = AddOn.Class('Lists.Base')
+local Request = AddOn.Class('Lists.Request', Base)
+local Response = AddOn.Class('Lists.Response', Base)
+
 function Lists:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('Lists'), self.defaults)
@@ -49,6 +53,11 @@ function Lists:OnInitialize()
 	-- in case they are not properly removed when consumed
 	self.laTemp = {}
 	setmetatable(self.laTemp, { __mode = "v" }) -- give table weak values
+	-- this is used for holding on to pending requests for configs and list
+	-- for verifying responses were actually merited. it's used for nothing else and has weak values
+	-- in case they are not properly removed when consumed
+	self.requestsTemp = {}
+	setmetatable(self.requestsTemp, { __mode = "v" }) -- give table weak values
 
 	self:InitializeService()
 	self.Send = Comm():GetSender(C.CommPrefixes.Lists)
@@ -92,9 +101,13 @@ function Lists:SubscribeToComms()
 		end,
 	})
 	self.commSubscriptionsLists = Comm():BulkSubscribe(C.CommPrefixes.Lists, {
-		-- todo : change this
-		[C.Commands.ActivateConfig] = function(data, sender)
-
+		[C.Commands.ConfigResourceRequest] = function(data, sender)
+			Logging:Debug("ConfigResourceRequest from %s", tostring(sender))
+			self:OnResourceRequest(sender, unpack(data))
+		end,
+		[C.Commands.ConfigResourceResponse] = function(data, sender)
+			Logging:Debug("ConfigResourceResponse from %s", tostring(sender))
+			self:OnResourceResponse(sender, unpack(data))
 		end,
 	})
 end
@@ -136,6 +149,7 @@ function Lists:HasActiveConfiguration()
 	return not Util.Objects.IsNil(self.activeConfig)
 end
 
+--- @return  Models.List.ActiveConfiguration
 function Lists:GetActiveConfiguration()
 	return self.activeConfig
 end
@@ -276,16 +290,6 @@ function Lists:ListDaoEvent(event, entity, attr, diff, ref)
 	self:_EnqueueEvent(ListEvents, event, entity, attr, diff, ref)
 end
 
-if AddOn._IsTestContext() then
-	function Lists:GetConfigurationEvents()
-		return ConfigurationEvents
-	end
-
-	function Lists:GetListEvents()
-		return ListEvents
-	end
-end
-
 --- @param self Lists
 local function GetListAndPriority(self, equipment, player, active, relative)
 	player = player and Player.Resolve(player) or AddOn.player
@@ -322,20 +326,32 @@ function Lists:GetOverallListAndPriority(equipment, player)
 	return GetListAndPriority(self, equipment, player, false)
 end
 
+local MaxActivationReattempts = 3
+
 --- @param sender string
 --- @param activation table
-function Lists:OnActivateConfigReceived(sender, activation)
-	Logging:Trace("OnActivateConfigReceived(%s)", tostring(sender))
+function Lists:OnActivateConfigReceived(sender, activation, attempt)
+	attempt = Util.Objects.Default(attempt, 0)
+
+	Logging:Trace("OnActivateConfigReceived(%s, %d)", tostring(sender), attempt)
+
+	if attempt > MaxActivationReattempts then
+		Logging:Warn("OnActivateConfigReceived() : Maximum activation (re)attempts exceeded, giving up")
+		return
+	end
 
 	if not AddOn:IsMasterLooter(sender) then
 		Logging:Warn("OnActivateConfigReceived() : Sender is not the master looter, ignoring")
 		return
 	end
 
+	-- TODO TODO TODO TODO : if we're an admin or owner, but no ML - we shouldn't send blanket requests (could overwrite local changes)
 	local function EnqueueRequest(to, id, type)
 		Logging:Trace("EnqueueRequest(%s, %s)",tostring(id), tostring(type))
-		Util.Tables.Push(to, {id = id, type = type})
+		Util.Tables.Push(to, Request(type, id))
 	end
+
+	local isMl = AddOn:IsMasterLooter()
 
 	-- see MasterLooter:ActivateConfiguration() for 'activation' message contents
 	-- only load reference for configuration, as activation is going to load lists
@@ -350,9 +366,18 @@ function Lists:OnActivateConfigReceived(sender, activation)
 		-- will need to request it
 		--
 		-- in practice, we should never be missing (or requesting) information
-		-- if we're the master looter we the activation message originated from us
+		-- if we're the master looter the activation message originated from us
 		-- if that were to occur, that's a regression
 		if not resolved or #resolved ~= 1 then
+			-- if we're the master looter and could not resolve the configuration
+			-- that's fatal and must result in abrupt halt
+			if isMl then
+				Logging:Fatal("OnActivateConfigReceived() : Could not resolve configuration '%s'", configForActivation)
+				local message = format("Could not resolve configuration '%s'", configForActivation)
+				AddOn:PrintError(message)
+				error(message)
+			end
+
 			EnqueueRequest(toRequest, configForActivation.id, Configuration.name)
 		else
 			local activate = resolved[1]
@@ -364,6 +389,15 @@ function Lists:OnActivateConfigReceived(sender, activation)
 
 			--Logging:Trace("OnActivateConfigReceived(%s) => %s/%s", tostring(activate.id), tostring(result), Util.Objects.ToString(activated))
 			if not result then
+				-- if we're the master looter and could not active the resolved configuration
+				-- that's fatal and must result in abrupt halt
+				if isMl then
+					Logging:Fatal("OnActivateConfigReceived() : Could not activate configuration '%s'", tostring(activate.id))
+					local message = format("Could not activate configuration '%s'", tostring(activate.id))
+					AddOn:PrintError(message)
+					error(message)
+				end
+
 				EnqueueRequest(toRequest, activate.id, Configuration.name)
 				Logging:Warn("OnActivateConfigReceived() : Could not activate configuration '%s' => %s", activate.id, tostring(activated))
 			else
@@ -372,7 +406,7 @@ function Lists:OnActivateConfigReceived(sender, activation)
 
 				-- we aren't the ML, do some checks to see if we have the correct data
 				-- this is entirely for requesting up to date data in case we are behind
-				if not AddOn:IsMasterLooter() or AddOn:DevModeEnabled() then
+				if not isMl or AddOn:DevModeEnabled() then
 					-- no need to check version and revision here
 					-- just compare hashes of data
 					local verification = self.activeConfig:Verify(activate, activation['lists'])
@@ -380,10 +414,10 @@ function Lists:OnActivateConfigReceived(sender, activation)
 					local v = verification[1]
 					if not v.verified then
 						Logging:Warn(
-								"OnActivateConfigReceived(%s)[Configuration] : Failed hash verification %s / %s",
-								self.activeConfig.config.id,
-								v.ah,
-								v.ch
+							"OnActivateConfigReceived(%s)[Configuration] : Failed hash verification %s / %s",
+							self.activeConfig.config.id,
+							v.ah,
+							v.ch
 						)
 						EnqueueRequest(toRequest, activate.id, Configuration.name)
 					-- only handle potential list requests in face of a verified configuration
@@ -397,10 +431,10 @@ function Lists:OnActivateConfigReceived(sender, activation)
 						for id, vfn in pairs(verifications) do
 							if not vfn.verified then
 								Logging:Warn(
-										"OnActivateConfigReceived(%s)[List] : failed hash verification %s / %s",
-										id,
-										vfn.ah,
-										vfn.ch
+									"OnActivateConfigReceived(%s)[List] : failed hash verification %s / %s",
+									id,
+									vfn.ah,
+									vfn.ch
 								)
 								EnqueueRequest(toRequest, id, List.name)
 							end
@@ -420,8 +454,11 @@ function Lists:OnActivateConfigReceived(sender, activation)
 				end
 			end
 
-			-- todo : request configuration from sender
-			-- self:Send(...)
+			if Util.Tables.Count(toRequest) > 0 then
+				self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
+				self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
+
+			end
 		end
 	end
 
@@ -442,7 +479,6 @@ function Lists:OnAwardItem(itemAward)
 	-- the exceptional case should never occur as this is only invoked by Master Looter who implicitly needs
 	-- an active configuration to do an award
 	if self:HasActiveConfiguration() then
-
 		-- only apply if the associated award reason dictate a suicide occur
 		local reason, list = AddOn:MasterLooterModule().AwardReasons[itemAward.awardReason], nil
 		if reason.suicide then
@@ -493,6 +529,136 @@ function Lists:OnAwardItem(itemAward)
 	end
 end
 
+function Base:initialize(type, id, cid)
+	self.type = type
+	self.id = id
+	-- correlation id for request/response pairing
+	self.cid = cid or Util.UUID.UUID()
+end
+
+function Base:IsValid()
+	return Util.Strings.IsSet(self.type) and Util.Strings.IsSet(self.id)
+end
+
+function Base:__tostring()
+	return format("[%s] : %s[%s(%s)]", self.cid, self.clazz.name, tostring(self.type), tostring(self.id))
+end
+
+function Request:initialize(type, id)
+	Base.initialize(self, type, id)
+end
+
+function Response:initialize(type, id, cid)
+	Base.initialize(self, type, id, cid)
+	self.payload = nil
+end
+
+function Response:ResolvePayload()
+	if self.payload then
+		if Util.Strings.Equal(self.type, Configuration.name) then
+			return Configuration:reconstitute(self.payload)
+		elseif Util.Strings.Equal(self.type, List.name) then
+			return List:reconstitute(self.payload)
+		end
+	end
+
+	return nil
+end
+
+function Lists:_SendRequest(to, ...)
+	to = to or AddOn.masterLooter
+	Logging:Trace("_SendRequest(%s)", (to and tostring(to) or nil))
+
+	if not to then
+		Logging:Warn("_SendRequest() : target not specified, not sending")
+		return
+	end
+
+	for _, r in Util.Objects.Each(Util.Tables.Temp(...)) do
+		self.requestsTemp[r.cid] = true
+		self:Send(AddOn.player, C.Commands.ConfigResourceRequest, r)
+	end
+end
+
+function Lists:OnResourceRequest(sender, payload)
+	Logging:Trace("OnResourceRequest(%s)", tostring(sender))
+
+	local request = Request:reconstitute(payload)
+	if request then
+		Logging:Trace("OnResourceRequest() : %s", tostring(request))
+		if request:IsValid() then
+			local resource
+
+			if Util.Strings.Equal(request.type, Configuration.name) then
+				resource = self:GetService().Configuration:Get(request.id)
+			elseif Util.Strings.Equal(request.type, List.name) then
+				resource = self:GetService().List:Get(request.id)
+			else
+				Logging:Warn("OnResourceRequest() : unsupported request type %s", request.type)
+				return
+			end
+
+			local response = Response(request.type, request.id, request.cid)
+			response.payload = resource
+			self:_SendResponse(sender, response)
+		end
+	end
+end
+
+function Lists:_SendResponse(to, ...)
+	if not to then
+		Logging:Warn("_SendResponse() : target not specified, not sending")
+		return
+	end
+	Logging:Trace("_SendResponse(%s)", tostring(to))
+
+	for _, r in Util.Objects.Each(Util.Tables.Temp(...)) do
+		self:Send(to, C.Commands.ConfigResourceResponse, r)
+	end
+end
+
+
+function Lists:OnResourceResponse(sender, payload)
+	-- Logging:Trace("OnResourceResponse(%s) : %s", tostring(sender), Util.Objects.ToString(payload))
+	local response = Response:reconstitute(payload)
+	Logging:Trace("OnResourceResponse(%s) : %s", tostring(sender), tostring(response and response or nil))
+	if response then
+		local resource = response:ResolvePayload()
+		if resource then
+			if not self.requestsTemp[response.cid] then
+				Logging:Trace("OnResourceResponse(%s, %s) : no pending request found", tostring(sender), tostring(response.cid))
+				return
+			end
+
+			if Util.Objects.IsInstanceOf(resource, Configuration) then
+				self:GetService().Configuration:Add(resource, false)
+			elseif Util.Objects.IsInstanceOf(resource, List) then
+				self:GetService().List:Add(resource, false)
+			end
+
+			self.requestsTemp[response.cid] = nil
+		end
+	end
+end
+
 function Lists:LaunchpadSupplement()
 	return L["lists"], function(container) self:LayoutInterface(container) end , false
+end
+
+if AddOn._IsTestContext() then
+	function Lists:GetConfigurationEvents()
+		return ConfigurationEvents
+	end
+
+	function Lists:GetListEvents()
+		return ListEvents
+	end
+
+	function Lists:CreateRequest(type, id)
+		return Request(type, id)
+	end
+
+	function Lists:ReconstructResponse(payload)
+		return Response:reconstitute(payload)
+	end
 end

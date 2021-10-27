@@ -109,12 +109,6 @@ end
 function AddOn:EncounterEnd(_, ...)
     Logging:Debug("EncounterEnd()")
     self.encounter = Encounter(...)
-    -- if master looter, need to check for EP
-    --[[
-    if self:IsMasterLooter() then
-        self:EffortPointsModule():OnEncounterEnd(self.encounter)
-    end
-    --]]
 end
 
 

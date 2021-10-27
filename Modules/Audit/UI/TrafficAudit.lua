@@ -434,6 +434,35 @@ local ColorConfiguration, ColorList, ColorUnknown =
 	{UIUtil.GetResourceTypeColor(TrafficRecord.ResourceType.List):GetRGB()},
 	{C.Colors.Aluminum:GetRGB()}
 
+local AttributeChangeHandlers = {
+	['permissions'] = function(tip, player, permissions)
+		local c = UIUtil.GetPlayerClassColor(player:GetShortName())
+		Logging:Debug("%s", Util.Objects.ToString(c))
+
+		tip:AddDoubleLine(
+			AddOn.Ambiguate(player),
+			permissions,
+			c.r, c.g, c.b, 1, 1, 1
+		)
+	end,
+	['equipment'] = function(tip, index, equipment)
+		if equipment then
+			tip:AddLine(equipment, 0.12, 1.00, 0.00)
+		else
+			tip:AddLine(format("%s [#%s]", L['removed'], tostring(index)), 0.99216, 0.48627, 0.43137)
+		end
+	end,
+	['players'] = function(tip, priority, player)
+		local c = UIUtil.GetPlayerClassColor(player:GetShortName())
+		tip:AddDoubleLine(
+			format("%s #%s", L['priority'], tostring(priority)),
+			AddOn.Ambiguate(player),
+			1, 1, 1,
+			c.r, c.g, c.b
+		)
+	end,
+}
+
 function TrafficAudit:UpdateMoreInfo(f, data, row)
 	local proceed, entry = MI.Context(f, data, row, 'entry')
 	local resources
@@ -463,6 +492,7 @@ function TrafficAudit:UpdateMoreInfo(f, data, row)
 			GetNameColor(config)
 		)
 
+		-- if a list, add additional contet
 		if resourceType == TrafficRecord.ResourceType.List then
 			tip:AddDoubleLine(
 				L['list'],
@@ -478,7 +508,8 @@ function TrafficAudit:UpdateMoreInfo(f, data, row)
 
 		local refs = {entry:GetResource(), entry.ref}
 		local refCount = Util.Tables.Count(refs)
-
+		-- iterate through associated resources (after and before)
+		-- adding versioning information (hash and revision)
 		for _, attr in pairs({'hash', 'revision'}) do
 			for index, ref in pairs(refs) do
 				tip:AddDoubleLine(
@@ -490,6 +521,16 @@ function TrafficAudit:UpdateMoreInfo(f, data, row)
 			end
 		end
 
+
+		if entry:ParseableModification() then
+			local parser = AttributeChangeHandlers[entry:GetModifiedAttribute()]
+			if parser then
+				tip:AddLine(" ")
+				tip:AddLine(L['changes'])
+				tip:AddLine(" ")
+				entry:ParseModification(function(k, v) parser(tip, k, v) end)
+			end
+		end
 
 		tip:Show()
 		tip:SetAnchorType("ANCHOR_RIGHT", 0, -tip:GetHeight())
