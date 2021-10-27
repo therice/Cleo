@@ -255,7 +255,7 @@ function List:SetPlayers(...)
 	local count = select("#", ...)
 	Logging:Trace("SetPlayers(%d)", count)
 
-	if count > 0 then
+	if count >= 0 then
 		self:ClearPlayers()
 		for i=1, count do
 			local p = select(i, ...)

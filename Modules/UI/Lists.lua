@@ -17,6 +17,10 @@ local Dialog = AddOn:GetLibrary("Dialog")
 local Player = AddOn.ImportPackage('Models').Player
 --- @type Models.List.Configuration
 local Configuration = AddOn.Package('Models.List').Configuration
+--- @type Models.List.List
+local List = AddOn.Package('Models.List').List
+--- @type Models.Dao
+local Dao = AddOn.Package('Models').Dao
 --- @type Lists
 local Lists = AddOn:GetModule("Lists", true)
 
@@ -29,6 +33,21 @@ local Tabs = {
 function Lists:LayoutInterface(container)
 	container:SetWide(1000)
 
+	container.warning =
+		UI:New('Text', container, L["warning_persistence_disabled"])
+	        :Point("RIGHT", container.banner, "RIGHT", 0, 0)
+	        :Color(0.99216, 0.48627, 0.43137, 0.8)
+	        :Right()
+	        :FontSize(12)
+	        :Shadow(true)
+	container.ShowPersistenceWarningIfNeeded = function(self)
+		if Dao.ShouldPersist() then
+			self.warning:Hide()
+		else
+			self.warning:Show()
+		end
+	end
+
 	container.tabs = UI:New('Tabs', container, unpack(Util.Tables.Keys(Tabs))):Point(0, -36):Size(1000, 580):SetTo(1)
 	container.tabs:SetBackdropBorderColor(0, 0, 0, 0)
 	container.tabs:SetBackdropColor(0, 0, 0, 0)
@@ -40,6 +59,15 @@ function Lists:LayoutInterface(container)
 
 	self:LayoutConfigurationTab(container.tabs:Get(1))
 	self:LayoutListTab(container.tabs:Get(2))
+	container:ShowPersistenceWarningIfNeeded()
+
+	self.interfaceFrame = container
+end
+
+function Lists:OnModeChange(_, mode)
+	if self.interfaceFrame then
+		self.interfaceFrame:ShowPersistenceWarningIfNeeded()
+	end
 end
 
 function Lists:Players(mapFn, ...)
@@ -48,7 +76,6 @@ function Lists:Players(mapFn, ...)
 	local players = AddOn:Players(true, true, true)
 	for _, p in pairs({...}) do
 		Logging:Debug("Players() : Evaluating %s", tostring(p))
-		-- Player:Get((Util.Objects.IsTable(p) and p:isInstanceOf(Player)) and p:GetName() or p)
 		local player = Player.Resolve(p)
 		if player and not players[player:GetShortName()] then
 			players[player:GetShortName()] = player
@@ -104,6 +131,32 @@ function Lists:LayoutConfigurationTab(tab)
 			:Point("BOTTOMRIGHT", tab, "TOPRIGHT", -2, -46)
 			:Color(0.25, 0.78, 0.92, 1, 0.50)
 
+	tab.version =
+		UI:New('Text', tab)
+	        :Point("LEFT", tab.banner, "LEFT", 5, 0)
+	        :Right()
+	        :FontSize(11)
+	tab.version:Hide()
+	tab.version.SetValue = function(self, config)
+		if config then
+			self:SetText(
+				format(
+					"%s %s",
+				    UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate(config:hash()),
+					UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate("(" ..tostring(config.revision) .. ")")
+				)
+			)
+			self:Show()
+		else
+			self:Hide()
+		end
+	end
+	-- register for callback when configuration is updated (only to update hash and revision)
+	self.listsService:RegisterCallbacks(tab, {
+	    [Configuration] = {
+			[Dao.Events.EntityUpdated] = function(...) tab.version:SetValue(SelectedConfiguration()) end,
+        }
+    })
 
 	-- delete configuration
 	tab.delete =
@@ -261,7 +314,6 @@ function Lists:LayoutConfigurationTab(tab)
 							end
 						)
 
-					-- todo : remove from available list those who are in admins as well (in case it was us)
 					return available, Util.Tables.Sort(admins)
 				end
 			)
@@ -293,6 +345,7 @@ function Lists:LayoutConfigurationTab(tab)
 		if config then
 			Logging:Trace("Config(Tab).Update(%s)", tostring(config.id))
 			self:SetFieldsEnabled(true)
+			self.version:SetValue(config)
 			self.name:Text(config.name)
 			self.default:SetChecked(config.default)
 			self.status:SetViaKey(config.status)
@@ -302,6 +355,7 @@ function Lists:LayoutConfigurationTab(tab)
 	end
 
 	tab:SetFieldsEnabled(false)
+
 
 	self.configTab = tab
 end
@@ -324,7 +378,7 @@ function Lists:DeleteConfigurationOnClickYes(_, config)
 	)
 	if lists then
 		for _, list in pairs(lists) do
-			self:GetService().List:Remvoe(list)
+			self:GetService().List:Remove(list)
 		end
 	end
 	self:GetService().Configuration:Remove(config)
@@ -478,6 +532,8 @@ function Lists:LayoutListTab(tab)
 			self.name:Text(nil)
 		end
 
+		self.version:SetValue(list)
+
 		-- iterate and child tabs and update their fields
 		for _, childTab in self.listSettings:IterateTabs() do
 			if childTab.Update then
@@ -498,10 +554,38 @@ function Lists:LayoutListTab(tab)
 	end
 
 	-- the background for configuration list tabs
-	UI:New('DecorationLine', tab.listSettings, true, "BACKGROUND",-5)
-		:Point("TOPLEFT", tab.listSettings, 0, 0)
-		:Point("BOTTOMRIGHT",tab,"TOPRIGHT", -2, -45)
-		:Color(0.25, 0.78, 0.92, 1, 0.50)
+	local tabBg =
+		UI:New('DecorationLine', tab, true, "BACKGROUND",-5)
+			:Point("TOPLEFT", tab.listSettings, 0, 0)
+			:Point("BOTTOMRIGHT",tab,"TOPRIGHT", -2, -45)
+			:Color(0.25, 0.78, 0.92, 1, 0.50)
+
+	tab.version =
+		UI:New('Text', tab)
+	        :Point("RIGHT", tabBg, "RIGHT", -5, 0)
+	        :Right()
+	        :FontSize(11)
+	tab.version:Hide()
+	tab.version.SetValue = function(self, list)
+		if list then
+			self:SetText(
+				format(
+					"%s %s",
+					UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate(list:hash()),
+					UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate("(" ..tostring(list.revision) .. ")")
+				)
+			)
+			self:Show()
+		else
+			self:Hide()
+		end
+	end
+	-- register for callback when list is updated (only to update hash and revision)
+	self.listsService:RegisterCallbacks(tab, {
+		[List] = {
+			[Dao.Events.EntityUpdated] = function(...) tab.version:SetValue(SelectedList()) end,
+		}
+	})
 
 	self:LayoutListEquipmentTab(
 		tab.listSettings:GetByName(L["equipment"]),
@@ -514,7 +598,6 @@ function Lists:LayoutListTab(tab)
 		SelectedConfiguration,
 		SelectedList
 	)
-
 
 	tab:Update()
 	self.listTab = tab
@@ -655,7 +738,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	local function EditOnDragStop(self, dragType)
 		self:StopMovingOrSizing()
 
-		local function SetText(edit, text, bgText)
+		local function SetText(edit, text)
 			edit:Set(text)
 		end
 
@@ -714,14 +797,15 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		end
 	end
 
+	-- yuck, yuck, yuck
+	local rt = tab:GetParent():GetParent():GetParent():GetParent().banner
 	tab.warning =
 		UI:New('Text', tab, L["warning_unsaved_changes"])
-			:Point("TOPRIGHT", tab, "TOPRIGHT", -70, 17)
+			:Point("TOPRIGHT", rt, "TOPRIGHT", 0, 17)
 			:Color(0.99216, 0.48627, 0.43137, 0.8)
 			:Right()
 			:FontSize(14)
 			:Shadow(true)
-			:Outline(false)
 	tab.warning:Hide()
 
 	-- this tracks player's priority "edits" which are currently on the list (pure UI element)
@@ -979,6 +1063,29 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	tab:SetScript("OnShow", function(self) self:Update() end)
 	self.listPriorityTab = tab
+end
+
+
+function Lists:SelectListModuleFn()
+	return function(lpad)
+		-- select the 'list' module
+		lpad:SetModuleIndex(self.interfaceFrame.moduleIndex)
+		-- select the 'list' tab
+		self.interfaceFrame.tabs:SetTo(2)
+		-- select the default configuration
+
+		local configs = self:GetService():Configurations(nil, true)
+		if Util.Tables.Count(configs) == 0 then
+			configs = self:GetService():Configurations()
+		end
+
+		local configId = configs and Util.Tables.Keys(configs)[1] or nil
+		if configId then
+			self.listTab.config:SetViaKey(configId)
+			self.listTab.lists:SetTo(1)
+			self.listPriorityTab:Update()
+		end
+	end
 end
 
 do

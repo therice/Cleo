@@ -6,6 +6,8 @@ local Util = AddOn:GetLibrary("Util")
 local SHA = AddOn:GetLibrary("SHA")
 --- @type LibMessagePack
 local MessagePack = AddOn:GetLibrary("MessagePack")
+--- @type LibLogging
+local Logging = AddOn:GetLibrary("Logging")
 
 --- @class Models.Hasher
 local Hasher = AddOn.Class('Models.Hasher')
@@ -46,11 +48,17 @@ function Hashable.Includable(algorithm)
 			clazz.isHashable = true
 		end,
 		hash = function(self)
+			Logging:Warn("hash() : %s", Util.Objects.ToString(self.clazz.static.excludedHA))
 			local asTable = self:toTable()
 			for _, attr in pairs(self.clazz.static.excludedHA) do
+				Logging:Warn("hash() : removing %s", tostring(attr))
 				Util.Tables.Remove(asTable, attr)
 			end
-			return hasher:hash(asTable)
+
+
+			local hv = hasher:hash(asTable)
+			Logging:Warn("hash(%s, %s) : %s", tostring(self.id), tostring(self.clazz.name), hv)
+			return hv
 		end,
 		Verify = function(self, against)
 			local ours = self:hash()

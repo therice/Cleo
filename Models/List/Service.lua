@@ -41,27 +41,27 @@ local function Dao(self, class)
 	end
 end
 
-function Service:RegisterCallbacks(callbacks)
+function Service:RegisterCallbacks(target, callbacks)
 	for class, eventFns in pairs(callbacks) do
 		local dao = Dao(self, class)
 		for event, fn in pairs(eventFns) do
-			dao.RegisterCallback(self, event, fn)
+			dao.RegisterCallback(target, event, fn)
 		end
 	end
 end
 
-function Service:UnregisterCallbacks(callbacks)
+function Service:UnregisterCallbacks(target, callbacks)
 	for class, events in pairs(callbacks) do
 		local dao = Dao(self, class)
 		for _, event in pairs(events) do
-			dao.UnregisterCallback(self, event)
+			dao.UnregisterCallback(target, event)
 		end
 	end
 end
 
-function Service:UnregisterAllCallbacks()
+function Service:UnregisterAllCallbacks(target)
 	for _, class in pairs({Configuration, List}) do
-		Dao(self, class).UnregisterAllCallbacks(self)
+		Dao(self, class).UnregisterAllCallbacks(target)
 	end
 end
 
@@ -195,11 +195,12 @@ end
 function Service:LoadAuditRefs(auditRef)
 	local config, list = nil, nil
 	if Util.Objects.IsInstanceOf(auditRef, AddOn.Package('Models.Audit').TrafficRecord) then
-		config = self.Configuration:Get(auditRef.config.id)
-		if auditRef.list then
-			list = self.List:Get(auditRef.list.id)
+		if auditRef.config then
+			config = self.Configuration:Get(auditRef.config.id)
+			if auditRef.list then
+				list = self.List:Get(auditRef.list.id)
+			end
 		end
-
 	end
 
 	return config, list

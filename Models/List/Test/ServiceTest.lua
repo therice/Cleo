@@ -194,9 +194,11 @@ describe("Service Model", function()
 		end)
 		it("provides callbacks", function()
 
+			local r = {}
+
 			assert.error(
 					function()
-						S:RegisterCallbacks({
+						S:RegisterCallbacks(r, {
 							[Configuration] = {},
 							[List] = {},
 							[Dao] = {},
@@ -204,7 +206,7 @@ describe("Service Model", function()
 					end
 			)
 
-			S:RegisterCallbacks({
+			S:RegisterCallbacks(r, {
                 [Configuration] = {
 	                [Dao.Events.EntityCreated] = function() end,
 	                [Dao.Events.EntityDeleted] = function() end,
@@ -214,12 +216,12 @@ describe("Service Model", function()
                 },
 			})
 
-			S:UnregisterCallbacks({
+			S:UnregisterCallbacks(r, {
 				[Configuration] = { Dao.Events.EntityCreated, Dao.Events.EntityDeleted },
 				[List]          = { Dao.Events.EntityUpdated }
 			})
 
-			S:UnregisterAllCallbacks()
+			S:UnregisterAllCallbacks(r)
 
 
 			local C = Configuration.CreateInstance()
@@ -264,11 +266,17 @@ describe("Service Model", function()
 				end,
 				EntityUpdated = function(self, event, entity, attr, diff, asRef)
 					print(format('EntityUpdated (%s) => %s', attr, Util.Objects.ToString(diff)))
+					-- print(format('EntityUpdated %s / %s', entity:hash(), asRef.hash))
 					IncrementEventCount(entity, event, attr)
+					assert.Not.equal(entity:hash(), asRef.hash)
+					if entity:TriggersNewRevision(attr) then
+						print('Expect new revision -> ' .. tostring(attr))
+						assert.Not.equal(entity.revision, asRef.revision)
+					end
 				end
 			}
 
-			S:RegisterCallbacks({
+			S:RegisterCallbacks(x, {
                 [Configuration] = {
                     [Dao.Events.EntityCreated] = function(...) x:EntityCreated(...) end,
                     [Dao.Events.EntityDeleted] = function(...) x:EntityDeleted(...) end,
@@ -305,7 +313,7 @@ describe("Service Model", function()
 			assert.equal(1, events[C][Dao.Events.EntityDeleted])
 			assert.equal(1, events[L][Dao.Events.EntityDeleted])
 
-			S:UnregisterAllCallbacks()
+			S:UnregisterAllCallbacks(x)
 		end)
 		it("is activated", function()
 			--- @type  Models.List.ActiveConfiguration

@@ -80,12 +80,14 @@ function Lists:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
 	self:RegisterCallbacks()
 	self:SubscribeToComms()
+	self:RegisterMessage(C.Messages.ModeChanged, "OnModeChange")
 end
 
 function Lists:OnDisable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
 	self:UnregisterCallbacks()
 	self:UnsubscribeFromComms()
+	self:UnregisterMessage(C.Messages.ModeChanged)
 end
 
 function Lists:EnableOnStartup()
@@ -121,7 +123,7 @@ function Lists:UnsubscribeFromComms()
 end
 
 function Lists:RegisterCallbacks()
-	self.listsService:RegisterCallbacks({
+	self.listsService:RegisterCallbacks(self, {
         [Configuration] = {
 	        [Dao.Events.EntityCreated] = function(...) self:ConfigurationDaoEvent(...) end,
 	        [Dao.Events.EntityDeleted] = function(...) self:ConfigurationDaoEvent(...) end,
@@ -137,7 +139,7 @@ end
 
 function Lists:UnregisterCallbacks()
 	if self.listsService then
-		self.listsService:UnregisterAllCallbacks()
+		self.listsService:UnregisterAllCallbacks(self)
 	end
 end
 
@@ -455,9 +457,9 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 			end
 
 			if Util.Tables.Count(toRequest) > 0 then
-				self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
-				self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
-
+				Logging:Warn("%s", Util.Objects.ToString(toRequest))
+				--self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
+				--self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
 			end
 		end
 	end

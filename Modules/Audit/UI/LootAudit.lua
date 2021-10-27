@@ -198,7 +198,6 @@ function LootAudit:LayoutInterface(container)
 	        :Right()
 	        :FontSize(12)
 	        :Shadow(true)
-	        :Outline(false)
 	container.warning:Hide()
 
 	container.recordFilterClear =

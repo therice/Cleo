@@ -96,7 +96,6 @@ function ScrollList:Create()
 end
 
 function ScrollList.SetTooltip(self, title, ...)
-
 	local lines = Util.Tables.Copy({...} or {})
 
 	self:SetScript(

@@ -21,6 +21,7 @@ local Dialog = AddOn:GetLibrary("Dialog")
 
 local function ModeToggle(self, flag)
     if self.mode:Enabled(flag) then self.mode:Disable(flag) else self.mode:Enable(flag) end
+    self:SendMessage(C.Messages.ModeChanged, self.mode)
 end
 
 --- @return boolean

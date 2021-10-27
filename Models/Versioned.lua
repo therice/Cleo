@@ -72,7 +72,12 @@ end
 function Versioned:NewRevision(revision)
 	revision = Util.Objects.Default(revision, GetServerTime())
 	if not Util.Objects.IsNumber(revision) then error('revision must be a number') end
+	-- before/after is for same instant, primarily for testing stuff (which could be conditionalized here)
+	local before = self.revision
 	self.revision = Date(revision, true).time
+	if before == self.revision then
+		self.revision = self.revision + 1
+	end
 end
 
 function Versioned:RevisionAsDate()

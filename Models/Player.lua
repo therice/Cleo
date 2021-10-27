@@ -176,12 +176,15 @@ function Player:Get(input)
             end
         end
     else
-        error(format("%s is an invalid player", tostring(input)), 2)
+        error(format("%s (%d) is an invalid player", Util.Objects.ToString(input), type(input)), 2)
     end
 
     -- Logging:Trace("Get(%s) : GUID=%s", tostring(input), tostring(guid))
 
-    if Util.Strings.IsEmpty(guid) then Logging:Warn("Get(%s) : unable to determine GUID", tostring(input)) end
+    if Util.Strings.IsEmpty(guid) then
+        Logging:Warn("Get(%s) : unable to determine GUID", tostring(input))
+    end
+
     return Get(guid) or Player.Create(guid, info)
 end
 

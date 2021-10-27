@@ -210,6 +210,7 @@ function DeltaParser:Parse(delta, callback)
 		for k, v in Util.Tables.Sparse.ipairs(delta) do
 			-- an empty value means placeholder for the
 			-- delta patch, it assists with re-applying
+			-- if self:HandleEmpty() or (not Util.Objects.IsEmpty(v) and not Util.Tables.IsEmpty(v)) then
 			if self:HandleEmpty() or not Util.Tables.IsEmpty(v) then
 				callback(self:Resolve(k, v))
 			end
@@ -221,10 +222,15 @@ function DeltaParser:HandleEmpty()
 	return false
 end
 
+local V = 'v'
+
 -- return the 'v' value of the 'from'
 -- this is a special key used in generating delta patches
 function DeltaParser:V(from)
-	return from['v']
+	-- {v = {key = value}}
+	-- {key = {v = value}}
+
+	return Util.Tables.ContainsKey(from, V) and from[V] or Util.Tables.Pluck(Util.Tables.Copy(from), V)
 end
 
 function DeltaParser:Resolve(key, value)
@@ -234,7 +240,11 @@ end
 local PermissionsParser = DeltaParser(ResourceType.Configuration, 'permissions')
 function PermissionsParser:Resolve(player, permissions)
 	player = Player.Resolve(player)
-	local perm = Permission:reconstitute(self:V(permissions))
+	Logging:Trace("Resolve(FROM) : %s", Util.Objects.ToString(permissions))
+	local v = self:V(permissions)
+	Logging:Trace("Resolve(TO) : %s", Util.Objects.ToString(v))
+
+	local perm = Permission:reconstitute(v)
 	return player, tostring(perm)
 end
 
@@ -248,5 +258,6 @@ end
 
 local PriorityParser = DeltaParser(ResourceType.List, 'players')
 function PriorityParser:Resolve(priority, player)
-	return priority, Player.Resolve(self:V(player))
+	local v = self:V(player)
+	return priority, Util.Objects.IsSet(v) and Player.Resolve(v) or nil
 end

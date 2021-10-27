@@ -13,8 +13,6 @@ local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
 local STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
 --- @type UI.MoreInfo
 local MI = AddOn.Require('UI.MoreInfo')
---- @type UI.DropDown
-local DropDown = AddOn.Require('UI.DropDown')
 --- @type UI.Native
 local UI = AddOn.Require('UI.Native')
 --- @type Models.CompressedDb
@@ -221,22 +219,6 @@ function TrafficAudit:FilterFunc(_, row)
 end
 
 local cpairs = CDB.static.pairs
---[[
-local function GetResourceFromRecord(record)
-	local resource
-	if record then
-		local resourceType, resourceRef = record:GetResourceType(), record:GetResource()
-		if resourceRef then
-			if resourceType == TrafficRecord.ResourceType.Configuration then
-				resource = AddOn:ListsModule():GetService().Configuration:Get(resourceRef.id)
-			elseif resourceType == TrafficRecord.ResourceType.List then
-				resource = AddOn:ListsModule():GetService().List:Get(resourceRef.id)
-			end
-		end
-	end
-	return resource
-end
---]]
 function TrafficAudit:BuildData(container)
 	local LM = AddOn:ListsModule()
 
@@ -437,8 +419,7 @@ local ColorConfiguration, ColorList, ColorUnknown =
 local AttributeChangeHandlers = {
 	['permissions'] = function(tip, player, permissions)
 		local c = UIUtil.GetPlayerClassColor(player:GetShortName())
-		Logging:Debug("%s", Util.Objects.ToString(c))
-
+		-- Logging:Debug("%s", Util.Objects.ToString(c))
 		tip:AddDoubleLine(
 			AddOn.Ambiguate(player),
 			permissions,
@@ -453,10 +434,10 @@ local AttributeChangeHandlers = {
 		end
 	end,
 	['players'] = function(tip, priority, player)
-		local c = UIUtil.GetPlayerClassColor(player:GetShortName())
+		local c = player and UIUtil.GetPlayerClassColor(player:GetShortName()) or Util.Constants.Aluminum
 		tip:AddDoubleLine(
 			format("%s #%s", L['priority'], tostring(priority)),
-			AddOn.Ambiguate(player),
+			player and AddOn.Ambiguate(player) or L['unknown'],
 			1, 1, 1,
 			c.r, c.g, c.b
 		)

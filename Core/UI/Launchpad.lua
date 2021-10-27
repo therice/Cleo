@@ -196,3 +196,10 @@ function AddOn:ToggleLaunchpad()
 		lpad:Show()
 	end
 end
+
+function AddOn:ShowLaunchpadAndSelect(fn)
+	self:ToggleLaunchpad()
+	if self.launchpad:IsVisible() then
+		fn(self.launchpad)
+	end
+end

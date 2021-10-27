@@ -21,12 +21,11 @@ function MinimapButton:initialize()
                 OnClick = function(_, button)
                     if button == C.Buttons.Right then
                         AddOn:ToggleLaunchpad()
-                        -- AddOn.ToggleConfig()
-                    else
+                    elseif button == C.Buttons.Left then
                         if IsShiftKeyDown() then
                             AddOn:LoggingModule():Toggle()
                         else
-                            -- AddOn:ToggleModule("Standings")
+                            AddOn:ShowLaunchpadAndSelect(AddOn:ListsModule():SelectListModuleFn())
                         end
                     end
                 end,

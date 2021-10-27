@@ -49,7 +49,7 @@ function Dao:Reconstitute(id, attrs)
 	return entity
 end
 
-function Dao:ShouldPersist()
+function Dao.ShouldPersist()
 	-- don't apply to persistence storage in test mode or if persistence mode is disabled
 	return (not AddOn:TestModeEnabled() and AddOn:PersistenceModeEnabled()) or AddOn._IsTestContext()
 end
@@ -61,7 +61,7 @@ function Dao:Add(entity, fireCallbacks)
 	local asTable = entity:toTable()
 	asTable['id'] = nil
 	Logging:Trace("Dao.Add[%s](%s) : %s", tostring(self.entityClass), entity.id, Util.Objects.ToString(asTable))
-	if self:ShouldPersist() then
+	if self.ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, asTable)
 	end
 
@@ -107,18 +107,25 @@ function Dao:Update(entity, attr, fireCallbacks)
 	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
 
 	local key = self.Key(entity, attr)
-	local asTable, asRef = entity:toTable(), nil
-	local curVal, prevVal, diff = asTable[attr], nil, nil
+	local asTable, ref = entity:toTable(), nil
+	local curVal, diff = asTable[attr], nil
 
-	-- if the entity is Referenceable, capture it for any needed callbacks.
-	-- this is done before mutations in order to provide a reference point for update
+	-- if the entity is Referenceable, capture it for any registered callbacks.
+	-- this is done based upon current persisted value in order to provide a reference point for update
 	if Referenceable.IsReferenceable(entity) then
-		asRef = entity:ToRef(false)
+		local current = self:Get(entity.id)
+		ref = current and current:ToRef(false)
+		Logging:Trace(
+			"Dao.Update(%s)[%s](CURRENT) : hash=%s, revision=%d",
+			tostring(self.entityClass), entity.id,
+			(ref and ref.hash or '?'), (ref and ref.revision or 0)
+		)
 	end
 
 	-- generate the diff of the two values
 	if Util.Objects.IsTable(curVal) then
-		prevVal = self.module:GetDbValue(self.db, key)
+		local prevVal = self.module:GetDbValue(self.db, key)
+		prevVal = Util.Tables.IsEmpty(prevVal) and {} or prevVal
 		diff = Util.Patch.diff(prevVal, curVal)
 		Logging:Trace(
 			"Dao.Update(%s)[%s] : %s / %s => %s [ %s ]",
@@ -130,7 +137,7 @@ function Dao:Update(entity, attr, fireCallbacks)
 		diff = curVal
 	end
 
-	local shouldPersist = self:ShouldPersist()
+	local shouldPersist = self.ShouldPersist()
 
 	if shouldPersist then
 		self.module:SetDbValue(
@@ -143,6 +150,12 @@ function Dao:Update(entity, attr, fireCallbacks)
 	-- for versioned entities, trigger a new revision if attribute is marked as such
 	if Util.Objects.IsInstanceOf(entity, Versioned) then
 		if entity:TriggersNewRevision(attr) then
+			Logging:Trace(
+				"Dao.Update(%s)[%s] : '%s' triggering (%s) new revision, current = %d",
+				tostring(self.entityClass), entity.id,
+				tostring(attr), tostring(shouldPersist),
+				entity.revision
+			)
 			entity:NewRevision()
 			if shouldPersist then
 				self.module:SetDbValue(
@@ -155,8 +168,8 @@ function Dao:Update(entity, attr, fireCallbacks)
 
 		-- check on stored version vs current version
 		local version, storedVersion =
-		entity.version,
-		self.module:GetDbValue(self.db, self.Key(entity, 'version'))
+			entity.version,
+			self.module:GetDbValue(self.db, self.Key(entity, 'version'))
 
 		if not Util.Objects.IsNil(storedVersion) then
 			_, storedVersion = SemanticVersion.Create(storedVersion)
@@ -175,7 +188,7 @@ function Dao:Update(entity, attr, fireCallbacks)
 	end
 
 	if fireCallbacks then
-		self.callbacks:Fire(Events.EntityUpdated, entity, attr, diff, asRef)
+		self.callbacks:Fire(Events.EntityUpdated, entity, attr, diff, ref)
 	end
 end
 
@@ -184,7 +197,7 @@ function Dao:Remove(entity, fireCallbacks)
 	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
 
 	Logging:Trace("Dao.Remove[%s](%s)", tostring(self.entityClass), entity.id)
-	if self:ShouldPersist() then
+	if self.ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, nil)
 	end
 

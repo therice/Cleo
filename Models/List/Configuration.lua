@@ -68,7 +68,7 @@ function Permission:__tostring()
 		Util.Tables.Push(perms, None)
 	end
 
-	return Util.Strings.Join(',', perms)
+	return Util.Strings.Join(', ', perms)
 end
 
 function Configuration:initialize(id, name)

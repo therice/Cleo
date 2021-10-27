@@ -138,8 +138,11 @@ describe("List Model", function()
 			assert.equal('List', ref.clz)
 
 			local l2 = AddOn.Require('Models.Referenceable').FromRef(ref)
-
 			print(Util.Objects.ToString(l2:toTable()))
+
+			l:RemovePlayer(Player:Get('Eliovak'))
+			ref = l:ToRef()
+			print(Util.Objects.ToString(ref, false))
 		end)
 	end)
 end)
