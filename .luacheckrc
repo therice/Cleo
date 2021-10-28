@@ -31,6 +31,7 @@ read_globals = {
 	"ceil",
 	"date",
 	"difftime",
+	"floor",
 	"format",
 	"getglobal",
 	"gsub",
@@ -67,6 +68,11 @@ read_globals = {
 	"CanEditOfficerNote",
 	"CloseLoot",
 	"CreateColor",
+	"CreateFont",
+	"C_Timer",
+	"GameFontHighlightSmall",
+	"GameFontHighlightSmallLeft",
+	"GameFontNormal",
 	"GetAddOnMetadata",
 	"GetContainerNumFreeSlots",
 	"GetGuildRosterInfo",
@@ -118,6 +124,7 @@ read_globals = {
 	"IsShiftKeyDown",
 	"LootSlot",
 	"LootSlotHasItem",
+	"MouseIsOver",
 	"RandomRoll",
 	"SendChatMessage",
 	"SetLootMethod",
@@ -135,6 +142,7 @@ read_globals = {
 	"UnitPosition",
 
 	-- Frames
+	"BackdropTemplateMixin",
 	"GameFontHighlightLeft",
 	"GameTooltip",
 	"InterfaceOptionsFrameCancel",
@@ -146,6 +154,12 @@ read_globals = {
 	"CreateFrame",
 	"EnumerateFrames",
 	"FauxScrollFrame_OnVerticalScroll",
+	"GameTooltip_Hide",
+	"GetScreenWidth",
+	"PanelTemplates_SetDisabledTabState",
+	"SliderOnMouseWheel",
+	"UIDropDownMenu_StartCounting",
+	"UIDropDownMenu_StopCounting",
 
 	-- Constants
 	"BACKPACK_CONTAINER",

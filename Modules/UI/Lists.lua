@@ -894,7 +894,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		    :OnClick(
 				function(self)
 					self:GetParent().includeGuild = self:GetChecked()
- 					self:GetParent():UpdateAvailablePlayers()
+					self:GetParent():UpdateAvailablePlayers()
 				end
 			)
 	tab.playersInGuild:SetSize(14, 14)
