@@ -24,6 +24,11 @@ target
 .target
 .g8
 
+# commit linter
+/node_modules
+package-lock.json
+package.json
+
 # coverage
 luacov.report.out
 luacov.stats.out
