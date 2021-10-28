@@ -1,0 +1,11 @@
+package-as: Cleo
+
+ignore:
+  - Test
+  - */Test/*
+  - .gitignore
+  - .luacov
+  - .luacheckrc
+  - .pkgmeta
+  - .travis.yml
+  - .busted

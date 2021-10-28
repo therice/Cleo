@@ -1,0 +1,40 @@
+language: minimal
+sudo: required
+
+env:
+  - LUA="lua 5.1"
+
+addons:
+  apt:
+    packages:
+      - luajit
+      - luarocks
+
+install:
+  - luarocks install --local --lua-version=5.1 luacheck
+  - luarocks install --local --lua-version=5.1 luafilesystem
+  - luarocks install --local --lua-version=5.1 busted
+  - luarocks install --local --lua-version=5.1 xml2lua
+  - luarocks install --local --lua-version=5.1 penlight
+  - luarocks install --local --lua-version=5.1 bitlib
+  - luarocks install --local --lua-version=5.1 luacov
+  - luarocks install --local --lua-version=5.1 cluacov
+  - luarocks install --local --lua-version=5.1 luacov-coveralls
+
+before_script:
+  # - /home/travis/.luarocks/bin/luacheck . --no-color -q
+  - eval `luarocks --lua-version=5.1 path`
+  - /home/travis/.luarocks/bin/busted --lua=lua5.1 -c -o gtest .
+  - sudo apt-get update
+  - sudo apt-get -y install jq
+
+script:
+  - curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g "2.5.2"
+
+after_success:
+  - /home/travis/.luarocks/bin/luacov-coveralls -v -t $COVERALLS_TOKEN
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always

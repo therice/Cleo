@@ -145,8 +145,8 @@ function AddOn:ApplyModules(moduleSuppliers)
 			moduleFrame.module = metadata[1]
 			moduleFrame.banner =
 				UI:New('DecorationLine', moduleFrame, true,"BACKGROUND",-5)
-						:Point("TOPLEFT",moduleFrame,0,-16)
-						:Point("BOTTOMRIGHT",moduleFrame,"TOPRIGHT", -2,-36)
+					:Point("TOPLEFT",moduleFrame,0,-16)
+					:Point("BOTTOMRIGHT",moduleFrame,"TOPRIGHT", -2,-36)
 
 			moduleFrame.GetLaunchPad = function(self)
 				return self:GetParent():GetParent()
