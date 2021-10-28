@@ -176,7 +176,7 @@ function Player:Get(input)
             end
         end
     else
-        error(format("%s (%d) is an invalid player", Util.Objects.ToString(input), type(input)), 2)
+        error(format("%s (%s) is an invalid player", Util.Objects.ToString(input), type(input)), 2)
     end
 
     -- Logging:Trace("Get(%s) : GUID=%s", tostring(input), tostring(guid))
