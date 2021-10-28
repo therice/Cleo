@@ -16,6 +16,8 @@ Locales\Locales.xml
 Core\PreLoad.xml
 ## Initialization Stub
 Init.lua
+## Change Log
+Changelog.lua
 ## Models
 Models\Models.xml
 ## User Interface

@@ -12,33 +12,6 @@ local UIUtil = AddOn.Require('UI.Util')
 --- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 
-local TestChangeLog = [=[
-2021.1.0-dev
-* A change
-* Another change
-* More changes
-
-2020.2.123
-* Fix regression
-* Last cut of this version
-
-2020.2.111
-* Fix regression
-* Last cut of this version
-
-2020.1.1245
-* Fix regression
-* Last cut of this version
-
-2020.1.444
-* Fix regression
-* Last cut of this version
-
-2020.1.0-beta
-* Fix regression
-* Last cut of this version
-]=]
-
 local ParsedChangeLog = Util.Memoize.Memoize(
 	function()
 		--- @type Models.SemanticVersion
@@ -47,11 +20,10 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 		local LineDecorator    = UIUtil.ColoredDecorator(C.Colors.ItemArtifact)
 
 		local parsed = Util.Tables.Map(
-				Util.Strings.Split(TestChangeLog, "\n"),
+				Util.Strings.Split(AddOn.Changelog, "\n"),
 				function(line, ...)
 					if SemanticVersion.Is(line) then
 						local _, version = SemanticVersion.Create(line)
-
 						return VersionDecorator:decorate(tostring(version))
 					end
 
