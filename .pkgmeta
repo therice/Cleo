@@ -9,3 +9,6 @@ ignore:
   - .pkgmeta
   - .travis.yml
   - .busted
+  - .commitlintrc.json
+  - .huskyrc.json
+  - commitlint.config
