@@ -156,24 +156,6 @@ function CustomItems:LayoutInterface(container)
 			lineCount = lineCount + 1
 			if not line then break end
 
-			-- todo : handle query failing
-			-- https://wowpedia.fandom.com/wiki/ItemMixin#Methods
-			local name, link, _, _, _, _, _, _, _, texture = GetItemInfo(itemId)
-			line.item = {
-				id = tonumber(itemId),
-				link = link,
-				GetDataSourceKey = function(self, attr)
-					return 'custom_items.' .. tostring(self.id) .. '.' .. attr
-				end
-			}
-			for attr, value in pairs(item) do
-				line.item[attr] = value
-			end
-
-			line.icon:SetTexture(texture)
-			line.icon:SetShown(true)
-			line.itemName:SetText(name)
-
 			local function UpdateItemQualityColor(quality)
 				local itemQualityColor = _G.ITEM_QUALITY_COLORS[quality]
 				if itemQualityColor then
@@ -181,28 +163,50 @@ function CustomItems:LayoutInterface(container)
 				end
 			end
 
-			UpdateItemQualityColor(item.rarity)
-			line.quality:Datasource(
-				module,
-				module.db.factionrealm,
-				line.item:GetDataSourceKey("rarity"),
-				nil,
-				function(quality) UpdateItemQualityColor(quality) end
-			)
+			ItemUtil.QueryItem(
+				itemId,
+				function(_, _)
+					-- https://wowpedia.fandom.com/wiki/ItemMixin#Methods
+					local name, link, _, _, _, _, _, _, _, texture = GetItemInfo(itemId)
+					line.item = {
+						id = tonumber(itemId),
+						link= link,
+						GetDataSourceKey = function(self, attr)
+							return 'custom_items.' .. tostring(self.id) .. '.' .. attr
+						end
+					}
+					for attr, value in pairs(item) do
+						line.item[attr] = value
+					end
 
-			line.type:Datasource(
-				module,
-				module.db.factionrealm,
-				line.item:GetDataSourceKey("equip_location")
-			)
+					line.icon:SetTexture(texture)
+					line.icon:SetShown(true)
+					line.itemName:SetText(name)
 
-			line.level:Datasource(
-				module,
-				module.db.factionrealm,
-				line.item:GetDataSourceKey("item_level")
-			)
+					UpdateItemQualityColor(item.rarity)
+					line.quality:Datasource(
+						module,
+						module.db.factionrealm,
+						line.item:GetDataSourceKey("rarity"),
+						nil,
+						function(quality) UpdateItemQualityColor(quality) end
+					)
 
-			line.delete.lastClick = nil
+					line.type:Datasource(
+						module,
+						module.db.factionrealm,
+						line.item:GetDataSourceKey("equip_location")
+					)
+
+					line.level:Datasource(
+						module,
+						module.db.factionrealm,
+						line.item:GetDataSourceKey("item_level")
+					)
+
+					line.delete.lastClick = nil
+				end
+			)
 
 			line:Show()
 		end
