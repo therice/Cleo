@@ -449,7 +449,7 @@ function LA:OnAwardedReceived(session, winner)
 	local oldWinner = entry.awarded
 	for session2, entry2 in ipairs(self.lootTable) do
 		if AddOn.ItemIsItem(entry2.link, entry.link) then
-			if oldWinner and not AddOn:UnitIsUnit(oldWinner, winner) then
+			if oldWinner and not AddOn.UnitIsUnit(oldWinner, winner) then
 				self:SetCandidateData(session2, oldWinner, LAA.Response, self:GetCandidateData(session2, oldWinner, LAA.ResponseActual))
 			end
 			self:SetCandidateData(session2, winner, LAA.ResponseActual, self:GetCandidateData(session2, winner, LAA.Response))

@@ -48,16 +48,12 @@ function Hashable.Includable(algorithm)
 			clazz.isHashable = true
 		end,
 		hash = function(self)
-			Logging:Warn("hash() : %s", Util.Objects.ToString(self.clazz.static.excludedHA))
 			local asTable = self:toTable()
 			for _, attr in pairs(self.clazz.static.excludedHA) do
-				Logging:Warn("hash() : removing %s", tostring(attr))
 				Util.Tables.Remove(asTable, attr)
 			end
 
-
 			local hv = hasher:hash(asTable)
-			Logging:Warn("hash(%s, %s) : %s", tostring(self.id), tostring(self.clazz.name), hv)
 			return hv
 		end,
 		Verify = function(self, against)

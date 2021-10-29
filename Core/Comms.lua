@@ -51,7 +51,9 @@ function AddOn:SubscribeToPermanentComms()
             Logging:Debug("MasterLooterDb from %s", tostring(sender))
             if AddOn:IsMasterLooter() then
                 return
-            elseif AddOn.UnitIsUnit(sender, self.masterLooter) then
+            end
+
+            if AddOn.UnitIsUnit(sender, self.masterLooter) then
                 AddOn:OnMasterLooterDbReceived(unpack(data))
             else
                 Logging:Warn("MasterLooterDb received from %s (NOT the master looter)", tostring(sender))

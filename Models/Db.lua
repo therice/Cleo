@@ -162,7 +162,6 @@ local _build = function(self, ml)
 
     -- do not support custom buttons and responses currently, only the default
     -- so don't send them unnecessarily
-
     local numButtons =
             Util.Tables.Get(mlSettings, 'buttons.numButtons') or
             Util.Tables.Get(mlDefaults, 'buttons.numButtons') or
@@ -174,7 +173,7 @@ local _build = function(self, ml)
 
     self.db = {
         outOfRaid         = mlSettings.outOfRaid,
-        timeout           = mlSettings.timeout,
+        timeout           = mlSettings.timeout and Util.Tables.Copy(mlSettings.timeout) or nil,
         showLootResponses = mlSettings.showLootResponses,
         buttons           = buttons,
     }
@@ -204,7 +203,7 @@ end
 
 ---@return table
 function MasterLooterDbSingleton:Get(rebuild)
-    rebuild = Util.Objects.IsNil(rebuild) and false or true
+    rebuild = Util.Objects.Default(rebuild, false)
     Logging:Trace("MasterLooterDbSingleton:Get(%s)", tostring(rebuild))
 
     if rebuild or not self.instance:IsInitialized() then
@@ -225,7 +224,7 @@ function MasterLooterDbSingleton:Set(data)
 end
 
 ---@type Core.Comm
-local Comm = Util.Memoize.Memoize(function() return AddOn.Require('Core.Comm') end)
+local Comm = AddOn.RequireOnUse('Core.Comm')
 function MasterLooterDbSingleton:Send(target)
     -- make sure the DB has been built, if already built it won't be rebuilt
     self:Get()

@@ -786,8 +786,10 @@ end
 
 function ML:OnHandleLootStop(...)
 	Logging:Debug("OnHandleLootStop")
-	-- don't proceed if not in a state to handle
-	if self:IsHandled() then
+	-- cannot call IsHandled() here because the workflow
+	-- may have already captured the new ML (even if current player was the previous ML)
+	-- see NewMasterLooterCheck()
+	if self:IsEnabled() then
 		-- todo : may need to check that active configuration is persisted and broadcast
 		-- todo : however, that should have been kept up to date as events occurred
 		self:Disable()
@@ -1502,7 +1504,7 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 		-- 0 == Poor
 		-- 1 == Common
 		-- 2 == Uncommon
-		if db.autoAwardLowerThreshold < 2 and quality < 2 and not AddOn:UnitIsUnit(winner, "player") then
+		if db.autoAwardLowerThreshold < 2 and quality < 2 and not AddOn.UnitIsUnit(winner, "player") then
 			AddOn:Print(
 				format(
 					L["cannot_auto_award_quality"],

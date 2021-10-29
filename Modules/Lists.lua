@@ -455,12 +455,12 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 					end
 				end
 			end
+		end
 
-			if Util.Tables.Count(toRequest) > 0 then
-				Logging:Warn("%s", Util.Objects.ToString(toRequest))
-				self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
-				self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
-			end
+		if Util.Tables.Count(toRequest) > 0 then
+			Logging:Warn("%s", Util.Objects.ToString(toRequest))
+			self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
+			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
 		end
 	end
 

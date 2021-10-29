@@ -256,7 +256,7 @@ function AddOn:NewMasterLooterCheck()
     -- at this point we can check if we're the ML, it's not changing
     local isML = self:IsMasterLooter()
     -- old ML is us, but no longer ML
-    if self:UnitIsUnit(oldMl, "player") and not isML then
+    if self.UnitIsUnit(oldMl, "player") and not isML then
         self:StopHandleLoot()
     end
 
@@ -267,7 +267,7 @@ function AddOn:NewMasterLooterCheck()
     end
 
     -- old ML is us, new ML is us (implied by check above) and loot method has not changed
-    if self:UnitIsUnit(oldMl, self.masterLooter) and Util.Strings.Equal(oldLm, self.lootMethod) then
+    if self.UnitIsUnit(oldMl, self.masterLooter) and Util.Strings.Equal(oldLm, self.lootMethod) then
         Logging:Debug("NewMasterLooterCheck() : No Master Looter change (%s / %s)", tostring(oldMl), tostring(self.masterLooter))
         return
     end
@@ -366,18 +366,19 @@ function AddOn:MasterLooterDbValue(...)
     return Util.Tables.Get(self.mlDb, Util.Strings.Join('.', ...))
 end
 
-
 function AddOn:OnMasterLooterDbReceived(mlDb)
-    Logging:Debug("OnMasterLooterDbReceived(%s)", Util.Tables.Count(mlDb))
+    Logging:Debug("OnMasterLooterDbReceived()")
     local ML = self:MasterLooterModule()
 
-    self.mlDb = mlDb
+    self.mlDb = Util.Tables.ContainsKey(mlDb, 'db') and mlDb['db'] or mlDb
 
     if not self.mlDb.responses then self.mlDb.responses = {} end
     setmetatable(self.mlDb.responses, {__index = ML:GetDefaultDbValue('profile.responses')})
 
     if not self.mlDb.buttons then self.mlDb.buttons = {} end
     setmetatable(self.mlDb.buttons, {__index = ML:GetDefaultDbValue('profile.buttons')})
+
+    Logging:Trace("OnMasterLooterDbReceived() : %s", Util.Objects.ToString(self.mlDb, 4))
 end
 
 local groupCopy

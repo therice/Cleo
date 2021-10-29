@@ -217,7 +217,7 @@ function Slider.SetText(self, text)
 end
 
 function Slider.SetTo(self, value)
-	Logging:Debug("SetTo(%s)", tostring(value))
+	-- Logging:Debug("SetTo(%s)", tostring(value))
 	if not value then
 		local _, max = self:GetMinMaxValues()
 		value = max
