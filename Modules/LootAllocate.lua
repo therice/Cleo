@@ -61,7 +61,7 @@ end
 function LA:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.db:RegisterNamespace(self:GetName(), LA.defaults)
-	self.alarm = AddOn.Alarm(0.50, function () self:Update() end)
+	self.alarm = AddOn.Alarm(1.50, function () self:Update() end)
 end
 
 function LA:OnEnable()

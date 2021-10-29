@@ -330,34 +330,33 @@ end
 
 local MaxActivationReattempts = 3
 
+-- TODO TODO TODO TODO : if we're an admin or owner, but no ML - we shouldn't send blanket requests (could overwrite local changes)
+local function EnqueueRequest(to, id, type)
+	Logging:Trace("EnqueueRequest(%s, %s)",tostring(id), tostring(type))
+	Util.Tables.Push(to, Request(type, id))
+end
+
 --- @param sender string
 --- @param activation table
 function Lists:OnActivateConfigReceived(sender, activation, attempt)
 	attempt = Util.Objects.Default(attempt, 0)
-
 	Logging:Trace("OnActivateConfigReceived(%s, %d)", tostring(sender), attempt)
-
-	if attempt > MaxActivationReattempts then
-		Logging:Warn("OnActivateConfigReceived() : Maximum activation (re)attempts exceeded, giving up")
-		return
-	end
 
 	if not AddOn:IsMasterLooter(sender) then
 		Logging:Warn("OnActivateConfigReceived() : Sender is not the master looter, ignoring")
 		return
 	end
 
-	-- TODO TODO TODO TODO : if we're an admin or owner, but no ML - we shouldn't send blanket requests (could overwrite local changes)
-	local function EnqueueRequest(to, id, type)
-		Logging:Trace("EnqueueRequest(%s, %s)",tostring(id), tostring(type))
-		Util.Tables.Push(to, Request(type, id))
+	local maxActivationReattemptsExceeded = (attempt > MaxActivationReattempts)
+	if maxActivationReattemptsExceeded then
+		Logging:Warn("OnActivateConfigReceived() : Maximum activation (re)attempts exceeded, giving up")
 	end
 
 	local isMl = AddOn:IsMasterLooter()
 
 	-- see MasterLooter:ActivateConfiguration() for 'activation' message contents
 	-- only load reference for configuration, as activation is going to load lists
-	if activation and Util.Tables.Count(activation) >= 1 then
+	if (not maxActivationReattemptsExceeded) and activation and Util.Tables.Count(activation) >= 1 then
 		-- a valid request to activate a new configuration means any current one must be discarded
 		self.activeConfig = nil
 
@@ -457,10 +456,12 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 			end
 		end
 
+		-- we have missing data, request it and resschedule activation
 		if Util.Tables.Count(toRequest) > 0 then
 			Logging:Warn("%s", Util.Objects.ToString(toRequest))
 			self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
 			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
+			return
 		end
 	end
 
@@ -483,7 +484,9 @@ function Lists:OnAwardItem(itemAward)
 	if self:HasActiveConfiguration() then
 		-- only apply if the associated award reason dictate a suicide occur
 		local reason, list = AddOn:MasterLooterModule().AwardReasons[itemAward.awardReason], nil
-		if reason.suicide then
+		-- it's possible the award reason wasn't one which we display to the user
+		-- E.G. ML decides to assign it to someone that passed without changing their response
+		if reason and reason.suicide then
 			local lid, apb, apa, opb, opa =
 				self:GetActiveConfiguration():OnLootEvent(
 						itemAward.winner,
@@ -519,7 +522,7 @@ function Lists:OnAwardItem(itemAward)
 		).finally(
 			-- track the loot audit record for association with traffic record
 			function()
-				if list then
+				if list and list.id then
 					self.laTemp[list.id] = audit
 				end
 			end

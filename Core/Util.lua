@@ -132,6 +132,13 @@ function AddOn.TransmittableItemString(item)
     return AddOn.SanitizeItemString(transmit)
 end
 
+function AddOn.NormalizeEquipmentLocation(equipLoc, subType)
+    if Util.Strings.Equal(subType, C.ItemEquipmentLocationNames.Wand) then return "INVTYPE_WAND" end
+    if Util.Strings.Equal(equipLoc, "INVTYPE_RANGEDRIGHT") then return "INVTYPE_RANGED" end
+    if Util.Strings.Equal(equipLoc, "INVTYPE_ROBE") then return "INVTYPE_CHEST" end
+    return equipLoc
+end
+
 ---@param item string any value to be prefaced with 'item:'
 function AddOn.DeSanitizeItemString(item)
     return "item:" .. (item or "0")

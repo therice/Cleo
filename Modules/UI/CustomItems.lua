@@ -360,9 +360,7 @@ function CustomItems:GetAddItemFrame()
 								tostring(C.EquipmentLocations[equipLoc])
 						)
 						if name then
-							if Util.Strings.Equal(subType, C.ItemEquipmentLocationNames.Wand) then equipLoc = "INVTYPE_WAND" end
-							if Util.Strings.Equal(equipLoc, "INVTYPE_RANGEDRIGHT") then equipLoc = "INVTYPE_RANGED" end
-							if Util.Strings.Equal(equipLoc, "INVTYPE_ROBE") then equipLoc = "INVTYPE_CHEST" end
+							equipLoc = AddOn.NormalizeEquipmentLocation(equipLoc, subType)
 							if not C.EquipmentLocations[equipLoc] then equipLoc = nil end
 
 							self.item = {

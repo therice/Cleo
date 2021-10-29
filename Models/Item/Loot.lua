@@ -180,7 +180,7 @@ end
 
 --- @return Models.Item.ItemAward
 function LootAllocateEntry:GetItemAward(candidate, reason)
-	Logging:Debug("%s", Util.Objects.ToString(self.clazz))
+	-- Logging:Debug("%s", Util.Objects.ToString(self.clazz))
 	return ItemAward(self, candidate, reason)
 end
 
@@ -220,14 +220,21 @@ function ItemAward:initialize(entry, candidate, reason)
 
 	--]]
 	local cr = entry:GetCandidateResponse(candidate)
+	-- Logging:Trace("ItemAward() : Candidate Response (raw) is %s", Util.Objects.ToString(cr and cr:toTable() or {}))
+
 	local awardReason
 	-- if reason is provided, it overrides candidate's response
 	-- it will be entry from ML's responses table
+	-- for example, Award For : Disenchant|Bank|Free
 	if reason and Util.Objects.IsTable(reason) then
 		awardReason = reason.key
 	else
-		awardReason = AddOn:GetResponse(cr.response).key
+		local response = AddOn:GetResponse(cr.response)
+		-- Logging:Trace("ItemAward() : Candidate Response (normalized) %s => %s", tostring(cr.response), Util.Objects.ToString(response))
+		awardReason = response.key and response.key or cr.response
 	end
+
+	-- Logging:Trace("ItemAward() : Candidate Award Reason is %s", Util.Objects.ToString(awardReason))
 
 	self.session = entry.session
 	self.winner = candidate

@@ -510,7 +510,7 @@ end
 
 function LA:Update(forceUpdate)
 	forceUpdate = Util.Objects.Default(forceUpdate, false)
-	Logging:Trace('Update(%s) : fired=%s', tostring(forceUpdate), tostring(self.alarm:Fired()))
+	-- Logging:Trace('Update(%s) : fired=%s', tostring(forceUpdate), tostring(self.alarm:Fired()))
 
 	if not forceUpdate and not self.alarm:Fired() then
 		return
