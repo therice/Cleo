@@ -108,7 +108,7 @@ end
 
 function VersionCheck:TrackVersion(sender, version)
 	if not Util.Strings.IsEmpty(sender) then
-		VersionCheck.Versions()[sender] = {version, GetServerTime()}
+		VersionCheck.Versions()[sender] = {version:toTable(), GetServerTime()}
 	end
 end
 
