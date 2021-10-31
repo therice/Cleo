@@ -152,12 +152,12 @@ function CellBuilder:cell(value)
 end
 
 function CellBuilder:playerIconAndColoredNameCell(player)
-    local p = Player:Get(player)
+    local p = Player:Get(player) or Player.Unknown(player)
     return self:classIconCell(p.class):classColoredCell(p:GetShortName(), p.class)
 end
 
 function CellBuilder:playerColoredCell(player)
-    local p = Player:Get(player)
+    local p = Player:Get(player) or Player.Unknown(player)
     return self:classColoredCell(p:GetShortName(), p.class)
 end
 
