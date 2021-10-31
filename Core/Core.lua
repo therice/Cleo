@@ -126,7 +126,7 @@ function AddOn:RegisterChatCommands()
             {
                 { 'config', 'c' },
                 L['chat_commands_config'],
-                function() AddOn.ToggleConfig() end,
+                function() AddOn:ShowLaunchpadAndSelect(AddOn:SelectConfigModuleFn()) end,
             },
             {
                 {'clearpc', 'cpc'},

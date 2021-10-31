@@ -98,3 +98,9 @@ function AddOn:ApplyConfiguration(supplements)
 		self.configUi = config
 	end
 end
+
+function AddOn:SelectConfigModuleFn()
+	return function(lpad)
+		lpad:SetModuleIndex(self.configUi.moduleIndex)
+	end
+end

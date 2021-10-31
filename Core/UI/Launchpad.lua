@@ -111,6 +111,8 @@ function AddOn:Launchpad()
 			end
 
 			local position = #self.frames + 1
+			moduleFrame.moduleIndex = position
+
 			self.modulesList.L[position] = moduleFrame.displayName
 			self.frames[position] = moduleFrame
 
@@ -141,7 +143,6 @@ function AddOn:ApplyModules(moduleSuppliers)
 
 			local index, moduleFrame = self.launchpad:AddModule(metadata[1]:GetName(), name, true)
 			moduleFrame:SetWide()
-			moduleFrame.moduleIndex = index
 			moduleFrame.module = metadata[1]
 			moduleFrame.banner =
 				UI:New('DecorationLine', moduleFrame, true,"BACKGROUND",-5)
