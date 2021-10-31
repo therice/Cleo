@@ -84,7 +84,7 @@ local function SetDbValue(self, db, i, v)
     local path = Util.Objects.IsTable(i) and tostring(i[#i]) or i
     Logging:Trace("SetDbValue(%s, %s, %s, %s)", self:GetName(), tostring(db), tostring(path), Util.Objects.ToString(v))
     Util.Tables.Set(db, path, v)
-    if self:GenerateConfigChangedEvents() then
+    if self['GenerateConfigChangedEvents'] and self:GenerateConfigChangedEvents() then
         AddOn:ConfigChanged(self:GetName(), path)
     end
 end
