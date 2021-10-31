@@ -710,6 +710,7 @@ end
 
 function ML:SendActiveConfig(target, config)
 	if self:IsHandled() then
+		Logging:Debug("SendActiveConfig(%s) : %s", tostring(target), tostring(config.id))
 		-- dispatch the config activation message to group
 		-- include information about the associated lists as well
 		-- this is necessary to make sure what we are activating is aligned with the master looter's view
@@ -721,7 +722,9 @@ function ML:SendActiveConfig(target, config)
 		Util.Tables.Set(toSend, 'config', config:ToRef())
 		local lists = AddOn:ListsModule():GetService():Lists(config.id)
 		for _, list in pairs(lists) do
-			Util.Tables.Push(toSend.lists, list:ToRef())
+			local ref = list:ToRef()
+			Logging:Trace("SendActiveConfig(%s) : %s", tostring(list.lid), Util.Objects.ToString(ref))
+			Util.Tables.Push(toSend.lists, ref)
 		end
 
 		AddOn:Send(target, C.Commands.ActivateConfig, toSend)

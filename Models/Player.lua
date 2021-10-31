@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local Util, Logging, GuildStorage = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging"), AddOn:GetLibrary("GuildStorage")
 
@@ -33,19 +34,24 @@ local function Put(player)
     cache[player.guid] = player:toTable()
 end
 
-local CACHE_TIME = 60 * 60 * 24 * 2 -- 2 days
+-- none of the cached stuff is going to change, bump retention from 2 days to 30
+local CACHE_TIME = Util.Memoize.Memoize(
+    function()
+        return AddOn:DevModeEnabled() and 0  or (60 * 60 * 24 * 30) -- 30 days
+    end
+)
 
 local function Get(guid)
     local player = cache[guid]
-    if player  then
-        -- Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
-        if GetServerTime() - player.timestamp <= CACHE_TIME then
+    if player then
+        Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
+        if GetServerTime() - player.timestamp <= CACHE_TIME() then
             return Player:reconstitute(player)
         else
             Logging:Warn('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
         end
     else
-        -- Logging:Trace("Get(%s) : No cached entry", tostring(guid))
+        Logging:Trace("Get(%s) : No cached entry", tostring(guid))
     end
 
     return nil
@@ -122,11 +128,11 @@ function Player.Create(guid, info)
     -- the client has encountered the queried GUID.
     -- localizedClass, englishClass, localizedRace, englishRace, sex, name, realm
     local _, class, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
-    --Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
+    Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
     -- if the name is not set, means the query did not complete. likely because the player was not
     -- encountered. therefore, just return nil
     if Util.Objects.IsEmpty(name) then
-        --Logging:Warn("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
+        Logging:Warn("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
         if info and Util.Strings.IsSet(info.name) then
             --Logging:Trace("Create(%s) : Using provided player information", guid)
             name = info.name
@@ -149,15 +155,12 @@ end
 --/run print(Cleo.Package('Models').Player:Get('Gnomechómsky'))
 function Player:Get(input)
     local guid, info
-
     -- Logging:Debug("Get(%s)", tostring(input))
 
     if Util.Strings.IsSet(input) then
-        if not strmatch(input, GuidPatternPremable) and strmatch(input, GuidPatternRemainder) then
-            guid = "Player-" .. input
-        elseif strmatch(input, GuidPattern) then
-            guid = input
-        else
+        guid = Player.ParseGuid(input)
+
+        if Util.Objects.IsNil(guid) then
             local name = Ambiguate(input, "short")
             -- For players: Player-[server ID]-[player UID] (Example: "Player-976-0002FD64")
             guid = UnitGUID(name)
@@ -198,6 +201,21 @@ function Player.Resolve(p)
     end
 end
 
+function Player.ParseGuid(input)
+    local guid
+
+    if not strmatch(input, GuidPatternPremable) and strmatch(input, GuidPatternRemainder) then
+        guid = "Player-" .. input
+    elseif strmatch(input, GuidPattern) then
+        guid = input
+    end
+
+    return guid
+end
+
+function Player.Unknown(guid)
+    return Player(Player.ParseGuid(guid), 'Unknown','DEATHKNIGHT', select(2, UnitFullName("player")))
+end
 
 function Player.ClearCache()
     AddOn.db.global.cache.player = {}

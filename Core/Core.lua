@@ -549,7 +549,6 @@ function AddOn:AutoPassCheck(class, equipLoc, typeId, subTypeId, classes)
     return not ItemUtil:ClassCanUse(class, classes, equipLoc, typeId, subTypeId)
 end
 
-
 function AddOn:DoAutoPass(lt, skip)
     skip = Util.Objects.Default(skip, 0)
     Logging:Debug("DoAutoPass(%d, %d)", Util.Tables.Count(lt), skip)
@@ -577,7 +576,7 @@ end
 function AddOn:SendLootAck(lt, skip)
     skip = Util.Objects.Default(skip, 0)
     Logging:Debug("SendLootAck(%d, %d)", Util.Tables.Count(lt), skip)
-    local hasData, toSend = false, { gear1 = {}, gear2 = {}, diff = {}, response = {} }
+    local hasData, reattempt, toSend = false, false, { gear1 = {}, gear2 = {}, diff = {}, response = {} }
     for session, entry in pairs(lt) do
         session = entry.session or session
         Logging:Debug("SendLootAck(%d)", tonumber(session))
@@ -592,14 +591,26 @@ function AddOn:SendLootAck(lt, skip)
                 end
             end
 
-            local g1, g2 = self:GetPlayersGear(item.link, item.equipLoc)
-            local diff = self:GetItemLevelDifference(item.link, g1, g2)
-
-            toSend.gear1[session] = g1 and AddOn.SanitizeItemString(g1) or nil
-            toSend.gear2[session] = g2 and AddOn.SanitizeItemString(g2) or nil
-            toSend.diff[session] = diff
-            toSend.response[session] = Util.Objects.Default(entry.autoPass, false)
+            if item then
+                local g1, g2 = self:GetPlayersGear(item.link, item.equipLoc)
+                local diff = self:GetItemLevelDifference(item.link, g1, g2)
+                toSend.gear1[session] = g1 and AddOn.SanitizeItemString(g1) or nil
+                toSend.gear2[session] = g2 and AddOn.SanitizeItemString(g2) or nil
+                toSend.diff[session] = diff
+                toSend.response[session] = Util.Objects.Default(entry.autoPass, false)
+            else
+                -- the item may not currently be available, set flag and continue
+                -- that way we at least try all of the items on this invocation
+                -- and callback will likely have them all available (without a need to reattempt again)
+                reattempt = true
+            end
         end
+    end
+
+    if reattempt then
+        Logging:Debug("SendLootAck() : re-attemping...")
+        self:ScheduleTimer("SendLootAck", 1, lt, skip)
+        return
     end
 
     if hasData then

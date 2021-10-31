@@ -75,7 +75,7 @@ function Configuration:initialize(id, name)
 	Versioned.initialize(self, Version)
 	self.id = id
 	self.name = name
-	--- @type table<any, Models.List.Permission>
+	--- @type table<string, Models.List.Permission>
 	self.permissions = {}
 	self.status = self.Status.Inactive
 	self.default = false
@@ -122,7 +122,7 @@ end
 function Configuration:PlayersWithPermission(p)
 	local players = {}
 	for player, permission in pairs(self.permissions) do
-		Logging:Debug("GetPlayersWithPermissions() : Evaluating %s, %s", tostring(player), tostring(permission))
+		Logging:Trace("GetPlayersWithPermissions() : Evaluating %s, %s", tostring(player), tostring(permission))
 		if permission:Enabled(p) then
 			Util.Tables.Push(players, Player:Get(player))
 		end

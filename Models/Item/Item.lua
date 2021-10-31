@@ -61,32 +61,33 @@ function Item:initialize(id, link, quality, ilvl, type, equipLoc, subType, textu
 	self.bindType  = bindType
 	self.classes   = classes
 end
-
 -- create an Item via GetItemInfo
 -- item can be a number, name, itemString, or itemLink
 -- https://wow.gamepedia.com/API_GetItemInfo
-local function ItemQuery(item)
+local function ItemQuery(item, callback)
 	Logging:Debug("ItemQuery(%s)", tostring(item))
 
-	local name, link, rarity, ilvl, _, type, subType, _, equipLoc, texture, _,
-		typeId, subTypeId, bindType  = GetItemInfo(item)
-	local id = link and ItemUtil:ItemLinkToId(link)
-	if name then
-		-- check to see if a custom item has been setup for the id
-		-- which overrides anything provided by API
-		local customItem = ItemUtil:GetCustomItem(tonumber(id))
-		-- Logging:Debug("CustomItem = %s, %s", Util.Objects.ToString(customItem), tostring(not customItem and subType or nil))
-		if Util.Objects.IsSet(customItem) then
-			rarity = customItem.rarity
-			ilvl = customItem.item_level
-			equipLoc = customItem.equip_location
-			subType = nil
-			subTypeId = nil
-		end
+	local function Query()
+		local name, link, rarity, ilvl, _, type, subType, _, equipLoc, texture, _, typeId, subTypeId, bindType  =
+			GetItemInfo(item)
 
-		Logging:Debug("ItemQuery(%s) : results available", tostring(item))
+		if name then
+			local id = link and ItemUtil:ItemLinkToId(link)
+			-- check to see if a custom item has been setup for the id
+			-- which overrides anything provided by API
+			local customItem = ItemUtil:GetCustomItem(tonumber(id))
+			-- Logging:Debug("CustomItem = %s, %s", Util.Objects.ToString(customItem), tostring(not customItem and subType or nil))
+			if Util.Objects.IsSet(customItem) then
+				rarity = customItem.rarity
+				ilvl = customItem.item_level
+				equipLoc = customItem.equip_location
+				subType = nil
+				subTypeId = nil
+			end
 
-		return Item:new(
+			Logging:Debug("ItemQuery(%s) : result available", tostring(item))
+
+			return Item:new(
 				id,
 				link,
 				rarity,
@@ -99,11 +100,35 @@ local function ItemQuery(item)
 				subTypeId,
 				bindType,
 				ItemUtil:GetItemClassesAllowedFlag(link)
+			)
+		end
+
+		return nil
+	end
+
+	local result = Query()
+	-- if needed, submit async query now - which will cache item and invoke callback
+	if Util.Objects.IsNil(result) and Util.Objects.IsFunction(callback) then
+		Logging:Trace("ItemQuery(%s) : NO result available, submitting async query for callback", tostring(item))
+		ItemUtil.QueryItem(
+			item,
+			function(i, _)
+				Logging:Trace("ItemQuery[QueryItem](%s) : async query callback", tostring(i))
+				local resolved
+				Util.Functions.try(
+					function()
+						resolved = Query()
+						cache[item] = resolved
+						Logging:Trace("ItemQuery[QueryItem](%s) : entry now cached", tostring(i))
+					end
+				)
+				.catch(function(err) Logging:Error("ItemQuery[QueryItem](%s) : %s", tostring(i), Util.Objects.ToString(err)) end)
+				.finally(function() callback(resolved) end)
+			end
 		)
 	end
 
-	Logging:Debug("ItemQuery(%s) : NO results available", tostring(item))
-	return nil
+	return result
 end
 
 --- @return boolean
@@ -151,6 +176,7 @@ function Item:GetLevelText()
 		local items = ItemUtil:GetTokenItems(self.id)
 		if items and #items > 0 then
 			-- they will all have the same item level, just grab the 1st one
+			-- todo : this probably isn't reliably going to be available in time to se text
 			local itemId, item = items[1], nil
 			ItemUtil.QueryItem(itemId, function(i) item = i end)
 			return tostring(item and item:GetCurrentItemLevel() or "")
@@ -191,7 +217,7 @@ end
 -- itemName : string - Name of an item owned by the player at some point during this play session, e.g. "Nordrassil Wrath-Kilt".
 -- itemString : string - A fragment of the itemString for the item, e.g. "item:30234:0:0:0:0:0:0:0" or "item:30234".
 -- itemLink : string - The full itemLink.
-function Item.Get(item)
+function Item.Get(item, callback)
 	-- cannot simply use the itemId as a number, as links could represent stuff
 	-- that the base item id wouldn't capture (e.g. sockets eventually)
 
@@ -208,7 +234,7 @@ function Item.Get(item)
 	local instance = cache[itemId]
 	-- local cached = Util.Objects.IsSet(instance)
 	if not instance then
-		instance = ItemQuery(itemId)
+		instance = ItemQuery(itemId, callback)
 		if instance then
 			cache[itemId] = instance
 		end
@@ -237,8 +263,8 @@ function ItemRef:initialize(item)
 end
 
 --- @return Models.Item.Item the item represented by the reference
-function ItemRef:GetItem()
-	return Item.Get(self.item)
+function ItemRef:GetItem(callback)
+	return Item.Get(self.item, callback)
 end
 
 --- invokes passed function (e.g. a class constructor) with varargs

@@ -457,8 +457,8 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 		end
 
 		-- we have missing data, request it and resschedule activation
-		if Util.Tables.Count(toRequest) > 0 then
-			Logging:Warn("%s", Util.Objects.ToString(toRequest))
+		if Util.Tables.Count(toRequest) > 0 and false then
+			Logging:Warn("OnActivateConfigReceived() : Requesting %s", Util.Objects.ToString(Util.Tables.Copy(toRequest, function(r) return tostring(r) end)))
 			self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
 			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
 			return
@@ -604,7 +604,7 @@ function Lists:OnResourceRequest(sender, payload)
 			end
 
 			local response = Response(request.type, request.id, request.cid)
-			response.payload = resource
+			response.payload = resource:toTable()
 			self:_SendResponse(sender, response)
 		end
 	end
@@ -635,11 +635,13 @@ function Lists:OnResourceResponse(sender, payload)
 				return
 			end
 
+			--[[
 			if Util.Objects.IsInstanceOf(resource, Configuration) then
 				self:GetService().Configuration:Add(resource, false)
 			elseif Util.Objects.IsInstanceOf(resource, List) then
 				self:GetService().List:Add(resource, false)
 			end
+			--]]
 
 			self.requestsTemp[response.cid] = nil
 		end

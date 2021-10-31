@@ -47,10 +47,15 @@ function Hashable.Includable(algorithm)
 		included = function(_, clazz)
 			clazz.isHashable = true
 		end,
-		hash = function(self)
+		hash = function(self, verbose)
+			verbose = Util.Objects.Default(verbose, false)
 			local asTable = self:toTable()
 			for _, attr in pairs(self.clazz.static.excludedHA) do
 				Util.Tables.Remove(asTable, attr)
+			end
+
+			if verbose then
+				Logging:Trace("hash() : %s", Util.Objects.ToString(asTable))
 			end
 
 			local hv = hasher:hash(asTable)
@@ -61,6 +66,7 @@ function Hashable.Includable(algorithm)
 
 			if against and against.hash then
 				local theirs = Util.Objects.IsFunction(against.hash) and against:hash() or against.hash
+				-- Logging:Trace("Verify() : %s (ours) %s (theirs)", ours, theirs)
 				return Util.Objects.Equals(ours, theirs), ours, theirs
 			end
 

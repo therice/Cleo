@@ -75,7 +75,7 @@ function Lists:Players(mapFn, ...)
 
 	local players = AddOn:Players(true, true, true)
 	for _, p in pairs({...}) do
-		Logging:Debug("Players() : Evaluating %s", tostring(p))
+		Logging:Trace("Players() : Evaluating %s", tostring(p))
 		local player = Player.Resolve(p)
 		if player and not players[player:GetShortName()] then
 			players[player:GetShortName()] = player
@@ -224,7 +224,7 @@ function Lists:LayoutConfigurationTab(tab)
 				function(self)
 					local config = SelectedConfiguration()
 					if config then
-						Logging:Debug("Config.Default.OnClick(%s) : %s", tostring(config.id), tostring(self:GetChecked()))
+						Logging:Trace("Config.Default.OnClick(%s) : %s", tostring(config.id), tostring(self:GetChecked()))
 						-- this will mutate the configurations (only one default)
 						-- so set the list to the returned list
 						tab.configList:SetList(
@@ -244,7 +244,7 @@ function Lists:LayoutConfigurationTab(tab)
 			:SetClickHandler(
 				function(_, _, item)
 					local config = SelectedConfiguration()
-					Logging:Debug("Config.Status.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
+					Logging:Trace("Config.Status.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
 					config.status = item.key
 					module:GetService().Configuration:Update(config, "status")
 					return true
@@ -265,7 +265,7 @@ function Lists:LayoutConfigurationTab(tab)
 			:SetClickHandler(
 				function(_, _, item)
 					local config = SelectedConfiguration()
-					Logging:Debug("Config.Owner.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
+					Logging:Trace("Config.Owner.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
 					config:SetOwner(item.value)
 					module:GetService().Configuration:Update(config, "permissions")
 					return true
@@ -302,7 +302,7 @@ function Lists:LayoutConfigurationTab(tab)
 				function()
 					local config = SelectedConfiguration()
 					local owner = config:GetOwner()
-					Logging:Debug("Config.Admins(OptionsSupplier) : id=%s owner=%s", tostring(config.id), tostring(owner))
+					Logging:Trace("Config.Admins(OptionsSupplier) : id=%s owner=%s", tostring(config.id), tostring(owner))
 					local admins = config:GetAdministrators()
 					local available =
 						module:Players(
@@ -319,7 +319,7 @@ function Lists:LayoutConfigurationTab(tab)
 			)
 			:OnSelectedChanged(
 				function(player, added)
-					Logging:Debug("Config.Admins(OnSelectedChanged) : %s, %s", tostring(player), tostring(added))
+					Logging:Trace("Config.Admins(OnSelectedChanged) : %s, %s", tostring(player), tostring(added))
 					local config = SelectedConfiguration()
 					if added then
 						config:GrantPermissions(player, Configuration.Permissions.Admin)
@@ -421,14 +421,14 @@ function Lists:LayoutListTab(tab)
 	local function SelectedConfiguration()
 		local values = tab.config:Selected()
 		local config = #values == 1 and values[1].value or nil
-		-- Logging:Debug("SelectedConfiguration() : %s", tostring(config and config.id or nil))
+		-- Logging:Trace("SelectedConfiguration() : %s", tostring(config and config.id or nil))
 		return config
 	end
 
 	--- @return Models.List.List
 	local function SelectedList()
 		local list = tab.lists:Selected()
-		-- Logging:Debug("SelectedList() : %s", tostring(list and list.id or nil))
+		-- Logging:Trace("SelectedList() : %s", tostring(list and list.id or nil))
 		return list
 	end
 
@@ -480,7 +480,7 @@ function Lists:LayoutListTab(tab)
 			:OnValueChanged(
 				function(item)
 					local config = item.value
-					Logging:Debug("List.Config.OnValueChanged(%s)", tostring(config.id))
+					Logging:Trace("List.Config.OnValueChanged(%s)", tostring(config.id))
 					tab.lists:SetList(module:GetService():Lists(config.id))
 					tab.lists:ClearSelection()
 					tab:Update()
@@ -643,10 +643,10 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 			:OptionsSupplier(
 				function()
 					local config, list = configSupplier(), listSupplier()
-					Logging:Debug("List.Equipment(OptionsSupplier) : %s ", tostring(list and list.id or nil))
+					Logging:Trace("List.Equipment(OptionsSupplier) : %s ", tostring(list and list.id or nil))
 					local unassigned = config and module:GetService():UnassignedEquipmentLocations(config.id) or {}
 					--[[
-					Logging:Debug("%s - %s",
+					Logging:Trace("%s - %s",
 					              Util.Objects.ToString(unassigned),
 					              Util.Objects.ToString(Util.Tables.CopySelect(C.EquipmentLocations, unpack(unassigned))))
 					--]]
@@ -659,7 +659,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 				function(equipment, added)
 					-- translate name into actual type/slot
 					local slot = AddOn.GetEquipmentLocation(equipment)
-					Logging:Debug("List.Equipment(OnSelectedChanged) : %s/%s, %s", tostring(equipment), tostring(slot), tostring(added))
+					Logging:Trace("List.Equipment(OnSelectedChanged) : %s/%s, %s", tostring(equipment), tostring(slot), tostring(added))
 
 					local list = listSupplier()
 					if list then
@@ -680,7 +680,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 
 	-- will be invoked when a list is selected
 	tab.Update = function(self)
-		Logging:Debug("List.Equipment(Tab).Update(%s)", tostring(self:IsVisible()))
+		Logging:Trace("List.Equipment(Tab).Update(%s)", tostring(self:IsVisible()))
 		if self:IsVisible() then
 			local enabled = (configSupplier() and listSupplier())
 			self:SetFieldsEnabled(enabled)
@@ -728,7 +728,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	local function EditOnDragStart(self)
 		if self:IsMovable() then
-			Logging:Debug("EditOnDragStart")
+			Logging:Trace("EditOnDragStart")
 			-- capture the original position
 			 _, _, _, self.x, self.y = self:GetPoint()
 			self:StartMoving()
@@ -774,13 +774,13 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	local function EditOnChange(self, isPriority, userInput)
 		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
-		Logging:Debug("EditOnChange(%d - %s, %s) : %s", index, tostring(isPriority), tostring(userInput), Util.Objects.Default(playerName, "nil"))
+		-- Logging:Trace("EditOnChange(%d - %s, %s) : %s", index, tostring(isPriority), tostring(userInput), Util.Objects.Default(playerName, "nil"))
 		if Util.Strings.IsSet(playerName) then
 			self:SetTextColor(UIUtil.GetPlayerClassColor(playerName):GetRGBA())
 		end
 
 		if isPriority then
-			Logging:Debug("EditOnChange() : %d => %s", index, tostring(playerName))
+			-- Logging:Trace("EditOnChange() : %d => %s", index, tostring(playerName))
 			if Util.Strings.IsSet(playerName) then
 				priorities[index] = Player:Get(playerName)
 			else
@@ -912,7 +912,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	tab.playersInRaid:SetSize(14, 14)
 
 	tab.HasPendingChanges = function(self)
-		Logging:Debug("HasPendingChanges() : Orig(%d), Current(%d)", Util.Tables.Count(self.prioritiesOrig), Util.Tables.Count(self.priorities))
+		-- Logging:Trace("HasPendingChanges() : Orig(%d), Current(%d)", Util.Tables.Count(self.prioritiesOrig), Util.Tables.Count(self.priorities))
 		return not Util.Tables.Equals(self.prioritiesOrig, self.priorities, true)
 	end
 
@@ -920,7 +920,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		reload = Util.Objects.IsNil(reload) and true or reload
 		local list = listSupplier()
 
-		Logging:Debug("UpdatePriorities(%s) : reload(%s)", list and list.id or 'nil', tostring(reload))
+		Logging:Trace("UpdatePriorities(%s) : reload(%s)", list and list.id or 'nil', tostring(reload))
 
 		if reload then
 			self.prioritiesOrig, self.priorities = {}, {}
@@ -930,7 +930,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		end
 
 		local priorityCount = reload and #self.prioritiesOrig or table.maxn(self.priorities)
-		Logging:Debug("UpdatePriorities(%s) : Count(%d)",  list and list.id or 'nil', priorityCount)
+		Logging:Trace("UpdatePriorities(%s) : Count(%d)",  list and list.id or 'nil', priorityCount)
 
 		for priority = 1, priorityCount do
 			-- reset it so potential change to previous value still fires the OnTextChanged event
@@ -970,7 +970,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				Util.Tables.Insert(self.priorities, table.maxn(self.priorities) + 1, player)
 			end
 
-			Logging:Debug("SetPriority(%s, %s) : %d", tostring(player), tostring(first), Util.Tables.Count(self.priorities))
+			Logging:Trace("SetPriority(%s, %s) : %d", tostring(player), tostring(first), Util.Tables.Count(self.priorities))
 			self:UpdatePriorities(false)
 		end
 	end
@@ -1017,7 +1017,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local playerIndex = index + floor(self.playersScroll:GetValue() + 0.5)
 			if playerIndex > #available then playerIndex = index end
 			
-			Logging:Debug("UpdateAvailablePlayers() : index=%d, playerIndex=%d", index, playerIndex)
+			Logging:Trace("UpdateAvailablePlayers() : index=%d, playerIndex=%d", index, playerIndex)
 			playerEdit:SetText(available[playerIndex]:GetShortName())
 			playerEdit:SetCursorPosition(1)
 			playerEdit:SetScript(
@@ -1046,7 +1046,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	end
 
 	tab.Update = function(self)
-		Logging:Debug("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
+		Logging:Trace("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
 		if self:IsVisible() then
 			-- todo : fix
 			local enabled = (configSupplier() and listSupplier())

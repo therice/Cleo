@@ -43,12 +43,11 @@ function List:initialize(configId, id, name)
 	--- @type table<number, string> equipment types/locations to which list applies (e.g. INVTYPE_HEAD)
 	self.equipment = {}
 	-- a sparse array
-	--- @type table<number, Models.Player>
+	--- @type table<string, Models.Player>
 	self.players = {}
 end
 
-local PlayerSerializer =  function(p) return p:ForTransmit() end
-
+local PlayerSerializer = function(p) return p:ForTransmit() end
 --- we only want to serialize the player's stripped guid which is enough
 function List:toTable()
 	local t = List.super.toTable(self)
@@ -56,12 +55,57 @@ function List:toTable()
 	return t
 end
 
+local MaxResolutionAttempts = 3
+local function resolve(self, guids, attempt)
+	attempt = Util.Objects.Default(attempt, 1)
+	local unresolved = {}
+
+	for _, guid in pairs(guids) do
+		local player = Player:Get(guid)
+		if player then
+			self.players[guid] = player
+			Logging:Trace("resolve(%s) : resolved %s", self.id, guid)
+		else
+			Util.Tables.Push(unresolved, guid)
+		end
+	end
+
+	local remaining = Util.Tables.Count(unresolved)
+	Logging:Debug("resolve(%s) : %d outstanding resolutions remaining", self.id, remaining)
+
+	if remaining > 0 then
+		if attempt + 1 > MaxResolutionAttempts then
+			Logging:Warn("resolve(%s) : max resolution attempts exceeded", self.id)
+		else
+			AddOn:ScheduleTimer(resolve, 3, self, unresolved, attempt + 1)
+		end
+	end
+end
+
 -- player's will be a table with stripped guids
 function List:afterReconstitute(instance)
 	instance = List.super:afterReconstitute(instance)
+	local unresolved = {}
+
 	instance.players =
 		Util(instance.players)
-			:Copy():Map(function(p) return Player:Get(p) end)()
+			:Copy()
+			:Map(
+				function(p)
+					local player = Player:Get(p)
+					if not player then
+						player = Player.Unknown(p)
+						Util.Tables.Push(unresolved, p)
+					end
+					return player
+				end
+			)()
+
+	if Util.Tables.Count(unresolved) > 0 then
+		Logging:Warn("List:afterReconstitute() : there are unresolved players, scheduling resolution")
+		AddOn:ScheduleTimer(resolve, 5, instance, unresolved, 1)
+	end
+
 	return instance
 end
 
@@ -109,6 +153,7 @@ function List:GetPlayers(asTable, normalizePriorities)
 				players[index] = PlayerSerializer(player)
 				index = index + 1
 			end
+			-- Logging:Trace("GetPlayers() : %s", Util.Objects.ToString(players))
 			return players
 		else
 			return Util(self.players):Copy():Map(PlayerSerializer)()
