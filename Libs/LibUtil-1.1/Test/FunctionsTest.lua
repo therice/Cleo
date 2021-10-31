@@ -84,25 +84,6 @@ describe("LibUtil", function()
 
 			assert(not finalized)
 		end)
-		--
-		--it("coroutinize", function()
-		--
-		--	local function foo()
-		--		print('yielding 1')
-		--		coroutine.yield(1)
-		--		print('sleeping 1')
-		--		sleep(1)
-		--		print('yielding 2')
-		--		coroutine.yield(2)
-		--		print('sleeping 2')
-		--		sleep(2)
-		--		print('done')
-		--	end
-		--
-		--	local f = coroutine.wrap(foo)
-		--	print(f())
-		--	print(f())
-		--
-		--end)
+
 	end)
 end )
