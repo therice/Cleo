@@ -6,6 +6,7 @@ max_code_line_length = false
 exclude_files = {
 	"Libs/",
 	"**/Test/**",
+	"node_modules/",
 }
 
 -- https://luacheck.readthedocs.io/en/stable/warnings.html
@@ -21,7 +22,7 @@ ignore = {
 }
 
 globals = {
-	"R2D2X",
+	"Cleo",
 	"RAID_CLASS_COLORS.a", -- seems suspcicious
 }
 

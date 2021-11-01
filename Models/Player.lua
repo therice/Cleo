@@ -37,7 +37,7 @@ end
 -- none of the cached stuff is going to change, bump retention from 2 days to 30
 local CACHE_TIME = Util.Memoize.Memoize(
     function()
-        return AddOn:DevModeEnabled() and 0  or (60 * 60 * 24 * 30) -- 30 days
+        return (AddOn._IsTestContext() or AddOn:DevModeEnabled()) and 0 or (60 * 60 * 24 * 30) -- 30 days
     end
 )
 
