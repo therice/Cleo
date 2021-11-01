@@ -1,7 +1,7 @@
 # https://docs.travis-ci.com/user/job-lifecycle/
-
-language: minimal
-sudo: required
+os: linux
+dist: xenial
+language: shell
 
 notifications:
   email:
@@ -37,8 +37,8 @@ jobs:
     - stage: "Test"
       name: "Lua Check"
       script:
-        /home/travis/.luarocks/bin/luacheck . --no-color -q
+        - /home/travis/.luarocks/bin/luacheck . --no-color -q
     - name: "Unit Tests"
       script:
-        eval `luarocks --lua-version=5.1 path`
-        /home/travis/.luarocks/bin/busted --lua=lua5.1 -c -o gtest .
+        - eval `luarocks --lua-version=5.1 path`
+        - /home/travis/.luarocks/bin/busted --lua=lua5.1 -c -o gtest .
