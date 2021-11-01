@@ -15,7 +15,6 @@ RUNNING_PID
 .release
 
 # SBT
-dist
 project/project
 project/boot
 project/target
@@ -36,5 +35,4 @@ luacov.stats.out
 # general
 *~
 *.log
-tmp
 dump
