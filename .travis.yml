@@ -41,4 +41,4 @@ after_script:
   - /home/travis/.luarocks/bin/luacov-coveralls -v -t $COVERALLS_TOKEN
 
 after_success:
-  - if [[ $TRAVIS_BRANCH == "master" && $TRAVIS_TAG != "" ]] ; curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g "2.5.2"; fi
+  - if [[ $TRAVIS_BRANCH == "master" && $TRAVIS_TAG != "" ]]; then curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g "2.5.2"; fi
