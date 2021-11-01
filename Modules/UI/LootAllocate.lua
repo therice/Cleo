@@ -51,7 +51,7 @@ local ScrollColumns, ScrollColumnCells =
 
 function LA:GetFrame()
 	if not self.frame then
-		local f = UI:NewNamed('Frame', UIParent, 'LootAllocate', self:GetName(), L['frame_loot_allocate'], 450, 450, false)
+		local f = UI:NewNamed('Frame', UIParent, 'LootAllocate', self:GetName(), L['frame_loot_allocate'], 450, 450)
 		f.close:Hide()
 		-- override default behavior for ESC to not close the loot allocation window
 		-- too easy to make mistakes and not get an opportunity to allocate loot

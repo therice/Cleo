@@ -85,7 +85,8 @@ function Slider:Create()
 		'SetText', Slider.SetText,
 		'Tooltip', Slider.SetTooltip,
 		'EditBox', Slider.WithEditBox,
-		'OnDatasourceConfigured', Slider.OnDatasourceConfigured
+		'OnDatasourceConfigured', Slider.OnDatasourceConfigured,
+		'NoValueOnTooltip', Slider.NoValueOnTooltip
 	)
 
 	slider.Range = Slider.Range
@@ -102,7 +103,6 @@ function Slider:Create()
 	slider.Text:SetFont(slider.text:GetFont(), 10)
 	slider.Low:SetFont(slider.Low:GetFont(), 10)
 	slider.High:SetFont(slider.High:GetFont(), 10)
-
 
 	if self.width and self.height then
 		slider:Size(self.width, self.height)
@@ -186,6 +186,11 @@ function Slider.SetSize(self, size)
 	return self
 end
 
+function Slider.NoValueOnTooltip(self)
+	self.tipNoValue = true
+	return self
+end
+
 function Slider.SetTooltip(self, title, ...)
 	self.tipTitle = title
 	self.tipLines = {...}
@@ -195,7 +200,9 @@ end
 function Slider.ShowTooltip(self)
 	-- Logging:Debug("Slider.ShowTooltip()")
 	local lines = Util.Tables.Copy(self.tipLines or {})
-	Util.Tables.Push(lines, {self:GetValue(), 0.90, 0.80, 0.50})
+	if not Util.Objects.Default(self.tipNoValue, false) then
+		Util.Tables.Push(lines, {self:GetValue(), 0.90, 0.80, 0.50})
+	end
 	-- Logging:Debug("Slider.ShowTooltip() : %s, %s", tostring(self.tipTitle), Util.Objects.ToString(lines))
 	UIUtil.ShowTooltip(self, nil, self.tipTitle, unpack(lines))
 end

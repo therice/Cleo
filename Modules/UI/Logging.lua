@@ -33,8 +33,8 @@ end
 
 function Logging:BuildFrame()
     if not self.frame then
-        local frame = UI:NewNamed('Frame', UIParent, 'Console', self:GetName(), L['frame_logging'], 750, 400, false)
-        -- frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
+        local frame = UI:NewNamed('Frame', UIParent, 'Console', self:GetName(), L['frame_logging'], 750, 400)
+        frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
         frame:CreateShadow(20)
         frame:ShadowInside()
 

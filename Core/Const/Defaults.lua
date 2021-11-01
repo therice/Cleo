@@ -10,8 +10,8 @@ AddOn.defaults = {
       versions = {},
     },
     profile = {
-        logThreshold = Logging.Level.Trace,
-        minimizeInCombat = false,
+        logThreshold        = Logging.Level.Trace,
+        minimizeInCombat    = false,
         minimap = {
             shown       = true,
             locked      = false,
@@ -23,7 +23,7 @@ AddOn.defaults = {
                 y           = 0,
                 x		    = 0,
                 point	    = "CENTER",
-                scale	    = 1.1,
+                scale	    = 1.0,
             },
         },
         -- module specific data storage
@@ -45,18 +45,6 @@ AddOn.defaults = {
                 alwaysShowTooltip = false,
             },
         },
-    }
-}
-
-AddOn.BaseConfigOptions = {
-    name = AddOn.Constants.name,
-    type = 'group',
-    childGroups = 'tab',
-    handler = AddOn,
-    get = "GetDbValue",
-    set = "SetDbValue",
-    args = {
-
     }
 }
 

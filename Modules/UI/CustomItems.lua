@@ -233,7 +233,7 @@ end
 
 function CustomItems:GetAddItemFrame()
 	if not self.addItemFrame then
-		local f = UI:Popup(UIParent, 'AddCustomItem', 'CustomItems', L['frame_add_custom_item'], 250, 210, false)
+		local f = UI:Popup(UIParent, 'AddCustomItem', 'CustomItems', L['frame_add_custom_item'], 250, 210)
 		-- f:SetPoint("TOPLEFT", self.interfaceFrame and self.interfaceFrame:GetParent() or UIParent, "TOPRIGHT")
 
 		local itemIconFn = UIUtil.ItemIconFn()

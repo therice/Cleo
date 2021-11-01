@@ -2,6 +2,7 @@ package-as: Cleo
 
 ignore:
   - Test
+  - node_modules
   - */Test/*
   - .gitignore
   - .luacov

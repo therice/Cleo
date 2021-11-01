@@ -22,7 +22,7 @@ local ScrollColumns =
 
 function LootSession:GetFrame()
 	if not self.frame then
-		local f = UI:NewNamed('Frame', UIParent, 'LootSession', 'LootSession', L['frame_loot_session'], 275, 305, false)
+		local f = UI:NewNamed('Frame', UIParent, 'LootSession', 'LootSession', L['frame_loot_session'], 275, 305)
 
 		local st = ST.New(ScrollColumns, 5, 40, nil, f)
 		-- disable sorting
@@ -58,6 +58,10 @@ function LootSession:GetFrame()
 				self.frame.start:SetText(_G.START)
 			end
 		end
+
+		-- the scrolling table header is preventing scale slider from being accessed
+		-- we don't use it in this context, so hide it
+		st.head:Hide()
 
 		self.frame = f
 	end

@@ -191,7 +191,7 @@ function ScrollBar.UpdateButtons(self)
 	local value = Util.Numbers.Round2(slider:GetValue())
 	local min,max = slider:GetMinMaxValues()
 	-- Logging:Debug("ScrollBar.UpdateButtons() : raw=%s, value=%s, min=%s, max=%s, eval=%s", slider:GetValue(), tostring(value), tostring(min), tostring(max), tostring(value >= max))
-	min, max = Util.Numbers.Round2(min), Util.Numbers.Round(max)
+	min, max = Util.Numbers.Round2(min), Util.Numbers.Round2(max)
 
 	if max == min then
 		-- Logging:Debug("max == min")

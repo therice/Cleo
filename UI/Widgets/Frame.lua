@@ -1,7 +1,16 @@
+--- @type AddOn
 local _, AddOn = ...
-local Logging, Util, Window = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Window')
+local L, C = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging = AddOn:GetLibrary('Logging')
+--- @type LibUtil
+local Util = AddOn:GetLibrary('Util')
+--- @type LibWindow
+local Window = AddOn:GetLibrary('Window')
 --- @type UI.Native
 local NativeUI = AddOn.Require('UI.Native')
+--- @type UI.Util
+local UIUtil = AddOn.Require('UI.Util')
 --- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
@@ -17,47 +26,36 @@ local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
 -- @param title the title text. (if nil, not title will be shown)
 -- @param width width of the frame, defaults to 450
 -- @param height height of the frame, defaults to 325
--- @param hookConfig should the frame be hooked into respecting configuration frame (hide/show if present). defaults to true
-function Frame:initialize(parent, name, module, title, width, height, hookConfig)
+function Frame:initialize(parent, name, module, title, width, height)
     BaseWidget.initialize(self, parent, name)
     self.module = module
     self.title = title
     self.width = width
     self.height = height
-    self.hookConfig = hookConfig
 end
 
 function Frame:Create()
     local f = CreateFrame("Frame", AddOn:Qualify(self.name), self.parent, BackdropTemplateMixin and "BackdropTemplate")
-    local hookIt = Util.Objects.IsNil(self.hookConfig) and true or self.hookConfig
-    local storage = { }
-    if self.module and AddOn.db then
+
+    f.GetStorage = function()
         local path = 'ui.'  .. (self.name and (self.module .. '_' .. self.name) or self.module)
-        storage = Util.Tables.Get(AddOn.db.profile, path) or {}
+        local storage = Util.Tables.Get(AddOn.db.profile, path) or {}
         Logging:Debug('Create() : storage at %s is %s', path, Util.Objects.ToString(storage))
+        return storage
     end
 
+    local storage = f:GetStorage()
     f:Hide()
     f:SetFrameStrata("DIALOG")
     f:SetToplevel(true)
     f:SetWidth(self.width or 450)
     f:SetHeight(self.height or 325)
-    f:SetScale(storage.scale or 1.1)
+    f:SetScale(storage.scale)
     Window:Embed(f)
     f:RegisterConfig(storage)
     f:RestorePosition()
     f:MakeDraggable()
     f:SetScript("OnMouseWheel", function(f,delta) if IsControlKeyDown() then Window.OnMouseWheel(f,delta) end end)
-    --f:HookScript("OnShow", function() f.restoreConfig = hookIt and AddOn.HideConfig() end)
-    --f:HookScript("OnHide",
-    --             function()
-    --                 if f.restoreConfig then
-    --                     AddOn.ShowConfig()
-    --                     f.restoreConfig = false
-    --                 end
-    --             end
-    --)
-
     f:SetScript("OnKeyDown",
             function(self, key)
                 -- Logging:Trace("OnKeyDown(%s) : %s", self:GetName(), key)
@@ -99,8 +97,9 @@ function Frame:Create()
 
     self:CreateTitle(f)
     self:CreateContent(f)
+    self:EmbedScalingSupport(f)
     self:CreateButtons(f)
-    self.EmbedMinimizeSupport(f)
+    self:EmbedMinimizeSupport(f)
     NativeUI:TrackFrame(f)
 
     BaseWidget.Mod(
@@ -117,11 +116,11 @@ function Frame:CreateTitle(f)
         local tf = CreateFrame("Frame", AddOn:Qualify(self.name, 'Title'), f, BackdropTemplateMixin and "BackdropTemplate")
         tf:SetToplevel(true)
         tf:SetBackdrop({
-                           bgFile = BaseWidget.ResolveTexture('white'),
-                           edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-                           tile = true, tileSize = 8, edgeSize = 2,
-                           insets = { left = 2, right = 2, top = 2, bottom = 2 },
-                       })
+            bgFile = BaseWidget.ResolveTexture('white'),
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true, tileSize = 8, edgeSize = 2,
+            insets = { left = 2, right = 2, top = 2, bottom = 2 },
+        })
         tf:SetBackdropColor(0, 0, 0, 1)
         tf:SetBackdropBorderColor(0, 0, 0, 1)
         tf:SetHeight(22)
@@ -183,11 +182,98 @@ function Frame:CreateContent(f)
     f.content = c
 end
 
+local _ScalingPrototype = {
+    GetFrameScale = function(self)
+        local storage = self:GetStorage()
+        local scale = storage.scale or 1.0
+        return max(min(scale, 2.0), 0.5)
+    end,
+    SetFrameScale = function(self, scale)
+        local storage = self:GetStorage()
+        storage.scale = scale
+    end,
+
+}
+
+local ScaleX, ScaleY = -30, -5
+
+function Frame:EmbedScalingSupport(f)
+    for field, obj in pairs(_ScalingPrototype) do
+        f[field] = obj
+    end
+
+    local parent = f.content or f
+
+    local scaleSlider = NativeUI:New('Slider', parent, true):_Size(70,8):Point("TOPRIGHT", ScaleX, ScaleY):Range(50,200,true):NoValueOnTooltip()
+    scaleSlider.RefreshTooltip = function(self, reload)
+        self:Tooltip(L["ui_scale"], Util.Numbers.Round(f:GetFrameScale() * 100) .. "%", L["right_click_reset"])
+        if reload then
+            self:ReloadTooltip()
+        end
+    end
+
+    scaleSlider:OnShow(
+        function(self)
+            Logging:Trace("OnShow()")
+
+            local scale = f:GetFrameScale()
+            self:SetTo(scale * 100):Scale(1 / scale)
+                :OnChange(
+                function(self, event)
+                    Logging:Trace("OnChange()")
+
+                    if self.disable then
+                        self:SetTo(100)
+                        self:RefreshTooltip()
+                        return
+                    end
+
+                    event = Util.Numbers.Round2(event)
+                    local newScale = event/100
+                    -- Logging:Trace("SetScale(%.2f) : %.2f", event, newScale)
+                    f:SetFrameScale(newScale)
+                    UIUtil.SetScale(f, newScale, true)
+                    self:SetScale(1 / newScale)
+                    self:RefreshTooltip(true)
+                end
+            )
+
+            self:SetScript("OnShow",nil)
+            self:RefreshTooltip()
+            self:Point("TOPRIGHT", ScaleX * f:GetFrameScale(), ScaleY)
+            f:SetScale(f:GetFrameScale())
+        end,
+        true
+    )
+    scaleSlider:SetScript(
+        "OnMouseDown",
+        function(self,button)
+            if Util.Strings.Equal(button, C.Buttons.Right) then
+                self:SetTo(100)
+                self.disable = true
+            end
+        end
+    )
+    scaleSlider:SetScript(
+        "OnMouseUp",
+        function(self,button)
+            if Util.Strings.Equal(button, C.Buttons.Right) then
+                self.disable = nil
+            end
+            self:Point("TOPRIGHT",-45 * f:GetFrameScale(), -5)
+        end
+    )
+    f.scale = scaleSlider
+end
+
 function Frame:CreateButtons(f)
-    local close = NativeUI:New('ButtonClose', f.content or f)
+    local parent = f.content or f
+    local target = f.content and f.content:GetParent() or f
+
+    local close = NativeUI:New('ButtonClose', parent)
     close:SetSize(18,18)
     close:SetPoint("TOPRIGHT",-1,0)
-    close:SetScript("OnClick", function() if f.content then f.content:GetParent():Hide() else f:Hide() end end)
+    close:SetScript("OnClick", function() target:Hide() end)
     f.close = close
 end
 
@@ -214,7 +300,7 @@ local _MinimizePrototype = {
     end
 }
 
-function Frame.EmbedMinimizeSupport(f)
+function Frame:EmbedMinimizeSupport(f)
     for field, obj in pairs(_MinimizePrototype) do
         f[field] = obj
     end

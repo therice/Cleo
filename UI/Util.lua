@@ -271,6 +271,27 @@ function U.CreateGameTooltip(module, parent)
     return UI:NewNamed('GameTooltip', parent, AddOn:Qualify(module, "GameTooltip"))
 end
 
+function U.SetScale(widget, scale, topRight)
+    topRight = Util.Objects.Default(topRight, false)
+
+    local l = topRight and widget:GetRight() or widget:GetLeft()
+    local t = widget:GetTop()
+    local s = widget:GetScale()
+
+    if not l or not t or not s then return end
+
+    s = scale / s
+
+    Logging:Trace("SetScale() : l=%.2f, t=%.2f, s =%.2f, scale=%.2f", l, t, s, scale)
+
+    widget:SetScale(scale)
+
+    local script = widget:GetScript("OnDragStop")
+    widget:ClearAllPoints()
+    widget:SetPoint(topRight and "TOPRIGHT" or "TOPLEFT", UIParent, "BOTTOMLEFT", l / s, t / s)
+    if script then script(widget) end
+end
+
 function U.GetClassColorRGB(class)
     local c = U.GetClassColor(class)
     return U.RGBToHex(c.r,c.g,c.b)

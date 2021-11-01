@@ -31,7 +31,7 @@ local ScrollColumns =
 function VersionCheck:GetFrame()
 	if not self.frame then
 		Logging:Trace("VersionCheck:GetFrame()")
-		local f = UI:NewNamed('Frame', UIParent, 'VersionCheck', self:GetName(), L['frame_version_check'], 350, 325, true)
+		local f = UI:NewNamed('Frame', UIParent, 'VersionCheck', self:GetName(), L['frame_version_check'], 350, 325)
 		local st = ST.New(ScrollColumns, 12, 20, nil, f)
 		st:RegisterEvents({
 			  ["OnEnter"] = function(rowFrame, _, data, _, row, realrow, ...)

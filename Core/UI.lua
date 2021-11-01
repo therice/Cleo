@@ -19,7 +19,6 @@ function AddOn:GetResponseColor(name)
         r, g, b, a = response.color:GetRGBA()
     end
 
-
     return r, g, b, a
 end
 

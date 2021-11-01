@@ -13,6 +13,7 @@ License: Public Domain
 local MAJOR = "LibWindow-1.1"
 local MINOR = tonumber(("$Revision: 8 $"):match("(%d+)"))
 
+--- @class LibWindow
 local lib = LibStub:NewLibrary(MAJOR,MINOR)
 if not lib then return end
 

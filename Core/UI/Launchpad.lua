@@ -12,7 +12,7 @@ local Width, Height, ListWidth = 865, 650, 165
 
 function AddOn:Launchpad()
 	if not self.launchpad then
-		local f = UI:NewNamed('Frame', UIParent, 'LaunchpadPlatform', 'Launchpad', nil, Width, Height, false)
+		local f = UI:NewNamed('Frame', UIParent, 'LaunchpadPlatform', 'Launchpad', nil, Width, Height)
 		f:SetPoint("CENTER",0,0)
 		f:CreateShadow(20)
 		f:ShadowInside()
@@ -141,7 +141,7 @@ function AddOn:ApplyModules(moduleSuppliers)
 			local metadata = moduleSuppliers[name]
 			Logging:Trace("ApplyModules(%s) : %s, %s, %s", tostring(name), metadata[1]:GetName(), Util.Objects.ToString(metadata[2]), tostring(metadata[3]))
 
-			local index, moduleFrame = self.launchpad:AddModule(metadata[1]:GetName(), name, true)
+			local _, moduleFrame = self.launchpad:AddModule(metadata[1]:GetName(), name, true)
 			moduleFrame:SetWide()
 			moduleFrame.module = metadata[1]
 			moduleFrame.banner =

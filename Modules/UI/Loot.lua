@@ -382,7 +382,7 @@ Loot.EntryManager = EntryManager()
 function Loot:GetFrame()
 	if not self.frame then
 		Logging:Trace("GetFrame() : building loot frame")
-		local f = UI:NewNamed('Frame', UIParent, 'Loot', self:GetName(),  L["frame_loot"], 550, 400, false)
+		local f = UI:NewNamed('Frame', UIParent, 'Loot', self:GetName(),  L["frame_loot"], 550, 400)
 		-- override default behavior for ESC to not close the loot window
 		-- too easy to make mistakes and not get an opportunity to specify a response
 		f:SetScript(
