@@ -33,9 +33,9 @@ before_script:
   - luarocks install --local --lua-version=5.1 luacov-coveralls
 
 jobs:
+  fast_finish: true
   include:
-    - stage: "Test"
-      name: "Lua Check"
+    - name: "Lua Check"
       script:
         - /home/travis/.luarocks/bin/luacheck . --no-color -q
     - name: "Unit Tests"
