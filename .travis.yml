@@ -32,13 +32,13 @@ before_script:
   - luarocks install --local --lua-version=5.1 cluacov
   - luarocks install --local --lua-version=5.1 luacov-coveralls
 
-jobs:
-  fast_finish: true
-  include:
-    - name: "Lua Check"
-      script:
-        - /home/travis/.luarocks/bin/luacheck . --no-color -q
-    - name: "Unit Tests"
-      script:
-        - eval `luarocks --lua-version=5.1 path`
-        - /home/travis/.luarocks/bin/busted --lua=lua5.1 -c -o gtest .
+script:
+  - /home/travis/.luarocks/bin/luacheck . --no-color -q
+  - eval `luarocks --lua-version=5.1 path`
+  - /home/travis/.luarocks/bin/busted --lua=lua5.1 -c -o gtest .
+
+after_script:
+  - /home/travis/.luarocks/bin/luacov-coveralls -v -t $COVERALLS_TOKEN
+
+after_success:
+  - test $TRAVIS_BRANCH  = "master" && test $TRAVIS_TAG != "" && curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g "2.5.2"
