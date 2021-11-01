@@ -962,7 +962,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local position
 			-- random
 			if Util.Objects.IsNil(first) then
-				position = math.random(1, table.maxn(self.priorities))
+				position = math.random(1, math.max(table.maxn(self.priorities), 1))
 				self.priorities = Util.Tables.Splice2(self.priorities, position, position + 1, {player})
 			elseif first then
 				Util.Tables.Insert(self.priorities, 1, player)
