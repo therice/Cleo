@@ -8,6 +8,7 @@ exclude_files = {
 	"**/Test/**",
 	"node_modules/",
 	".tools/",
+	"Changelog.lua",
 }
 
 -- https://luacheck.readthedocs.io/en/stable/warnings.html
