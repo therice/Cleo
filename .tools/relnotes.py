@@ -19,20 +19,29 @@ def process(input_file, output_file):
 
     markdown = mistune.create_markdown(renderer='ast')
     parsed = markdown(text)
+    logging.debug('%s', parsed)
 
     content = []
 
     for child in parsed:
+        # logging.debug('%s', child)
         if child['type'] == 'heading':
             content.append(child['children'][0]['text'] + '\n')
-        elif child['type'] == 'block_code':
-            content.append(child['text'] + '\n')
+        elif child['type'] == 'list':
+            for item in child['children']:
+                if item['type'] == 'list_item':
+                    text = item['children'][0]['children'][0]['text']
+                    logging.debug('list_item -> %s', text)
+                    content.append('* ' + text + '\n')
+
+    content.append('\n')
 
     logging.debug('Processing %s', output_file)
 
     inserting, index = True, 0
     with open(output_file, mode='r', encoding="utf-8") as current:
         for line in current:
+            # logging.debug('%s', line)
             if inserting:
                 content.insert(index, line)
             else:
@@ -42,7 +51,6 @@ def process(input_file, output_file):
                 inserting = False
 
             index = index + 1
-
 
     logging.debug('Writing %s', output_file)
     with open(output_file, mode='w', encoding="utf-8") as append:

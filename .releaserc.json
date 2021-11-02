@@ -49,11 +49,16 @@
 		["@semantic-release/changelog", {
 			"changelogFile": "CHANGELOG.md"
 		}],
-		["@semantic-release/github", {
-			"assets": ["Changelog.lua"]
-		}],
 		["@semantic-release/exec",{
-			"prepareCmd": "python3 $TRAVIS_BUILD_DIR/.tools/relnotes.py -i $TRAVIS_BUILD_DIR/CHANGELOG.md -o $TRAVIS_BUILD_DIR/Changelog.lua"
+			"prepareCmd": "python3 $TRAVIS_BUILD_DIR/.tools/relnotes.py -i $TRAVIS_BUILD_DIR/CHANGELOG.md -o $TRAVIS_BUILD_DIR/Changelog.lua",
+			"successCmd": "curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g \"2.5.2\""
+		}],
+		["@semantic-release/git", {
+			"assets": ["Changelog.lua"],
+			"message": "docs(release): ${nextRelease.version} [skip ci]"
+		}],
+		["@semantic-release/github", {
+			"assets": ["CHANGELOG.md"]
 		}]
 	]
 }
