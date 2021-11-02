@@ -1,6 +1,6 @@
 local AddOnName, AddOn
 
-describe("Launch[ad", function()
+describe("Launchpad", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true)
 	end)
@@ -13,6 +13,5 @@ describe("Launch[ad", function()
 			AddOnLoaded(AddOnName, true)
 			AddOn:ToggleLaunchpad()
 		end)
-
 	end)
 end)

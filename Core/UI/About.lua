@@ -18,13 +18,22 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 		local SemanticVersion  = AddOn.Package('Models').SemanticVersion
 		local VersionDecorator = UIUtil.ColoredDecorator(C.Colors.ItemHeirloom)
 		local LineDecorator    = UIUtil.ColoredDecorator(C.Colors.ItemArtifact)
+		local ExtraDecorator    = UIUtil.ColoredDecorator(C.Colors.White)
 
 		local parsed = Util.Tables.Map(
 				Util.Strings.Split(AddOn.Changelog, "\n"),
 				function(line, ...)
-					if SemanticVersion.Is(line) then
-						local _, version = SemanticVersion.Create(line)
-						return VersionDecorator:decorate(tostring(version))
+					local split = Util.Strings.Split(line, " ")
+
+					if SemanticVersion.Is(split[1]) then
+						local _, version = SemanticVersion.Create(split[1])
+						local extra
+
+						if #split > 1 then
+							extra = Util.Tables.Concat(Util.Tables.Sub(split, 2), " ")
+						end
+
+						return VersionDecorator:decorate(tostring(version)) .. (extra and ExtraDecorator:decorate(extra) or '')
 					end
 
 					return Util.Strings.IsEmpty(line) and " " or LineDecorator:decorate(line)
@@ -34,6 +43,12 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 		return parsed
 	end
 )
+
+if AddOn._IsTestContext('About') then
+	function AddOn.GetParsedChangeLog()
+		return ParsedChangeLog()
+	end
+end
 
 function AddOn:AddAbout()
 	if not self.about then
