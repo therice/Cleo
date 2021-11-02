@@ -1,5 +1,9 @@
 package-as: Cleo
 
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
 ignore:
   - Test
   - node_modules
@@ -13,4 +17,7 @@ ignore:
   - .busted
   - .commitlintrc.json
   - .huskyrc.json
-  - commitlint.config
+  - .releaserc.json
+  - commitlint.config.js
+  - CHANGELOG.md
+  - package.json
