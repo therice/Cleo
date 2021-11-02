@@ -1,0 +1,59 @@
+{
+	"branches": ["master"],
+	"tagFormat": "${version}",
+	"plugins": [
+		["@semantic-release/commit-analyzer", {
+			"preset" : "conventionalcommits",
+			"releaseRules": [
+				{ "type": "build", "release": false },
+				{ "type": "chore", "release": "patch" },
+				{ "type": "ci", "release": false },
+				{ "type": "docs", "release": false},
+				{ "type": "feat", "release": "minor" },
+				{ "type": "fix", "release": "patch" },
+				{ "type": "perf", "release": "patch" },
+				{ "type": "refactor", "release": "patch" },
+				{ "type": "revert", "release": "patch" },
+				{ "type": "style", "release": "minor" },
+				{ "type": "test", "release": false }
+			],
+			"parserOpts": {
+				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+			}
+		}],
+		["@semantic-release/release-notes-generator", {
+			"preset": "eslint",
+			"releaseRules": [
+				{ "type": "build", "release": false },
+				{ "type": "chore", "release": "patch" },
+				{ "type": "ci", "release": false },
+				{ "type": "docs", "release": false},
+				{ "type": "feat", "release": "minor" },
+				{ "type": "fix", "release": "patch" },
+				{ "type": "perf", "release": "patch" },
+				{ "type": "refactor", "release": "patch" },
+				{ "type": "revert", "release": "patch" },
+				{ "type": "style", "release": "minor" },
+				{ "type": "test", "release": false }
+			],
+			"parserOpts": {
+				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+			},
+			"writerOpts" : {
+				"groupBy" : false,
+				"transform" : {}
+			},
+			"linkReferences": false,
+			"linkCompare": false
+		}],
+		["@semantic-release/changelog", {
+			"changelogFile": "CHANGELOG.md"
+		}],
+		["@semantic-release/github", {
+			"assets": ["Changelog.lua"]
+		}],
+		["@semantic-release/exec",{
+			"generateNotesCmd": "python3 .tools/relnotes.py -i CHANGELOG.md -o Changelog.lua"
+		}]
+	]
+}

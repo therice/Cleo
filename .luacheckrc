@@ -7,6 +7,7 @@ exclude_files = {
 	"Libs/",
 	"**/Test/**",
 	"node_modules/",
+	".tools/",
 }
 
 -- https://luacheck.readthedocs.io/en/stable/warnings.html

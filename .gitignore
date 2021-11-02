@@ -35,4 +35,5 @@ luacov.stats.out
 # general
 *~
 *.log
+*.pyc
 dump

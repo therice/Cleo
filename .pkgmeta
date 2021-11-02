@@ -4,6 +4,7 @@ ignore:
   - Test
   - node_modules
   - */Test/*
+  - .tools
   - .gitignore
   - .luacov
   - .luacheckrc
