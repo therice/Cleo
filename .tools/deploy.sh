@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+source $NVM_DIR/nvm.sh
+echo $NVM_DIR
+nvm --version
+
 nvm install lts/*
 npm install --save-dev semantic-release
 npm install --save-dev conventional-changelog-eslint
