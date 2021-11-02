@@ -46,6 +46,7 @@ script:
 
 deploy:
   provider: script
+  github_token: $GITHUB_TOKEN
   skip_cleanup: true
   script: bash $TRAVIS_BUILD_DIR/.tools/deploy.sh
   on:
