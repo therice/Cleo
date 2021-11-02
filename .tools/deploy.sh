@@ -12,4 +12,4 @@ npm install --save-dev @semantic-release/release-notes-generator
 npm install --save-dev @semantic-release/changelog
 npm install --save-dev @semantic-release/github
 npm install --save-dev @semantic-release/exec
-npx -y semantic-release --dry-run --debug
+npx -y semantic-release --debug
