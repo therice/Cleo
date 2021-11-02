@@ -53,7 +53,7 @@
 			"assets": ["Changelog.lua"]
 		}],
 		["@semantic-release/exec",{
-			"generateNotesCmd": "python3 .tools/relnotes.py -i CHANGELOG.md -o Changelog.lua"
+			"generateNotesCmd": "python3 $TRAVIS_BUILD_DIR/.tools/relnotes.py -i CHANGELOG.md -o Changelog.lua"
 		}]
 	]
 }
