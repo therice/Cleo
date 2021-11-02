@@ -9,8 +9,7 @@ notifications:
     on_failure: always
 
 env:
-  - LUA="lua 5.1"
-  - PYTHON="python3"
+  - LUA="lua5.1" PYTHON="python3"
 
 addons:
   apt:
@@ -19,6 +18,7 @@ addons:
       - luarocks
       - jq
       - python3
+      - python3-pip
 
 before_install:
   - sudo apt-get update
