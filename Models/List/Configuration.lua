@@ -130,9 +130,22 @@ function Configuration:PlayersWithPermission(p)
 	return players
 end
 
+--- @param p Models.Player the player to evaluate, if nil will use the current player
+function Configuration:IsOwner(p)
+	p = p and Player.Resolve(p) or AddOn.player
+	return (p == self:GetOwner())
+end
+
+--- @param p Models.Player the player to evaluate, if nil will use the current player
+function Configuration:IsAdmin(p)
+	p = p and Player.Resolve(p) or AddOn.player
+	return Util.Tables.ContainsValue(self:GetAdministrators(), p)
+end
+
+--- @param p Models.Player the player to evaluate, if nil will use the current player
 function Configuration:IsAdminOrOwner(p)
-	p = Player.Resolve(p)
-	return (p == self:GetOwner()) or Util.Tables.ContainsValue(self:GetAdministrators(), p)
+	p = p and Player.Resolve(p) or AddOn.player
+	return self:IsOwner(p) or self:IsAdmin(p)
 end
 
 function Configuration:GetOwner()

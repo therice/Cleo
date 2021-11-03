@@ -75,7 +75,7 @@ function Lists:Players(mapFn, ...)
 
 	local players = AddOn:Players(true, true, true)
 	for _, p in pairs({...}) do
-		Logging:Trace("Players() : Evaluating %s", tostring(p))
+		-- Logging:Trace("Players() : Evaluating %s", tostring(p))
 		local player = Player.Resolve(p)
 		if player and not players[player:GetShortName()] then
 			players[player:GetShortName()] = player
@@ -225,7 +225,7 @@ function Lists:LayoutConfigurationTab(tab)
 					local config = SelectedConfiguration()
 					if config then
 						Logging:Trace("Config.Default.OnClick(%s) : %s", tostring(config.id), tostring(self:GetChecked()))
-						-- this will mutate the configurations (only one default)
+						-- this will mutate the configurations (only one default permitted)
 						-- so set the list to the returned list
 						tab.configList:SetList(
 							module:GetService():ToggleDefaultConfiguration(config.id, self:GetChecked())
@@ -330,21 +330,24 @@ function Lists:LayoutConfigurationTab(tab)
 				end
 			)
 
-
-	tab.SetFieldsEnabled = function(self, enabled)
-		-- todo : check that current user is owner
+	--- @param self any
+	--- @param config Models.List.Configuration
+	tab.SetFieldsEnabled = function(self, config)
+		-- todo : disable check for development mode
+		-- admins can only modify the list associated with the configuration, not the configuration itself
+		local enabled = config and config:IsOwner()
 		self.name:SetEnabled(enabled)
 		self.default:SetEnabled(enabled)
 		self.status:SetEnabled(enabled)
 		self.owner:SetEnabled(enabled)
 		self.admins:SetEnabled(enabled)
+		self.delete:SetEnabled(enabled)
 	end
 
 	tab.Update = function(self)
 		local config = SelectedConfiguration()
 		if config then
-			Logging:Trace("Config(Tab).Update(%s)", tostring(config.id))
-			self:SetFieldsEnabled(true)
+			self:SetFieldsEnabled(config)
 			self.version:SetValue(config)
 			self.name:Text(config.name)
 			self.default:SetChecked(config.default)
@@ -354,8 +357,7 @@ function Lists:LayoutConfigurationTab(tab)
 		end
 	end
 
-	tab:SetFieldsEnabled(false)
-
+	tab:SetFieldsEnabled()
 
 	self.configTab = tab
 end
@@ -372,9 +374,9 @@ end
 function Lists:DeleteConfigurationOnClickYes(_, config)
 	-- need to remove the associated lists as well
 	local lists = self:GetService().List:GetAll(
-			function(list)
-				return list.configId == config.id
-			end
+		function(list)
+			return list.configId == config.id
+		end
 	)
 	if lists then
 		for _, list in pairs(lists) do
@@ -421,14 +423,12 @@ function Lists:LayoutListTab(tab)
 	local function SelectedConfiguration()
 		local values = tab.config:Selected()
 		local config = #values == 1 and values[1].value or nil
-		-- Logging:Trace("SelectedConfiguration() : %s", tostring(config and config.id or nil))
 		return config
 	end
 
 	--- @return Models.List.List
 	local function SelectedList()
 		local list = tab.lists:Selected()
-		-- Logging:Trace("SelectedList() : %s", tostring(list and list.id or nil))
 		return list
 	end
 
@@ -484,7 +484,7 @@ function Lists:LayoutListTab(tab)
 					tab.lists:SetList(module:GetService():Lists(config.id))
 					tab.lists:ClearSelection()
 					tab:Update()
-					tab:SetButtonsEnabled(true)
+					tab:SetButtonsEnabled(config)
 					return true
 				end
 			)
@@ -511,20 +511,27 @@ function Lists:LayoutListTab(tab)
 				)
 			)
 
-	tab.SetButtonsEnabled = function(self, enabled)
+	--- @param self any
+	--- @param config Models.List.Configuration
+	tab.SetButtonsEnabled = function(self, config)
+		local enabled = config and config:IsAdminOrOwner()
 		self.add:SetEnabled(enabled)
 		self.delete:SetEnabled(enabled)
 	end
 
-	tab.SetFieldsEnabled = function(self, enabled)
+	--- @param self any
+	--- @param config Models.List.Configuration
+	--- @param list Models.List.List
+	tab.SetFieldsEnabled = function(self, config, list)
+		local enabled = (list and config) and config:IsAdminOrOwner()
 		self.name:SetEnabled(enabled)
 	end
 
 	tab.Update = function(self)
 		local config, list = SelectedConfiguration(), SelectedList()
 		Logging:Trace("List(Tab).Update() : %s - %s", tostring(config and config.id or nil), tostring(list and list.id or nil))
-		self:SetFieldsEnabled(Util.Objects.IsSet(list))
-		self:SetButtonsEnabled(Util.Objects.IsSet(config))
+		self:SetFieldsEnabled(config, list)
+		self:SetButtonsEnabled(config)
 
 		if list then
 			self.name:Text(list.name)
@@ -673,20 +680,20 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 				end
 			)
 
-	tab.SetFieldsEnabled = function(self, enabled)
+	--- @param self any
+	--- @param config Models.List.Configuration
+	--- @param list Models.List.List
+	tab.SetFieldsEnabled = function(self, config, list)
+		local enabled = (config and list) and config:IsAdminOrOwner()
 		self.equipment:SetEnabled(enabled)
-		if not enabled then self.equipment:Clear() end
 	end
 
 	-- will be invoked when a list is selected
 	tab.Update = function(self)
 		Logging:Trace("List.Equipment(Tab).Update(%s)", tostring(self:IsVisible()))
 		if self:IsVisible() then
-			local enabled = (configSupplier() and listSupplier())
-			self:SetFieldsEnabled(enabled)
-			if enabled then
-				self.equipment:Refresh()
-			end
+			self:SetFieldsEnabled(configSupplier(), listSupplier())
+			self.equipment:Refresh()
 		end
 	end
 
@@ -719,10 +726,12 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 		local column = floor((self.index - 1) / rowsPerColumn)
 		local row = ((self.index -1) % rowsPerColumn)
+		--[[
 		Logging:Trace(
 			"columns=%d, rowsPerColumn=%d, index=%d, column=%d, row=%d",
 			columns, rowsPerColumn, self.index, column, row
 		)
+		--]]
 		return (10 + (column * (PriorityWidth + 15))) + xAdjust, (-20 - (row  * 22)) + yAdjust
 	end
 
@@ -839,7 +848,9 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				self.xButton:Hide()
 			else
 				self:BackgroundText(nil)
-				self.xButton:Show()
+				-- bind this to whether edit is movable
+				-- if not movable, then set to inactive due to permissions
+				if self:IsMovable() then self.xButton:Show() end
 			end
 			self:SetCursorPosition(1)
 		end
@@ -851,12 +862,17 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 					end
 				end
 		)
-		priorityEdit:SetMovable(true)
 		priorityEdit:SetEnabled(false)
-		priorityEdit:RegisterForDrag("LeftButton")
-		priorityEdit:SetScript("OnDragStart", EditOnDragStart)
-		priorityEdit:SetScript("OnDragStop", function(self) EditOnDragStop(self, EditDragType.Within) end)
 		priorityEdit:Point("TOPLEFT", PriorityCoord(priorityEdit))
+
+		priorityEdit.SetActive = function(self, active)
+			self:SetMovable(active)
+			self:RegisterForDrag(active and "LeftButton" or nil)
+			self:SetScript("OnDragStart", active and EditOnDragStart or nil)
+			self:SetScript("OnDragStop", active and function(e) EditOnDragStop(e, EditDragType.Within) end or nil)
+			if active then self.xButton:Show() else self.xButton:Hide() end
+		end
+		priorityEdit:SetActive(true)
 	end
 
 	-- this tracks player "edits" which aren't currently on the list (pure UI element)
@@ -1039,25 +1055,25 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		end
 	end
 
-	tab.SetFieldsEnabled = function(self, enabled)
+	--- @param self any
+	--- @param config Models.List.Configuration
+	--- @param list Models.List.List
+	tab.SetFieldsEnabled = function(self, config, list)
+		local enabled = (config and list) and config:IsAdminOrOwner()
 		self.playersScroll:Hide()
 		self.playersInGuild:SetEnabled(enabled)
 		self.playersInRaid:SetEnabled(enabled)
+
+		for index = 1, #self.priorityEdits do
+			self.priorityEdits[index]:SetActive(enabled)
+		end
 	end
 
 	tab.Update = function(self)
 		Logging:Trace("List.Priority(Tab).Update(%s)", tostring(self:IsVisible()))
 		if self:IsVisible() then
-			-- todo : fix
-			local enabled = (configSupplier() and listSupplier())
-			self:SetFieldsEnabled(true)
+			self:SetFieldsEnabled(configSupplier(), listSupplier())
 			self:UpdatePriorities()
-			--[[
-			self:SetFieldsEnabled(enabled)
-			if enabled then
-				self:LoadPriorities()
-			end
-			--]]
 		end
 	end
 
