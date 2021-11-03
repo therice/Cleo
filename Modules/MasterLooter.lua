@@ -350,6 +350,13 @@ function ML:RegisterPlayerMessages()
 	end
 end
 
+function ML:UnregisterPlayerMessages()
+	if self:IsHandled() then
+		Logging:Trace("UnregisterPlayerMessages()")
+		self:UnregisterMessage(C.Messages.PlayerJoinedGroup)
+		self:UnregisterMessage(C.Messages.PlayerLeftGroup)
+	end
+end
 
 function ML:OnPlayerEvent(event, player)
 	if self:IsHandled() then
@@ -711,7 +718,7 @@ end
 function ML:SendActiveConfig(target, config)
 	if self:IsHandled() then
 		Logging:Debug("SendActiveConfig(%s) : %s", tostring(target), tostring(config.id))
-		-- dispatch the config activation message to group
+		-- dispatch the config activation message to target
 		-- include information about the associated lists as well
 		-- this is necessary to make sure what we are activating is aligned with the master looter's view
 		local toSend = {
@@ -728,6 +735,36 @@ function ML:SendActiveConfig(target, config)
 		end
 
 		AddOn:Send(target, C.Commands.ActivateConfig, toSend)
+	end
+end
+
+-- this will reload current configuration/lists and activate
+-- used when the underlying configuration or list(s) are mutated while active
+function ML:ReactivateConfiguration()
+	Logging:Debug("ReactivateConfiguration()")
+	if self:IsHandled() then
+		if not AddOn:ListsModule():HasActiveConfiguration() then
+			Logging:Warn("ReactivateConfiguration() : No active configuration, cannot reactivate")
+			return
+		end
+
+		local ac = AddOn:ListsModule():GetActiveConfiguration()
+		-- reload the current active configuration, as reactivation was likely a result of a mutation
+		local config = AddOn:ListsModule():GetService().Configuration:Get(ac.config.id)
+		if not config then
+			Logging:Warn(
+				"ReactivateConfiguration(%s) : Current active configuration not found, cannot reactivate",
+				ac.config.id
+			)
+			return
+		end
+
+		Logging:Info("ReactivateConfiguration(%s) : activating", config.id)
+
+		-- unregister player messages during re-activation, otherwise we could duplicate
+		-- events. while they should be handled, they are unnecessary
+		self:UnregisterPlayerMessages()
+		self:ActivateConfiguration(config)
 	end
 end
 
@@ -750,6 +787,8 @@ function ML:ActivateConfiguration(config)
 				return
 			end
 
+			-- may want to send to ML (player) 1st and then
+			-- send to group after, but no way to say send to group but not me
 			self:SendActiveConfig(C.group, config)
 
 			-- if this looks strange, it's because it is

@@ -221,8 +221,21 @@ local EventToAction = {
 }
 
 function Lists:_ProcessEvents(queue)
-
 	Logging:Trace("_ProcessEvents(%d)", Util.Tables.Count(queue.events))
+
+	-- capture some state which instructs us as to whether (1) we need to check for reactivation and
+	-- (2) reactivation should occur
+	local isMl, hasActiveConfig, acId, reactivate =
+		AddOn:IsMasterLooter(), self:HasActiveConfiguration(), nil, false
+	if isMl and hasActiveConfig then
+		acId = self:GetActiveConfiguration().config.id
+	end
+
+	local function CheckReactivation(id)
+		if acId and not reactivate then
+			reactivate = Util.Strings.Equal(acId, id)
+		end
+	end
 
 	local function ProcessEvent(id, event, detail)
 		Logging:Trace("ProcessEvent(%s)[%s] : %s", id, tostring(detail.entity.clazz.name), event)
@@ -236,8 +249,10 @@ function Lists:_ProcessEvents(queue)
 
 		if Util.Objects.IsInstanceOf(entity, Configuration) then
 			record = TrafficRecord.For(entity)
+			CheckReactivation(entity.id)
 		elseif Util.Objects.IsInstanceOf(entity, List) then
 			record = TrafficRecord.For(self:GetService().Configuration:Get(entity.configId), entity)
+			CheckReactivation(entity.configId)
 		end
 
 		record:SetAction(EventToAction[event])
@@ -261,8 +276,13 @@ function Lists:_ProcessEvents(queue)
 		AddOn:TrafficAuditModule():Broadcast(record)
 	end
 
+	-- copy the event queue and set it back to empty for future ones
+	local process = Util.Tables.Copy(queue.events)
+	queue.events = {}
+	queue.timer = nil
+
 	-- string, table (of events)
-	for id, events in pairs(queue.events) do
+	for id, events in pairs(process) do
 		--- event type (string), detail (either the detail (table) or attribute names (table))
 		for event, detail in pairs(events) do
 			if Util.Objects.In(event, Dao.Events.EntityCreated, Dao.Events.EntityDeleted) then
@@ -276,8 +296,10 @@ function Lists:_ProcessEvents(queue)
 		end
 	end
 
-	queue.events = {}
-	queue.timer = nil
+	if reactivate then
+		Logging:Info("_ProcessEvents(%s) : active configuration has been modified, requires reactivation", acId)
+		AddOn:MasterLooterModule():ReactivateConfiguration()
+	end
 end
 
 local ConfigurationEvents = EventsQueue()

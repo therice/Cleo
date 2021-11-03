@@ -63,10 +63,10 @@ function Dao:Add(entity, fireCallbacks)
 	Logging:Trace("Dao.Add[%s](%s) : %s", tostring(self.entityClass), entity.id, Util.Objects.ToString(asTable))
 	if self.ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, asTable)
-	end
 
-	if fireCallbacks then
-		self.callbacks:Fire(Events.EntityCreated, entity)
+		if fireCallbacks then
+			self.callbacks:Fire(Events.EntityCreated, entity)
+		end
 	end
 end
 
@@ -187,7 +187,7 @@ function Dao:Update(entity, attr, fireCallbacks)
 		end
 	end
 
-	if fireCallbacks then
+	if shouldPersist and fireCallbacks then
 		self.callbacks:Fire(Events.EntityUpdated, entity, attr, diff, ref)
 	end
 end
@@ -199,10 +199,10 @@ function Dao:Remove(entity, fireCallbacks)
 	Logging:Trace("Dao.Remove[%s](%s)", tostring(self.entityClass), entity.id)
 	if self.ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, nil)
-	end
 
-	if fireCallbacks then
-		self.callbacks:Fire(Events.EntityDeleted, entity)
+		if fireCallbacks then
+			self.callbacks:Fire(Events.EntityDeleted, entity)
+		end
 	end
 end
 

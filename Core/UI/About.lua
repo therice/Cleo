@@ -18,7 +18,7 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 		local SemanticVersion  = AddOn.Package('Models').SemanticVersion
 		local VersionDecorator = UIUtil.ColoredDecorator(C.Colors.ItemHeirloom)
 		local LineDecorator    = UIUtil.ColoredDecorator(C.Colors.ItemArtifact)
-		local ExtraDecorator    = UIUtil.ColoredDecorator(C.Colors.White)
+		local ExtraDecorator    = UIUtil.ColoredDecorator(C.Colors.Salmon)
 
 		local parsed = Util.Tables.Map(
 				Util.Strings.Split(AddOn.Changelog, "\n"),
@@ -33,7 +33,7 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 							extra = Util.Tables.Concat(Util.Tables.Sub(split, 2), " ")
 						end
 
-						return VersionDecorator:decorate(tostring(version)) .. (extra and ExtraDecorator:decorate(extra) or '')
+						return VersionDecorator:decorate(tostring(version)) .. (extra and (' ' .. ExtraDecorator:decorate(extra)) or '')
 					end
 
 					return Util.Strings.IsEmpty(line) and " " or LineDecorator:decorate(line)

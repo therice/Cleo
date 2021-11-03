@@ -10,7 +10,7 @@ local Dialog = AddOn:GetLibrary("Dialog")
 ---@type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
 
-local MachuPicchu = "text is missing, machu picchu!"
+local MachuPicchu = "hey, ho, let's go!"
 
 Dialog:Register(C.Popups.ConfirmUsage, {
     text = L["confirm_usage_text"],
@@ -149,23 +149,6 @@ Dialog:Register(C.Popups.ConfirmReannounceItems, {
 })
 
 --[[
-Dialog:Register(C.Popups.ConfirmRevert, {
-    text = MachuPicchu,
-    on_show = AddOn:StandingsModule().RevertOnShow,
-    buttons = {
-        {
-            text = _G.YES,
-            on_click = AddOn:StandingsModule().RevertOnClickYes,
-        },
-        {
-            text = _G.NO,
-            on_click = Util.Functions.Noop
-        },
-    },
-    hide_on_escape = true,
-    show_while_dead = true,
-})
-
 Dialog:Register(C.Popups.ConfirmSync, {
     text = L['incoming_sync_request'],
     on_show = AddOn:SyncModule().ConfirmSyncOnShow,
