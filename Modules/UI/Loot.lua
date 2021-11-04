@@ -302,7 +302,7 @@ function EntryManager:CreateRollEntry(item)
 		entry.rollResult:SetText("")
 		entry.rollResult:Hide()
 
-		entry.width = 182
+		entry.width = 250 -- 182
 		entry.width = math.max(entry.width, 90 + entry.itemText:GetStringWidth())
 		entry.width = math.max(entry.width, 89 + entry.itemLvl:GetStringWidth())
 	end
@@ -397,6 +397,7 @@ function Loot:GetFrame()
 		)
 		f.itemTooltip = UIUtil.CreateGameTooltip(self:GetName(), f.content)
 		f.close:Hide()
+		f.scale:Hide()
 
 		self.frame = f
 	end
