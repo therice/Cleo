@@ -2,6 +2,15 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.2.2 (2021-11-04)
+* change responses displayed text - MS to Need and OS to Open 56a71e5
+* add interface for viewing addon metrics 234e804
+* add support for sorting by priority in loot allocation window 10eb330
+* address 'accessing undefined variable self' in Loot Allocate 42b5cf6
+* convert alarm to using native scheduling rather than frame events 909bf86
+* make loot window wider and hide rescaling slider 7da177d
+* black magic to get scheduling based stuff to work 0726548
+
 2021.2.1 (2021-11-04)
 * don't run luacheck on Changelog.lua 32a83d7
 * final cleanup of addon packaging and reintroduce tests b80f9fa
