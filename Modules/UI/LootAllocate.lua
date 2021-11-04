@@ -389,7 +389,7 @@ LA.SortByResponse =
 LA.SortByActivePrio =
 	ST.SortFn(
 		function(row)
-			local name, entry = row.name, self:CurrentEntry()
+			local name, entry = row.name, LA:CurrentEntry()
 			local _, priority = AddOn:ListsModule():GetActiveListAndPriority(entry:GetEquipmentLocation(), name)
 			return priority or 9999
 		end
@@ -398,7 +398,7 @@ LA.SortByActivePrio =
 LA.SortByOverallPrio =
 	ST.SortFn(
        function(row)
-	       local name, entry = row.name, self:CurrentEntry()
+	       local name, entry = row.name, LA:CurrentEntry()
 	       local _, priority = AddOn:ListsModule():GetOverallListAndPriority(entry:GetEquipmentLocation(), name)
 	       return priority or 9999
        end
