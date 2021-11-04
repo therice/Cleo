@@ -383,14 +383,16 @@ function Alarm:_Fire()
 end
 
 function Alarm:Start()
-    Logging:Debug('Start')
-    if not self.timer then
+    Logging:Trace('Start')
+    -- the backing API for the scheduling stuff isn't available in test mode (or I haven't properly implemented it)
+    -- don't register the schedule
+    if not self.timer and not AddOn._IsTestContext() then
         self.timer = AddOn:ScheduleRepeatingTimer(function() self:_Fire() end, self.interval)
     end
 end
 
 function Alarm:Stop()
-    Logging:Debug('Stop')
+    Logging:Trace('Stop')
     if self.timer then
         AddOn:CancelTimer(self.timer)
         self.timer = nil
@@ -399,5 +401,9 @@ end
 
 function AddOn.Alarm(interval, fn)
     local alarm = Alarm(interval, fn)
+    -- something odd is going on in the test framework in which events/messages aren't being
+    -- fired without a frame with the name 'AlarmFrame', so create it here under those conditions
+    -- it probably merits some extra investigation
+    if AddOn._IsTestContext() then CreateFrame('Frame', 'AlarmFrame')  end
     return alarm
 end

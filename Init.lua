@@ -178,6 +178,7 @@ AddOn:SetDefaultModulePrototype(ModulePrototype)
 
 -- stuff below here is strictly for use during tests of addon
 -- not to be confused with addon test mode
+--@debug@
 local function _testNs(name) return  Util.Strings.Join('_', name, 'Testing')  end
 local AddOnTestNs = _testNs(AddOnName)
 function AddOn._IsTestContext(name)
@@ -192,3 +193,4 @@ function AddOn._IsTestContext(name)
 
     return false
 end
+--@end-debug@
