@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.2.1 (2021-11-04)
+* don't run luacheck on Changelog.lua 32a83d7
+* final cleanup of addon packaging and reintroduce tests b80f9fa
+* only fire callbacks when persistence mode is enabled and reactive configuration on changes 1f94baf
+* respect admin/owner(s) with respect to configuration and list editing a414fbb
+
 2021.2.0 (2021-11-02)
 * docs(release): 2021.2.0 
 * build(release): update changelog parsing to handle additional details 
