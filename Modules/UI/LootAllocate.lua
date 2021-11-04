@@ -38,9 +38,9 @@ local ScrollColumns, ScrollColumnCells =
 		:column(L["response"]):set("col", "response"):sortnext(5):width(240)                    -- 4
 			:comparesort(function(...) return LA.SortByResponse(...) end)
 		:column(L["priority_active"]):set("col", "pa"):sortnext(6):width(100)                   -- 5
-			--:comparesort(function(...) return LA.SortByEp(...) end)
+			:comparesort(function(...) return LA.SortByActivePrio(...) end)
 		:column(L["priority_overall"]):set("col", "po"):sortnext(11):width(100)                 -- 6
-			--:comparesort(function(...) return LA.SortByGp(...) end)
+			:comparesort(function(...) return LA.SortByOverallPrio(...) end)
 		:column(_G.ITEM_LEVEL_ABBR):set("col", "ilvl"):sortnext(8):width(45)                    -- 7
 		:column(L["diff"]):set("col", "diff"):width(40)                                         -- 8
 		:column(L["g1"]):set("col", "gear1"):width(20):align('CENTER')                          -- 9
@@ -386,23 +386,23 @@ LA.SortByResponse =
 		end
 	)
 
---[[
-LA.SortByEp =
+LA.SortByActivePrio =
 	ST.SortFn(
 		function(row)
-			local ep = AddOn:StandingsModule().Points(row.name)
-			return ep
+			local name, entry = row.name, self:CurrentEntry()
+			local _, priority = AddOn:ListsModule():GetActiveListAndPriority(entry:GetEquipmentLocation(), name)
+			return priority or 9999
 		end
 	)
 
-LA.SortByGp =
+LA.SortByOverallPrio =
 	ST.SortFn(
        function(row)
-	       local _, gp = AddOn:StandingsModule().Points(row.name)
-	       return gp
+	       local name, entry = row.name, self:CurrentEntry()
+	       local _, priority = AddOn:ListsModule():GetOverallListAndPriority(entry:GetEquipmentLocation(), name)
+	       return priority or 9999
        end
 	)
---]]
 
 --
 -- SetCellX BEGIN
@@ -454,6 +454,7 @@ function LA:SetCellPa(_, frame, data, _, _, realrow, column, _, _, ...)
 	local name, entry = data[realrow].name, self:CurrentEntry()
 	local _, priority = AddOn:ListsModule():GetActiveListAndPriority(entry:GetEquipmentLocation(), name)
 	frame.text:SetText(tostring(priority and priority or '?'))
+	frame.text:SetTextColor(C.Colors.MageBlue:GetRGB())
 	data[realrow].cols[column].value = priority
 end
 
@@ -462,6 +463,7 @@ function LA:SetCellPo(_, frame, data, _, _, realrow, column, _, _, ...)
 	local name, entry = data[realrow].name, self:CurrentEntry()
 	local _, priority = AddOn:ListsModule():GetOverallListAndPriority(entry:GetEquipmentLocation(), name)
 	frame.text:SetText(tostring(priority and priority or '?'))
+	frame.text:SetTextColor(C.Colors.ItemArtifact:GetRGB())
 	data[realrow].cols[column].value = priority
 end
 
