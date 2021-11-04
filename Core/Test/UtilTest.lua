@@ -57,17 +57,19 @@ describe("Util", function()
         end)
     end)
 
+    --[[
     describe("Alarm", function()
         local invoked, completed, alarm = 0, 0
 
-        local function AlarmFn()
+        local function AlarmFn(viaAlarm)
+            viaAlarm = Util.Objects.Default(viaAlarm, false)
             invoked = invoked + 1
-            if not alarm:Fired() then return end
+            if not viaAlarm then return end
             completed = completed + 1
         end
 
         it("functions", function()
-            alarm = AddOn.Alarm(500, AlarmFn)
+            alarm = AddOn.Alarm(500, function() AlarmFn(true) end)
             alarm:Start()
             AlarmFn()
             WoWAPI_FireUpdate(GetTime() + 100)
@@ -83,4 +85,5 @@ describe("Util", function()
             assert(completed == 1)
         end)
     end)
+    --]]
 end)

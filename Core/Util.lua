@@ -370,50 +370,34 @@ function AddOn:PrintError(msg)
     AddOn:Print(format(L["error_x"], msg))
 end
 
--- user C_Timer
 local Alarm = AddOn.Class('Alarm')
 function Alarm:initialize(interval, fn)
     self.interval = interval
     self.fn = fn
-    self.elapsed = 0
-    self.fired = false
-    self.frame = CreateFrame('Frame', 'AlarmFrame')
-    self.frame:Hide()
+    self.timer = nil
 end
 
-function Alarm:OnUpdate(elapsed)
-    self.elapsed = self.elapsed + elapsed
-    -- Logging:Debug("OnUpdate(%.2f) : %.2f, %.2f", elapsed, self.elapsed, self.interval)
-    if self.elapsed > self.interval then
-        -- Logging:Debug("OnUpdate(%.2f) : %.2f, %.2f", elapsed, self.elapsed, self.interval)
-        self.fired = true
-        self.fn()
-        self:Restart()
-    end
-end
-
-function Alarm:Fired()
-    return self.fired
+function Alarm:_Fire()
+    -- Logging:Trace("Alarm:_Fire()")
+    self.fn()
 end
 
 function Alarm:Start()
     Logging:Debug('Start')
-    self.elapsed = 0
-    self.frame:Show()
+    if not self.timer then
+        self.timer = AddOn:ScheduleRepeatingTimer(function() self:_Fire() end, self.interval)
+    end
 end
 
 function Alarm:Stop()
     Logging:Debug('Stop')
-    self.frame:Hide()
-end
-
-function Alarm:Restart()
-    -- Logging:Debug('Restart')
-    self.elapsed, self.fired = 0, false
+    if self.timer then
+        AddOn:CancelTimer(self.timer)
+        self.timer = nil
+    end
 end
 
 function AddOn.Alarm(interval, fn)
     local alarm = Alarm(interval, fn)
-    alarm.frame:SetScript("OnUpdate", function(_, elapsed) alarm:OnUpdate(elapsed) end)
     return alarm
 end
