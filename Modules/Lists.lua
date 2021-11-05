@@ -41,7 +41,9 @@ Lists.defaults = {
 }
 
 local Base = AddOn.Class('Lists.Base')
+--- @class Lists.Request
 local Request = AddOn.Class('Lists.Request', Base)
+--- @class Lists.Response
 local Response = AddOn.Class('Lists.Response', Base)
 
 function Lists:OnInitialize()
@@ -647,6 +649,7 @@ end
 
 function Lists:OnResourceResponse(sender, payload)
 	-- Logging:Trace("OnResourceResponse(%s) : %s", tostring(sender), Util.Objects.ToString(payload))
+	--- @type Lists.Response
 	local response = Response:reconstitute(payload)
 	Logging:Trace("OnResourceResponse(%s) : %s", tostring(sender), tostring(response and response or nil))
 	if response then
@@ -657,13 +660,16 @@ function Lists:OnResourceResponse(sender, payload)
 				return
 			end
 
-			--[[
+			Logging:Trace("OnResourceResponse(%s) : Adding %s (%s)", tostring(sender), tostring(resource.clazz.name), tostring(resource.id))
+			-- persist the payload
+			-- todo : should add some logic here for ignoring the update if two admins (or owner) are interacting
+			-- todo : as they could have different/conflicting versions of resource
+			-- todo : this is unlikely to be right place to do that though and instead in the requesting code
 			if Util.Objects.IsInstanceOf(resource, Configuration) then
 				self:GetService().Configuration:Add(resource, false)
 			elseif Util.Objects.IsInstanceOf(resource, List) then
 				self:GetService().List:Add(resource, false)
 			end
-			--]]
 
 			self.requestsTemp[response.cid] = nil
 		end
