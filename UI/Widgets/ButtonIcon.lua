@@ -30,8 +30,8 @@ local ButtonRight = AddOn.Package('UI.Widgets'):Class('ButtonRight', ButtonIcon)
 local ButtonLeftLarge = AddOn.Package('UI.Widgets'):Class('ButtonLeftLarge', ButtonIcon)
 --- @class UI.Widgets.ButtonRightLarge
 local ButtonRightLarge = AddOn.Package('UI.Widgets'):Class('ButtonRightLarge', ButtonIcon)
-
-local cos, sin, rad = math.cos, math.sin, math.rad
+--- @class UI.Widgets.ButtonRefresh
+local ButtonRefresh = AddOn.Package('UI.Widgets'):Class('ButtonRefresh', ButtonIcon)
 
 ---@type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
@@ -49,6 +49,7 @@ local Type = {
     LeftLarge  = 10,
     RightLarge = 11,
     DotDotDot  = 12,
+    Refresh    = 13,
 }
 
 ButtonIcon.Type = Type
@@ -67,6 +68,7 @@ local TypeMetadata = {
     [ButtonIcon.Type.LeftLarge]  = { { 0.18359, 0.25, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
     [ButtonIcon.Type.RightLarge] = { { 0.125, 0.18359, 0.0, 0.1328 }, { 1, 1, 1, .7 }, 0, { 1, 1, 1, 1 }, { .3, .3, .3, .7 } },
     [ButtonIcon.Type.DotDotDot]  = { { 0.871, 0.9375, 0.5, 0.625 } },
+    [ButtonIcon.Type.Refresh]    = { { 0.12549, 0.18823, 0.5, 0.625 }, { 0.25, 0.78, 0.92, .7 }, { 0.25, 0.78, 0.92, .9 }, { 0.25, 0.78, 0.92, 1 }},
 }
 ButtonIcon.TypeMetadata = TypeMetadata
 
@@ -248,6 +250,10 @@ function ButtonRightLarge:initialize(parent, name)
     ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.RightLarge)
 end
 
+function ButtonRefresh:initialize(parent, name)
+    ButtonIconBase.initialize(self, parent, name, ButtonIcon.Type.Refresh)
+end
+
 NativeUI:RegisterWidget('ButtonIcon', ButtonIcon)
 NativeUI:RegisterWidget('ButtonUp', ButtonUp)
 NativeUI:RegisterWidget('ButtonDown', ButtonDown)
@@ -260,4 +266,5 @@ NativeUI:RegisterWidget('ButtonLeft', ButtonLeft)
 NativeUI:RegisterWidget('ButtonRight', ButtonRight)
 NativeUI:RegisterWidget('ButtonLeftLarge', ButtonLeftLarge)
 NativeUI:RegisterWidget('ButtonRightLarge', ButtonRightLarge)
+NativeUI:RegisterWidget('ButtonRefresh', ButtonRefresh)
 

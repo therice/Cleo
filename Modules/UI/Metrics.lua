@@ -75,27 +75,21 @@ local ScrollColumns =
 
 function Metrics:LayoutMetricsTab(tab, type)
 	tab.metricType = type
-	tab.alarm = AddOn.Alarm(2.0, function() self:BuildScrollingTable(tab) end)
 
-	local st = ST.New(ScrollColumns, 10, 20, nil, tab)
+	local st = ST.New(ScrollColumns, 12, 20, nil, tab)
 	st.frame:ClearAllPoints()
-	st.frame:SetHeight(200)
+	st.frame:SetHeight(240)
+	st.frame:SetWidth(800)
 	st.frame:SetPoint("TOPLEFT", tab:GetParent():GetParent().banner, "BOTTOMLEFT", 20, -50)
 	st:EnableSelection(true)
 
+	local refresh = UI:New('ButtonRefresh', tab)
+	refresh:SetSize(18,18)
+	refresh:SetPoint("BOTTOMRIGHT", st.frame, "TOPRIGHT", 0, 10)
+	refresh:SetScript("OnClick", function() self:BuildScrollingTable(tab) end)
+	tab.refresh = refresh
 
-	tab:SetScript("OnShow",
-	              function(t)
-		              self:BuildScrollingTable(t)
-		              t.alarm:Start()
-	              end
-	)
-
-	tab:SetScript("OnHide",
-	              function(t)
-		              t.alarm:Stop()
-	              end
-	)
+	tab:SetScript("OnShow", function(t) self:BuildScrollingTable(t) end)
 end
 
 function Metrics:BuildScrollingTable(tab)
