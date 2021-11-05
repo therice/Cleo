@@ -1488,26 +1488,41 @@ local AutoAwardMode = {
 ---@return string
 function ML:ShouldAutoAward(item, quality)
 	if not item then return false end
-	Logging:Debug("ShouldAutoAward() : item=%s, quality=%d", tostring(item), quality)
+	Logging:Debug(
+		"ShouldAutoAward() : item=%s, quality=%d,autoAward=%s",
+		tostring(item), quality, tostring(self.db.profile.autoAward)
+	)
 
 	local db = self.db.profile
 
 	local function IsEligibleUnit(unit)
+		Logging:Trace("IsEligibleUnit(%s)", tostring(unit))
 		return UnitInRaid(unit) or UnitInParty(unit)
 	end
 
 	local function IsEligibleItem(item)
 		local itemId = ItemUtil:ItemLinkToId(item)
+		Logging:Trace("IsEligibleItem(%s) : %d", tostring(item), tonumber(itemId))
 		-- reputation items are handled separately, always false
 		if itemId and ItemUtil:IsReputationItem(itemId) then
 			return false
 		end
 
 		local isEquippable = IsEquippableItem(item)
+		Logging:Trace(
+			"IsEligibleItem(%d) : isEquippable=%s, autoAwardType=%s",
+			itemId, tostring(isEquippable), tostring(db.autoAwardType)
+		)
 		return  (db.autoAwardType == ML.AutoAwardType.All) or
 				(db.autoAwardType == ML.AutoAwardType.Equippable and isEquippable) or
 				(db.autoAwardType == ML.AutoAwardType.NotEquippable and not isEquippable)
 	end
+
+	Logging:Trace(
+		"ShouldAutoAward() : quality=%d, autoAwardLowerThreshold=%d, autoAwardUpperThreshold=%d, lootThreshold=%d",
+		quality, db.autoAwardLowerThreshold, db.autoAwardUpperThreshold, GetLootThreshold()
+	)
+
 
 	if db.autoAward and
 		quality >= db.autoAwardLowerThreshold and
@@ -1564,26 +1579,38 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 		self:PrintLootError(cause, item, winner)
 		return false
 	else
-		local awardReasonIdx
+		local awardReason
 		if Util.Strings.Equal(mode, AutoAwardMode.Normal) then
-			awardReasonIdx = db.autoAwardReason
+			-- db.autoAwardReason
+
+			-- 'autoAwardReason' is going to something like 'bank', 'free', etc.
+			-- this is the key attribute for locating the actual award entry
+			 _, awardReason = Util.Tables.FindFn(
+				AddOn:LootAllocateModule().db.profile.awardReasons,
+				function(e) return Util.Strings.Equal(db.autoAwardReason, e.key) end
+			)
+
+			-- safety net, just take first one
+			if not awardReason then
+				Logging:Warn("AutoAward() : Could not find award reason for '%s', using random one", tostring(db.autoAwardReason))
+				awardReason = AddOn:LootAllocateModule().db.profile.awardReasons[1]
+			end
+
+			Logging:Trace("AutoAward() : awardReason=%s", Util.Objects.ToString(awardReason))
 		else
 			AddOn:Print(L["cannot_auto_award"])
 			AddOn:Print(format(L["auto_award_invalid_mode"], mode))
 			return false
 		end
 
-		local awardReason = AddOn:LootAllocateModule().db.profile.awardReasons[awardReasonIdx]
 		self:GiveLoot(
 				slot,
 				winner,
 				function(awarded, cause)
 					if awarded then
 						self:AnnounceAward(winner, item, awardReason.text)
-
 						local audit = LootRecord.FromAutoAward(item, winner, awardReason)
 						AddOn:LootAuditModule():Broadcast(audit)
-
 						return true
 					else
 						AddOn:Print(L["cannot_auto_award"])

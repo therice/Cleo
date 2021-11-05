@@ -307,6 +307,25 @@ describe("MasterLooter", function()
 			WoWAPI_FireUpdate(GetTime() + 10)
 		end)
 
+		it("Auto Award", function()
+			ml.db.profile.autoAward = true
+			ml.db.profile.autoAwardReason = 'bank'
+			ml.db.profile.autoAwardUpperThreshold = 3
+			ml.db.profile.autoAwardType = ml.AutoAwardType.All
+			ml.db.profile.autoAwardTo =AddOn.player:GetShortName()
+			ml:_AddLootSlot(2)
+
+			local loot = ml.lootSlots[2]
+			loot.quality = 3
+
+			local shouldAutoAward, _, awardTo = ml:ShouldAutoAward(loot.item, loot.quality)
+			assert(shouldAutoAward)
+			assert.equal(ml.db.profile.autoAwardTo, awardTo)
+
+			local awarded = ml:AutoAward(2, ml.lootSlots[2].item, ml.lootSlots[2].quality, ml.db.profile.autoAwardTo, "normal")
+			assert(awarded)
+		end)
+
 		it("handles whispers", function()
 			SendChatMessage("!help", "WHISPER")
 			SendChatMessage("!items", "WHISPER")
