@@ -975,10 +975,15 @@ function ML:_AddLootSlot(slot, ...)
 		-- return's the link for item at specified slot
 		-- https://wow.gamepedia.com/API_GetLootSlotLink
 		local link = GetLootSlotLink(slot)
+		Logging:Trace(
+			"_AddLootSlot(%d) : link=%s, texture=%s, name=%s, quantity=%s, currencyId=%s, quality=%s",
+			slot, tostring(link), tostring(texture), tostring(name), tostring(quantity), tostring(currencyId), tostring(quality)
+		)
+
 		if currencyId then
-			Logging:Debug("_AddLootSlot(%d) : ignoring %s as it's currency", slot, tostring(link))
+			Logging:Trace("_AddLootSlot(%d) : ignoring %s as it's currency", slot, tostring(link))
 		elseif not AddOn:IsItemBlacklisted(link) then
-			Logging:Debug("_AddLootSlot(%d) : adding %s from creature %s to loot table", slot, tostring(link), tostring(guid))
+			Logging:Trace("_AddLootSlot(%d) : adding %s from creature %s to loot table", slot, tostring(link), tostring(guid))
 			self.lootSlots[slot] =
 				LootSlotInfo(
 					slot,
@@ -1158,13 +1163,13 @@ function ML:ShouldAddItem(item, quality)
 
 	-- item is available (AND)
 	-- auto-adding of items is enabled (AND)
-	-- item is equipable or auto-adding non-equipable items is enabled (AND)
-	-- quality is set and >= our threshold (AND)
+	-- item is equipable OR auto-adding non-equipable items is enabled (AND)
+	-- quality is set AND >= our threshold (AND)
 	-- item is not BOE or auto-adding of BOE is enabled
-	if item and quality then
+	if item then
 		if self.db.profile.autoAdd and
 			(IsEquippableItem(item) or self.db.profile.autoAddNonEquipable) and
-			quality >= GetLootThreshold() then
+			(quality and quality >= GetLootThreshold()) then
 			addItem = self.db.profile.autoAddBoe or not AddOn.IsItemBoe(item)
 		end
 	end
