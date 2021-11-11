@@ -2,6 +2,13 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.2.3 (2021-11-11)
+* add additional logging to ML loot table construction 3461690
+* auto-award was not working due to award reason lookup being incorrect dc2e8b8
+* modify list priority on award before announcement 613c51b
+* re-introduce persistence of resources in request/response workflow 0b8a2c2
+* require manual refresh instead of periodic on metrics display b09661d
+
 2021.2.2 (2021-11-04)
 * change responses displayed text - MS to Need and OS to Open 56a71e5
 * add interface for viewing addon metrics 234e804
