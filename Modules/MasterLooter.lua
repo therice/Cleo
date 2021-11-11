@@ -1284,7 +1284,14 @@ function ML:RegisterAndAnnounceAward(award)
 	ltEntry.awarded = winner
 
 	self:Send(C.group, C.Commands.Awarded, session, winner)
+	-- dispatch the award to list first, dispatch audit 2nd
+	-- this order is intentional as announcement is not relevant
+	-- without list modification (priority) occurring first
 	Util.Functions.try(
+		function()
+			AddOn:ListsModule():OnAwardItem(award)
+		end
+	).finally(
 		function()
 			self:AnnounceAward(
 				winner,
@@ -1294,10 +1301,6 @@ function ML:RegisterAndAnnounceAward(award)
 				session,
 				previousWinner
 			)
-		end
-	).finally(
-		function()
-			AddOn:ListsModule():OnAwardItem(award)
 		end
 	)
 
