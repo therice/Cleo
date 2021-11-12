@@ -400,7 +400,7 @@ function TrafficAudit:SetCellLootRecord(_, frame, data, _, _, realrow, _, _)
 				-- select the loot audit tab
 				AddOn:LootAuditModule():SelectRecord(player:GetName(), lrId)
 				self.interfaceFrame:GetLaunchPad()
-					:SetModuleIndex(self.interfaceFrame.moduleIndex - 1)
+					:SetModuleIndex(self.interfaceFrame.moduleIndex - 2)
 			end
 		)
 	else
