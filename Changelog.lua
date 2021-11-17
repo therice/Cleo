@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.0 (2021-11-17)
+* add support for alternate characters (not yet plugged into loot allocation) e0cf4fa
+* add support for alternate characters (plug into loot allocation process) e8b6b48
+* address incompatibility with Bagnon related to how it iterates all libraries b0edecf
+* navigating to award from traffic history selecting incorrect tab 3113abe
+
 2021.2.3 (2021-11-11)
 * add additional logging to ML loot table construction 3461690
 * auto-award was not working due to award reason lookup being incorrect dc2e8b8
