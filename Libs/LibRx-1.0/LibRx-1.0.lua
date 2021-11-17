@@ -9,6 +9,12 @@ local Util = LibStub('LibUtil-1.1')
 
 local classes = {}
 local function ClassesIndex(_, name, resolved)
+    -- wow, LibItemCache iterates all loaded libraries and has assumptions/expectations
+    -- about how indexing works, so short circuit here if name represents that usage
+    if Util.Strings.Equal(name, 'IsItemCache') then
+        return nil
+    end
+
     local c = Util.Tables.Get(classes, name)
     if not c then error(format("LibRx - package or class '%s' does not exist", resolved and (resolved .. '.' .. name) or name)) end
     if type(c) == 'table' and not rawget(c, 'clazz') then
