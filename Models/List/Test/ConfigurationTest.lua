@@ -62,42 +62,55 @@ describe("Configuration Model", function()
 
 			assert.same(t1, t2)
 			assert.same(t1, c2:toTable())
+
+			local p = c1:ResolvePlayer("Player-1-00000001")
+			assert(p)
+			assert(p == Player:Get("Player-1-00000001"))
+			p = c1:ResolvePlayer("Player-1-00000099")
+			assert(p)
+			assert(p == Player:Get("Player-1-00000099"))
+			p = c1:ResolvePlayer("Player-1-00000002")
+			assert(p)
+			assert(p == Player:Get("Player-1-00000001"))
+			p = c1:ResolvePlayer("Player-1-00000022")
+			assert(p)
+			assert(p == Player:Get("Player-1-00000004"))
 		end)
-		--it("is hashable", function()
-		--	local c = Configuration.CreateInstance()
-		--	c:GrantPermissions("Player-1-00000004", Configuration.Permissions.Admin)
-		--	c:GrantPermissions("Player-1-00000005", Configuration.Permissions.Admin)
-		--	c.status = Configuration.Status.Active
-		--	c.default = false
-		--	local h1, h2 = c:hash(), nil
-		--	assert(h1)
-		--	-- print(Util.Objects.ToString(c:toTable()))
-		--	-- print(c:hash())
-		--	c.default = true
-		--	c.status = Configuration.Status.Inactive
-		--	h2 = c:hash()
-		--	assert.Not.equal(h1, h2)
-		--	c.default = false
-		--	c.status = Configuration.Status.Active
-		--	h2 = c:hash()
-		--	assert.equal(h1, h2)
-		--	c:NewRevision(GetServerTime() + 10)
-		--	h2 = c:hash()
-		--	assert.equal(h1, h2)
-		--end)
-		--it("is referenceable", function()
-		--	local c = Configuration.CreateInstance()
-		--	c:GrantPermissions("Player-1-00000004", Configuration.Permissions.Admin)
-		--	c:GrantPermissions("Player-1-00000005", Configuration.Permissions.Admin)
-		--	c.status = Configuration.Status.Active
-		--	c.default = false
-		--	local ref = c:ToRef()
-		--	assert(ref)
-		--	assert(ref.id)
-		--	assert(ref.hash)
-		--	assert(ref.revision)
-		--	assert(ref.version)
-		--	assert.equal('Configuration', ref.clz)
-		--end)
+		it("is hashable", function()
+			local c = Configuration.CreateInstance()
+			c:GrantPermissions("Player-1-00000004", Configuration.Permissions.Admin)
+			c:GrantPermissions("Player-1-00000005", Configuration.Permissions.Admin)
+			c.status = Configuration.Status.Active
+			c.default = false
+			local h1, h2 = c:hash(), nil
+			assert(h1)
+			-- print(Util.Objects.ToString(c:toTable()))
+			-- print(c:hash())
+			c.default = true
+			c.status = Configuration.Status.Inactive
+			h2 = c:hash()
+			assert.Not.equal(h1, h2)
+			c.default = false
+			c.status = Configuration.Status.Active
+			h2 = c:hash()
+			assert.equal(h1, h2)
+			c:NewRevision(GetServerTime() + 10)
+			h2 = c:hash()
+			assert.equal(h1, h2)
+		end)
+		it("is referenceable", function()
+			local c = Configuration.CreateInstance()
+			c:GrantPermissions("Player-1-00000004", Configuration.Permissions.Admin)
+			c:GrantPermissions("Player-1-00000005", Configuration.Permissions.Admin)
+			c.status = Configuration.Status.Active
+			c.default = false
+			local ref = c:ToRef()
+			assert(ref)
+			assert(ref.id)
+			assert(ref.hash)
+			assert(ref.revision)
+			assert(ref.version)
+			assert.equal('Configuration', ref.clz)
+		end)
 	end)
 end)

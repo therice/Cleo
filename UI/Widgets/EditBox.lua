@@ -45,6 +45,7 @@ function EditBox:Create()
         eb,
         'Text', EditBox.SetText,
         'Tooltip', EditBox.SetTooltip,
+        'ClearTooltip', EditBox.ClearTooltip,
         'OnChange', EditBox.OnChange,
         'OnFocus', EditBox.OnFocus,
         'InsideIcon', EditBox.InsideIcon,
@@ -104,6 +105,14 @@ end
 function EditBox.SetText(self, text)
     self:SetText(text or "")
     self:SetCursorPosition(0)
+    return self
+end
+
+function EditBox.ClearTooltip(self)
+    self.tipTitle = nil
+    self.tipLines = nil
+    self:SetScript("OnEnter", nil)
+    self:SetScript("OnLeave", nil)
     return self
 end
 

@@ -145,7 +145,6 @@ function Item:GetEquipmentLocation()
 	if Util.Strings.IsSet(self.equipLoc)then
 		return AddOn.NormalizeEquipmentLocation(self.equipLoc, self.subType)
 	else
-
 		local customItem = ItemUtil:GetCustomItem(self.id)
 		if customItem then
 			local equipLoc = customItem[3]

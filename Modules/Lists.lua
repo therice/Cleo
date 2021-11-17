@@ -333,7 +333,8 @@ local function GetListAndPriority(self, equipment, player, active, relative)
 		end
 
 		if list then
-			prio, _ = list:GetPlayerPriority(player, relative)
+			-- need to resolve via any potential alts in this code path
+			prio, _ = list:GetPlayerPriority(self:GetActiveConfiguration().config:ResolvePlayer(player), relative)
 		end
 	end
 

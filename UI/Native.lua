@@ -37,22 +37,22 @@ function Widget.Border(self, cR, cG, cB, cA, size, offsetX, offsetY)
     offsetX = offsetX or 0
     offsetY = offsetY or 0
 
-    self.BorderTop = self:CreateTexture(nil,"BACKGROUND")
+    self.BorderTop = self.BorderTop or self:CreateTexture(nil,"BACKGROUND")
     self.BorderTop:SetColorTexture(cR,cG,cB,cA)
     self.BorderTop:SetPoint("TOPLEFT",-size-offsetX,size+offsetY)
     self.BorderTop:SetPoint("BOTTOMRIGHT",self,"TOPRIGHT",size+offsetX,offsetY)
 
-    self.BorderLeft = self:CreateTexture(nil,"BACKGROUND")
+    self.BorderLeft = self.BorderLeft or self:CreateTexture(nil,"BACKGROUND")
     self.BorderLeft:SetColorTexture(cR,cG,cB,cA)
     self.BorderLeft:SetPoint("TOPLEFT",-size-offsetX,offsetY)
     self.BorderLeft:SetPoint("BOTTOMRIGHT",self,"BOTTOMLEFT",-offsetX,-offsetY)
 
-    self.BorderBottom = self:CreateTexture(nil,"BACKGROUND")
+    self.BorderBottom = self.BorderBottom or self:CreateTexture(nil,"BACKGROUND")
     self.BorderBottom:SetColorTexture(cR,cG,cB,cA)
     self.BorderBottom:SetPoint("BOTTOMLEFT",-size-offsetX,-size-offsetY)
     self.BorderBottom:SetPoint("TOPRIGHT",self,"BOTTOMRIGHT",size+offsetX,-offsetY)
 
-    self.BorderRight = self:CreateTexture(nil,"BACKGROUND")
+    self.BorderRight = self.BorderRight or self:CreateTexture(nil,"BACKGROUND")
     self.BorderRight:SetColorTexture(cR,cG,cB,cA)
     self.BorderRight:SetPoint("BOTTOMRIGHT",size+offsetX, -offsetY)
     self.BorderRight:SetPoint("TOPLEFT",self,"TOPRIGHT",offsetX,offsetY)

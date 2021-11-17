@@ -443,7 +443,7 @@ local AttributeChangeHandlers = {
 		)
 	end,
 	['alts'] = function(tip, main, alts)
-		Logging:Debug("%s => %s", tostring(main), Util.Objects.ToString(alts))
+		-- Logging:Debug("%s => %s", tostring(main), Util.Objects.ToString(alts))
 
 		local c = main and UIUtil.GetPlayerClassColor(main:GetShortName()) or C.Colors.Aluminum
 		tip:AddLine(
@@ -462,7 +462,6 @@ local AttributeChangeHandlers = {
 
 		for _, alt in pairs(added) do
 			c = alt and UIUtil.GetPlayerClassColor(alt:GetShortName()) or C.Colors.Aluminum
-
 			tip:AddDoubleLine(
 				L['added'],
 				alt and AddOn.Ambiguate(alt) or L['unknown'],

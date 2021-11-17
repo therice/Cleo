@@ -637,7 +637,7 @@ ML.AwardStrings = {
 			local LM = AddOn:ListsModule()
 			if LM:HasActiveConfiguration() then
 				local _, list =
-				LM:GetActiveConfiguration():GetActiveListByEquipment(item:GetEquipmentLocation())
+					LM:GetActiveConfiguration():GetActiveListByEquipment(item:GetEquipmentLocation())
 				if list then return list.name end
 			end
 		end
@@ -889,8 +889,8 @@ end
 
 function ML:OnLootSlotCleared(slot)
 	if self:IsHandled() then
-		Logging:Debug("OnLootSlotCleared(%d)", slot)
 		local loot = self:_GetLootSlot(slot)
+		Logging:Debug("OnLootSlotCleared(%d) : %s", slot, Util.Objects.ToString(loot and loot:toTable() or {}))
 		if loot and not loot.looted then
 			loot.looted = true
 
@@ -1284,14 +1284,8 @@ function ML:RegisterAndAnnounceAward(award)
 	ltEntry.awarded = winner
 
 	self:Send(C.group, C.Commands.Awarded, session, winner)
-	-- dispatch the award to list first, dispatch audit 2nd
-	-- this order is intentional as announcement is not relevant
-	-- without list modification (priority) occurring first
+	-- perform award announcement first (as the priority will be changed after actual award)
 	Util.Functions.try(
-		function()
-			AddOn:ListsModule():OnAwardItem(award)
-		end
-	).finally(
 		function()
 			self:AnnounceAward(
 				winner,
@@ -1301,6 +1295,11 @@ function ML:RegisterAndAnnounceAward(award)
 				session,
 				previousWinner
 			)
+
+		end
+	).finally(
+		function()
+			AddOn:ListsModule():OnAwardItem(award)
 		end
 	)
 
@@ -1405,8 +1404,7 @@ end
 ---@param callback function This function will be called as callback(awarded, session, winner, status, ...)
 ---@return boolean true if award is success. false if award is failed. nil if we don't know the result yet.
 function ML:Award(award, callback, ...)
-	local session, winner, response, reason =
-		award.session, award.winner, award:NormalizedReason().text, award.reason
+	local session, winner = award.session, award.winner
 
 	Logging:Debug("Award(%d) : winner=%s", session, tostring(winner))
 	if not self.lootTable or #self.lootTable == 0 then

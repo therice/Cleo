@@ -201,6 +201,7 @@ describe("MasterLooter", function()
 			AddOn:CallModule("Lists")
 			LM = AddOn:ListsModule()
 			LM.db = NewAceDb(ListDataComplete)
+	        LM:InitializeService()
 			-- AddOn.masterLooter = AddOn.player
 			AddOn:CallModule("MasterLooter")
 			ml = AddOn:MasterLooterModule()
@@ -305,14 +306,19 @@ describe("MasterLooter", function()
 			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 1)
 			assert(cbFired)
 			WoWAPI_FireUpdate(GetTime() + 10)
-		end)
 
+			-- this handles the testing of alt mapping
+			la:OnResponseReceived(2, "Player525-Realm1", {response = 1})
+			award = AddOn:LootAllocateModule():GetItemAward(2, "Player525-Realm1")
+			ml:Award(award, Util.Functions.Noop, award)
+			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 3)
+		end)
 		it("Auto Award", function()
 			ml.db.profile.autoAward = true
 			ml.db.profile.autoAwardReason = 'bank'
 			ml.db.profile.autoAwardUpperThreshold = 3
 			ml.db.profile.autoAwardType = ml.AutoAwardType.All
-			ml.db.profile.autoAwardTo =AddOn.player:GetShortName()
+			ml.db.profile.autoAwardTo = AddOn.player:GetShortName()
 			ml:_AddLootSlot(2)
 
 			local loot = ml.lootSlots[2]
@@ -325,8 +331,11 @@ describe("MasterLooter", function()
 			local awarded = ml:AutoAward(2, ml.lootSlots[2].item, ml.lootSlots[2].quality, ml.db.profile.autoAwardTo, "normal")
 			assert(awarded)
 		end)
-
 		it("handles whispers", function()
+			WoWAPI_FireEvent("LOOT_READY")
+			WoWAPI_FireEvent("LOOT_OPENED")
+			WoWAPI_FireUpdate(GetTime()+10)
+
 			SendChatMessage("!help", "WHISPER")
 			SendChatMessage("!items", "WHISPER")
 			SendChatMessage("!item 2 1", "WHISPER")
@@ -336,7 +345,6 @@ describe("MasterLooter", function()
 			assert(cr2)
 			assert.equal(cr2.response, 1)
 		end)
-
 		it("ends session", function()
 			ml:EndSession()
 			assert(not ml.running)

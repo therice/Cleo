@@ -198,7 +198,7 @@ end
 function LA:GetCandidateResponse(session, candidate)
 	local response = self:GetEntry(session):GetCandidateResponse(candidate)
 	if not response then
-		error(format("no loot alloation entry available for session %d, candidate %s", session, candidate))
+		error(format("no loot allocation entry available for session %d, candidate %s", session, candidate))
 	end
 	return response
 end

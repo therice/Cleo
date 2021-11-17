@@ -84,7 +84,7 @@ _G.GetItemInfo = function(item)
     if info and #info > 0 then
         return unpack(info)
     else
-        return "ItemName" .. id, "item:" .. id ..":0:0:0:0:0:0:0:" .. random(60)
+        return "ItemName" .. id, "item:" .. id ..":0:0:0:0:0:0:0:" .. random(60), 4, 70, 60,  "Weapon", 'One-Handed Swords', 1, "INVTYPE_WEAPON"
     end
 end
 

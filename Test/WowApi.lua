@@ -452,7 +452,7 @@ function UnitHealthMax() return 100  end
 
 function UnitHealth() return 50 end
 
-_G.MAX_RAID_MEMBERS = 40
+_G.MAX_RAID_MEMBERS = 25
 
 function GetNumRaidMembers() return _G.MAX_RAID_MEMBERS  end
 

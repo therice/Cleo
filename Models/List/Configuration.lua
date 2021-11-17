@@ -32,7 +32,7 @@ local Configuration =
 		:include(Referenceable.Includable())
 Versioned.ExcludeAttrsInHash(Configuration)
 Versioned.IncludeAttrsInRef(Configuration)
-Configuration.static:AddTriggers("name", "permissions", "status", "default")
+Configuration.static:AddTriggers("name", "permissions", "alts", "status", "default")
 Configuration.static:IncludeAttrsInRef("id", {hash = function(self) return self:hash() end})
 
 local Version = SemanticVersion(1, 0, 0)
@@ -275,9 +275,41 @@ function Configuration:SetAlternates(player, ...)
 end
 
 
+--- @param player string|Models.Player
 --- @return table<string, table<Models.Player>>
-function Configuration:GetAlternates()
+function Configuration:GetAlternates(player)
+	if Util.Objects.IsSet(player) then
+		player = player and Player.Resolve(player) or nil
+		return player and self.alts[player.guid] or {}
+	end
+
 	return self.alts
+end
+
+--- @return boolean
+function Configuration:HasAlternates(player)
+	return Util.Tables.IsSet(self:GetAlternates(player))
+end
+
+--- resolves specified player with respect to any configured alts
+--- if no alts are configured, the passed player will be resolved as a Player
+--- if alts are configured and the passed player is a main, the passed player will be resolved as a Player
+--- if alts are configured and the passed players is an alt, the passed player will be resolved to the main as a Player
+--- @param player string|Models.Player
+function Configuration:ResolvePlayer(player)
+	player = player and Player.Resolve(player) or nil
+	if player and Util.Tables.Count(self.alts) > 0 then
+		if not self.alts[player.guid] then
+			for main, alts in pairs(self.alts) do
+				if Util.Tables.ContainsValue(alts, player) then
+					player = Player.Resolve(main)
+					break
+				end
+			end
+		end
+	end
+
+	return player
 end
 
 function Configuration:__tostring()

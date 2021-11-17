@@ -23,6 +23,7 @@ L["addon_name_colored"] = name_colored
 L["administrators"] = "Administrator(s)"
 L["after"] = "After"
 L["all"] = "All"
+L["all_items_have_been_awarded"] = "All items have been awarded and the loot session concluded"
 L["all_unawarded_items"] = "All un-awarded items"
 L["always_show_tooltip_howto"] = "Double click to toggle tooltip"
 L["announce_&i_desc"] = "|cfffcd400 &i|r: item link"

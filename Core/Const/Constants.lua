@@ -75,6 +75,7 @@ AddOn.Constants = {
         ItemPoor       = _G.ITEM_QUALITY_COLORS[0].color,
         ItemRare       = _G.ITEM_QUALITY_COLORS[3].color,
         ItemUncommon   = _G.ITEM_QUALITY_COLORS[2].color,
+        LightBlue      = CreateColor(0.62353,0.86275,0.89412, 1),
         LuminousOrange = CreateColor(1, 0, 0, 1),
         LuminousYellow = CreateColor(1, 1, 0, 1),
         MageBlue       = CreateColor(0.25, 0.78, 0.92, 1),

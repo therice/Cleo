@@ -43,7 +43,7 @@ function DualListbox:Create()
 	        :LinePaddingLeft(2)
 	        :ScrollWidth(22)
 			:LineTexture(15, UIUtil.ColorWithAlpha(C.Colors.White, 0.5), UIUtil.ColorWithAlpha(C.Colors.ItemArtifact, 0.6))
-			:HideBorders()
+			--:HideBorders()
 
 	-- selected options
 	dlb.selected =
@@ -53,7 +53,7 @@ function DualListbox:Create()
 			:LinePaddingLeft(2)
 			:ScrollWidth(22)
 			:LineTexture(15, UIUtil.ColorWithAlpha(C.Colors.White, 0.5), UIUtil.ColorWithAlpha(C.Colors.ItemArtifact, 0.6))
-			:HideBorders()
+			--:HideBorders()
 
 	dlb.addAll =
 		NativeUI:New('ButtonIcon', dlb, ButtonMetadata, BaseWidget.ResolveTexture("Arrow1"))
@@ -228,9 +228,9 @@ function DualListbox.SetEnabled(self, enabled)
 	self.remove:SetEnabled(enabled)
 	self.addAll:SetEnabled(enabled)
 	self.removeAll:SetEnabled(enabled)
-	self.available:HideBorders()
+	--self.available:HideBorders()
 	self.available:Border(ac.r, ac.g, ac.b, ac.a, 1, 0, 0)
-	self.selected:HideBorders()
+	--self.selected:HideBorders()
 	self.selected:Border(rc.r, rc.g, rc.b, rc.a, 1, 0, 0)
 end
 

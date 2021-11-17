@@ -105,6 +105,11 @@ ListDataComplete = {
 				["status"] = 1,
 				["default"] = true,
 				["name"] = "Tempest Keep",
+				["alts"] = {
+					["4372-00706FE5"] = {
+						"1-00000525", -- [1]
+					}
+				}
 			},
 		},
 		lists = {

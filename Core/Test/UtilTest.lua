@@ -48,12 +48,12 @@ describe("Util", function()
             assert.equal(guildRank, "Unguilded")
             assert.equal(enchanter,  true)
             assert.equal(enchantLvl, 298)
-            assert.equal(avgItemLevel, 0)
+            assert.equal(avgItemLevel, 70) -- see GetItemInfo in WowItemInfo.lua
         end)
         it("UpdatePlayerData", function()
             AddOn:UpdatePlayerData()
-            assert.equal(0, AddOn.playerData.ilvl)
-            assert(#AddOn.playerData.gear > 0)
+            assert.equal(70, AddOn.playerData.ilvl)
+            assert(#AddOn.playerData.gear > 0) -- see GetItemInfo in WowItemInfo.lua
         end)
     end)
 

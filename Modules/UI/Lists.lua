@@ -1268,19 +1268,40 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		self:ClearFocus()
 	end
 
-	local function EditOnChange(self, isPriority, userInput)
+
+	local function EditOnChange(self, isPriority)
 		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
-		-- Logging:Trace("EditOnChange(%d - %s, %s) : %s", index, tostring(isPriority), tostring(userInput), Util.Objects.Default(playerName, "nil"))
 		if Util.Strings.IsSet(playerName) then
 			self:SetTextColor(UIUtil.GetPlayerClassColor(playerName):GetRGBA())
 		end
 
+		-- reset border and tooltip back to default
+		self:ColorBorder()
+		self:ClearTooltip()
+
 		if isPriority then
-			-- Logging:Trace("EditOnChange() : %d => %s", index, tostring(playerName))
 			if Util.Strings.IsSet(playerName) then
 				priorities[index] = Player:Get(playerName)
 			else
 				priorities[index] = nil
+			end
+
+			-- if the player has alts, then color the border
+			local config = configSupplier()
+			if config and Util.Strings.IsSet(playerName) then
+				local alts = config:GetAlternates(playerName)
+				if Util.Objects.IsSet(alts) then
+					self:ColorBorder(C.Colors.LightBlue:GetRGBA())
+
+					local altsColored = {}
+					for _, alt in pairs(alts) do
+						Util.Tables.Push(
+							altsColored,
+							UIUtil.PlayerClassColorDecorator(alt:GetName()):decorate(alt:GetShortName())
+						)
+					end
+					self:Tooltip(L['list_alts'], unpack(altsColored))
+				end
 			end
 
 			if tab:HasPendingChanges() then
@@ -1317,10 +1338,10 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		priorityEdit:BackgroundText(tostring(index))
 		priorityEdit.xButton:Hide()
 		priorityEdit.xButton:SetScript(
-				"OnClick",
-				function(self)
-					self:GetParent():Set(nil)
-				end
+			"OnClick",
+			function(self)
+				self:GetParent():Set(nil)
+			end
 		)
 		priorityEdit.Reset = function(self)
 			local otcFn = self:GetScript("OnTextChanged")
@@ -1482,11 +1503,19 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		local displayRows = (rowsPerColumn - 3)
 		--- @type  table<string, Models.Player>
 		local allPlayers = AddOn:Players(self.includeRaid, self.includeGuild, true)
+		local allAlts = Util.Tables.Flatten(Util.Tables.Values(configSupplier():GetAlternates()))
+
 		Logging:Trace("UpdateAvailablePlayers() : all(%d) / list(%d)", Util.Tables.Count(allPlayers), Util.Tables.Count(self.priorities))
 
 		local available =
 			Util(allPlayers)
-				:CopyFilter(function(player) return not Util.Tables.ContainsValue(self.priorities, player) end)
+				:CopyFilter(
+					function(player)
+						return
+							not Util.Tables.ContainsValue(self.priorities, player) and
+							not Util.Tables.ContainsValue(allAlts, player)
+					end
+				)
 				:Sort(function(p1, p2) return p1:GetName() < p2:GetName() end)()
 
 		-- update scroll (as needed)

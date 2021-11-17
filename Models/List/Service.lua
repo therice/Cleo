@@ -278,8 +278,7 @@ function ActiveConfiguration:Verify(config, lists)
 	local verified, ah, ch = self.config:Verify(config)
 	Util.Tables.Push(verification, {verified = verified, ah = ah, ch = ch})
 	-- only go through lists if configuration was verified
-	-- as lists are bound to a configuration and all bets are off if config
-	-- is not verified
+	-- as lists are bound to a configuration and all bets are off if the config is not verified
 	if verified then
 		-- lvs - id(s) to verification of ones which are present in both self.lists and lists
 		-- missing - id(s) of ones which are present in self.lists, but missing in lists
@@ -330,7 +329,11 @@ end
 -- only time this mutates the priority list is if the player is not present on a list
 -- and configuration dictates that they are added
 function ActiveConfiguration:OnPlayerEvent(player, joined)
-	player = Player.Resolve(player)
+	Logging:Trace("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
+	-- resolve player through configuration as it has potential to be an ALT
+	-- if that is the case, all priorities will be tied to the main with which it is associated
+	-- otherwise, the player stands alone
+	player = self.config:ResolvePlayer(player)
 	Logging:Trace("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
 
 	-- make sure player is present on original list(s)
@@ -403,7 +406,11 @@ end
 --- @return string, number, number, number, number :
 ---     list id, active prio (before), active prio (after), original prio (before), orginal prio (after)
 function ActiveConfiguration:OnLootEvent(player, equipment)
-	player = Player.Resolve(player)
+	Logging:Debug("OnLootEvent(%s, %s)", tostring(player), tostring(equipment))
+	-- resolve player through configuration as it has potential to be an ALT
+	-- if that is the case, all priorities will be tied to the main with which it is associated
+	-- otherwise, the player stands alone
+	player = self.config:ResolvePlayer(player)
 	Logging:Debug("OnLootEvent(%s, %s)", tostring(player), tostring(equipment))
 
 	-- locate the current active list for the equipment
@@ -414,6 +421,7 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 			"OnLootEvent(%s, %s) : Located List(%s, '%s'), 'suiciding' player",
 			tostring(player), tostring(equipment), tostring(listId), list.name
 		)
+
 		-- 'suicide' the player on active list and then apply to master list
 		local apb = list:GetPlayerPriority(player, true)
 		list:DropPlayer(player)
