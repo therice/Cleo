@@ -88,7 +88,7 @@ function Player:GetShortName()
 end
 
 function Player:ForTransmit()
-    return gsub(self.guid, GuidPatternPremable, "")
+    return Player.StripGuidPrefix(self.guid)
 end
 
 function Player:Update(data)
@@ -179,7 +179,7 @@ function Player:Get(input)
             end
         end
     else
-        error(format("%s (%s) is an invalid player", Util.Objects.ToString(input), type(input)), 2)
+        error(format("'%s' (%s) is an invalid player", Util.Objects.ToString(input), type(input)), 2)
     end
 
     -- Logging:Trace("Get(%s) : GUID=%s", tostring(input), tostring(guid))
@@ -211,6 +211,10 @@ function Player.ParseGuid(input)
     end
 
     return guid
+end
+
+function Player.StripGuidPrefix(input)
+    return gsub(input, GuidPatternPremable, "")
 end
 
 function Player.Unknown(guid)

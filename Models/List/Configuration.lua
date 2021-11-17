@@ -77,18 +77,113 @@ function Configuration:initialize(id, name)
 	self.name = name
 	--- @type table<string, Models.List.Permission>
 	self.permissions = {}
+	--- @type table<string, table<Models.Player>>
+	self.alts = {}
 	self.status = self.Status.Inactive
 	self.default = false
 end
 
+function Configuration:toTable()
+	local t = Configuration.super.toTable(self)
+	t['alts'] =
+		Util(self.alts)
+			-- this creates a copy, but values point to original
+			:MapKeys(function(_, p) return Player.StripGuidPrefix(p) end, true)
+			:Map(
+				function(alts)
+					-- need to copy the values, as it will be pointer to original
+					return Util(alts):Copy()
+							:Map(function(a) return a:ForTransmit() end)
+							:Sort(function(a1, a2) return a1 < a2 end)()
+				end
+			):Sort2(false)()
+
+	return t
+end
+
+local MaxResolutionAttempts = 3
+local function resolve(self, guids, attempt)
+	attempt = Util.Objects.Default(attempt, 1)
+	local unresolved = {}
+
+	for main, alts in pairs(guids) do
+		for _, alt in pairs(alts) do
+			local player = Player:Get(alt)
+			if player then
+				local t = self.alts[main]
+				local index, _ = Util.Tables.FindFn(t, function(p) return p.guid == player.guid end)
+				if index then
+					t[index] = player
+					Logging:Trace("resolve(%s) : resolved %s", self.id, alt)
+				else
+					Logging:Warn("resolve(%s) : couldn't locate %s in 'alts'", alt)
+				end
+			else
+				if not unresolved[main] then unresolved[main] = {} end
+				Util.Tables.Push(unresolved[main], alt)
+			end
+		end
+	end
+
+	local remaining = Util.Tables.Count(unresolved)
+	Logging:Debug("resolve(%s) : %d outstanding resolutions remaining", self.id, remaining)
+
+	if remaining > 0 then
+		if attempt + 1 > MaxResolutionAttempts then
+			Logging:Warn("resolve(%s) : max resolution attempts exceeded", self.id)
+		else
+			AddOn:ScheduleTimer(resolve, 3, self, unresolved, attempt + 1)
+		end
+	end
+end
+
 function Configuration:afterReconstitute(instance)
 	instance = Configuration.super:afterReconstitute(instance)
-	instance.permissions = Util.Tables.Map(
-		Util.Tables.Copy(instance.permissions),
+	instance.permissions = Util.Tables.Copy(instance.permissions,
 		function(p)
 			return Permission:reconstitute(p)
 		end
 	)
+
+	local unresolved = {}
+
+	instance.alts =
+		Util(instance.alts)
+			-- this creates a copy, but values point to original
+			:MapKeys(
+				function(_, main)
+					local player = Player:Get(main)
+					return player and player.guid or Player.ParseGuid(main)
+				end, true
+			)
+			:Map(
+				function(alts, main)
+					return
+						-- need to copy the values, as it will be pointer to original
+						Util(alts):Copy()
+							:Map(
+								function(a)
+									local player = Player:Get(a)
+									if not player then
+										-- couldn't be resolved, add it to list to be processed later
+										-- main (guid) => alts (table<guid>)
+										player = Player.Unknown(a)
+										if not unresolved[main] then unresolved[main] = {} end
+										Util.Tables.Push(unresolved[main], a)
+									end
+
+									return player
+								end
+							)
+							:Sort(function(a1, a2) return a1.guid < a2.guid end)()
+				end, true
+			):Sort2(false)()
+
+	if Util.Tables.Count(unresolved) > 0 then
+		Logging:Warn("Configuration:afterReconstitute() : there are unresolved players, scheduling resolution")
+		AddOn:ScheduleTimer(resolve, 5, instance, unresolved, 1)
+	end
+
 	return instance
 end
 
@@ -165,6 +260,24 @@ function Configuration:SetOwner(player)
 	end
 
 	self:GrantPermissions(player, Configuration.Permissions.Owner)
+end
+
+function Configuration:SetAlternates(player, ...)
+	player = Player.Resolve(player)
+	local alts = {}
+	for _, p in Util.Objects.Each(Util.Tables.Temp(...)) do
+		Util.Tables.Push(alts, Player.Resolve(p))
+	end
+
+	-- sort both keys (mains) and values (alts)  to retain ordering
+	self.alts[player.guid] = Util.Tables.Sort(alts, function(p1, p2) return p1.guid < p2.guid end)
+	self.alts = Util.Tables.Sort2(self.alts, false)
+end
+
+
+--- @return table<string, table<Models.Player>>
+function Configuration:GetAlternates()
+	return self.alts
 end
 
 function Configuration:__tostring()

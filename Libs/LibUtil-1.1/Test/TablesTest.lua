@@ -235,8 +235,8 @@ describe("LibUtil", function()
             for k, v in pairs(t) do
                 local sorted =
                 Util.Tables.Sort(
-                        Util.Tables.Copy(v),
-                        function (a, b) return a < b end
+                    Util.Tables.Copy(v),
+                    function (a, b) return a < b end
                 )
 
                 if k == 1 then
@@ -344,6 +344,70 @@ describe("LibUtil", function()
             local t = {"a", "b", "c", "d", "e", "z"}
             Util.Tables.Insert(t, 1, "aa")
             assert.is.same(t, {"aa", "a", "b", "c", "d", "e", "z"})
+        end)
+        it("flattens", function()
+            local t = {
+                [1] = {"a", "b"},
+                [2] = {"c"},
+                [12] = {"d", "e", "f", "z", "x"},
+                [14] = {"aa"},
+            }
+
+            local v = Util.Tables.Values(t)
+            assert.same(
+                {{'a', 'b'}, {'c'}, {'d', 'e', 'f', 'z', 'x'}, {'aa'}},
+                v
+            )
+            local f = Util.Tables.Flatten(v)
+            assert.same(
+                {'a', 'b', 'c', 'd', 'e', 'f', 'z', 'x', 'aa'},
+                f
+            )
+        end)
+        it("compares", function()
+            local t1 = {
+                ['a1'] = { 'b', 'c', 'd' },
+                ['b1'] = { 'e', 'f', 'g' },
+                ['c1'] = { 'h', 'i', 'j' }
+            }
+
+            local t2 = {
+                ['a1'] = { 'b', 'c', 'd' },
+                ['b1'] = { 'e', 'f', 'g' },
+                ['c1'] = { 'h', 'i', 'j' }
+            }
+
+            assert(Util.Tables.Equals(t1, t2, true))
+
+            t2 = {
+                ['c1'] = { 'h', 'i', 'j' },
+                ['a1'] = { 'b', 'c', 'd' },
+                ['b1'] = { 'e', 'f', 'g' },
+            }
+            assert.Not(Util.Tables.Equals(t1, t2, false))
+            assert(Util.Tables.Equals(t1, t2, true))
+
+            t2 = {
+                ['a1'] = { 'c', 'd', 'b' },
+                ['b1'] = { 'f', 'g', 'e' },
+                ['c1'] = { 'j', 'i', 'h' },
+
+            }
+            assert.Not(Util.Tables.Equals(t1, t2, false))
+            assert.Not(Util.Tables.Equals(t1, t2, true))
+
+            local k1, k2 =
+                Util.Tables.Sort(Util.Tables.Keys(t1)),
+                Util.Tables.Sort(Util.Tables.Keys(t2))
+
+            assert(Util.Tables.Equals(k1, k2, false))
+
+            local v1, v2
+            for _, k in pairs(k1) do
+                v1 = Util.Tables.Sort(Util.Tables.Copy(t1[k]))
+                v2 = Util.Tables.Sort(Util.Tables.Copy(t2[k]))
+                assert(Util.Tables.Equals(v1, v2, false))
+            end
         end)
     end)
 end )

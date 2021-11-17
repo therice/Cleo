@@ -69,6 +69,17 @@ function Self.Set(t, ...)
     return t, val
 end
 
+function Self.Replace(t, keyFn, value, ...)
+    keyFn = Util.Functions.New(keyFn)
+
+    for k, v in pairs(t) do
+        if Util.Functions.Call(keyFn, v, k, true, false, ...) then
+            t[k] = value
+        end
+    end
+
+    return t
+end
 
 -- Get a random key from the table
 function Self.RandomKey(t)
@@ -375,20 +386,7 @@ function Self.Equals(a, b, deep)
     return type(a) == "table" and type(b) == "table" and Self.Contains(a, b, deep) and Self.Contains(b, a, deep)
 end
 
---function Self.Compare (s1,s2,symm)
---    local res = {}
---    for k,v in pairs(s1) do
---        if s2[k] == nil then res[k] = v end
---    end
---    if symm then
---        for k,v in pairs(s2) do
---            if s1[k] == nil then res[k] = v end
---        end
---    end
---    return res
---end
---
---
+--[[
 function Self.Compare(a, b)
     local resA, resB = {}, {}
 
@@ -423,53 +421,53 @@ function Self.Compare(a, b)
     return resA, resB
 end
 
--- https://github.com/martinfelis/luatablediff/blob/master/ltdiff.lua
---function Self.Compare(A, B)
---    local mod, del = {}, {}
---
---    for k,v in pairs(A) do
---        if B[k] ~= nil and type(A[k]) == "table" and type(B[k]) == "table" then
---            local a, b = Self.Compare(A[k], B[k])
---            mod[k] = a
---            del[k] = b
---        elseif B[k] == nil then
---            del[#del + 1] = k
---            --diff.del[#(diff.del) + 1] = k
---        elseif B[k] ~= v then
---            mod[k] = B[k]
---            --diff.mod[k] = B[k]
---        end
---    end
---
---    for k,v in pairs(B) do
---        if mod[k] ~= nil then
---            -- skip
---        elseif A[k] ~= nil and type(A[k]) == "table" and type(B[k]) == "table" then
---            local a, b = Self.Compare(A[k], B[k])
---            mod[k] = a
---            del[k] = b
---        elseif B[k] ~= A[k] then
---            mod[k] = v
---        end
---    end
---
---    --if next(diff.sub) == nil then
---    --    diff.sub = nil
---    --end
---    --
---    --if next(diff.mod) == nil then
---    --    diff.mod = nil
---    --end
---    --
---    --if next(diff.del) == nil then
---    --    diff.del = nil
---    --end
---
---    print('Mod -> ' .. Util.Objects.ToString(mod))
---    print('Del -> ' .. Util.Objects.ToString(del))
---    return mod, del
---end
+--  https://github.com/martinfelis/luatablediff/blob/master/ltdiff.lua
+function Self.Compare(A, B)
+    local mod, del = {}, {}
 
+    for k,v in pairs(A) do
+        if B[k] ~= nil and type(A[k]) == "table" and type(B[k]) == "table" then
+            local a, b = Self.Compare(A[k], B[k])
+            mod[k] = a
+            del[k] = b
+        elseif B[k] == nil then
+            del[#del + 1] = k
+            --diff.del[#(diff.del) + 1] = k
+        elseif B[k] ~= v then
+            mod[k] = B[k]
+            --diff.mod[k] = B[k]
+        end
+    end
+
+    for k,v in pairs(B) do
+        if mod[k] ~= nil then
+            -- skip
+        elseif A[k] ~= nil and type(A[k]) == "table" and type(B[k]) == "table" then
+            local a, b = Self.Compare(A[k], B[k])
+            mod[k] = a
+            del[k] = b
+        elseif B[k] ~= A[k] then
+            mod[k] = v
+        end
+    end
+
+    --if next(diff.sub) == nil then
+    --    diff.sub = nil
+    --end
+    --
+    --if next(diff.mod) == nil then
+    --    diff.mod = nil
+    --end
+    --
+    --if next(diff.del) == nil then
+    --    diff.del = nil
+    --end
+
+    print('Mod -> ' .. Util.Objects.ToString(mod))
+    print('Del -> ' .. Util.Objects.ToString(del))
+    return mod, del
+end
+--]]
 
 -- Check if a table matches the given key-value pairs
 ---@param t table
@@ -1013,7 +1011,6 @@ local function GenOrderedIndex(t)
     table.sort(orderedIndex, Util.Functions.CompareMultitype)
     return orderedIndex
 end
-
 
 -- Equivalent of the next function, but returns the keys in the alphabetic
 -- order. We use a temporary ordered key table that is stored in the

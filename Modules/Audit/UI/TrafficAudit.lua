@@ -434,7 +434,7 @@ local AttributeChangeHandlers = {
 		end
 	end,
 	['players'] = function(tip, priority, player)
-		local c = player and UIUtil.GetPlayerClassColor(player:GetShortName()) or Util.Constants.Aluminum
+		local c = player and UIUtil.GetPlayerClassColor(player:GetShortName()) or C.Colors.Aluminum
 		tip:AddDoubleLine(
 			format("%s #%s", L['priority'], tostring(priority)),
 			player and AddOn.Ambiguate(player) or L['unknown'],
@@ -442,6 +442,44 @@ local AttributeChangeHandlers = {
 			c.r, c.g, c.b
 		)
 	end,
+	['alts'] = function(tip, main, alts)
+		Logging:Debug("%s => %s", tostring(main), Util.Objects.ToString(alts))
+
+		local c = main and UIUtil.GetPlayerClassColor(main:GetShortName()) or C.Colors.Aluminum
+		tip:AddLine(
+			main and AddOn.Ambiguate(main) or L['unknown'],
+			c.r, c.g, c.b
+		)
+
+		local removed, added = 0, {}
+		for _, alt in pairs(alts) do
+			if Util.Objects.IsBoolean(alt) and not alt then
+				removed = removed + 1
+			else
+				Util.Tables.Push(added, alt)
+			end
+		end
+
+		for _, alt in pairs(added) do
+			c = alt and UIUtil.GetPlayerClassColor(alt:GetShortName()) or C.Colors.Aluminum
+
+			tip:AddDoubleLine(
+				L['added'],
+				alt and AddOn.Ambiguate(alt) or L['unknown'],
+				1, 1, 1,
+				c.r, c.g, c.b
+			)
+		end
+
+		if removed > 0 then
+			tip:AddDoubleLine(
+				L['removed'],
+				tostring(removed),
+				1, 1, 1,
+				1, 1, 1
+			)
+		end
+	end
 }
 
 function TrafficAudit:UpdateMoreInfo(f, data, row)

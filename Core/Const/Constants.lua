@@ -121,6 +121,7 @@ AddOn.Constants = {
     DropDowns = {
         AllocateRightClick      = name .. "_AllocateRightClick",
         AllocateFilter          = name .. "_AllocateFilter",
+        ConfigAltActions        = name .. "_ConfigAltActions",
         Enchanters              = name .. "_AllocateEnchantersMenu",
         ListPriorityActions     = name .. "_ListPriorityActions",
         ListPlayerActions       = name .. "_ListPlayerActions",

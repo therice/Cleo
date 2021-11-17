@@ -229,7 +229,6 @@ local V = 'v'
 function DeltaParser:V(from)
 	-- {v = {key = value}}
 	-- {key = {v = value}}
-
 	return Util.Tables.ContainsKey(from, V) and from[V] or Util.Tables.Pluck(Util.Tables.Copy(from), V)
 end
 
@@ -248,6 +247,23 @@ function PermissionsParser:Resolve(player, permissions)
 	return player, tostring(perm)
 end
 
+local AltsParser = DeltaParser(ResourceType.Configuration, 'alts')
+function AltsParser:Resolve(main, alts)
+	Logging:Trace("Resolve(%s) : %s", tostring(main), Util.Objects.ToString(alts))
+
+	local altsM = {}
+
+	for index, alt in pairs(alts) do
+		if Util.Tables.IsEmpty(alt) then
+			altsM[index] = false -- false means removed an ALT
+		else
+			altsM[index] = Player.Resolve(self:V(alt))
+		end
+	end
+
+	return Player.Resolve(main), altsM
+end
+
 local EquipmentParser = DeltaParser(ResourceType.List, 'equipment')
 function EquipmentParser:Resolve(index, equipment)
 	return index, Util.Objects.IsEmpty(equipment) and nil or C.EquipmentLocations[self:V(equipment)]
@@ -261,3 +277,4 @@ function PriorityParser:Resolve(priority, player)
 	local v = self:V(player)
 	return priority, Util.Objects.IsSet(v) and Player.Resolve(v) or nil
 end
+

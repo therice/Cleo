@@ -16,11 +16,11 @@ local LootEntry = AddOn.Package('Models.Item').LootEntry
 local Loot = AddOn:NewModule("Loot", "AceTimer-3.0")
 
 local RANDOM_ROLL_PATTERN =
-_G.RANDOM_ROLL_RESULT:gsub("%(", "%%(")
-  :gsub("%)", "%%)")
-  :gsub("%%%d%$", "%%")
-  :gsub("%%s", "(.+)")
-  :gsub("%%d", "(%%d+)")
+	_G.RANDOM_ROLL_RESULT:gsub("%(", "%%(")
+	  :gsub("%)", "%%)")
+	  :gsub("%%%d%$", "%%")
+	  :gsub("%%s", "(.+)")
+	  :gsub("%%d", "(%%d+)")
 
 local ROLL_TIMEOUT, ROLL_SHOW_RESULT_TIME = 5, 5
 
@@ -214,10 +214,6 @@ function Loot:OnRoll(entry, button)
 		end
 
 		local response = AddOn:GetResponse(button)
-		-- todo
-		--[[
-		local me = AddOn:StandingsModule():GetEntry(AddOn.player)
-		--]]
 		AddOn:Print(
 			format(L["response_to_item"], AddOn.GetItemTextWithCount(item.link,#item.sessions)) ..
 			" : " .. (response and response.text or "???")
