@@ -78,9 +78,7 @@ function AddOn:OnEnable()
 
     -- this enables flag for persistence of stuff like lists, history, and sync payloads
     -- it can be disabled as needed through /cleo pm
-    --@debug@
-    self.mode:Disable(AddOn.Constants.Modes.Persistence)
-    --@end-debug@
+    self.mode:Enable(AddOn.Constants.Modes.Persistence)
 
     --- @type Models.Player
     self.player = Player:Get("player")
