@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.1 (2021-11-19)
+* address regression with Lists UI when no Configuration(s) exist 0b8ac26
+* enable persistence mode by default 32db14e
+* item link missing on loot roll window 679eff0
+* when in debug mode, parse version from change log 47f9d47
+
 2021.3.0 (2021-11-17)
 * add support for alternate characters (not yet plugged into loot allocation) e0cf4fa
 * add support for alternate characters (plug into loot allocation process) e8b6b48
