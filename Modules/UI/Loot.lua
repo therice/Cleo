@@ -135,8 +135,8 @@ function Entry:Update(item)
 
 	self.item = item
 	self.itemText:SetText(
-		item.isRoll and (_G.ROLL .. ": ") or "" ..
-		AddOn.GetItemTextWithCount(self.item.link or "error", #self.item.sessions)
+		(item.isRoll and (_G.ROLL .. ": ") or "") ..
+		AddOn.GetItemTextWithCount(item.link or "error", #self.item.sessions)
 	)
 	self.icon:SetNormalTexture(self.item.texture or "Interface\\InventoryItems\\WoWUnknownItem01")
 	self.itemCount:SetText(#self.item.sessions > 1 and tostring(#self.item.sessions) or "")
