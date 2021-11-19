@@ -20,6 +20,7 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 		local LineDecorator    = UIUtil.ColoredDecorator(C.Colors.ItemArtifact)
 		local ExtraDecorator    = UIUtil.ColoredDecorator(C.Colors.Salmon)
 
+		local latestVersion
 		local parsed = Util.Tables.Map(
 				Util.Strings.Split(AddOn.Changelog, "\n"),
 				function(line, ...)
@@ -27,8 +28,11 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 
 					if SemanticVersion.Is(split[1]) then
 						local _, version = SemanticVersion.Create(split[1])
-						local extra
+						if Util.Objects.IsNil(latestVersion) or version > latestVersion then
+							latestVersion = version
+						end
 
+						local extra
 						if #split > 1 then
 							extra = Util.Tables.Concat(Util.Tables.Sub(split, 2), " ")
 						end
@@ -40,14 +44,12 @@ local ParsedChangeLog = Util.Memoize.Memoize(
 				end
 		)
 
-		return parsed
+		return parsed, latestVersion
 	end
 )
 
-if AddOn._IsTestContext('About') then
-	function AddOn.GetParsedChangeLog()
-		return ParsedChangeLog()
-	end
+function AddOn.GetParsedChangeLog()
+	return ParsedChangeLog()
 end
 
 function AddOn:AddAbout()
@@ -61,7 +63,8 @@ function AddOn:AddAbout()
 		about.versionText =  UI:New('Text', about, tostring(AddOn.version)):Size(520,25):Point("TOPLEFT", about.versionLabel, "TOPRIGHT"):Color():Shadow():Top()
 		about.changeLog = UI:New('ScrollFrame', about):Size(680, 180):Point("TOP", 0, -385):OnShow(
 				function(self)
-					local text = Util.Strings.Join2("\n", function() return true end, ParsedChangeLog())
+					local cl = ParsedChangeLog()
+					local text = Util.Strings.Join2("\n", function() return true end, cl)
 					self.text:SetText(text)
 					self:Height(self.text:GetStringHeight() + 50)
 

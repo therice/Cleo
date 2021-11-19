@@ -15,7 +15,8 @@ local Comm = AddOn.Require('Core.Comm')
 local Util =  AddOn:GetLibrary("Util")
 --- @type LibGuildStorage
 local GuildStorage =  AddOn:GetLibrary('GuildStorage')
-
+--- @type Models.SemanticVersion
+local SemanticVersion  = AddOn.Package('Models').SemanticVersion
 
 function AddOn:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
@@ -74,6 +75,14 @@ function AddOn:OnEnable()
     --@debug@
     -- this enables certain code paths that wouldn't otherwise be available in normal usage
     self.mode:Enable(AddOn.Constants.Modes.Develop)
+    --@end-debug@
+
+    -- in debug mode, parse the version from the Changelog
+    --@debug@
+    local _, latestVersion = AddOn.GetParsedChangeLog()
+    if latestVersion then
+        AddOn.version = SemanticVersion(tostring(latestVersion) .. '-dev')
+    end
     --@end-debug@
 
     -- this enables flag for persistence of stuff like lists, history, and sync payloads
