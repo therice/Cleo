@@ -1501,9 +1501,10 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	tab.UpdateAvailablePlayers = function(self)
 		-- less 3 rows because of headers and footers
 		local displayRows = (rowsPerColumn - 3)
+		local config = configSupplier()
 		--- @type  table<string, Models.Player>
 		local allPlayers = AddOn:Players(self.includeRaid, self.includeGuild, true)
-		local allAlts = Util.Tables.Flatten(Util.Tables.Values(configSupplier():GetAlternates()))
+		local allAlts = config and Util.Tables.Flatten(Util.Tables.Values(config:GetAlternates())) or {}
 
 		Logging:Trace("UpdateAvailablePlayers() : all(%d) / list(%d)", Util.Tables.Count(allPlayers), Util.Tables.Count(self.priorities))
 
