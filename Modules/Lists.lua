@@ -481,8 +481,8 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 			end
 		end
 
-		-- we have missing data, request it and resschedule activation
-		if Util.Tables.Count(toRequest) > 0 and false then
+		-- we have missing data, request it and reschedule activation
+		if Util.Tables.Count(toRequest) > 0 then
 			Logging:Warn("OnActivateConfigReceived() : Requesting %s", Util.Objects.ToString(Util.Tables.Copy(toRequest, function(r) return tostring(r) end)))
 			self:_SendRequest(AddOn.masterLooter, unpack(toRequest))
 			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
@@ -606,7 +606,7 @@ function Lists:_SendRequest(to, ...)
 
 	for _, r in Util.Objects.Each(Util.Tables.Temp(...)) do
 		self.requestsTemp[r.cid] = true
-		self:Send(AddOn.player, C.Commands.ConfigResourceRequest, r)
+		self:Send(to, C.Commands.ConfigResourceRequest, r)
 	end
 end
 
