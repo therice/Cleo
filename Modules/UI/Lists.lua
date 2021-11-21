@@ -210,7 +210,7 @@ function Lists:LayoutConfigurationTab(tab)
 	end
 
 	tab.SetButtonsEnabled = function(self, config)
-		local enabled = config and config:IsAdmin()
+		local enabled = config and config:IsOwner()
 		self.delete:SetEnabled(enabled)
 	end
 
@@ -715,7 +715,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 end
 
 function Lists:LayoutConfigGeneralTab(tab, configSupplier)
-	local module, configList = self, tab:GetParent().configList
+	local module, configList = self, tab:GetParent():GetParent().configList
 
 	tab.name =
 		UI:New('EditBox', tab)
