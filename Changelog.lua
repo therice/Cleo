@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.2 (2021-11-21)
+* resole issue with being unable to set a configuration as default or delete (as owner) dfabc50
+* resolve issue with priority lists not being requested/sent from ML when in raid 74eb5d5
+
 2021.3.1 (2021-11-19)
 * address regression with Lists UI when no Configuration(s) exist 0b8ac26
 * enable persistence mode by default 32db14e
