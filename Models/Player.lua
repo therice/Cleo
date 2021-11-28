@@ -44,14 +44,14 @@ local CACHE_TIME = Util.Memoize.Memoize(
 local function Get(guid)
     local player = cache[guid]
     if player then
-        Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
+        --Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
         if GetServerTime() - player.timestamp <= CACHE_TIME() then
             return Player:reconstitute(player)
         else
             Logging:Warn('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
         end
     else
-        Logging:Trace("Get(%s) : No cached entry", tostring(guid))
+        --Logging:Trace("Get(%s) : No cached entry", tostring(guid))
     end
 
     return nil
@@ -120,7 +120,7 @@ Player.Nobody.class = "DEATHKNIGHT"
 Player.Nobody.guid = "Player-9999-XXXXXXXX"
 
 function Player.Create(guid, info)
-    Logging:Trace("Create(%s) : info=%s", tostring(guid), tostring(Util.Objects.IsSet(info)))
+    --Logging:Trace("Create(%s) : info=%s", tostring(guid), tostring(Util.Objects.IsSet(info)))
     if Util.Strings.IsEmpty(guid) then return Player(nil, 'Unknown', nil, nil) end
 
     -- https://wow.gamepedia.com/API_GetPlayerInfoByGUID
@@ -128,7 +128,7 @@ function Player.Create(guid, info)
     -- the client has encountered the queried GUID.
     -- localizedClass, englishClass, localizedRace, englishRace, sex, name, realm
     local _, class, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
-    Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
+    --Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
     -- if the name is not set, means the query did not complete. likely because the player was not
     -- encountered. therefore, just return nil
     if Util.Objects.IsEmpty(name) then
@@ -145,7 +145,7 @@ function Player.Create(guid, info)
     if Util.Objects.IsEmpty(realm) then realm = select(2, UnitFullName("player")) end
 
     local player = Player(guid, name, class, realm)
-    Logging:Trace("Create(%s) : created %s", guid, Util.Objects.ToString(player:toTable()))
+    --Logging:Trace("Create(%s) : created %s", guid, Util.Objects.ToString(player:toTable()))
     Put(player)
     return player
 end

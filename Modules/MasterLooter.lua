@@ -1326,7 +1326,7 @@ function ML:PrintLootError(cause, item, winner)
 	else
 		local prefix =
 			format(
-				L["unable_to_give_item_to_player'"],
+				L["unable_to_give_item_to_player"],
 				item,
 				UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner)) .. " - "
 			)
