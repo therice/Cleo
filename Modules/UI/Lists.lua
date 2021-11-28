@@ -59,7 +59,6 @@ function Lists:LayoutInterface(container)
 		container.tabs.tabs[index]:Tooltip(Tabs[key])
 	end
 
-	--self:LayoutAltTab(container.tabs:Get(1))
 	self:LayoutConfigurationTab(container.tabs:Get(1))
 	self:LayoutListTab(container.tabs:Get(2))
 	container:ShowPersistenceWarningIfNeeded()
@@ -95,8 +94,14 @@ local ConfigTabs = {
 	[L["general"]]   = L["general_desc"],
 }
 
+local ConfigActionsMenu
+
 function Lists:LayoutConfigurationTab(tab)
 	local module = self
+
+	ConfigActionsMenu = MSA_DropDownMenu_Create(C.DropDowns.ConfigActions, tab)
+	MSA_DropDownMenu_Initialize(ConfigActionsMenu, self.ConfigActionsMenuInitializer, "MENU")
+	ConfigActionsMenu.module = module
 
 	tab.configList =
 		UI:New('ScrollList', tab)
@@ -110,9 +115,19 @@ function Lists:LayoutConfigurationTab(tab)
 	tab.configList.frame.ScrollBar.buttonUp:HideBorders()
 	tab.configList.frame.ScrollBar.buttonDown:HideBorders()
 	-- invoked when a list item is clicked, where index is the numeric id within the list
-	tab.configList.SetListValue = function(self, index)
+	tab.configList.SetListValue = function(self, index, button, ...)
 		Logging:Trace("Config(Tab).ConfigList.SetListValue(%d)", index)
 		self:GetParent():Update()
+		self.List[index]:SetScript(
+			"OnMouseDown",
+			function(self, button)
+				if Util.Strings.Equal(C.Buttons.Right, button) then
+					Logging:Debug("Config(Tab).ConfigList.OnMouseDown(%s)", tostring(index))
+					ConfigActionsMenu.entry = tab.configList:Selected()
+					DropDown.ToggleMenu(1, ConfigActionsMenu, self, 100)
+				end
+			end
+		)
 	end
 	tab.configList:SetList(module:GetService():Configurations())
 
@@ -1678,27 +1693,52 @@ do
 			PlayerActionsEntryBuilder:build()
 	)
 
-	local ConfigAltsMenuInitializer =
+	local ConfigAltsMenuEntryBuilder =
 		DropDown.EntryBuilder()
 	        :nextlevel()
-	        :add():text(L["list_alts"]):checkable(false):title(true)
-	        :add():text(L["save"]):checkable(false)
-	        :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
-	        :fn(
-				function(_, _, self)
-					self.configAltsTab:SavePlayers()
-				end
-			)
-	        :add():text(L["revert"]):checkable(false)
-	        :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
-	        :fn(
-				function(_, _, self)
-					self.configAltsTab:UpdatePlayers()
-				end
-			)
+		        :add():text(L["list_alts"]):checkable(false):title(true)
+		        :add():text(L["save"]):checkable(false)
+			        :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
+			        :fn(
+						function(_, _, self)
+							self.configAltsTab:SavePlayers()
+						end
+					)
+		        :add():text(L["revert"]):checkable(false)
+			        :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
+			        :fn(
+						function(_, _, self)
+							self.configAltsTab:UpdatePlayers()
+						end
+					)
 
 	Lists.ConfigAltsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
-		ConfigAltsMenuInitializer:build()
+		ConfigAltsMenuEntryBuilder:build()
+	)
+
+	local function ConfigActionDisabled(_, config)
+		return not config:IsAdminOrOwner(AddOn.player)
+		-- return not (config:IsAdminOrOwner(AddOn.player) or AddOn:DevModeEnabled())
+	end
+
+	local ConfigActionsMenuEntryBuilder =
+		DropDown.EntryBuilder()
+	        :nextlevel()
+				:add():text(function(_, config, _)return config.name end):checkable(false):title(true)
+				:add():text(L["broadcast"]):checkable(false):arrow(true)
+			:nextlevel()
+				:add():text(L["guild"]):checkable(false)
+					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA()))
+					:disabled(ConfigActionDisabled)
+					:fn(function(_, config, self) self:Broadcast(config.id, C.guild) end)
+				:add():text(L["raid"]):checkable(false)
+					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA()))
+					:disabled(ConfigActionDisabled)
+					:fn(function(_, config, self) self:Broadcast(config.id, C.group) end)
+
+	Lists.ConfigActionsMenuInitializer = DropDown.RightClickMenu(
+		Util.Functions.True,
+		ConfigActionsMenuEntryBuilder:build()
 	)
 end

@@ -70,8 +70,8 @@ function DropDown.EntryBuilder()
 end
 
 
-function DropDown.ToggleMenu(level, menu, cellFrame)
-    MSA_ToggleDropDownMenu(level, nil, menu, cellFrame, 0, 0)
+function DropDown.ToggleMenu(level, menu, cellFrame, xOffset, yOffset)
+    MSA_ToggleDropDownMenu(level, nil, menu, cellFrame, Util.Objects.Default(xOffset, 0), Util.Objects.Default(yOffset, 0))
 end
 
 function DropDown.RightClickMenu(predicate, entries, callback)

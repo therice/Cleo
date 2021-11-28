@@ -113,6 +113,13 @@ function Lists:SubscribeToComms()
 			Logging:Debug("ConfigResourceResponse from %s", tostring(sender))
 			self:OnResourceResponse(sender, unpack(data))
 		end,
+		[C.Commands.ConfigBroadcast] = function(data, sender)
+			Logging:Debug("ConfigBroadcast from %s", tostring(sender))
+			--don't consume our own broadcast (unless we're in dev mode)
+			if not AddOn.UnitIsUnit(sender, AddOn.player) or AddOn:DevModeEnabled() then
+				self:OnBroadcastReceived(unpack(data))
+			end
+		end,
 	})
 end
 
@@ -673,6 +680,42 @@ function Lists:OnResourceResponse(sender, payload)
 			end
 
 			self.requestsTemp[response.cid] = nil
+		end
+	end
+end
+
+--- broadcasts the specified configuration and any associated lists to specified target
+---
+--- @param configId number the configuration identifier
+--- @param target string the target channel to which to broadcast
+function Lists:Broadcast(configId, target)
+	Logging:Debug("Broadcast(%s, %s)", tostring(configId), tostring(target))
+
+	if Util.Strings.IsSet(configId) and Util.Strings.IsSet(target) then
+		local config = self:GetService().Configuration:Get(configId)
+		if config and config:IsAdminOrOwner(AddOn.player) then --or AddOn:DevModeEnabled())
+			local lists = self:GetService():Lists(configId)
+			self:Send(target, C.Commands.ConfigBroadcast, {  config = config, lists = lists or {}})
+		end
+	end
+end
+
+-- todo : if admin or owner make sure we don't overwrite local changes
+function Lists:OnBroadcastReceived(payload)
+	Logging:Debug("OnBroadcastReceived()")
+
+	local config = Configuration:reconstitute(payload.config)
+	if config then
+		local lists = Util.Tables.Map(payload.lists, function(v) return List:reconstitute(v) end)
+		Logging:Debug("OnBroadcastReceived() : config id = %s, list count = %d", tostring(config.id), Util.Tables.Count(lists))
+		-- add will overwrite any current data (no need to delete in advance)
+		-- todo : fire callbacks?
+		self:GetService().Configuration:Add(config, false)
+		Logging:Debug("OnBroadcastReceived() : updated/added config id = %s", tostring(config.id))
+
+		for _, list in pairs(lists) do
+			self:GetService().List:Add(list, false)
+			Logging:Debug("OnBroadcastReceived() : updated/added config id = %s, list id = %s", tostring(config.id), tostring(list.id))
 		end
 	end
 end
