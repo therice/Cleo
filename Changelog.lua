@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.3 (2021-11-29)
+* add support for broadcasting config and associated lists via right-click on configuration dac606d
+* minor cleanup with logging and tests related to master looter 4ccd96b
+
 2021.3.2 (2021-11-21)
 * resole issue with being unable to set a configuration as default or delete (as owner) dfabc50
 * resolve issue with priority lists not being requested/sent from ML when in raid 74eb5d5
