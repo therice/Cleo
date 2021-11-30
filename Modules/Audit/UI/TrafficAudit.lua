@@ -218,6 +218,12 @@ function TrafficAudit:FilterFunc(_, row)
 	return selectionFilter
 end
 
+function TrafficAudit:RefreshData()
+	if self:IsEnabled() and self.interfaceFrame and self.interfaceFrame:IsVisible() then
+		self:BuildData(self.interfaceFrame)
+	end
+end
+
 local cpairs = CDB.static.pairs
 function TrafficAudit:BuildData(container)
 	local LM = AddOn:ListsModule()
