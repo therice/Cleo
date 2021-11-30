@@ -240,14 +240,12 @@ function ML:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.db:RegisterNamespace(self:GetName(), ML.defaults)
 	self.Send = Comm():GetSender(C.CommPrefixes.Main)
-	--[[
 	AddOn:SyncModule():AddHandler(
 			self:GetName(),
-			format("%s %s", L['ml'], L['settings']),
+			format("%s %s", L["master_looter"], L['settings']),
 			function() return self.db.profile end,
 			function(data) self:ImportData(data) end
 	)
-	--]]
 end
 
 function ML:OnEnable()
