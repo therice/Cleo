@@ -1287,7 +1287,9 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	local function EditOnChange(self, isPriority)
 		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
 		if Util.Strings.IsSet(playerName) then
-			self:SetTextColor(UIUtil.GetPlayerClassColor(playerName):GetRGBA())
+			local color = UIUtil.GetPlayerClassColor(playerName)
+			if not color then color = C.Colors.ItemPoor end
+			self:SetTextColor(color:GetRGBA())
 		end
 
 		-- reset border and tooltip back to default

@@ -119,6 +119,16 @@ function AddOn:TrafficAuditModule()
     return self:GetModule("TrafficAudit")
 end
 
+--- @return TrafficAudit
+function AddOn:TrafficAuditModule()
+    return self:GetModule("TrafficAudit")
+end
+
+--- @return Sync
+function AddOn:SyncModule()
+    return self:GetModule("Sync")
+end
+
 
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
@@ -171,6 +181,13 @@ function AddOn:RegisterChatCommands()
                     else
                         self:CallModule('VersionCheck')
                     end
+                end
+            },
+            {
+                {'sync', 's'},
+                L['chat_commands_sync'],
+                function()
+                    self:CallModule('Sync')
                 end
             },
             {

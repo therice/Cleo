@@ -366,6 +366,10 @@ function AddOn.Unsubscribe(subscriptions)
     end
 end
 
+function AddOn.GetDateTime()
+    return date("%m/%d/%y %H:%M:%S", time())
+end
+
 function AddOn:PrintError(msg)
     AddOn:Print(format(L["error_x"], msg))
 end

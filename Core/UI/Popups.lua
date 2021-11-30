@@ -148,9 +148,8 @@ Dialog:Register(C.Popups.ConfirmReannounceItems, {
     show_while_dead = true,
 })
 
---[[
 Dialog:Register(C.Popups.ConfirmSync, {
-    text = L['incoming_sync_request'],
+    text = format("%s : |cfffcd400%s|r", L['addon_name_colored'], L['incoming_sync_request']),
     on_show = AddOn:SyncModule().ConfirmSyncOnShow,
     buttons = {
         {
@@ -165,7 +164,6 @@ Dialog:Register(C.Popups.ConfirmSync, {
     hide_on_escape = true,
     show_while_dead = true,
 })
---]]
 
 Dialog:Register(C.Popups.SelectConfiguration, {
     text = format("%s : |cfffcd400%s|r", L['addon_name_colored'], L['select_configuration']),

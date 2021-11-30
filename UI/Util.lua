@@ -337,10 +337,6 @@ function U.PlayerClassColorDecorator(name)
     return ColoredDecorator(U.GetPlayerClassColor(name))
 end
 
-function U.SubjectTypeDecorator(subjectType)
-    return ColoredDecorator(U.GetSubjectTypeColor(subjectType))
-end
-
 function U.ResourceTypeDecorator(resourceType)
     return ColoredDecorator(U.GetResourceTypeColor(resourceType))
 end

@@ -72,7 +72,7 @@ function Button:Create()
         'FontSize', Button.SetFontSize
     )
 
-    b._Disable = self.Disable
+    b._Disable = b.Disable
     b.Disable = Button.Disable
 
     return b
