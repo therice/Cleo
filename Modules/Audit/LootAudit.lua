@@ -35,14 +35,12 @@ function LootAudit:OnInitialize()
 	self.history = CDB(self.db.factionrealm)
 	self.stats = {stale = true, value = nil}
 	self.Send = Comm():GetSender(C.CommPrefixes.Audit)
-	--[[
 	AddOn:SyncModule():AddHandler(
 			self:GetName(),
-			L['loot_history'],
+			L['loot_audit'],
 			function() return self:GetDataForSync() end,
 			function(data) self:ImportDataFromSync(data) end
 	)
-	--]]
 end
 
 function LootAudit:OnEnable()
@@ -135,6 +133,95 @@ function LootAudit:GetStatistics()
 	else
 		return ret
 	end
+end
+
+function LootAudit:GetDataForSync()
+	Logging:Debug("GetDataForSync()")
+	if AddOn:DevModeEnabled() then
+		Logging:Debug("GetDataForSync() : %d", Util.Tables.Count(self.db.factionrealm))
+
+		local db = self.db.factionrealm
+		local rkeys = {}
+
+		while Util.Tables.Count(rkeys) < math.min(4, Util.Tables.Count(db)) do
+			local rkey = Util.Tables.RandomKey(db)
+			if not Util.Tables.ContainsKey(rkey) then
+				rkeys[rkey] = true
+			end
+		end
+
+		Logging:Debug("GetDataForSync() : randomly selected keys are %s", Util.Objects.ToString(Util.Tables.Keys(rkeys)))
+		return Util.Tables.CopySelect(db, unpack(Util.Tables.Keys(rkeys)))
+	else
+		return self.db.factionrealm
+	end
+end
+
+function LootAudit:ImportDataFromSync(data)
+	Logging:Debug("ImportDataFromSync() : current history player count is %d, import history player count is %d",
+	              Util.Tables.Count(self.db.factionrealm),
+	              Util.Tables.Count(data)
+	)
+
+	local persist = (not AddOn:DevModeEnabled() and AddOn:PersistenceModeEnabled()) or AddOn._IsTestContext()
+	if Util.Tables.Count(data) > 0 then
+		local cdb = CDB(data)
+		local imported, skipped = 0, 0
+		for name, history in cpairs(cdb) do
+			local charHistory = self.history:get(name)
+			Logging:Debug("ImportDataFromSync(%s)", tostring(name))
+
+			if not charHistory then
+				Logging:Debug("ImportDataFromSync(%s) : no previous history, creating and populating", name)
+				if persist then
+					self.history:put(name, history)
+				end
+				imported = imported + #history
+			else
+				Logging:Debug("ImportDataFromSync(%s) : pre-existing history (count=%d), examining each entry", name, #charHistory)
+				local function FindExistingEntry(importe)
+					return Util.Tables.FindFn(
+						charHistory,
+						function(e)
+							-- Logging:Debug("%d == %d, %s == %s", e.timestamp, importe.timestamp, tostring(e.item), tostring(importe.item))
+							return e.timestamp == importe.timestamp and Util.Strings.Equal(e.item, importe.item)
+						end
+					)
+				end
+
+				for _, entryTable in pairs(history) do
+					Logging:Debug("ImportDataFromSync(%s, %s) : examining import entry", name, entryTable.id)
+					local _, existing = FindExistingEntry(entryTable)
+					if existing then
+						Logging:Debug("ImportDataFromSync(%s, %s) : found existing entry in history, skipping...", name, entryTable.id)
+						skipped = skipped + 1
+					else
+						Logging:Debug("ImportDataFromSync(%s, %s) : entry does not exist in history, adding...", name, entryTable.id)
+						if persist then
+							self.history:insert(entryTable, name)
+						end
+						imported = imported + 1
+					end
+				end
+			end
+		end
+
+		if imported > 0 then
+			self.stats.stale = true
+			self:RefreshData()
+		end
+
+		Logging:Debug("ImportDataFromSync(%s) : imported %s history entries, skipped %d import history entries, new history player entry count is %d",
+		              tostring(persist),
+		              imported,
+		              skipped,
+		              Util.Tables.Count(self.db.factionrealm)
+		)
+		AddOn:Print(format(L['import_successful_with_count'], AddOn.GetDateTime(), self:GetName(), imported))
+	else
+		AddOn:Print(format(L['import_successful_with_count'], AddOn.GetDateTime(), self:GetName(), 0))
+	end
+
 end
 
 function LootAudit:LaunchpadSupplement()

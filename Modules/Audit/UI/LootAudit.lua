@@ -221,6 +221,12 @@ end
 
 local cpairs = CDB.static.pairs
 
+function LootAudit:RefreshData()
+	if self:IsEnabled() and self.interfaceFrame and self.interfaceFrame:IsVisible() then
+		self:BuildData(self.interfaceFrame)
+	end
+end
+
 function LootAudit:BuildData(container)
 	local data = {}
 	for name, entries in cpairs(self:GetHistory()) do
