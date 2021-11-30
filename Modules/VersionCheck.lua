@@ -107,6 +107,7 @@ function VersionCheck:ClearExpiredVersions()
 end
 
 function VersionCheck:TrackVersion(sender, version)
+	Logging:Trace("TrackVersion(%s, %s)", tostring(sender), tostring(version))
 	if not Util.Strings.IsEmpty(sender) then
 		VersionCheck.Versions()[sender] = {version:toTable(), GetServerTime()}
 	end
@@ -131,7 +132,8 @@ function VersionCheck:CheckAndDisplay(version)
 end
 
 function VersionCheck:OnVersionPingReplyReceived(sender, version)
-	if not AddOn.UnitName(sender, C.player) then
+	Logging:Trace("OnVersionPingReplyReceived(%s, %s)", tostring(sender), tostring(version))
+	if not AddOn.UnitIsUnit(sender, C.player) then
 		self:TrackVersion(AddOn:UnitName(sender), version)
 		self:CheckAndDisplay(version)
 	end
@@ -141,6 +143,7 @@ end
 --- @param dist string
 --- @param version Models.SemanticVersion
 function VersionCheck:OnVersionPingReceived(sender, dist, version)
+	Logging:Trace("OnVersionPingReceived(%s, %s)", tostring(sender), tostring(version))
 	if not AddOn.UnitIsUnit(sender, C.player) then
 		self:TrackVersion(AddOn:UnitName(sender), version)
 		if not Util.Strings.Equal(VersionCheck.Check(AddOn.version, version), C.VersionStatus.Current) then
@@ -184,12 +187,12 @@ end
 function VersionCheck:DisplayOutOfDateClients()
 	local versions, outOfDate, isGrouped, tt = VersionCheck.Versions(), {}, IsInGroup(), GetServerTime() - 86400 --[[ 1 day ]]--
 	local sortedVersions = Util.Tables.Sort(
-			Util(versions):Copy():Map(function(e) return SemanticVersion(e[1]) end):Values()(),
-			function (a, b) return a > b end
+		Util(versions):Copy():Map(function(e) return SemanticVersion(e[1]) end):Values()(),
+		function (a, b) return a > b end
 	)
 
 	local mostRecent = sortedVersions and sortedVersions[1] or VersionCheck.VersionZero
-	Logging:Trace("DisplayOutOfDateClients() : most recent version is '%s'", tostring(mostRecent))
+	Logging:Trace("DisplayOutOfDateClients() : most recent version is '%s', all versions '%s'", tostring(mostRecent), Util.Objects.ToString(versions))
 
 	for name, data in pairs(versions) do
 		if (isGrouped and AddOn.group[name]) or not isGrouped then

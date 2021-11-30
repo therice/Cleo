@@ -112,8 +112,8 @@ function VersionCheck:AddEntry(name, class, version, mode)
 	end
 
 	Util.Tables.Push(
-			rows,
-			Row(name, class, version, mode)
+		rows,
+		Row(name, class, version, mode)
 	)
 	self:Update()
 end
@@ -155,9 +155,9 @@ end
 
 VersionCheck.SortByVersion =
 	ST.SortFn(
-			function(row)
-				return row.version or VersionCheck.VersionZero
-			end
+		function(row)
+			return row.version or VersionCheck.VersionZero
+		end
 	)
 
 function VersionCheck:QueryTimer()
