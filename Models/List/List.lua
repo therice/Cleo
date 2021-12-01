@@ -60,13 +60,13 @@ local function resolve(self, guids, attempt)
 	attempt = Util.Objects.Default(attempt, 1)
 	local unresolved = {}
 
-	for _, guid in pairs(guids) do
+	for priority, guid in pairs(guids) do
 		local player = Player:Get(guid)
 		if player then
-			self.players[guid] = player
-			Logging:Trace("resolve(%s) : resolved %s", self.id, guid)
+			self.players[priority] = player
+			Logging:Trace("resolve(%s) : resolved %s at %d", self.id, guid, priority)
 		else
-			Util.Tables.Push(unresolved, guid)
+			unresolved[priority] = guid
 		end
 	end
 
@@ -91,14 +91,14 @@ function List:afterReconstitute(instance)
 		Util(instance.players)
 			:Copy()
 			:Map(
-				function(p)
+				function(p, priority)
 					local player = Player:Get(p)
 					if not player then
 						player = Player.Unknown(p)
-						Util.Tables.Push(unresolved, p)
+						unresolved[priority] = p
 					end
 					return player
-				end
+				end, true
 			)()
 
 	if Util.Tables.Count(unresolved) > 0 then

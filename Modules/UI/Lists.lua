@@ -1288,8 +1288,11 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
 		if Util.Strings.IsSet(playerName) then
 			local color = UIUtil.GetPlayerClassColor(playerName)
-			if not color then color = C.Colors.ItemPoor end
-			self:SetTextColor(color:GetRGBA())
+			if Util.Objects.IsFunction(color.GetRGBA) then
+				self:SetTextColor(color:GetRGBA())
+			else
+				self:SetTextColor(C.Colors.ItemPoor:GetRGBA())
+			end
 		end
 
 		-- reset border and tooltip back to default
@@ -1456,11 +1459,11 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		return not Util.Tables.Equals(self.prioritiesOrig, self.priorities, true)
 	end
 
-	tab.UpdatePriorities = function(self, reload)
+	tab.UpdatePriorities = function(self, reload, list)
 		reload = Util.Objects.IsNil(reload) and true or reload
-		local list = listSupplier()
+		list = list or listSupplier()
 
-		Logging:Trace("UpdatePriorities(%s) : reload(%s)", list and list.id or 'nil', tostring(reload))
+		Logging:Debug("UpdatePriorities(%s) : reload(%s)", list and list.id or 'nil', tostring(reload))
 
 		if reload then
 			self.prioritiesOrig, self.priorities = {}, {}
@@ -1470,17 +1473,32 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		end
 
 		local priorityCount = reload and #self.prioritiesOrig or table.maxn(self.priorities)
-		Logging:Trace("UpdatePriorities(%s) : Count(%d)",  list and list.id or 'nil', priorityCount)
+		Logging:Debug("UpdatePriorities(%s) : Count(%d)",  list and list.id or 'nil', priorityCount)
 
+		local reschedule = false
+
+		-- todo : if Unknown player then reschedule
 		for priority = 1, priorityCount do
 			-- reset it so potential change to previous value still fires the OnTextChanged event
 			self.priorityEdits[priority]:Reset()
 			local player = reload and self.prioritiesOrig[priority] or self.priorities[priority]
 			self.priorityEdits[priority]:Set(player and player:GetShortName() or nil)
+			Logging:Debug(
+				"UpdatePriorities(%s) : %d => %s/%s",
+				list and list.id or 'nil', priority,
+				tostring(player and player:GetShortName() or nil),
+				tostring(player and player.guid or nil)
+			)
+			reschedule = reschedule or (player and Util.Strings.Equal(player:GetShortName(), "Unknown"))
 		end
 
 		for priority = priorityCount + 1, #self.priorityEdits do
 			self.priorityEdits[priority]:Set(nil)
+		end
+
+		Logging:Debug("UpdatePriorities(%s) : reschedule(%s)", list and list.id or 'nil', tostring(reschedule))
+		if reschedule then
+			AddOn:ScheduleTimer(function() tab:UpdatePriorities(true, list) end, 6)
 		end
 	end
 
