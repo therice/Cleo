@@ -2,6 +2,14 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.4 (2021-12-01)
+* add support for synchronizing data between players bba4eac
+* add support for synchronizing loot history 12d2f6f
+* add support for synchronizing master looter settings 47acb6d
+* add support for synchronizing traffic history 492d9a7
+* address issue with display of player's priority shortly after login 922516f
+* address version tracking regression 13ec8bd
+
 2021.3.3 (2021-11-29)
 * add support for broadcasting config and associated lists via right-click on configuration dac606d
 * minor cleanup with logging and tests related to master looter 4ccd96b
