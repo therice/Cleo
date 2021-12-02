@@ -97,12 +97,15 @@ function ResetLogging()
     )
 end
 
+local default_eh = function(msg) print(format("ERROR : %s", dump(msg))) end
+local eh = default_eh
 
+function seterrorhandler(fn)
+    eh = fn
+end
 
 function geterrorhandler()
-    return function(msg)
-        print(format("ERROR : %s", dump(msg)))
-    end
+    return eh
 end
 
 -- It seems Wow doesn't follow the 5.1 spec for xpcall (no additional arguments),

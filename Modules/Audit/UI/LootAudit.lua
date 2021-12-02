@@ -576,7 +576,23 @@ local EncounterCreatures = Util.Memoize.Memoize(
 			if creatureIds then
 				local creatureNames =
 					Util(creatureIds):Copy()
-						:Map(function(id)  return LibEncounter:GetCreatureName(id) end)()
+						:Map(
+							function(id)
+								local eh, name = geterrorhandler()
+								Util.Functions.try(
+									function()
+										seterrorhandler(function(msg) Logging:Warn("%s", msg) end)
+										name = LibEncounter:GetCreatureName(id)
+									end
+								).finally(
+									function()
+										seterrorhandler(eh)
+									end
+								)
+
+								return name
+							end
+						)()
 				return Util.Strings.Join(", ", Util.Tables.Values(creatureNames))
 			end
 		end
