@@ -267,14 +267,11 @@ function ScrollingTable.Decorate(st)
     st.Hook = function(self)
         self.scrollframe.ScrollBar:OnChange(
                 function(_, offset)
-                    FauxScrollFrame_OnVerticalScroll(self.scrollframe,  offset, st.rowHeight, function() st:Refresh() end)
+                    FauxScrollFrame_OnVerticalScroll(self.scrollframe, offset, st.rowHeight, function() st:Refresh() end)
                 end
         )
 
-        -- todo : will need to hook DoFilter as well
-        self._SetData = self.SetData
-        self.SetData = function(self, ...)
-            self:_SetData(...)
+        self.UpdateScrollBar = function(self, ...)
             -- Logging:Debug("SetData(): %d, %d, %d", #st.filtered, st.displayRows, st.rowHeight)
             -- max =  (total height for all rows) - (total height for displayed rows)
             local max = (#self.filtered * self.rowHeight) - (self.displayRows * self.rowHeight)
@@ -286,6 +283,19 @@ function ScrollingTable.Decorate(st)
             else
                 self.scrollframe.ScrollBar:Show()
             end
+        end
+
+        self._SetData = self.SetData
+        self.SetData = function(self, ...)
+            self:_SetData(...)
+            self:UpdateScrollBar()
+        end
+
+        self._DoFilter = self.DoFilter
+        self.DoFilter = function(self, ...)
+            local result = self:_DoFilter(...)
+            self:UpdateScrollBar()
+            return result
         end
 
         return self

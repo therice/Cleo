@@ -78,10 +78,10 @@ function VersionCheck:Query(target)
 	}
 
 	self:AddEntry(
-			AddOn.player:GetName(),
-			AddOn.player.class,
-			AddOn.version,
-			AddOn.mode
+		AddOn.player:GetName(),
+		AddOn.player.class,
+		AddOn.version,
+		AddOn.mode
 	)
 
 	self:ScheduleTimer("QueryTimer", 5)
@@ -160,9 +160,12 @@ function VersionCheck:OnVersionPingReceived(sender, dist, version)
 end
 
 function VersionCheck:OnVersionCheckReceived(sender, dist)
+	Logging:Trace("OnVersionCheckReceived(%s, %s)", tostring(sender), tostring(dist))
 	local player, target = Player:Get(sender)
-	if Util.Objects.In(Util.Strings.Upper(dist), C.Channels.Raid, C.Channels.Party, C.Channels.Guild) then
-		target = Util.Strings.Lower(dist)
+	if Util.Strings.Equal(Util.Strings.Upper(dist), C.Channels.Guild) then
+		target = C.guild
+	elseif Util.Objects.In(Util.Strings.Upper(dist), C.Channels.Raid, C.Channels.Party) then
+		target = C.group
 	else
 		target = player
 	end
