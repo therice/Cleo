@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.5 (2021-12-03)
+* address issue with version checker not being scrollable f824a10
+* squash unresolved creature names in loot history fd6dc67
+* use constants for guild/group for targets in sync window d96f26d
+* add native globals to luacheck a17e643
+
 2021.3.4 (2021-12-01)
 * add support for synchronizing data between players bba4eac
 * add support for synchronizing loot history 12d2f6f
