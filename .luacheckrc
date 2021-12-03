@@ -38,6 +38,8 @@ read_globals = {
 	"format",
 	"getglobal",
 	"gsub",
+	"geterrorhandler",
+	"seterrorhandler",
 	"max",
 	"mod",
 	"min",
