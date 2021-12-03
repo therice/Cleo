@@ -62,8 +62,8 @@ function Sync:AvailableSyncTargets()
 		targets[1] = format("-- %s --", L['no_recipients_avail'])
 	else
 		-- add guild and group targets, which will processed dynamically if selected
-		targets[AddOn.Constants.guild] = UIUtil.ColoredDecorator(C.Colors.ItemUncommon):decorate(_G.GUILD)
-		targets[AddOn.Constants.group] = UIUtil.ColoredDecorator(C.Colors.ItemLegendary):decorate(_G.GROUP)
+		targets[C.guild] = UIUtil.ColoredDecorator(C.Colors.ItemUncommon):decorate(_G.GUILD)
+		targets[C.group] = UIUtil.ColoredDecorator(C.Colors.ItemLegendary):decorate(_G.GROUP)
 	end
 
 	-- table.sort(targets, function (a,b) return a > b end)
