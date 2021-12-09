@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.6 (2021-12-09)
+* address issue with priority not being displayed to player on loot window a8c9022
+* address issue with testing loot allocation not working outside of a group 26a9192
+* response changes, need to suicide and open to off spec 7f1660e
+
 2021.3.5 (2021-12-03)
 * address issue with version checker not being scrollable f824a10
 * squash unresolved creature names in loot history fd6dc67
