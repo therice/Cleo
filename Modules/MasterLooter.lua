@@ -511,7 +511,7 @@ function ML:IsHandled()
 	--              tostring(self:IsEnabled()), tostring(AddOn:IsMasterLooter()),
 	--              tostring(AddOn.enabled), tostring(AddOn.handleLoot)
 	--)
-	return self:IsEnabled() and AddOn:IsMasterLooter() and AddOn.enabled and AddOn.handleLoot
+	return self:IsEnabled() and AddOn:IsMasterLooter() and AddOn.enabled and (AddOn.handleLoot or AddOn:TestModeEnabled())
 end
 
 ----- @param ml Models.Player
@@ -1647,6 +1647,8 @@ end
 function ML:Test(items)
 	Logging:Debug("Test(%d)", #items)
 
+	self:OnHandleLootStart()
+
 	for _, item in ipairs(items) do
 		self:_AddLootTableEntry(nil, item)
 	end
@@ -1657,7 +1659,24 @@ function ML:Test(items)
 
 	-- if not in a group or raid, simulate a player joined event
 	if not IsInGroup() and not IsInRaid() then
-		AddOn:ListsModule():GetActiveConfiguration():OnPlayerEvent(AddOn.player, true)
+		local function SimulatePlayerJoinedEvent()
+			local activeConfiguration = AddOn:ListsModule():GetActiveConfiguration()
+			if activeConfiguration then
+				activeConfiguration:OnPlayerEvent(AddOn.player, true)
+				return true
+			end
+
+			return false
+		end
+
+		local function PlayerJoinedEvent()
+			local eventGenerated = SimulatePlayerJoinedEvent()
+			if not eventGenerated then
+				AddOn:ScheduleTimer(PlayerJoinedEvent, 1)
+			end
+		end
+
+		PlayerJoinedEvent()
 	end
 
 	AddOn:CallModule("LootSession")
