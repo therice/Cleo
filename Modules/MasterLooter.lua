@@ -600,8 +600,8 @@ function ML:AnnounceItems(items)
 	Util.Tables.Iter(
 		items,
 		function(e, i)
-			Logging:Debug("AnnounceItems() : %d => %s", i, Util.Objects.ToString(e))
 			local itemRef = ItemRef.Resolve(e)
+			Logging:Debug("AnnounceItems() : %d (index) => %s (itemid)", i, tostring(itemRef.item))
 			local msg = template
 			for repl, fn in pairs(self.AnnounceItemStrings) do
 				msg = gsub(msg, repl,

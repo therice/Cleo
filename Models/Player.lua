@@ -48,7 +48,7 @@ local function Get(guid)
         if GetServerTime() - player.timestamp <= CACHE_TIME() then
             return Player:reconstitute(player)
         else
-            Logging:Warn('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
+            Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
         end
     else
         --Logging:Trace("Get(%s) : No cached entry", tostring(guid))

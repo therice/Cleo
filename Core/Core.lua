@@ -424,7 +424,9 @@ function AddOn:UpdateGroupMembers()
     end
 
     -- make sure we are present
-    self.group[self.player.name] = true
+    -- e.g. {'Jackburtón-Atiesh' = true}
+    self.group[self:UnitName(self.player:GetName())] = true
+
     --in test mode, add some other players to help with testing
     --if AddOn:TestModeEnabled() then
     --    self.group['Gnomechómsky-Atiesh'] = true
@@ -450,6 +452,8 @@ function AddOn:UpdateGroupMembers()
         -- we're done now, we can let go of copy
         function() groupCopy = nil end
     )
+
+    Logging:Trace("UpdateGroupMembers() : %s", Util.Objects.ToString(self.group))
 
     return self.group
 end

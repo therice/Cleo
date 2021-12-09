@@ -241,6 +241,7 @@ function ActiveConfiguration:initialize(service, config, lists)
 		Util(self.lists)
 			:Copy()
 			:Map(
+				--- @param list  Models.List.List
 				function(list)
 					local copy = list:clone()
 					copy:ClearPlayers()
@@ -329,7 +330,7 @@ end
 -- only time this mutates the priority list is if the player is not present on a list
 -- and configuration dictates that they are added
 function ActiveConfiguration:OnPlayerEvent(player, joined)
-	Logging:Trace("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
+	Logging:Debug("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
 	-- resolve player through configuration as it has potential to be an ALT
 	-- if that is the case, all priorities will be tied to the main with which it is associated
 	-- otherwise, the player stands alone
@@ -352,10 +353,11 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 	local prios = {}
 	-- based upon joining or leaving, capture current priority from appropriate lists
 	for listId, list in pairs(joined and self.lists or self.listsActive) do
-		prios[listId] = list:GetPlayerPriority(player) or -1
+		local priority, _ = list:GetPlayerPriority(player)
+		prios[listId] = priority or -1
 	end
 
-	Logging:Trace("OnPlayerEvent(%s, %s) : Working Priorities %s",  tostring(player), tostring(joined), Util.Objects.ToString(prios))
+	Logging:Debug("OnPlayerEvent(%s, %s) : Working Priorities %s",  tostring(player), tostring(joined), Util.Objects.ToString(prios))
 
 	--- @type Models.List.List
 	local list
@@ -378,7 +380,7 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 						tostring(player), tostring(joined), listId
 				)
 			else
-				Logging:Trace(
+				Logging:Debug(
 						"OnPlayerEvent(%s, %s, %s) : Adding at priority %d",
 						tostring(player), tostring(joined), listId, priority
 				)
@@ -393,13 +395,19 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 				return
 			end
 
-			Logging:Trace(
+			Logging:Debug(
 					"OnPlayerEvent(%s, %s, %s) : Removing",
 					tostring(player), tostring(joined), listId
 			)
 
 			list:RemovePlayer(player, false)
 		end
+
+		Logging:Trace(
+			"OnPlayerEvent[after](%s, %s, %s) : %s",
+			tostring(player), tostring(joined), tostring(listId),
+			Util.Objects.ToString(Util.Tables.Copy(list.players, function(p) return p:toTable() end))
+		)
 	end
 end
 
@@ -456,6 +464,7 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 		return listId, apb, apa, opb, opa
 	else
 		Logging:Error("OnLootEvent(%s, %s) : No applicable list found - no change in priority will be applied", player.guid, tostring(equipment))
+		AddOn:PrintError(format("No list found - no change in priority will be applied for %s", player and player:GetShortName() or L["unknown"]))
 	end
 end
 

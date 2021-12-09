@@ -171,6 +171,8 @@ function List:GetPlayerPriority(player, relative)
 	player = Player.Resolve(player)
 	relative = Util.Objects.Default(relative, false)
 
+	Logging:Trace("GetPlayerPriority(%s, %s)", tostring(player), tostring(relative))
+
 	local priority
 
 	if relative then
@@ -194,7 +196,7 @@ function List:GetPlayerPriority(player, relative)
 				true
 			)
 	else
-		priority, _ = Util.Tables.Find(self.players, Player.Resolve(player))
+		priority, _ = Util.Tables.Find(self.players, player)
 	end
 
 	return priority, player

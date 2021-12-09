@@ -51,15 +51,11 @@ function Lists:OnInitialize()
 	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('Lists'), self.defaults)
 	-- this is used for holding on to loot audit records temporarily
 	-- so they can be associated with a traffic record that was a result of
-	-- a loot allocation. it's used for nothing else and has weak values
-	-- in case they are not properly removed when consumed
+	-- a loot allocation
 	self.laTemp = {}
-	setmetatable(self.laTemp, { __mode = "v" }) -- give table weak values
 	-- this is used for holding on to pending requests for configs and list
-	-- for verifying responses were actually merited. it's used for nothing else and has weak values
-	-- in case they are not properly removed when consumed
+	-- for verifying responses were actually merited.
 	self.requestsTemp = {}
-	setmetatable(self.requestsTemp, { __mode = "v" }) -- give table weak values
 
 	self:InitializeService()
 	self.Send = Comm():GetSender(C.CommPrefixes.Lists)
@@ -329,19 +325,29 @@ local function GetListAndPriority(self, equipment, player, active, relative)
 	active = Util.Objects.Default(active, true)
 	relative = Util.Objects.Default(relative, false)
 
+	Logging:Trace("GetListAndPriority(%s, %s, %s, %s)", tostring(player), tostring(equipment), tostring(active), tostring(relative))
+
 	local list, prio = nil, nil
 	if equipment and self:HasActiveConfiguration() then
+		local activeConfiguration = self:GetActiveConfiguration()
 		if active then
-			_, list =
-				self:GetActiveConfiguration():GetActiveListByEquipment(equipment)
+			_, list = activeConfiguration:GetActiveListByEquipment(equipment)
 		else
-			_, list =
-				self:GetActiveConfiguration():GetOverallListByEquipment(equipment)
+			_, list = activeConfiguration:GetOverallListByEquipment(equipment)
 		end
+
+		Logging:Trace(
+			"GetListAndPriority(%s, %s) : list=%s",
+			tostring(player), tostring(equipment), list and list.id or '?'
+		)
 
 		if list then
 			-- need to resolve via any potential alts in this code path
-			prio, _ = list:GetPlayerPriority(self:GetActiveConfiguration().config:ResolvePlayer(player), relative)
+			prio, _ = list:GetPlayerPriority(activeConfiguration.config:ResolvePlayer(player), relative)
+			Logging:Trace(
+				"GetListAndPriority(%s, %s) : list=%s, prio=%s",
+				tostring(player), tostring(equipment), list and list.id or '?', tostring(prio)
+			)
 		end
 	end
 
