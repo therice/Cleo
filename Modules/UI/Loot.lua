@@ -208,7 +208,8 @@ function Entry:UpdateButtons()
 	end
 	self.width = width
 	self.width = math.max(self.width, 90 + self.itemText:GetStringWidth())
-	self.width = math.max(self.width, 89 + self.itemLvl:GetStringWidth())
+	self.width = math.max(self.width, 99 + self.itemLvl:GetStringWidth())
+	self.width = math.max(self.width, 90 + self.listWithPrio:GetStringWidth())
 end
 
 ---@class Loot.EntryManager
@@ -304,7 +305,9 @@ function EntryManager:CreateRollEntry(item)
 
 		entry.width = 250 -- 182
 		entry.width = math.max(entry.width, 90 + entry.itemText:GetStringWidth())
-		entry.width = math.max(entry.width, 89 + entry.itemLvl:GetStringWidth())
+		entry.width = math.max(entry.width, 99 + entry.itemLvl:GetStringWidth())
+		entry.width = math.max(entry.width, 90 + entry.listWithPrio:GetStringWidth())
+
 	end
 	entry.DisableButtons = function(entry)
 		-- disable roll button
@@ -458,11 +461,21 @@ function Loot.UpdateListAndPriority(entry)
 	local list, prio =
 		AddOn:ListsModule():GetActiveListAndPriority(
 			entry.item:GetEquipmentLocation()
+
 		)
 
 	entry.listWithPrio:SetText(
+		format("|cFFE6CC80%s|r", (list and list.name or L['unknown']))
+	)
+
+	-- in order to display the appropriate priority, need to handle player joined/left events
+	-- for all players, not just the master looter. currently, this is not done and needs implemented before
+	-- this can be reinstated
+	--[[
+	entry.listWithPrio:SetText(
 		format("|cFFE6CC80%s|r (|cFFE6CC80%s|r)", (list and list.name or L['unknown']), prio and tostring(prio) or "?")
 	)
+	--]]
 end
 
 function Loot.UpdateItemResponders(entry, response)

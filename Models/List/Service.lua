@@ -330,7 +330,7 @@ end
 -- only time this mutates the priority list is if the player is not present on a list
 -- and configuration dictates that they are added
 function ActiveConfiguration:OnPlayerEvent(player, joined)
-	Logging:Debug("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
+	Logging:Trace("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
 	-- resolve player through configuration as it has potential to be an ALT
 	-- if that is the case, all priorities will be tied to the main with which it is associated
 	-- otherwise, the player stands alone

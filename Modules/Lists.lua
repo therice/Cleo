@@ -336,20 +336,17 @@ local function GetListAndPriority(self, equipment, player, active, relative)
 			_, list = activeConfiguration:GetOverallListByEquipment(equipment)
 		end
 
-		Logging:Trace(
-			"GetListAndPriority(%s, %s) : list=%s",
-			tostring(player), tostring(equipment), list and list.id or '?'
-		)
-
 		if list then
 			-- need to resolve via any potential alts in this code path
 			prio, _ = list:GetPlayerPriority(activeConfiguration.config:ResolvePlayer(player), relative)
-			Logging:Trace(
-				"GetListAndPriority(%s, %s) : list=%s, prio=%s",
-				tostring(player), tostring(equipment), list and list.id or '?', tostring(prio)
-			)
 		end
 	end
+
+	Logging:Trace(
+		"GetListAndPriority(%s, %s, %s, %s) : list=%s, prio=%s",
+		tostring(player), tostring(equipment),  tostring(active), tostring(relative),
+		list and list.id or '?', tostring(prio)
+	)
 
 	return list, prio
 end

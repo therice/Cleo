@@ -549,13 +549,14 @@ end
 
 function ML:EndSession()
 	Logging:Debug("EndSession()")
-
 	self.oldLootTable = self.lootTable
 	self.lootTable = {}
 	self:Send(C.group, C.Commands.LootSessionEnd)
 	self.running = false
 	self:CancelAllTimers()
+
 	if AddOn:TestModeEnabled() then
+		AddOn:StopHandleLoot()
 		AddOn:ScheduleTimer("NewMasterLooterCheck", 1)
 		AddOn.mode:Disable(C.Modes.Test)
 	end
@@ -1647,7 +1648,7 @@ end
 function ML:Test(items)
 	Logging:Debug("Test(%d)", #items)
 
-	self:OnHandleLootStart()
+	AddOn:StartHandleLoot()
 
 	for _, item in ipairs(items) do
 		self:_AddLootTableEntry(nil, item)
