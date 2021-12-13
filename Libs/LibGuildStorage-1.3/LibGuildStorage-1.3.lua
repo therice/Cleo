@@ -94,7 +94,7 @@ local GuildStorageEntry = Class('GuildStorageEntry')
 -- guid : String - The player's globally unique id, https://wowwiki.fandom.com/wiki/API_UnitGUID
 function GuildStorageEntry:initialize(
         name, class, classTag, rank,
-        rankIndex, officerNote, guid
+        rankIndex, officerNote, guid, online
 )
     self.name = name
     self.class = class
@@ -103,6 +103,7 @@ function GuildStorageEntry:initialize(
     self.rankIndex = rankIndex
     self.officerNote = officerNote
     self.guid = guid
+    self.online = online or false
     self.pendingOfficerNote = nil
     self.seen = nil
 end
@@ -307,7 +308,7 @@ local function OnUpdate()
     Logging:Trace("Processing guild members from %d to %s", index, lastIndex)
     for i = index, lastIndex do
         -- https://wowwiki.fandom.com/wiki/API_GetGuildRosterInfo
-        local name, rank, rankIndex, _, class, _, _, officerNote, _, _, classTag, _, _, _, _, _, guid =
+        local name, rank, rankIndex, _, class, _, _, officerNote, online, _, classTag, _, _, _, _, _, guid =
             GetGuildRosterInfo(i)
         -- The Rank Index starts at 0, add 1 to correspond with the index
         -- for usage in GuildControlGetRankName(index)
@@ -317,7 +318,7 @@ local function OnUpdate()
             local entry = lib:GetMember(name)
             -- Logging:Trace("BEFORE(%s) = %s", name, Util.Objects.ToString(entry))
             if not entry then
-                entry = GuildStorageEntry(name, class, classTag, rank, rankIndex, officerNote, guid)
+                entry = GuildStorageEntry(name, class, classTag, rank, rankIndex, officerNote, guid, online)
                 cache[name] = entry
             else
                 entry.rank = rank
@@ -325,6 +326,7 @@ local function OnUpdate()
                 entry.class = class
                 entry.classTag = classTag
                 entry.guid = guid
+                entry.online = online or false
             end
             entry.seen = true
             

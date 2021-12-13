@@ -20,6 +20,16 @@ local Events = {
 	EntityUpdated   =   "EntityUpdated",
 }
 
+local function EventDetail(entity, attr, diff, ref, ...)
+	return {
+		entity = entity,
+		attr   = attr,
+		diff   = diff,
+		ref    = ref,
+		extra = {...},
+	}
+end
+
 --- @class Models.Dao
 local Dao = AddOn.Package('Models'):Class('Dao')
 Dao.Events = Events
@@ -56,16 +66,18 @@ end
 
 
 -- C(reate)
-function Dao:Add(entity, fireCallbacks)
+--- @param entity any the entity to add
+--- @param fireCallbacks boolean should callbacks be fired
+--- @param ... any additional callback arguments
+function Dao:Add(entity, fireCallbacks, ...)
 	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
 	local asTable = entity:toTable()
 	asTable['id'] = nil
 	Logging:Trace("Dao.Add[%s](%s) : %s", tostring(self.entityClass), entity.id, Util.Objects.ToString(asTable))
 	if self.ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, asTable)
-
 		if fireCallbacks then
-			self.callbacks:Fire(Events.EntityCreated, entity)
+			self.callbacks:Fire(Events.EntityCreated, EventDetail(entity, nil, nil, nil, ...))
 		end
 	end
 end
@@ -90,9 +102,7 @@ function Dao:GetAll(filter, sort)
 
 	return Util(self.db)
 			:Copy()
-			:Filter(
-				function(...) return filter(...) end
-			)
+			:Filter(function(...) return filter(...) end)
 			:Map(
 				function(value, key)
 					return self:Reconstitute(key, value)
@@ -103,7 +113,11 @@ function Dao:GetAll(filter, sort)
 end
 
 -- U(pdate)
-function Dao:Update(entity, attr, fireCallbacks)
+--- @param entity any the entity to add
+--- @param attr string the entity attribute to update
+--- @param fireCallbacks boolean should callbacks be fired
+--- @param ... any additional callback arguments
+function Dao:Update(entity, attr, fireCallbacks, ...)
 	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
 
 	local key = self.Key(entity, attr)
@@ -188,12 +202,15 @@ function Dao:Update(entity, attr, fireCallbacks)
 	end
 
 	if shouldPersist and fireCallbacks then
-		self.callbacks:Fire(Events.EntityUpdated, entity, attr, diff, ref)
+		self.callbacks:Fire(Events.EntityUpdated, EventDetail(entity, attr, diff, ref, ...))
 	end
 end
 
 -- D(elete)
-function Dao:Remove(entity, fireCallbacks)
+--- @param entity any the entity to delete
+--- @param fireCallbacks boolean should callbacks be fired
+--- @param ... any additional callback arguments
+function Dao:Remove(entity, fireCallbacks, ...)
 	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
 
 	Logging:Trace("Dao.Remove[%s](%s)", tostring(self.entityClass), entity.id)
@@ -201,7 +218,7 @@ function Dao:Remove(entity, fireCallbacks)
 		self.module:SetDbValue(self.db, entity.id, nil)
 
 		if fireCallbacks then
-			self.callbacks:Fire(Events.EntityDeleted, entity)
+			self.callbacks:Fire(Events.EntityDeleted, EventDetail(entity, nil, nil, nil, ...))
 		end
 	end
 end

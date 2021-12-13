@@ -2,6 +2,7 @@
     <Script file="Logging.lua" />
     <Script file="Sync.lua" />
     <Script file="CustomItems.lua" />
+    <Script file="ListsDataPlane.lua" />
     <Script file="Lists.lua" />
     <Script file="LootSession.lua" />
     <Script file="MasterLooter.lua" />

@@ -375,9 +375,10 @@ function GetGuildRosterInfo(index)
 
     AddPlayerGuid(name, guid, realm, classInfo.classFile)
 
-    -- local name, rank, rankIndex, _, class, _, _, officerNote, _, _, classTag, _, _, _, _, _, guid =
+    --  name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote, isOnline, status, class, achievementPoints, achievementRank, isMobile, canSoR, repStanding, GUID
+
     return
-        name .. '-' .. realm, 'Member', 2, 60, classInfo.className, 'IronForge', "", "1240,34", 1, 0, classInfo.classFileName,
+        name .. '-' .. realm, 'Member', 2,760, classInfo.className, 'IronForge', "", "1240,34", 1, 0, classInfo.classFileName,
         -1, 64, false, false, 3, guid
 end
 
@@ -628,6 +629,27 @@ function C_CreatureInfo.GetClassInfo(classID)
         }
     end
     return nil
+end
+
+local function CreatePlayerLocationMixin()
+    return {
+        guid = nil,
+        SetGUID = function(self, guid)
+            self.guid = guid
+        end
+    }
+end
+
+PlayerLocation = {}
+function PlayerLocation:CreateFromGUID(guid)
+    local playerLocation = CreatePlayerLocationMixin()
+    playerLocation:SetGUID(guid)
+    return playerLocation
+end
+
+C_PlayerInfo = {}
+function C_PlayerInfo.IsConnected(playerLocation)
+    return true
 end
 
 

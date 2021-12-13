@@ -42,6 +42,8 @@ describe("Lists", function()
 	describe("functional", function()
 		--- @type Lists
 		local lists
+		--- @type ListsDataPlane
+		local listsDp
 		local Send
 
 		setup(function()
@@ -98,15 +100,17 @@ describe("Lists", function()
 			lists = AddOn:ListsModule()
 			lists.db = db
 			lists:InitializeService()
-			Send = lists.Send
-			lists.Send = function(...)
+			listsDp = AddOn:ListsDataPlaneModule()
+			Send = listsDp.Send
+			listsDp.Send = function(...)
 				Send(...)
 				WoWAPI_FireUpdate(GetTime()+10)
 			end
 		end)
 
 		teardown(function()
-			lists.Send = Send
+			listsDp.Send = Send
+			listsDp = nil
 			lists = nil
 		end)
 
@@ -180,11 +184,12 @@ describe("Lists", function()
 			--- @param record  Models.Audit.TrafficRecord
 			local function IncrementAuditCount(record)
 				local resourceType = record:GetResourceType()
-
 				if record.action == TrafficRecord.ActionType.Modify then
 					local attr = record:GetModifiedAttribute()
 					if not records[resourceType][record.action][attr] then
-						records[resourceType][record.action][attr] = 0
+						records[resourceType]
+							[record.action]
+							[attr] = 0
 					end
 
 					records[resourceType][record.action][attr] =
@@ -201,6 +206,13 @@ describe("Lists", function()
 				IncrementAuditCount(record)
 			end
 
+			local _ProcessEvents, handlingEvents = lists._ProcessEvents, false
+			lists._ProcessEvents = function(self, queue)
+				if handlingEvents then
+					_ProcessEvents(self, queue)
+				end
+			end
+
 			S.Configuration:Add(C)
 			C.name = "An Updated Name"
 			C:RevokePermissions("Player1", Configuration.Permissions.Owner)
@@ -208,7 +220,9 @@ describe("Lists", function()
 			C:GrantPermissions("Player2", Configuration.Permissions.Owner)
 			S.Configuration:Update(C, 'name')
 			S.Configuration:Update(C, 'permissions')
+			handlingEvents = true
 			lists:_ProcessEvents(lists:GetConfigurationEvents())
+			handlingEvents = false
 
 			L:AddPlayer("Player1")
 			L:AddPlayer("Player2")
@@ -218,12 +232,12 @@ describe("Lists", function()
 			S.List:Update(L, 'equipment')
 			L:DropPlayer("Player2")
 			S.List:Update(L, 'players')
+			handlingEvents = true
 			lists:_ProcessEvents(lists:GetListEvents())
+			handlingEvents = false
 
 			S.List:Remove(L)
 			S.Configuration:Remove(C)
-
-			LA.Broadcast = _Broadcast
 
 			assert.equal(1, records[TrafficRecord.ResourceType.Configuration][TrafficRecord.ActionType.Create])
 			assert.equal(0, records[TrafficRecord.ResourceType.Configuration][TrafficRecord.ActionType.Delete])
@@ -234,16 +248,21 @@ describe("Lists", function()
 			assert.equal(0, records[TrafficRecord.ResourceType.List][TrafficRecord.ActionType.Delete])
 			assert.equal(1, records[TrafficRecord.ResourceType.List][TrafficRecord.ActionType.Modify]['equipment'])
 			assert.equal(1, records[TrafficRecord.ResourceType.List][TrafficRecord.ActionType.Modify]['players'])
+
+			finally(function()
+				LA.Broadcast = _Broadcast
+				lists._ProcessEvents = _ProcessEvents
+			end)
 		end)
 		it("handles resource requests", function()
-			local OnResourceResponse = lists.OnResourceResponse
+			local OnResourceResponse = listsDp.OnResourceResponse
 			local response
-			lists.OnResourceResponse = function(self, sender, payload)
+			listsDp.OnResourceResponse = function(self, sender, payload)
 				OnResourceResponse(self, sender, payload)
-				response = lists:ReconstructResponse(payload)
+				response = listsDp:ReconstructResponse(payload)
 			end
 
-			lists:_SendRequest(AddOn.player, lists:CreateRequest(Configuration.name, "614A4F87-AF52-34B4-E983-B9E8929D44AF"))
+			listsDp:SendRequest(AddOn.player, listsDp:CreateRequest(Configuration.name, "614A4F87-AF52-34B4-E983-B9E8929D44AF"))
 
 			assert(response)
 			local config = response:ResolvePayload()
@@ -251,14 +270,13 @@ describe("Lists", function()
 			assert.equal("614A4F87-AF52-34B4-E983-B9E8929D44AF", config.id)
 
 			response = nil
-			lists:_SendRequest(AddOn.player, lists:CreateRequest(List.name, "615247A9-311F-57E4-0503-CC3F53E61597"))
+			listsDp:SendRequest(AddOn.player, listsDp:CreateRequest(List.name, "615247A9-311F-57E4-0503-CC3F53E61597"))
 			assert(response)
 			local list = response:ResolvePayload()
 			assert(list)
 			assert.equal("615247A9-311F-57E4-0503-CC3F53E61597", list.id)
 
-
-			finally(function() lists.OnResourceResponse =  OnResourceResponse end)
+			finally(function() listsDp.OnResourceResponse =  OnResourceResponse end)
 		end)
 	end)
 end)

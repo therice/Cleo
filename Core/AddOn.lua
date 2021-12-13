@@ -21,7 +21,7 @@ local SemanticVersion  = AddOn.Package('Models').SemanticVersion
 function AddOn:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
     -- convert to a semantic version
-    self.version = AddOn.Package('Models').SemanticVersion(self.version)
+    self.version = SemanticVersion(self.version)
     -- bitfield which keeps track of our operating mode
     self.mode = AddOn.Package('Core').Mode()
     -- is the addon enabled, can be altered at runtime
@@ -116,22 +116,22 @@ function AddOn:OnEnable()
     if IsInGuild() then
         -- Register with guild storage for state change callback
         GuildStorage.RegisterCallback(
-                self,
-                GuildStorage.Events.StateChanged,
-                function(event, state)
-                    Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
-                    if state == GuildStorage.States.Current then
-                        local me = GuildStorage:GetMember(AddOn.player:GetName())
-                        if me then
-                            AddOn.guildRank = me.rank
-                            GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
-                            Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
-                        else
-                            Logging:Debug("GuildStorage.Callback() : Not Found")
-                            AddOn.guildRank = L["not_found"]
-                        end
+            self,
+            GuildStorage.Events.StateChanged,
+            function(event, state)
+                Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
+                if state == GuildStorage.States.Current then
+                    local me = GuildStorage:GetMember(AddOn.player:GetName())
+                    if me then
+                        AddOn.guildRank = me.rank
+                        GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
+                        Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
+                    else
+                        Logging:Debug("GuildStorage.Callback() : Not Found")
+                        AddOn.guildRank = L["not_found"]
                     end
                 end
+            end
         )
     end
 

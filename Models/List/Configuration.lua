@@ -39,7 +39,7 @@ local Version = SemanticVersion(1, 0, 0)
 local None = "None"
 -- todo : do we really need 'None'? its one use is tracking previous owner/admins who have been removed
 Configuration.Permissions = {
-	[None]      =   0x01,
+	None        =   0x01,
 	Owner       =   0x02,
 	Admin       =   0x04,
 }
@@ -119,7 +119,9 @@ local function resolve(self, guids, attempt)
 					Logging:Warn("resolve(%s) : couldn't locate %s in 'alts'", alt)
 				end
 			else
-				if not unresolved[main] then unresolved[main] = {} end
+				if not unresolved[main] then
+					unresolved[main] = {}
+				end
 				Util.Tables.Push(unresolved[main], alt)
 			end
 		end
@@ -152,6 +154,9 @@ function Configuration:afterReconstitute(instance)
 			-- this creates a copy, but values point to original
 			:MapKeys(
 				function(_, main)
+					-- attempt to resolve the player
+					-- if resolved then use the GUID
+					-- otherwise, 'main' is a stripped GUID so parse it to expected format
 					local player = Player:Get(main)
 					return player and player.guid or Player.ParseGuid(main)
 				end, true
@@ -162,14 +167,16 @@ function Configuration:afterReconstitute(instance)
 						-- need to copy the values, as it will be pointer to original
 						Util(alts):Copy()
 							:Map(
-								function(a)
-									local player = Player:Get(a)
+								function(alt)
+									local player = Player:Get(alt)
 									if not player then
 										-- couldn't be resolved, add it to list to be processed later
 										-- main (guid) => alts (table<guid>)
-										player = Player.Unknown(a)
-										if not unresolved[main] then unresolved[main] = {} end
-										Util.Tables.Push(unresolved[main], a)
+										player = Player.Unknown(alt)
+										if not unresolved[main] then
+											unresolved[main] = {}
+										end
+										Util.Tables.Push(unresolved[main], alt)
 									end
 
 									return player
@@ -299,7 +306,9 @@ end
 function Configuration:ResolvePlayer(player)
 	player = player and Player.Resolve(player) or nil
 	if player and Util.Tables.Count(self.alts) > 0 then
+		-- the player is not a main
 		if not self.alts[player.guid] then
+			-- go through the alts looking for the player in an ALT list
 			for main, alts in pairs(self.alts) do
 				if Util.Tables.ContainsValue(alts, player) then
 					player = Player.Resolve(main)

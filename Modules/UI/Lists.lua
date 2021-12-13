@@ -23,7 +23,8 @@ local List = AddOn.Package('Models.List').List
 local Dao = AddOn.Package('Models').Dao
 --- @type Lists
 local Lists = AddOn:GetModule("Lists", true)
-
+--- @type ListsDataPlane
+local ListsDp = AddOn:GetModule("ListsDataPlane", true)
 
 local Tabs = {
 	[L["list_configs"]]     = L["list_configs_desc"],
@@ -1684,7 +1685,7 @@ do
 		DropDown.EntryBuilder()
 			:nextlevel()
 				:add():text(
-					function(name, entry, module)
+					function(name, entry)
 						return UIUtil.ClassColorDecorator(entry.class):decorate(name)
 					end
 				):checkable(false):title(true)
@@ -1751,11 +1752,11 @@ do
 				:add():text(L["guild"]):checkable(false)
 					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA()))
 					:disabled(ConfigActionDisabled)
-					:fn(function(_, config, self) self:Broadcast(config.id, C.guild) end)
+					:fn(function(_, config) ListsDp:Broadcast(config.id, C.guild) end)
 				:add():text(L["raid"]):checkable(false)
 					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA()))
 					:disabled(ConfigActionDisabled)
-					:fn(function(_, config, self) self:Broadcast(config.id, C.group) end)
+					:fn(function(_, config) ListsDp:Broadcast(config.id, C.group) end)
 
 	Lists.ConfigActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,

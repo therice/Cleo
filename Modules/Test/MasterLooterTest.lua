@@ -1,6 +1,5 @@
 local AddOnName, AddOn, Util, Player, C
 
-
 describe("MasterLooter", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_MasterLooter')
@@ -209,6 +208,10 @@ describe("MasterLooter", function()
 			ml.db.profile.autoAdd = true
 			ml.db.profile.outOfRaid = true
 			ml.db.profile.acceptWhispers = true
+			-- there is an edge case in the testing framework where OnUpdate
+			-- is called repeatedly for timeout bar which results in endless loop
+			-- just disable it, the functionality is tested elsewhere
+			ml.db.profile.timeout.enabled = false
 			ml.db.profile.usage = {
 				state  = 1,
 				whenLeader = true,

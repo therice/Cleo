@@ -59,7 +59,7 @@ end
 
 local function GUID(name)
     for guid, player in pairs(AddOn.db.global.cache.player) do
-        if Util.Strings.Equal(Ambiguate(player.name, "short"), name) then
+        if Util.Strings.Equal(Ambiguate(player.name, "short"), name) or Util.Strings.Equal(player.name, name) then
             return guid
         end
     end

@@ -89,6 +89,11 @@ function AddOn:ListsModule()
     return self:GetModule("Lists")
 end
 
+--- @return ListsDataPlane
+function AddOn:ListsDataPlaneModule()
+    return self:GetModule("ListsDataPlane")
+end
+
 --- @return MasterLooter
 function AddOn:MasterLooterModule()
     return self:GetModule("MasterLooter")
@@ -398,60 +403,58 @@ function AddOn:OnMasterLooterDbReceived(mlDb)
     Logging:Trace("OnMasterLooterDbReceived() : %s", Util.Objects.ToString(self.mlDb, 4))
 end
 
-local groupCopy
-
 function AddOn:UpdateGroupMembers()
-    Logging:Trace("UpdateGroupMembers()")
+    Logging:Trace("UpdateGroupMembers() : current count is %d", #self.group)
 
-    -- if we are missing a copy of current state of group, copy it
-    if Util.Objects.IsNil(groupCopy) then
-        groupCopy = Util(self.group):Copy()()
-    end
-
-    -- wipe out current group
-    Util.Tables.Wipe(self.group)
-
-    local name
+    local group, name, reschedule = {}, nil, false
     for i = 1, GetNumGroupMembers() do
         name = GetRaidRosterInfo(i)
         if not name then
-            Logging:Warn("UpdateGroupMembers(%d) : information not yet available, rescheduling")
-            self:ScheduleTimer("UpdateGroupMembers", 1)
-            return
+            Logging:Warn("UpdateGroupMembers(%d) : raid roster info not yet available, rescheduling", i)
+            reschedule = true
+            break
         end
 
-        self.group[self:UnitName(name)] = true
+        group[self:UnitName(name)] = true
     end
 
-    -- make sure we are present
-    -- e.g. {'Jackburtón-Atiesh' = true}
-    self.group[self:UnitName(self.player:GetName())] = true
 
-    --in test mode, add some other players to help with testing
-    --if AddOn:TestModeEnabled() then
-    --    self.group['Gnomechómsky-Atiesh'] = true
-    --    self.group['Cerrendel-Atiesh'] = true
-    --end
+    if reschedule then
+        -- reschedule another attempt, don't mutate current state
+        self:ScheduleTimer("UpdateGroupMembers", 1)
+    else
+        -- make sure we are present
+        -- e.g. {'Jackburtón-Atiesh' = true}
+        group[self:UnitName(self.player:GetName())] = true
 
-    Util.Functions.try(
-        function()
-            -- go through previous copy and dispatch left messages (as necessary)
-            for player, _ in pairs(groupCopy) do
-                if not self.group[player] then
-                    self:SendMessage(C.Messages.PlayerLeftGroup, player)
-                end
-            end
-
-            for player, _ in pairs(self.group) do
-                if not groupCopy[player] then
-                    self:SendMessage(C.Messages.PlayerJoinedGroup, player)
-                end
+        -- go through previous state and dispatch player messages (as necessary)
+        -- self.group is the previous state (reflects previous roster)
+        -- group is the current state (reflects current roster)
+        --
+        -- the SendMessage() calls are by default synchronous (inline), unless any subscriber
+        -- has registered interest in a manner that dictates different semantics (e.g. bucket messages on a timer)
+        for player, _ in pairs(self.group) do
+            if not group[player] then
+                Logging:Debug("UpdateGroupMembers() : dispatching PlayerLeftGroup for %s", tostring(player))
+                self:SendMessage(C.Messages.PlayerLeftGroup, player)
             end
         end
-    ).finally(
-        -- we're done now, we can let go of copy
-        function() groupCopy = nil end
-    )
+
+        for player, _ in pairs(group) do
+            if not self.group[player] then
+                Logging:Debug("UpdateGroupMembers() : dispatching PlayerJoinedGroup for %s", tostring(player))
+                self:SendMessage(C.Messages.PlayerJoinedGroup, player)
+            end
+        end
+
+
+        -- track current state
+        -- currently, nothing in the code path which consumes player joined/left messages relies
+        -- upon the current state here being up to date
+        -- if that were to change, could collect the messages to be dispatched in for loops above
+        -- then dispatch them after the group (state) has been updated to reflect current group
+        self.group = group
+    end
 
     Logging:Trace("UpdateGroupMembers() : %s", Util.Objects.ToString(self.group))
 

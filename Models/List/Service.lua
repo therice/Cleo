@@ -41,6 +41,10 @@ local function Dao(self, class)
 	end
 end
 
+function Service:GetDao(class)
+	return Dao(self, class)
+end
+
 function Service:RegisterCallbacks(target, callbacks)
 	for class, eventFns in pairs(callbacks) do
 		local dao = Dao(self, class)
@@ -215,12 +219,12 @@ function Service:Activate(idOrConfig)
 			self.Configuration:Get(idOrConfig)
 
 	if not config then
-		error(format("No configuration found with id ='%d'", tostring(idOrConfig)))
+		error(format("No configuration found with id '%s'", tostring(idOrConfig)))
 	end
 
 	local lists = self:Lists(config.id)
 	if not lists or Util.Tables.Count(lists) == 0 then
-		error(format("No lists found with configuration id ='%s'", config.id))
+		error(format("No lists found with configuration id '%s'", config.id))
 	end
 
 	return ActiveConfiguration(self, config, lists)
@@ -231,7 +235,7 @@ function ActiveConfiguration:initialize(service, config, lists)
 	self.service = service
 	--- @type Models.List.Configuration
 	self.config = config
-	-- Players who are not currently in the raid do not move up or down in the lists.
+	-- Players who are not currently in the raid do not move up or down in these lists
 	--- @type table<string, Models.List.List>
 	self.lists = lists
 	-- create a copy of each list and clear the players priority
@@ -276,6 +280,7 @@ function ActiveConfiguration:Verify(config, lists)
 	local verification = {}
 	-- configuration 1st
 	-- {verified, active hash (ah), comparison hash (ch)}
+	-- this goes through Hashable:Verify()
 	local verified, ah, ch = self.config:Verify(config)
 	Util.Tables.Push(verification, {verified = verified, ah = ah, ch = ch})
 	-- only go through lists if configuration was verified
@@ -291,6 +296,7 @@ function ActiveConfiguration:Verify(config, lists)
 			if not alist then
 				Util.Tables.Push(extra, lref.id)
 			else
+				-- this goes through Hashable:Verify()
 				verified, ah, ch = alist:Verify(lref)
 				Util.Tables.Insert(lvs, alist.id, { verified = verified, ah = ah, ch = ch})
 			end
@@ -315,7 +321,7 @@ local function EnsurePresent(lists, player)
 	for listId, list in pairs(lists) do
 		if not list:ContainsPlayer(player) then
 			Logging:Warn(
-				"EnsurePresent(%s, %s) : Missing from original on list - Adding",
+				"EnsurePresent(%s, %s) : Missing from original on list, adding",
 				tostring(player), listId
 			)
 			list:AddPlayer(player)
@@ -327,7 +333,7 @@ local function EnsurePresent(lists, player)
 end
 
 -- this handles events related top players joining and leaving the party
--- only time this mutates the priority list is if the player is not present on a list
+-- only time this mutates the original priority list is if the player is not present on a list
 -- and configuration dictates that they are added
 function ActiveConfiguration:OnPlayerEvent(player, joined)
 	Logging:Trace("OnPlayerEvent(%s, %s)", tostring(player), tostring(joined))
@@ -345,7 +351,14 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 		for _, listId in pairs(addedTo) do
 			self.service.List:Update(
 				self.lists[listId],
-				'players'
+				'players',
+				true,
+				-- extra detail related to reactivation of configuration
+				-- all modifications performed via this path are already applied and active
+				-- there is no need to reactivate it as the messages will originate from us (as ML)
+				-- still need to dispatch to other raid members via comms
+				-- see Lists:_ProcessEvents()
+				{appliedToAc = true, via = 'OnPlayerEvent'}
 			)
 		end
 	end
@@ -430,6 +443,11 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 			tostring(player), tostring(equipment), tostring(listId), list.name
 		)
 
+		-- apb : active priority before
+		-- apa : active priority after
+		-- opb : original priority before
+		-- opa : original priority after
+
 		-- 'suicide' the player on active list and then apply to master list
 		local apb = list:GetPlayerPriority(player, true)
 		list:DropPlayer(player)
@@ -449,7 +467,14 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 				-- persist the list now
 				self.service.List:Update(
 					origList,
-					'players'
+					'players',
+					true,
+					-- extra detail related to reactivation of configuration
+					-- all modifications performed via this path are already applied and active
+					-- there is no need to reactivate it as the messages will originate from us (as ML)
+					-- still need to dispatch to other raid members via comms
+					-- see Lists:_ProcessEvents()
+					{appliedToAc = true, via = 'OnLootEvent'}
 				)
 			end
 		)

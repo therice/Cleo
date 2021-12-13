@@ -36,6 +36,9 @@ describe("Service Model", function()
 								["Player-4372-011C6125"] = {
 									["bitfield"] = 5,
 								},
+								["Player-1-00000001"] = {
+									["bitfield"] = 5,
+								},
 								["Player-4372-01FC8D1A"] = {
 									["bitfield"] = 3,
 								},
@@ -244,7 +247,8 @@ describe("Service Model", function()
 				}
 			}
 
-			local function IncrementEventCount(entity, event, attr)
+			local function IncrementEventCount(eventDetail, event)
+				local entity, attr = eventDetail.entity, eventDetail.attr
 				if attr then
 					if not events[entity][event][attr] then
 						events[entity][event][attr] = 0
@@ -256,22 +260,23 @@ describe("Service Model", function()
 			end
 
 			local x = {
-				EntityCreated = function(self, event, entity)
+				EntityCreated = function(_, event, eventDetail)
 					print('EntityCreated')
-					IncrementEventCount(entity, event)
+					IncrementEventCount(eventDetail, event)
 				end,
-				EntityDeleted = function(self, event, entity)
+				EntityDeleted = function(_, event, eventDetail)
 					print('EntityDeleted')
-					IncrementEventCount(entity, event)
+					IncrementEventCount(eventDetail, event)
 				end,
-				EntityUpdated = function(self, event, entity, attr, diff, asRef)
-					print(format('EntityUpdated (%s) => %s', attr, Util.Objects.ToString(diff)))
+				EntityUpdated = function(_, event, eventDetail)
+					-- print(format('EntityUpdated (%s) => %s', attr, Util.Objects.ToString(diff)))
 					-- print(format('EntityUpdated %s / %s', entity:hash(), asRef.hash))
-					IncrementEventCount(entity, event, attr)
-					assert.Not.equal(entity:hash(), asRef.hash)
+					IncrementEventCount(eventDetail, event)
+					local entity, ref, attr = eventDetail.entity, eventDetail.ref, eventDetail.attr
+					assert.Not.equal(eventDetail:hash(), ref.hash)
 					if entity:TriggersNewRevision(attr) then
 						print('Expect new revision -> ' .. tostring(attr))
-						assert.Not.equal(entity.revision, asRef.revision)
+						assert.Not.equal(entity.revision, ref.revision)
 					end
 				end
 			}
@@ -432,6 +437,18 @@ describe("Service Model", function()
 		it("handles player joined event", function()
 			--- @type  Models.List.ActiveConfiguration
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+
+			--- @type Lists
+			local L = AddOn:ListsModule()
+			L:SetService(S, ac)
+
+			local ML = AddOn:MasterLooterModule()
+			local _IsMasterLooter = AddOn.IsMasterLooter
+			local _IsHandled = ML.IsHandled
+			AddOn.IsMasterLooter = function(self) return true end
+			ML.IsHandled = function(self) return true end
+
+
 			ac:OnPlayerEvent("4372-01C6940A", true)
 			ac:OnPlayerEvent("1-00000031", true)
 			ac:OnPlayerEvent("4372-0004FD18", true)
@@ -474,6 +491,11 @@ describe("Service Model", function()
 					list:GetPlayers(true, true)
 			)
 
+			finally(function()
+				L:InitializeService()
+				AddOn.IsMasterLooter = _IsMasterLooter
+				ML._IsHandled = _IsHandled
+			end)
 		end)
 
 		it("handles player joined event (duplicate)", function()
@@ -534,6 +556,17 @@ describe("Service Model", function()
 		it("handles loot event", function()
 			--- @type  Models.List.ActiveConfiguration
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+
+			--- @type Lists
+			local L = AddOn:ListsModule()
+			L:SetService(S, ac)
+
+			local ML = AddOn:MasterLooterModule()
+			local _IsMasterLooter = AddOn.IsMasterLooter
+			local _IsHandled = ML.IsHandled
+			AddOn.IsMasterLooter = function(self) return true end
+			ML.IsHandled = function(self) return true end
+
 			ac:OnPlayerEvent("4372-00706FE5", true)
 			ac:OnPlayerEvent("1-00000001", true)
 			ac:OnPlayerEvent("4372-000054BB", true)
@@ -574,11 +607,28 @@ describe("Service Model", function()
 					{'4372-00706FE5', '4372-01C6940A', '1-00000031', '4372-000054BB', '4372-011C6125', '4372-00C1D806', '1-00000045',  '1-00000001', '4372-0034311C', '4372-0004FD18', '4372-01642E85'},
 					ol:GetPlayers(true)
 			)
+
+			finally(function()
+				L:InitializeService()
+				AddOn.IsMasterLooter = _IsMasterLooter
+				ML._IsHandled = _IsHandled
+			end)
 		end)
 
 		it("handles player left event", function()
 			--- @type  Models.List.ActiveConfiguration
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+
+			--- @type Lists
+			local L = AddOn:ListsModule()
+			L:SetService(S, ac)
+
+			local ML = AddOn:MasterLooterModule()
+			local _IsMasterLooter = AddOn.IsMasterLooter
+			local _IsHandled = ML.IsHandled
+			AddOn.IsMasterLooter = function(self) return true end
+			ML.IsHandled = function(self) return true end
+
 			ac:OnPlayerEvent("4372-01C6940A", true)
 			ac:OnPlayerEvent("1-00000031", true)
 			ac:OnPlayerEvent("4372-0004FD18", true)
@@ -593,7 +643,7 @@ describe("Service Model", function()
 
 			assert(al)
 			assert.same(
-					{
+				{
 					[2] = "4372-01C6940A",
 					[3] = "4372-01642E85",
 					[4] = "1-00000031",
@@ -602,7 +652,7 @@ describe("Service Model", function()
 					[11] = "1-00000001",
 					[12] = "1-00000099"
 				},
-					al:GetPlayers(true)
+				al:GetPlayers(true)
 			)
 			assert.same (
 					{'4372-00706FE5', '4372-01C6940A', '4372-01642E85', '1-00000031', '4372-011C6125', '4372-00C1D806', '1-00000045', '4372-000054BB', '4372-0034311C', '4372-0004FD18', '1-00000001', '1-00000099'},
@@ -641,6 +691,12 @@ describe("Service Model", function()
 					{'4372-00706FE5', '4372-01C6940A', '4372-01642E85', '1-00000031', '4372-011C6125', '4372-00C1D806', '1-00000045', '4372-000054BB', '4372-0034311C', '4372-0004FD18', '1-00000001', '1-00000099'},
 					ol:GetPlayers(true)
 			)
+
+			finally(function()
+				L:InitializeService()
+				AddOn.IsMasterLooter = _IsMasterLooter
+				ML._IsHandled = _IsHandled
+			end)
 		end)
 	end)
 end)

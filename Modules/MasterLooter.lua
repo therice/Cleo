@@ -729,7 +729,7 @@ function ML:SendActiveConfig(target, config)
 		local lists = AddOn:ListsModule():GetService():Lists(config.id)
 		for _, list in pairs(lists) do
 			local ref = list:ToRef()
-			Logging:Trace("SendActiveConfig(%s) : %s", tostring(list.lid), Util.Objects.ToString(ref))
+			Logging:Trace("SendActiveConfig(%s) : %s", tostring(list.id), Util.Objects.ToString(ref))
 			Util.Tables.Push(toSend.lists, ref)
 		end
 
@@ -737,10 +737,14 @@ function ML:SendActiveConfig(target, config)
 	end
 end
 
--- this will reload current configuration/lists and activate
--- used when the underlying configuration or list(s) are mutated while active
-function ML:ReactivateConfiguration()
-	Logging:Debug("ReactivateConfiguration()")
+--- this will reload current configuration/lists and activate
+--- used when the underlying configuration or list(s) are mutated while active
+---
+--- @param applied boolean have the changes which resulted in reactivation been applied locally
+function ML:ReactivateConfiguration(applied)
+	applied = Util.Objects.Default(applied, false)
+	Logging:Debug("ReactivateConfiguration(%s)", tostring(applied))
+
 	if self:IsHandled() then
 		if not AddOn:ListsModule():HasActiveConfiguration() then
 			Logging:Warn("ReactivateConfiguration() : No active configuration, cannot reactivate")
@@ -759,17 +763,17 @@ function ML:ReactivateConfiguration()
 		end
 
 		Logging:Info("ReactivateConfiguration(%s) : activating", config.id)
-
-		-- unregister player messages during re-activation, otherwise we could duplicate
-		-- events. while they should be handled, they are unnecessary
-		self:UnregisterPlayerMessages()
-		self:ActivateConfiguration(config)
+		self:ActivateConfiguration(config, applied)
 	end
 end
 
 --- @param config Models.List.Configuration
-function ML:ActivateConfiguration(config)
-	Logging:Trace("ActivateConfiguration(%s)", config and config.id or "NIL")
+--- @param dispatchOnly boolean should activation only be dispatched (not activated ourselves)
+function ML:ActivateConfiguration(config, dispatchOnly)
+	-- by default, we both dispatch and activate
+	dispatchOnly = Util.Objects.Default(dispatchOnly, false)
+
+	Logging:Trace("ActivateConfiguration(%s, %s)", config and config.id or "NIL", tostring(dispatchOnly))
 
 	if self:IsHandled() then
 		if not config then
@@ -777,7 +781,6 @@ function ML:ActivateConfiguration(config)
 			AddOn:Print(L["invalid_configuration_ml"])
 			AddOn:StopHandleLoot()
 		else
-
 			-- make sure we're an admin or owner, otherwise cannot mutate it
 			if not config:IsAdminOrOwner(AddOn.player) then
 				Logging:Warn("ActivateConfiguration(%s) : Not an admin or owner, cannot activate configuration", config.id)
@@ -786,41 +789,43 @@ function ML:ActivateConfiguration(config)
 				return
 			end
 
-			-- may want to send to ML (player) 1st and then
-			-- send to group after, but no way to say send to group but not me
-			self:SendActiveConfig(C.group, config)
-
-			-- if this looks strange, it's because it is
-			-- there is an issue with C_Timer (which AceTimer leverages) being used in close proximity to a login
-			-- where the specified time is not obeyed (it fires much sooner). wrapping it in a 0 second delay
-			-- resolves the issue
-			--
-			-- this may not always be called in close proximity to login, but the extra 'schedule' does not
-			-- have a regressive impact in those cases
-			AddOn.Timer.After(0, function()
-				self:ScheduleTimer(
-						function()
-							Logging:Trace("ActivateConfiguration(%s) : Callback", config.id )
-							-- wait for message the be received and handled, then verify activation occurred
-							if not AddOn:ListsModule():HasActiveConfiguration() then
+			local LM, activationSuccess = AddOn:ListsModule(), nil
+			-- only activate configuration if the call was limited to dispatching
+			if not dispatchOnly then
+				-- unregister player messages during activation, otherwise we could duplicate events.
+				-- while they could be handled, they are unnecessary
+				self:UnregisterPlayerMessages()
+				activationSuccess =
+					LM:ActivateConfiguration(
+						config,
+						function(success, activated)
+							Logging:Trace("ActivateConfiguration(%s) : Callback", tostring(config))
+							if not success then
 								Logging:Warn("ActivateConfiguration() : No active configuration, stopping the handling of loot")
 								AddOn:Print(L["invalid_configuration_ml"])
 								AddOn:StopHandleLoot()
 							else
 								Logging:Debug("ActivateConfiguration() : Configuration activated")
-								local ac = AddOn:ListsModule():GetActiveConfiguration()
-								-- this will generate player joined/left messages but we don't
+								AddOn:Print(format(L["activated_configuration"], tostring(activated.config.name)))
+								-- this will generate player joined/left messages for current group
 								-- register for those messages until after
 								for name, _ in AddOn:GroupIterator() do
-									ac:OnPlayerEvent(name, true)
+									activated:OnPlayerEvent(name, true)
 								end
+								-- we register for callbacks after activation here
 								self:RegisterPlayerMessages()
 							end
-						end,
-						5
-				)
-			end)
+						end
+					)
+			else
+				Logging:Trace("ActivateConfiguration(%s) : dispatch only, skipping activation", tostring(config))
+			end
 
+			-- this broadcasts to entire group, but message handling will not dispatch in case of
+			-- receiving player being the ML (which is the case here)
+			if Util.Objects.Default(activationSuccess, true) then
+				self:SendActiveConfig(C.group, config)
+			end
 		end
 	end
 end

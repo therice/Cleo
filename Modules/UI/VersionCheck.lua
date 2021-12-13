@@ -148,7 +148,7 @@ end
 function VersionCheck.SetCellVersion(_, frame, data, _, _, realrow, column, ...)
 	local r = data[realrow]
 	local version, mode = r.version, r.mode
-	Logging:Debug("SetCellVersion() : version=%s / mode=%s / value=%s", tostring(version), tostring(mode), tostring(r.cols[column].value))
+	Logging:Trace("SetCellVersion() : version=%s / mode=%s / value=%s", tostring(version), tostring(mode), tostring(r.cols[column].value))
 	frame.text:SetText(version and tostring(version) or r.cols[column].value)
 	frame.text:SetTextColor(VersionCheck.GetVersionColor(version, mode):GetRGBA())
 end
