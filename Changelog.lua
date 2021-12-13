@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.7 (2021-12-13)
+* disable priority in loot window until player events are handled by all group members 91d561c
+* fix repeated re-activation of configuration/lists resulting in corruption of priorities when ML 2569cfc
+
 2021.3.6 (2021-12-09)
 * address issue with priority not being displayed to player on loot window a8c9022
 * address issue with testing loot allocation not working outside of a group 26a9192
