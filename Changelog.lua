@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.8 (2021-12-17)
+* address issue with UI for configuration/lists not being refreshed when underling data has been modified 9c66b80
+
 2021.3.7 (2021-12-13)
 * disable priority in loot window until player events are handled by all group members 91d561c
 * fix repeated re-activation of configuration/lists resulting in corruption of priorities when ML 2569cfc
