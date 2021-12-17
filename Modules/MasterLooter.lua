@@ -382,7 +382,7 @@ function ML:ConfigTableChanged(msg)
 	for serializedMsg, _ in pairs(msg) do
 		local success, module, val = AddOn:Deserialize(serializedMsg)
 		Logging:Debug("ConfigTableChanged(%s) : %s",  Util.Objects.ToString(module), Util.Objects.ToString(val))
-		if success and Util.Objects.In(module, self:GetName()) then
+		if success and Util.Strings.Equal(module, self:GetName()) then
 			if not updateDb then
 				for key in pairs(AddOn.mlDb) do
 					Logging:Debug("ConfigTableChanged() : examining %s, %s, %s", tostring(module), tostring(key), tostring(val))
@@ -795,7 +795,7 @@ function ML:ActivateConfiguration(config, dispatchOnly)
 				-- unregister player messages during activation, otherwise we could duplicate events.
 				-- while they could be handled, they are unnecessary
 				self:UnregisterPlayerMessages()
-				activationSuccess =
+				activationSuccess, _ =
 					LM:ActivateConfiguration(
 						config,
 						function(success, activated)
@@ -821,7 +821,7 @@ function ML:ActivateConfiguration(config, dispatchOnly)
 				Logging:Trace("ActivateConfiguration(%s) : dispatch only, skipping activation", tostring(config))
 			end
 
-			-- this broadcasts to entire group, but message handling will not dispatch in case of
+			-- this broadcasts to entire group, but message handling will not process in case of
 			-- receiving player being the ML (which is the case here)
 			if Util.Objects.Default(activationSuccess, true) then
 				self:SendActiveConfig(C.group, config)

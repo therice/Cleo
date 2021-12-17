@@ -70,6 +70,7 @@ function Lists:OnEnable()
 	self:RegisterCallbacks()
 	self:SubscribeToComms()
 	self:RegisterMessage(C.Messages.ModeChanged, "OnModeChange")
+	self:RegisterMessage(C.Messages.ResourceRequestCompleted, "OnResourceRequestCompleted")
 end
 
 function Lists:OnDisable()
@@ -77,6 +78,7 @@ function Lists:OnDisable()
 	self:UnregisterCallbacks()
 	self:UnsubscribeFromComms()
 	self:UnregisterMessage(C.Messages.ModeChanged)
+	self:UnregisterMessage(C.Messages.ResourceRequestCompleted)
 end
 
 function Lists:EnableOnStartup()
@@ -89,7 +91,8 @@ function Lists:SubscribeToComms()
 		[C.Commands.ActivateConfig] = function(data, sender)
 			Logging:Debug("ActivateConfig from %s", tostring(sender))
 			-- path for the ML activating configuration doesn't flow through communications (messaging)
-			if not AddOn:IsMasterLooter() then
+			-- also, activate configuration should only originate from ML
+			if AddOn.UnitIsUnit(sender, self.masterLooter) and not AddOn:IsMasterLooter() then
 				self:OnActivateConfigReceived(sender, unpack(data))
 			end
 		end,
@@ -372,16 +375,16 @@ function Lists:ActivateConfiguration(idOrConfig, callback)
 
 		if success then
 			self.activeConfig = activated
-			Logging:Debug("ActivateConfiguration() : Activated '%s'", tostring(activated))
+			Logging:Debug("ActivateConfiguration() : Activated %s", tostring(activated))
 		else
-			Logging:Warn("ActivateConfiguration() : Could not activate '%s'", tostring(activated))
+			Logging:Warn("ActivateConfiguration() : Could not activate %s - %s", tostring(idOrConfig), tostring(activated))
 		end
 
 		if Util.Objects.IsFunction(callback) then
 			callback(success, self.activeConfig)
 		end
 
-		return success, activated
+		return success, self.activeConfig
 	end
 
 	return false, nil
@@ -440,7 +443,7 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 						EnqueueRequest(toRequest, activate.id, Configuration.name)
 						Logging:Warn("OnActivateConfigReceived() : Could not activate configuration '%s'", activate.id)
 					else
-						Logging:Debug("OnActivateConfigReceived() : Activated '%s'", activated.id)
+						Logging:Debug("OnActivateConfigReceived() : Activated '%s'", tostring(activated))
 						-- do some checks to see if we have the correct data
 						-- this is entirely for requesting the most recent data in case we are behind
 

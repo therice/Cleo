@@ -188,12 +188,17 @@ function ListsDP:OnResourceResponse(sender, payload)
 			-- todo : should add some logic here for ignoring the update if two admins (or owner) are interacting
 			-- todo : as they could have different/conflicting versions of resource
 			-- todo : this is unlikely to be right place to do that though and instead in the requesting code
+
+			-- intentionally do not fire callbacks on the adds as they could result in
+			-- traffic audit events being generated, configuration re-activation (when unnecessary), etc.
+			-- these adds are a direct result of a resource being out of date or missing with another authoritative player
 			if Util.Objects.IsInstanceOf(resource, Configuration) then
 				Lists:GetService().Configuration:Add(resource, false)
 			elseif Util.Objects.IsInstanceOf(resource, List) then
 				Lists:GetService().List:Add(resource, false)
 			end
 
+			self:SendMessage(C.Messages.ResourceRequestCompleted, resource)
 			self.requestsTemp[response.cid] = nil
 		end
 	end

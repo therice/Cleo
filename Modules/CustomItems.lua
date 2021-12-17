@@ -58,7 +58,7 @@ function CustomItems:ConfigTableChanged(msg)
 	Logging:Trace("ConfigTableChanged() : '%s", Util.Objects.ToString(msg))
 	for serializedMsg, _ in pairs(msg) do
 		local success, module, _ = AddOn:Deserialize(serializedMsg)
-		if success and self:GetName() == module then
+		if success and Util.Strings.Equal(self:GetName(), module) then
 			self:ConfigureItemUtil()
 			break
 		end

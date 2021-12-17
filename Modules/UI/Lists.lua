@@ -67,9 +67,29 @@ function Lists:LayoutInterface(container)
 	self.interfaceFrame = container
 end
 
+-- this is invoked as result of a ModeChanged message
 function Lists:OnModeChange(_, mode)
 	if self.interfaceFrame then
 		self.interfaceFrame:ShowPersistenceWarningIfNeeded()
+	end
+end
+
+-- this is invoked as result of a ResourceRequestCompleted message
+function Lists:OnResourceRequestCompleted(_, resource)
+	local ok,msg = pcall(
+		function()
+			if Util.Objects.IsInstanceOf(resource, Configuration) and self.configTab then
+				self.configTab:Refresh(resource)
+			end
+
+			if Util.Objects.IsInstanceOf(resource, List) and self.listTab then
+				self.listTab:Refresh(resource)
+			end
+		end
+	)
+
+	if not ok then
+		Logging:Error("OnResourceRequestCompleted() : %s", tostring(msg))
 	end
 end
 
@@ -177,12 +197,6 @@ function Lists:LayoutConfigurationTab(tab)
 			self:Hide()
 		end
 	end
-	-- register for callback when configuration is updated (only to update hash and revision)
-	self.listsService:RegisterCallbacks(tab, {
-	    [Configuration] = {
-			[Dao.Events.EntityUpdated] = function(...) tab.version:SetValue(SelectedConfiguration()) end,
-        }
-    })
 
 	-- delete configuration
 	tab.delete =
@@ -241,6 +255,33 @@ function Lists:LayoutConfigurationTab(tab)
 			end
 		end
 	end
+
+	tab.Refresh = function(self, config)
+		self.configList:SetList(module:GetService():Configurations())
+		self:ConfigurationUpdated(nil, {entity=config})
+	end
+
+	-- handles updates to configuration, both via UI and external sources
+	tab.ConfigurationUpdated = function(self, _, detail)
+		Logging:Debug("ConfigurationUpdated() : %s", Util.Objects.ToString(detail))
+
+		local config = detail.entity
+		if config then
+			--Logging:Debug("ConfigurationUpdated() : Resolving %s [%s]", tostring(config), tostring(config.id))
+			self.configList:Set(config, function(item) return Util.Strings.Equal(config.id, item.id) end)
+		end
+
+		self:Update()
+	end
+
+	-- register for callback when configuration is updated
+	self.listsService:RegisterCallbacks(tab, {
+		[Configuration] = {
+			[Dao.Events.EntityUpdated] = function(...)
+				tab:ConfigurationUpdated(...)
+			end,
+		}
+	})
 
 	self:LayoutConfigAltsTab(
 		tab.configSettings:GetByName(L["list_alts"]),
@@ -373,7 +414,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 		if Util.Objects.IsEmpty(playerName) then playerName = nil end
 		if Util.Objects.IsEmpty(priorValue) then priorValue = nil end
 
-		Logging:Debug(
+		Logging:Trace(
 			"EditOnChange(%s, %d, %s, %s) : %s / %s",
 			tostring(isPlayer), index, tostring(isMain), tostring(userInput),
 			tostring(playerName), tostring(priorValue)
@@ -396,7 +437,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 			if isMain then
 				-- if the main was removed, the alts have no meaning - wipe them
 				if not playerName and priorValue then
-					Logging:Debug("EditOnChange()[main] : %s (previous) cleared", tostring(priorValue))
+					Logging:Trace("EditOnChange()[main] : %s (previous) cleared", tostring(priorValue))
 					for i = index + 1, index + MaxAlts do
 						self:GetParent().altEdits[i]:Reset()
 					end
@@ -550,7 +591,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	tab.playersCache = {}
 	tab.ProcessPlayers = Util.Memoize.Memoize(
 		function(self)
-			Logging:Debug("ProcessPlayers()")
+			Logging:Trace("ProcessPlayers()")
 
 			local players = {}
 			-- iterate through main indexes
@@ -558,11 +599,11 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 				local mainName = self.altEdits[mainIndex]:GetText()
 				if Util.Objects.IsSet(mainName) then
 					local main, alts = Player:Get(mainName), {}
-					Logging:Debug("ProcessPlayers(%d) : %s", mainIndex, tostring(mainName))
+					Logging:Trace("ProcessPlayers(%d) : %s", mainIndex, tostring(mainName))
 					for altIndex = mainIndex + 1, (mainIndex + MaxAlts) do
 						local altName = self.altEdits[altIndex]:GetText()
 						if Util.Objects.IsSet(altName) then
-							Logging:Debug("ProcessPlayers(%d) : %s", altIndex, tostring(altName))
+							Logging:Trace("ProcessPlayers(%d) : %s", altIndex, tostring(altName))
 							local alt = Player:Get(altName)
 							if alt then
 								Util.Tables.Push(alts, alt)
@@ -815,10 +856,10 @@ function Lists:LayoutConfigGeneralTab(tab, configSupplier)
 		local config = configSupplier()
 		local owner = config:GetOwner()
 		local players =
-		module:Players(
-			function(t) return Util.Tables.Sort(Util.Tables.Keys(t)) end,
-			owner
-		)
+			module:Players(
+				function(t) return Util.Tables.Sort(Util.Tables.Keys(t)) end,
+				owner
+			)
 		self:SetList(players)
 		if owner then
 			self:SetViaValue(owner:GetShortName())
@@ -941,8 +982,7 @@ function Lists:LayoutListTab(tab)
 
 	--- @return Models.List.List
 	local function SelectedList()
-		local list = tab.lists:Selected()
-		return list
+		return tab.lists:Selected()
 	end
 
 	tab.delete =
@@ -1062,6 +1102,11 @@ function Lists:LayoutListTab(tab)
 		end
 	end
 
+	tab.Refresh = function(self, list)
+		self.config:SetList(module:GetService():Configurations())
+		self:ListUpdated(nil, {entity=list})
+	end
+
 	-- various tabs related to a configuration list
 	tab.listSettings = UI:New('Tabs', tab, unpack(Util.Tables.Keys(ListTabs))):Point(230, -65):Size(840, 530):SetTo(1)
 	tab.listSettings:SetBackdropBorderColor(0, 0, 0, 0)
@@ -1100,10 +1145,23 @@ function Lists:LayoutListTab(tab)
 			self:Hide()
 		end
 	end
+
+	-- handles updates to a list, both via UI and external sources
+	tab.ListUpdated = function(self, _, detail)
+		Logging:Debug("ListUpdated() : %s", Util.Objects.ToString(detail))
+		local list = detail.entity
+		if list then
+			self.lists:Set(list, function(item) return Util.Strings.Equal(list.id, item.id) end)
+		end
+		self:Update()
+	end
+
 	-- register for callback when list is updated (only to update hash and revision)
 	self.listsService:RegisterCallbacks(tab, {
 		[List] = {
-			[Dao.Events.EntityUpdated] = function(...) tab.version:SetValue(SelectedList()) end,
+			[Dao.Events.EntityUpdated] = function(...)
+				tab:ListUpdated(...)
+			end,
 		}
 	})
 

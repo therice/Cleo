@@ -209,15 +209,16 @@ AddOn.Constants = {
     },
 
     Messages = {
-        AwardSuccess            =   name .. "_AwardFailed",
-        AwardFailed             =   name .. "_AwardSuccess",
-        ConfigTableChanged      =   name .. "_ConfigTableChanged",
-        LootTableAddition       =   name .. "_LootTableAddition",
-        MasterLooterAddItem     =   name .. "_MasterLooterAddItem",
-        ModeChanged             =   name .. "_ModeChanged",
-        PlayerJoinedGroup       =   name .. "_PlayerJoinedGroup",
-        PlayerLeftGroup         =   name .. "_PlayerLeftGroup",
-        PlayerNotFound          =   name .. "_PlayerNotFound",
+        AwardSuccess             = name .. "_AwardFailed",
+        AwardFailed              = name .. "_AwardSuccess",
+        ConfigTableChanged       = name .. "_ConfigTableChanged",
+        LootTableAddition        = name .. "_LootTableAddition",
+        MasterLooterAddItem      = name .. "_MasterLooterAddItem",
+        ModeChanged              = name .. "_ModeChanged",
+        PlayerJoinedGroup        = name .. "_PlayerJoinedGroup",
+        PlayerLeftGroup          = name .. "_PlayerLeftGroup",
+        PlayerNotFound           = name .. "_PlayerNotFound",
+        ResourceRequestCompleted = name .. "_ResourceRequestCompleted",
     },
 
     Modes = {

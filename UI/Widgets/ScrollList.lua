@@ -58,6 +58,7 @@ function ScrollList:Create()
 		'LineTexture', ScrollList.SetLineTexture,
 		'Add', ScrollList.Add,
 		'Insert', ScrollList.Insert,
+		'Set', ScrollList.Set,
 		'Remove', ScrollList.Remove,
 		'RemoveAll', ScrollList.RemoveAll,
 		'RemoveSelected', ScrollList.RemoveSelected,
@@ -242,6 +243,18 @@ function ScrollList.Remove(self, index)
 	self:Update()
 end
 
+function ScrollList.Set(self, item, indexFn)
+	if Util.Objects.IsSet(item) and Util.Objects.IsFunction(indexFn) then
+		local index = Util.Tables.FindFn(self.L, indexFn)
+		--Logging:Debug("Set() : index=%s", tostring(index))
+		if index then
+			--Logging:Debug("Set() : %d => %s", index, tostring(item))
+			self.L[index] = item
+			self:Update()
+		end
+	end
+end
+
 function ScrollList.Insert(self, item, indexFn)
 	if Util.Objects.IsFunction(indexFn) then
 		local index = Util.Tables.FindFn(self.L, indexFn)
@@ -259,7 +272,7 @@ end
 
 function ScrollList.RemoveSelected(self)
 	if self.selected then
-		local selected = self.L[self.selected]
+		local selected = self:Selected()
 		self:Remove(self.selected)
 		return selected
 	end
