@@ -91,8 +91,7 @@ function Lists:SubscribeToComms()
 		[C.Commands.ActivateConfig] = function(data, sender)
 			Logging:Debug("ActivateConfig from %s", tostring(sender))
 			-- path for the ML activating configuration doesn't flow through communications (messaging)
-			-- also, activate configuration should only originate from ML
-			if AddOn.UnitIsUnit(sender, self.masterLooter) and not AddOn:IsMasterLooter() then
+			if not AddOn:IsMasterLooter() then
 				self:OnActivateConfigReceived(sender, unpack(data))
 			end
 		end,
@@ -398,6 +397,7 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 	attempt = Util.Objects.Default(attempt, 0)
 	Logging:Debug("OnActivateConfigReceived(%s, %d)", tostring(sender), attempt)
 
+	-- configuration activation should only originate from ML
 	if not AddOn:IsMasterLooter(sender) then
 		Logging:Warn("OnActivateConfigReceived() : Sender is not the master looter, ignoring")
 		AddOn:PrintError(format(L["invalid_configuration_received"], tostring(sender)))
