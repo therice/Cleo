@@ -160,6 +160,8 @@ ML.defaults = {
 		announceResponseText = { channel = "group", text = "&p specified &r for &i (Priority #&lp : &ln)"},
 		-- enables the auto-awarding of items that meet specific criteria
 		autoAward = false,
+		-- where auto awards are announced, channel + message
+		autoAwardText = { channel = "group", text = "&p was auto awarded &i for &r"},
 		-- what types of items should be auto-awarded, supports
 		-- equipable, non-equipable, and all currently
 		autoAwardType = ML.AutoAwardType.Equipable,
@@ -627,10 +629,8 @@ ML.AwardStrings = {
 	["&i"] = function(_, item) return item and item.link or "[?]" end,
 	["&r"] = function(...) return select(3, ...) or "" end,
 	["&n"] = function(...) return select(4, ...) or "" end,
-	["&l"] = function(_, item)
-		return item and item:GetLevelText() or "" end,
-	["&t"] = function(_, item)
-		return item and item:GetTypeText() or "" end,
+	["&l"] = function(_, item) return item and item:GetLevelText() or "" end,
+	["&t"] = function(_, item) return item and item:GetTypeText() or "" end,
 	["&ln"] = function(_, item)
 		if item then
 			local LM = AddOn:ListsModule()
@@ -658,14 +658,28 @@ ML.AwardStrings = {
 }
 
 
+--- @param winner string the winner's name
+--- @param link string the item link
+--- @param response string the reason for the award
+--- @param roll string the roll value, if applicable
+--- @param session number the loot session
 --- @param changeAward boolean if the item is being re-awarded (changed)
----
-function ML:AnnounceAward(winner, link, response, roll, session, changeAward)
+--- @param isAuto boolean is the award an automatic one
+function ML:AnnounceAward(winner, link, response, roll, session, changeAward, isAuto)
 	if not self:GetDbValue('announceAwards') then return end
 
+	isAuto = Util.Objects.Default(isAuto, false)
 	Logging:Trace("AnnounceAward(%d) : winner=%s, item=%s", session, winner, tostring(link))
 
-	local channel, announcement = self:GetDbValue('announceAwardText.channel'), self:GetDbValue('announceAwardText.text')
+	local channel, announcement
+	if isAuto then
+		channel, announcement =
+			self:GetDbValue('autoAwardText.channel'), self:GetDbValue('autoAwardText.text')
+	else
+		channel, announcement =
+			self:GetDbValue('announceAwardText.channel'), self:GetDbValue('announceAwardText.text')
+	end
+
 	for repl, fn in pairs(self.AwardStrings) do
 		announcement =
 			gsub(announcement, repl,
@@ -1592,7 +1606,6 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 		local awardReason
 		if Util.Strings.Equal(mode, AutoAwardMode.Normal) then
 			-- db.autoAwardReason
-
 			-- 'autoAwardReason' is going to something like 'bank', 'free', etc.
 			-- this is the key attribute for locating the actual award entry
 			 _, awardReason = Util.Tables.FindFn(
@@ -1618,7 +1631,7 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 				winner,
 				function(awarded, cause)
 					if awarded then
-						self:AnnounceAward(winner, item, awardReason.text)
+						self:AnnounceAward(winner, item, awardReason.text, nil, nil, false, true)
 						local audit = LootRecord.FromAutoAward(item, winner, awardReason)
 						AddOn:LootAuditModule():Broadcast(audit)
 						return true

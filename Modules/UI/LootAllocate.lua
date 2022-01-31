@@ -910,24 +910,6 @@ do
 					MSA_DropDownMenu_AddButton(info, level)
 				end
 			end
-
-			--[[
-			info = MSA_DropDownMenu_CreateInfo()
-			info.text = L["ep_abbrev"]
-			info.isTitle = true
-			info.notCheckable = true
-			info.disabled = true
-			MSA_DropDownMenu_AddButton(info, level)
-
-			info = MSA_DropDownMenu_CreateInfo()
-			info.text = L["greater_than_min"]
-			info.func = function()
-				filters.minimums['ep'] = not filters.minimums['ep']
-				LA:Update(true)
-			end
-			info.checked = filters.minimums['ep']
-			MSA_DropDownMenu_AddButton(info, level)
-			--]]
 		end
 	end
 end
@@ -953,17 +935,6 @@ function LA:FilterFunc(_, row)
 			include = filters['STATUS']
 		end
 	end
-
-	--[[
-	if include then
-		if Util.Tables.ContainsKey(filters.minimums, 'ep') and filters.minimums['ep'] then
-			local ep = AddOn:StandingsModule().Points(name)
-			if Util.Objects.IsNumber(ep) then
-				include = ep > AddOn:EffortPointsModule().db.profile.ep_min
-			end
-		end
-	end
-	--]]
 
 	return include
 end

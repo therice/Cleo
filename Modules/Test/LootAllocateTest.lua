@@ -101,6 +101,9 @@ describe("LootAllocate", function()
 			AddOn:Send(C.group, C.Commands.OfflineTimer, AddOn.player:GetName())
 			WoWAPI_FireUpdate(GetTime() + 10)
 
+			print(Util.Objects.ToString(cr1))
+			print(Util.Objects.ToString(cr2))
+
 			assert(cr1.response == C.Responses.Nothing)
 			assert(cr2.response == C.Responses.Nothing)
 		end)

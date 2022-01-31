@@ -488,9 +488,11 @@ function LA:OnAwardedReceived(session, winner)
 end
 
 function LA:OnOfflineTimerReceived()
+	local response
 	for session = 1, #self.lootTable do
 		for candidate in pairs(self:GetEntry(session).candidates) do
-			if self:GetCandidateData(session, candidate, LAA.Response) == C.Responses.Announced then
+			response = self:GetCandidateData(session, candidate, LAA.Response)
+			if Util.Objects.In(response, C.Responses.Announced, C.Responses.Wait) then
 				self:SetCandidateData(session, candidate, LAA.Response, C.Responses.Nothing)
 			end
 		end
