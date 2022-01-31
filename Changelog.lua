@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.3.9 (2022-01-31)
+* address issue where award types that aren't visibile to player were being incorrectly handled in loot history 98f7d6c
+* don't include list and priority in auto-award announcements d45ea03
+* don't revert player's response to awaiting when requesting rolls 1c60561
+* fix regression with configuration activation not being processed when player is not ML fb3036c
+
 2021.3.8 (2021-12-17)
 * address issue with UI for configuration/lists not being refreshed when underling data has been modified 9c66b80
 
