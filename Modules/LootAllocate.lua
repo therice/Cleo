@@ -208,6 +208,7 @@ end
 --- @param key any
 --- @param value any
 function LA:SetCandidateData(session, candidate, key, value)
+	Logging:Trace("SetCandidateData(%s, %s) : %s => %s", tostring(session), tostring(candidate), tostring(key), Util.Objects.ToString(value))
 	---@param self LootAllocate
 	local function Set(self, session, candidate, key, value)
 		self:GetCandidateResponse(session, candidate):Set(key, value)
@@ -369,32 +370,52 @@ function LA:SolicitResponse(namePredicate, sessionPredicate, isRoll, noAutoPass)
 			end
 		end
 	end
-
 end
 
 function LA:OnLootAckReceived(candidate, ilvl, sessionData)
-	Logging:Trace("OnLootAckReceived(%s) : %s, %s", tostring(candidate), tostring(ilvl), Util.Objects.ToString(sessionData))
+	--[[
+	sessionData will be of the following format, where session key/value pairs have the session id as the key
+		{
+			response = { session = value, ... },
+			diff = { session = value, ...},
+			gear1 = { session = value, ...},
+			gear2 = { session = value, ...},
+		}
 
+	E.G. { response = { 4 = false }, diff = { 4 = 127 }, gear1 = { 4 = '51::::::::2' }, gear2 = { } }
+	--]]
+	--- set current candidate data to what was in the response's session data
 	for key, values in pairs(sessionData) do
 		for session, value in pairs(values) do
-			if Util.Objects.In(key, "gear1", "gear2") then
+			if Util.Objects.In(key, LAA.Gear1, LAA.Gear2) then
 				self:SetCandidateData(session, candidate, key, AddOn.DeSanitizeItemString(value))
+			-- handle response diffrently due to it's value being overloaded
+			elseif Util.Objects.Equals(key, LAA.Response) then
+				local current = self:GetCandidateData(session, candidate, LAA.Response)
+				-- only replace previous response in situation where it was a boolean or not set
+				if Util.Objects.IsNil(current) or Util.Objects.IsBoolean(current) then
+					self:SetCandidateData(session, candidate, key, value)
+				end
 			else
 				self:SetCandidateData(session, candidate, key, value)
 			end
 		end
 	end
 
+	-- iterate all current sessions
 	for session = 1, #self.lootTable do
 		self:SetCandidateData(session, candidate, LAA.Ilvl, ilvl)
-		-- false means we need to do stuff
-		if not sessionData.response[session] then
-			-- if the response is a boolean (and false), it means we should update to waiting
-			if Util.Objects.IsBoolean(self:GetCandidateData(session, candidate, LAA.Response)) then
+		local sessionResponse = sessionData.response[session]
+		-- if not data included in the user's response for the session
+		-- this will be the case for no response for a session or value of 'false'
+		if not sessionResponse then
+			-- grab previous response (if present)
+			local response = self:GetCandidateData(session, candidate, LAA.Response)
+			if Util.Strings.Equal(response, C.Responses.Announced) then
 				self:SetCandidateData(session, candidate, LAA.Response, C.Responses.Wait)
 			end
 		-- this is an auto-pass
-		elseif sessionData.response[session] == true then
+		elseif sessionResponse == true then
 			self:SetCandidateData(session, candidate, LAA.Response, C.Responses.AutoPass)
 		end
 	end

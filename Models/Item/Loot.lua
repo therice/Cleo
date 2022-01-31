@@ -134,6 +134,8 @@ LootAllocateResponse.Attributes = {
 	Response        =   "response",         -- tracks the player's response to an item
 	ResponseActual  =   "response_actual",  -- when an item is awarded, this is the original response (otherwise, unset)
 	Roll            =   "roll",
+	Gear1           =   "gear1",
+	Gear2           =   "gear2",
 }
 
 function LootAllocateResponse:initialize(player)
