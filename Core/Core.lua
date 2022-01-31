@@ -805,9 +805,16 @@ end
 
 AddOn.NonUserVisibleResponse = Util.Memoize.Memoize(
     function(responseId)
-        local _, response = Util.Tables.FindFn(
+        local reasons = Util.Tables.CopyFilter(
             AddOn:LootAllocateModule().db.profile.awardReasons,
-            function(e) return e.sort == responseId end
+            function(e) return Util.Objects.IsTable(e) end
+        )
+
+        local _, response = Util.Tables.FindFn(
+            reasons,
+            -- the extra check w/ subtraction of 400 is due to a previous regression where some non user visible
+            -- award resasons had 400 added to them, but not consistent throughout usage
+            function(e) return (e.sort == responseId) or (responseId > 400 and e.sort == (responseId - 400)) end
         )
         return response
     end

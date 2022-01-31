@@ -28,7 +28,7 @@ LA.defaults = {
 }
 
 -- Copy defaults from MasterLooter into our defaults for award reasons
--- This actually should be done via the AddOn's DB once it's initialized, but we currently
+-- This actually should be done via the Addon's DB once it's initialized, but we currently
 -- don't allow users to change these values (either here or from MasterLooter) so we can
 -- do it before initialization. If we allow for these to be configured by user, then will
 -- need to be copied from DB

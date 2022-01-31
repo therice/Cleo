@@ -60,8 +60,19 @@ function LootRecord:SetOrigin(fromAwardReason)
 end
 
 function LootRecord:GetResponseId()
-	-- see LootAllocate for the addition of 400
-	return self:IsCandidateResponse() and self.responseId or self.responseId + 400
+	local responseId
+	if self:IsCandidateResponse() then
+		responseId = self.responseId
+	else
+		-- see LootAllocate for the addition of 400 (as needed, there is a bug via the auto award path I need to track down)
+		if self.responseId < 400 then
+			responseId = self.responseId + 400
+		else
+			responseId = self.responseId
+		end
+	end
+
+	return responseId
 end
 
 --- @param itemAward Models.Item.ItemAward
@@ -99,7 +110,8 @@ function LootRecord.FromAutoAward(item, winner, reason)
 
 	record.responseOrigin = ResponseOrigin.AwardReason
 	record.response = reason.text
-	record.responseId = reason.sort
+	-- see ItemAward constructor for subtraction of 400
+	record.responseId = reason.sort - 400
 	return record
 end
 

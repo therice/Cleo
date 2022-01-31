@@ -253,7 +253,7 @@ function ItemAward:initialize(entry, candidate, reason)
 	-- the name (key) of the award reason
 	self.awardReason = awardReason
 
-	-- normalize the response/reason divergence for consistent access
+	-- normalize the response/reason divergence for consistent access (1 .. N indexes)
 	local r = AddOn:GetResponse(self.responseId)
 	self.normalizedReason = {
 		id    = self.reason and self.reason.sort - 400 or self.responseId,
