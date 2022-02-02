@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.0 (2022-02-02)
+* Merge pull request #1 from therice/feature/dataplane 7fba8ed, closes #1
+* update game version in TOC 8a8e0c3
+* add support for electing leaders for configurations and lists, in preparation for real time data replication bc0358a
+
 2021.3.9 (2022-01-31)
 * address issue where award types that aren't visibile to player were being incorrectly handled in loot history 98f7d6c
 * don't include list and priority in auto-award announcements d45ea03
