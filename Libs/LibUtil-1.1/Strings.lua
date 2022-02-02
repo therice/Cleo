@@ -104,7 +104,6 @@ function Self.IsNumber(str)
     return type(str) == 'string' and tonumber(str) ~= nil
 end
 
-
 function Self.Abbr(str, length)
     return str:len() <= length and str or str:sub(1, length) .. "..."
 end

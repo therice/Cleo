@@ -15,8 +15,8 @@ local List = AddOn.Package('Models.List').List
 local ListsDP = AddOn:NewModule('ListsDataPlane', "AceEvent-3.0", "AceBucket-3.0", "AceTimer-3.0", "AceHook-3.0")
 --- @type Lists
 local Lists
---- @type Models.Replication.Election
--- local Election = AddOn.RequireOnUse('Models.Replication.Election')
+--- @type Models.Replication.Replicate
+local Replicate = AddOn.RequireOnUse('Models.Replication.Replicate')
 
 local Base = AddOn.Class('Lists.Base')
 --- @class Lists.Request
@@ -35,14 +35,25 @@ end
 
 function ListsDP:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
+	-- for tracking leadership by replica
+	self.replicas = {}
 	self:SubscribeToComms()
-	-- todo : introduce once data replication is finished
-	-- self:ScheduleTimer(function() self:InitiateElection() end, 5)
+	self:RegisterMessage(C.Messages.ModeChanged, "OnModeChange")
+	self:ScheduleTimer(
+		function()
+			if not AddOn._IsTestContext() then
+				self:InitiateReplication()
+			end
+		end,
+		5
+	)
 end
 
 function ListsDP:OnDisable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
+	self.replicas = nil
 	self:UnsubscribeFromComms()
+	self:UnregisterMessage(C.Messages.ModeChanged)
 end
 
 function ListsDP:EnableOnStartup()
@@ -179,7 +190,7 @@ function ListsDP:OnResourceResponse(sender, payload)
 		local resource = response:ResolvePayload()
 		if resource then
 			if not self.requestsTemp[response.cid] then
-				Logging:Trace("OnResourceResponse(%s, %s) : no pending request found", tostring(sender), tostring(response.cid))
+				Logging:Warn("OnResourceResponse(%s, %s) : no pending request found", tostring(sender), tostring(response.cid))
 				return
 			end
 
@@ -213,7 +224,7 @@ function ListsDP:Broadcast(configId, target)
 
 	if Util.Strings.IsSet(configId) and Util.Strings.IsSet(target) then
 		local config = Lists:GetService().Configuration:Get(configId)
-		if config and config:IsAdminOrOwner(AddOn.player) then --or AddOn:DevModeEnabled())
+		if config and config:IsAdminOrOwner(AddOn.player) then
 			local lists = Lists:GetService():Lists(configId)
 			self:Send(target, C.Commands.ConfigBroadcast, {config = config, lists = lists or {}})
 		end
@@ -237,37 +248,47 @@ function ListsDP:OnBroadcastReceived(payload)
 			Lists:GetService().List:Add(list, false)
 			Logging:Debug("OnBroadcastReceived() : updated/added config id = %s, list id = %s", tostring(config.id), tostring(list.id))
 		end
+
+		-- todo : refresh UI if visible
 	end
 end
 
---[[
-function ListsDP:InitiateElection()
-	Logging:Debug("InitiateElection()")
-
-	-- iterate through all the configurations and associated lists, establishing a subject for each
-	local subjects, service = {}, Lists:GetService()
-
-	local function subject(entity)
-		local group = Util.Memoize.Memoize(function() return Util.Strings.Join(':', entity.clazz.name, entity.id) end)
-		local dao = service:GetDao(entity.clazz)
-
-		return {
-			groupId = function() return group() end,
-			entity = function() return dao:Get(entity.id) end
-		}
-	end
-	local configs = service:Configurations(true)
-	for id, config in pairs(configs) do
-		Util.Tables.Push(subjects, subject(config))
-		local lists = service:Lists(id)
-		for _, list in pairs(lists) do
-			Util.Tables.Push(subjects, subject(list))
+function ListsDP:OnModeChange(_, mode, flag, enabled)
+	-- ignore it unless the flag was replication
+	if flag == C.Modes.Replication then
+		local running = Replicate():IsRunning()
+		if enabled and not running then
+			self:InitiateReplication()
+		elseif not enabled and running then
+			Replicate():Shutdown()
+			self.replicas = {}
 		end
 	end
-
-	Election():Initialize(Comm(), unpack(subjects))
 end
---]]
+
+function ListsDP:GetReplicaLeader(entity)
+	if entity then
+		local replica = Util.Strings.Join(':', entity.clazz.name, entity.id)
+		return self.replicas[replica]
+	end
+
+	return nil
+end
+
+function ListsDP:OnReplicaLeaderChange(replica, leader)
+	Logging:Debug("OnReplicaLeaderChange(%s) : %s", tostring(replica), tostring(leader))
+	local replicaFragments = Util.Strings.Split(replica, ':')
+	if replicaFragments and Util.Tables.Count(replicaFragments) == 2 then
+		self.replicas[replica] = leader
+	end
+end
+
+function ListsDP:InitiateReplication()
+	Logging:Debug("InitiateReplication()")
+	if AddOn:ReplicationModeEnabled() then
+		Replicate():Initialize(Comm(), function(...) self:OnReplicaLeaderChange(...) end)
+	end
+end
 
 if AddOn._IsTestContext() then
 	function ListsDP:ReconstructResponse(payload)

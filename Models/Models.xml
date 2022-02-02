@@ -14,6 +14,7 @@
     <Script file="List\Configuration.lua"/>
     <Script file="List\List.lua"/>
     <Script file="List\Service.lua"/>
+    <Script file="Replication\Engine.lua"/>
     <Script file="Audit\Audit.lua"/>
     <Script file="Audit\Loot.lua"/>
     <Script file="Audit\Traffic.lua"/>

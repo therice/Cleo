@@ -79,6 +79,7 @@ lib.Events = {
     GuildOfficerNoteConflict =   "GuildNoteConflict",
     GuildOfficerNoteWritten  =   "GuildOfficerNoteWritten",
     GuildMemberDeleted       =   "GuildMemberDeleted",
+    GuildMemberOnlineChanged =   "GuildMemberOnlineChanged",
 }
 
 local state, initialized, index, cache, guildInfo, guildName =
@@ -326,12 +327,20 @@ local function OnUpdate()
                 entry.class = class
                 entry.classTag = classTag
                 entry.guid = guid
-                entry.online = online or false
             end
             entry.seen = true
             
             -- Logging:Trace("AFTER(%s) = %s", name, Util.Objects.ToString(entry))
-            
+
+            online = Util.Objects.Default(online, false)
+            if entry.online ~= online then
+                entry.online = online
+                if initialized then
+                    Logging:Trace("Firing Events.GuildMemberOnlineChanged for %s", name)
+                    callbacks:Fire(lib.Events.GuildMemberOnlineChanged, name, online)
+                end
+            end
+
             if entry.officerNote ~= officerNote then
                 entry.officerNote = officerNote
                 if initialized then
@@ -343,7 +352,8 @@ local function OnUpdate()
                     callbacks:Fire(lib.Events.GuildOfficerNoteConflict, name, officerNote, entry.officerNote, entry.pendingOfficerNote)
                 end
             end
-    
+
+
             if entry:HasPendingOfficerNote() then
                 Logging:Trace("Writing note '%s' for '%s'", entry.pendingOfficerNote, entry.name)
                 GuildRosterSetOfficerNote(i, entry.pendingOfficerNote)

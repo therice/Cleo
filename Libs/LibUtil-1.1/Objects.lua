@@ -192,7 +192,10 @@ function Self.ToString(val, depth)
     if t == "nil" then
         return "nil"
     elseif t == "table" then
-        local fn = val.ToString or val.toString or val.tostring
+        local _, fn = pcall(
+            function() return val.ToString or val.toString or val.tostring end
+        )
+
         if depth == 0 then
             return "{...}"
         elseif type(fn) == "function" and fn ~= Self.ToString then

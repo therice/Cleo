@@ -6,8 +6,6 @@ local Class = LibStub("LibClass-1.0")
 local SemanticVersion = AddOn.Package('Models').SemanticVersion
 --- @type Models.Date
 local Date = AddOn.Package('Models').Date
---- @type Models.DateFormat
-local DateFormat = AddOn.Package('Models').DateFormat
 ---- @type Models.SemanticVersion
 local DefaultVersion = SemanticVersion(1, 0)
 

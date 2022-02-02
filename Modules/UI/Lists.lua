@@ -11,6 +11,12 @@ local UI = AddOn.Require('UI.Native')
 local UIUtil = AddOn.Require('UI.Util')
 --- @type UI.DropDown
 local DropDown = AddOn.Require('UI.DropDown')
+--- @type UI.MoreInfo
+local MI = AddOn.Require('UI.MoreInfo')
+--- @type Models.Date
+local Date = AddOn.ImportPackage('Models').Date
+--- @type Models.DateFormat
+local DateFormat = AddOn.ImportPackage('Models').DateFormat
 --- @type LibDialog
 local Dialog = AddOn:GetLibrary("Dialog")
 --- @type Models.Player
@@ -68,8 +74,9 @@ function Lists:LayoutInterface(container)
 end
 
 -- this is invoked as result of a ModeChanged message
-function Lists:OnModeChange(_, mode)
-	if self.interfaceFrame then
+function Lists:OnModeChange(_, mode, flag, enabled)
+	-- ignore it unless the flag was persistence mode
+	if (flag == C.Modes.Persistence) and self.interfaceFrame then
 		self.interfaceFrame:ShowPersistenceWarningIfNeeded()
 	end
 end
@@ -143,7 +150,7 @@ function Lists:LayoutConfigurationTab(tab)
 			"OnMouseDown",
 			function(self, button)
 				if Util.Strings.Equal(C.Buttons.Right, button) then
-					Logging:Debug("Config(Tab).ConfigList.OnMouseDown(%s)", tostring(index))
+					Logging:Trace("Config(Tab).ConfigList.OnMouseDown(%s)", tostring(index))
 					ConfigActionsMenu.entry = tab.configList:Selected()
 					DropDown.ToggleMenu(1, ConfigActionsMenu, self, 100)
 				end
@@ -177,26 +184,9 @@ function Lists:LayoutConfigurationTab(tab)
 	  :Point("BOTTOMLEFT",tab:GetParent(),"BOTTOM",0,-18)
 	  :Size(1,0)
 
-	tab.version =
-		UI:New('Text', tab)
-	        :Point("RIGHT", tab.banner, "RIGHT", -5, 0)
-	        :Right()
-	        :FontSize(11)
-	tab.version:Hide()
-	tab.version.SetValue = function(self, config)
-		if config then
-			self:SetText(
-				format(
-					"%s %s",
-				    UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate(config:hash()),
-					UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate("(" ..tostring(config.revision) .. ")")
-				)
-			)
-			self:Show()
-		else
-			self:Hide()
-		end
-	end
+
+	MI.EmbedWidgets(self:GetName() .. "_Configuration", tab, function(...) self:UpdateMoreInfo(...) end)
+	tab.moreInfoBtn:SetPoint("TOPRIGHT", tab.banner, "TOPRIGHT", -5, 2)
 
 	-- delete configuration
 	tab.delete =
@@ -246,7 +236,7 @@ function Lists:LayoutConfigurationTab(tab)
 
 	tab.Update = function(self)
 		local config = SelectedConfiguration()
-		self.version:SetValue(config)
+		MI.Update(tab, config)
 		self:SetButtonsEnabled(config)
 
 		for _, childTab in self.configSettings:IterateTabs() do
@@ -1092,7 +1082,7 @@ function Lists:LayoutListTab(tab)
 			self.name:Text(nil)
 		end
 
-		self.version:SetValue(list)
+		MI.Update(tab, list)
 
 		-- iterate and child tabs and update their fields
 		for _, childTab in self.listSettings:IterateTabs() do
@@ -1119,32 +1109,14 @@ function Lists:LayoutListTab(tab)
 	end
 
 	-- the background for configuration list tabs
-	local tabBg =
+	tab.banner =
 		UI:New('DecorationLine', tab, true, "BACKGROUND",-5)
 			:Point("TOPLEFT", tab.listSettings, 0, 0)
 			:Point("BOTTOMRIGHT",tab,"TOPRIGHT", -2, -45)
 			:Color(0.25, 0.78, 0.92, 1, 0.50)
 
-	tab.version =
-		UI:New('Text', tab)
-	        :Point("RIGHT", tabBg, "RIGHT", -5, 0)
-	        :Right()
-	        :FontSize(11)
-	tab.version:Hide()
-	tab.version.SetValue = function(self, list)
-		if list then
-			self:SetText(
-				format(
-					"%s %s",
-					UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate(list:hash()),
-					UIUtil.ColoredDecorator(C.Colors.Aluminum):decorate("(" ..tostring(list.revision) .. ")")
-				)
-			)
-			self:Show()
-		else
-			self:Hide()
-		end
-	end
+	MI.EmbedWidgets(self:GetName() .. "_List", tab, function(...) self:UpdateMoreInfo(...) end)
+	tab.moreInfoBtn:SetPoint("TOPRIGHT", tab.banner, "TOPRIGHT", -5, 2)
 
 	-- handles updates to a list, both via UI and external sources
 	tab.ListUpdated = function(self, _, detail)
@@ -1691,6 +1663,27 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	self.listPriorityTab = tab
 end
 
+local FullDf = DateFormat:new("mm/dd/yyyy HH:MM:SS")
+
+function Lists:UpdateMoreInfo(tab, entity)
+	Logging:Debug("UpdateMoreInfo(%s)", tab:GetName())
+	if entity then
+		local tip = tab.moreInfo
+		tip:SetOwner(tab.banner, "ANCHOR_RIGHT")
+		tip:AddLine(entity.name)
+		tip:AddLine(" ")
+		tip:AddDoubleLine(L["hash"], entity:hash(), 0.90, 0.80, 0.50, 1,1,1)
+		tip:AddDoubleLine(L["revision"], entity.revision, 0.90, 0.80, 0.50, 1,1,1)
+		tip:AddDoubleLine(L["modified"], FullDf:format(entity.revision), 0.90, 0.80, 0.50, 1,1,1)
+
+		local leader = ListsDp:GetReplicaLeader(entity)
+		local c = leader and UIUtil.GetPlayerClassColor(leader) or C.Colors.Aluminum
+		tip:AddDoubleLine(L["authority"], leader and AddOn.Ambiguate(leader) or "N/A", 0.90, 0.80, 0.50, c.r, c.g, c.b)
+
+		tip:Show()
+		tip:SetAnchorType("ANCHOR_RIGHT", 0, -tip:GetHeight())
+	end
+end
 
 function Lists:SelectListModuleFn()
 	return function(lpad)
@@ -1709,6 +1702,7 @@ function Lists:SelectListModuleFn()
 		if configId then
 			self.listTab.config:SetViaKey(configId)
 			self.listTab.lists:SetTo(1)
+			self.listTab:Update()
 			self.listPriorityTab:Update()
 		end
 	end
@@ -1798,7 +1792,6 @@ do
 
 	local function ConfigActionDisabled(_, config)
 		return not config:IsAdminOrOwner(AddOn.player)
-		-- return not (config:IsAdminOrOwner(AddOn.player) or AddOn:DevModeEnabled())
 	end
 
 	local ConfigActionsMenuEntryBuilder =

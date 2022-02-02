@@ -57,8 +57,8 @@ function Lists:InitializeService()
 	self:UnregisterCallbacks()
 	--- @type Models.List.Service
 	self.listsService = ListsService(
-			{self, self.db.factionrealm.configurations},
-			{self, self.db.factionrealm.lists}
+		{self, self.db.factionrealm.configurations},
+		{self, self.db.factionrealm.lists}
 	)
 	--- @type Models.List.ActiveConfiguration
 	self.activeConfig = nil

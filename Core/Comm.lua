@@ -113,7 +113,7 @@ function Comms:PrepareForSend(command, ...)
     local serialized = self:Serialize(command, scrubbed)
     local data = Compressor:compress(serialized, true)
     Util.Tables.ReleaseTemp(scrubbed)
-    Logging:Trace("PrepareForSend(%s) : Compressed length '%d' -> '%d'", command, #serialized, #data)
+    Logging:Trace("PrepareForSend(%s) : Compressed length '%d' -> '%d'", tostring(command), #serialized, #data)
     return data
 end
 
@@ -140,7 +140,7 @@ function Comms:ProcessReceived(msg)
 end
 
 function Comms:FireCommand(prefix, dist, sender, command, data)
-    Logging:Debug("FireCommand(%s) : via=%s, sender=%s, command=%s", tostring(prefix), tostring(dist), tostring(sender), tostring(command))
+    Logging:Debug("FireCommand(%s) : dist=%s, sender=%s, command=%s", tostring(prefix), tostring(dist),  tostring(sender), tostring(command))
     self:Subject(prefix, command):next(data, sender, command, dist)
 end
 
@@ -200,13 +200,15 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
                 target = isPlayer and target:GetName() or target
                 Logging:Debug("SendComm[other](%s, %s)", tostring(prefix), tostring(target))
                 if AddOn.UnitIsUnit(target, C.player) then
-                    Logging:Trace("SendComm[other]() : UnitIsUnit(true), %s", AddOn.player.name)
-                    self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, AddOn.player:GetName(), prio,
-                                                 callback, callbackarg)
+                    Logging:Trace("SendComm[player]() : UnitIsUnit(true), %s", AddOn.player.name)
+                    self.AceComm:SendCommMessage(
+                        prefix, toSend, C.Channels.Whisper, AddOn.player:GetName(), prio, callback, callbackarg
+                    )
                 else
                     Logging:Trace("SendComm[other]() : UnitIsUnit(false), %s", target)
-                    self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, target, prio, callback,
-                                                 callbackarg)
+                    self.AceComm:SendCommMessage(
+                        prefix, toSend, C.Channels.Whisper, target, prio, callback, callbackarg
+                    )
                 end
             end
         end,
