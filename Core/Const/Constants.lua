@@ -23,11 +23,12 @@ AddOn.Constants = {
     },
 
     CommPrefixes = {
-      Audit     =   name .. "_a",
-      Main      =   name,
-      Lists     =   name .. "_l",
-      Version   =   name .. '_v',
-      Sync      =   name .. '_s',
+        Audit       = name .. "_a",
+        Main        = name,
+        Lists       = name .. "_l",
+        Replication = name .. "_r",
+        Sync        = name .. '_s',
+        Version     = name .. '_v',
     },
 
     Channels = {
@@ -93,9 +94,11 @@ AddOn.Constants = {
         ActivateConfig          =   "alc",      -- sent when a configuration should be activated (for loot priorities)
         Awarded                 =   "awd",
         ChangeResponse          =   "cr",
-        ConfigBroadcast         =   "cb",       -- this is a broadcast to multiple recipients for configuration (and lists)
+        ConfigBroadcast         =   "cb",       -- this is a broadcast to multiple recipients for a configuration and associated lists
         ConfigResourceRequest   =   "crr",      -- this is a request for a configuration or a list
         ConfigResourceResponse  =   "crrsp",    -- this is a response for a configuration or a list
+        Coordinator             =   "rcl",      -- replication based message (coordinator/leader)
+        Election                =   "rer",      -- replication based message (election request)
         HandleLootStart         =   "hlst",
         HandleLootStop          =   "hlstp",
         LootAuditAdd            =   "laa",
@@ -106,6 +109,10 @@ AddOn.Constants = {
         MasterLooterDb          =   "mldb",
         MasterLooterDbRequest   =   "mldbr",
         OfflineTimer            =   "ot",
+        Ok                      =   "rok",      -- replication based message (ok)
+        PeerQuery               =   "rpq",      -- replication based message (query for peers)
+        PeerReply               =   "rpr",      -- replication based message (reply to peers query)
+        PeerLeft                =   "rpl",      -- replication based message (peer left due to replication being stopped)
         PlayerInfo              =   "pi",
         PlayerInfoRequest       =   "pir",
         Reconnect               =   "rct",
@@ -222,10 +229,11 @@ AddOn.Constants = {
     },
 
     Modes = {
-        Standard                =   0x01,
-        Test                    =   0x02,
-        Develop                 =   0x04,
-        Persistence             =   0x08,
+        Standard                =   0x01,   -- 00001
+        Test                    =   0x02,   -- 00010
+        Develop                 =   0x04,   -- 00100
+        Persistence             =   0x08,   -- 01000
+        Replication             =   0x10,   -- 10000
     },
     
     Popups = {

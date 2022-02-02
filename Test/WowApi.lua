@@ -4,6 +4,7 @@ _G.random = math.random
 math.randomseed(os.time())
 math.random()
 
+
 -- utility function for "dumping" a number of arguments (return a string representation of them)
 function dump(...)
     local t = {}
@@ -162,10 +163,37 @@ function SetLocale(locale)
 end
 
 C_Timer = {}
-function C_Timer.After(duration, callback)  callback() end
+local timer = require("copas.timer")
+local timerCount = 1
+function C_Timer.After(duration, callback)
+    local ref = timerCount
+    timerCount = timerCount + 1
+
+    print(format('C_Timer.After[START](%d, %d, %d)', ref, duration, os.time()))
+    if _G.IsAsync() then
+        return timer.new({
+             delay = duration,
+             recurring = false,
+             callback = function()
+                 print(format('C_Timer.After[END](%d, %d, %d)', ref, duration, os.time()))
+                 callback()
+             end
+         })
+    else
+        callback()
+        return nil
+    end
+end
+
 function C_Timer.NewTimer(duration, callback)  end
 function C_Timer.NewTicker(duration, callback, iterations)  end
-function C_Timer.Cancel() end
+function C_Timer.Cancel(t)
+    print(format('C_Timer.Cancel[EVAL]()'))
+    if t and t.cancel then
+        print(format('C_Timer.Cancel[EXEC]()'))
+        t:cancel()
+    end
+end
 
 if not wipe then
     function wipe(tbl)
@@ -560,7 +588,7 @@ function RegisterAddonMessagePrefix(prefix)
 end
 
 function SendAddonMessage(prefix, message, distribution, target)
-    -- print('SendAddonMessage -> ' .. tostring(distribution) .. '/' .. tostring(target))
+    --print('SendAddonMessage -> ' .. tostring(distribution) .. '/' .. tostring(target))
     if RegisterAddonMessagePrefix then --4.1+
         assert(#message <= 255,
                 string.format("SendAddonMessage: message too long (%d bytes > 255)",
@@ -901,3 +929,4 @@ end
 
 loadfile('Test/WowItemInfo.lua')()
 loadfile('Test/WowApiUI.lua')()
+

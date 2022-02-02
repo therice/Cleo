@@ -224,12 +224,31 @@ end
 function Configuration:PlayersWithPermission(p)
 	local players = {}
 	for player, permission in pairs(self.permissions) do
-		Logging:Trace("GetPlayersWithPermissions() : Evaluating %s, %s", tostring(player), tostring(permission))
+		Logging:Trace("GetPlayersWithPermissions(%s) : Evaluating %s, %s", tostring(p), tostring(player), tostring(permission))
 		if permission:Enabled(p) then
 			Util.Tables.Push(players, Player:Get(player))
 		end
 	end
 	return players
+end
+
+function Configuration:PlayerPermissionsToOrdinal(p)
+	p = p and Player.Resolve(p) or AddOn.player
+
+	Logging:Trace("PlayerPermissionsToOrdinal(%s)", tostring(p))
+	-- ordinal of 0  means no permissions
+	local ordinal = 0
+	-- permissions is modeled as a bit field, but in reality it's mutually exclusive (cannot be admin and owner)
+	-- the following block though is explicit for each case, although not needed
+	if self:IsAdmin(p) then
+		ordinal = ordinal + 10
+	elseif self:IsOwner(p) then
+		ordinal = ordinal + 100
+	end
+
+	Logging:Trace("PlayerPermissionsToOrdinal(%s) : %d", tostring(p), ordinal)
+
+	return ordinal
 end
 
 --- @param p Models.Player the player to evaluate, if nil will use the current player

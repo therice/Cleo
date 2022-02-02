@@ -23,6 +23,7 @@ function AddOn:OnInitialize()
     -- convert to a semantic version
     self.version = SemanticVersion(self.version)
     -- bitfield which keeps track of our operating mode
+    --- @type Core.Mode
     self.mode = AddOn.Package('Core').Mode()
     -- is the addon enabled, can be altered at runtime
     self.enabled = true
@@ -75,6 +76,11 @@ function AddOn:OnEnable()
     --@debug@
     -- this enables certain code paths that wouldn't otherwise be available in normal usage
     self.mode:Enable(AddOn.Constants.Modes.Develop)
+    --@end-debug@
+
+    --@debug@
+    -- this enables real time replication of data, only via switch and debug builds for now
+    self.mode:Enable(AddOn.Constants.Modes.Replication)
     --@end-debug@
 
     -- in debug mode, parse the version from the Changelog

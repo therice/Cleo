@@ -13,8 +13,6 @@ local ConfigurationDao = AddOn.Package('Models.List').ConfigurationDao
 local List = AddOn.Package('Models.List').List
 --- @type Models.List.ListDao
 local ListDao = AddOn.Package('Models.List').ListDao
---- @type Models.Player
-local Player = AddOn.Package('Models').Player
 --- @type Models.Referenceable
 local Referenceable = AddOn.Require('Models.Referenceable')
 --- @class Models.List.ActiveConfiguration
@@ -42,6 +40,14 @@ local function Dao(self, class)
 end
 
 function Service:GetDao(class)
+	if Util.Objects.IsString(class) then
+		if Util.Strings.Equal(Configuration.name, class) then
+			class = Configuration
+		elseif Util.Strings.Equal(List.name, class) then
+			class = List
+		end
+	end
+
 	return Dao(self, class)
 end
 

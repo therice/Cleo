@@ -20,8 +20,17 @@ local Item = AddOn.Package('Models.Item').Item
 local Dialog = AddOn:GetLibrary("Dialog")
 
 local function ModeToggle(self, flag)
-    if self.mode:Enabled(flag) then self.mode:Disable(flag) else self.mode:Enable(flag) end
-    self:SendMessage(C.Messages.ModeChanged, self.mode)
+    local enabled
+
+    if self.mode:Enabled(flag) then
+        self.mode:Disable(flag)
+        enabled = false
+    else
+        self.mode:Enable(flag)
+        enabled = true
+    end
+
+    self:SendMessage(C.Messages.ModeChanged, self.mode, flag, enabled)
 end
 
 --- @return boolean
@@ -37,6 +46,11 @@ end
 --- @return boolean
 function AddOn:PersistenceModeEnabled()
     return self.mode:Enabled(C.Modes.Persistence)
+end
+
+--- @return boolean
+function AddOn:ReplicationModeEnabled()
+    return self.mode:Enabled(C.Modes.Replication)
 end
 
 function AddOn:ModuleSettings(module)
@@ -174,6 +188,15 @@ function AddOn:RegisterChatCommands()
                 function()
                     ModeToggle(self, C.Modes.Persistence)
                     self:Print("Persistence Mode = " .. tostring(self:PersistenceModeEnabled()))
+                end,
+                true
+            },
+            {
+                {'rm'},
+                L['chat_commands_rm'],
+                function()
+                    ModeToggle(self, C.Modes.Replication)
+                    self:Print("Replication Mode = " .. tostring(self:ReplicationModeEnabled()))
                 end,
                 true
             },

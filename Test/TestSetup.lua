@@ -12,7 +12,9 @@ local addOnTestNs, testNs, loadAddon, logFileName, logFile, caller =
 
 loadAddon = params[1] or false
 
---
+--local copas = require('copas')
+--_G.async = copas.async
+
 -- custom assertions start
 --
 local function less(state, arguments)
@@ -111,7 +113,6 @@ end
 -- It seems Wow doesn't follow the 5.1 spec for xpcall (no additional arguments),
 -- but instead the one from 5.2 where that's allowed.
 -- Try to recreate that here.
-
 local xpcall_orig = _G.xpcall
 function xpcall_patch()
     --there's an issue on lua5.1 with xpcall accepting function aruments, so patch it
@@ -131,7 +132,7 @@ function xpcall_patch()
             --        (tail call): ?
             --        ./Models/History/Test/TrafficTest.lua:28: in function <./Models/History/Test/TrafficTest.lua:27>
             --
-            --print(code)
+            -- print(code)
             -- print(debug.traceback(1))
             -- print('here')
             geterrorhandler()(code)
@@ -171,6 +172,23 @@ function GuildRosterUpdate()
     WoWAPI_FireUpdate()
 end
 
+local _async = false
+_G.IsAsync = function()
+    return _async
+end
+
+local copas = require("copas")
+function Async(thunk)
+    _async = true
+    return function()
+        copas.loop(
+            function()
+                thunk(copas)
+                _async = false
+            end
+        )
+    end
+end
 
 function After()
     if logFile then
