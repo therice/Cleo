@@ -558,6 +558,8 @@ function ML:EndSession()
 	self:CancelAllTimers()
 
 	if AddOn:TestModeEnabled() then
+		-- deactivate the configuration 1st
+		self:DeactivateConfiguration()
 		AddOn:StopHandleLoot()
 		AddOn:ScheduleTimer("NewMasterLooterCheck", 1)
 		AddOn.mode:Disable(C.Modes.Test)
@@ -780,6 +782,23 @@ function ML:ReactivateConfiguration(applied)
 		self:ActivateConfiguration(config, applied)
 	end
 end
+
+--- if there is currently an active configuration, deactivates it and broadcasts to group
+function ML:DeactivateConfiguration()
+	local LM = AddOn:ListsModule()
+
+	Logging:Debug("DeactivateConfiguration(%s, %s)", tostring(self:IsHandled()), tostring(LM:HasActiveConfiguration()))
+
+	if self:IsHandled() then
+		local activeConfig = LM:GetActiveConfiguration()
+		Logging:Debug("DeactivateConfiguration(%s)", tostring(activeConfig))
+		if activeConfig then
+			LM:DeactivateConfiguration(activeConfig.config)
+			AddOn:Send(C.group, C.Commands.DeactivateConfig, activeConfig.config.id)
+		end
+	end
+end
+
 
 --- @param config Models.List.Configuration
 --- @param dispatchOnly boolean should activation only be dispatched (not activated ourselves)

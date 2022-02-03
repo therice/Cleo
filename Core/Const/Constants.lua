@@ -98,6 +98,7 @@ AddOn.Constants = {
         ConfigResourceRequest   =   "crr",      -- this is a request for a configuration or a list
         ConfigResourceResponse  =   "crrsp",    -- this is a response for a configuration or a list
         Coordinator             =   "rcl",      -- replication based message (coordinator/leader)
+        DeactivateConfig        =   "dlc",      -- sent when a configuration should be deactivated (for loot priorities)
         Election                =   "rer",      -- replication based message (election request)
         HandleLootStart         =   "hlst",
         HandleLootStop          =   "hlstp",

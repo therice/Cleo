@@ -379,6 +379,7 @@ function Tabs.CreateTabButton(parent, name)
 	tabButton.HighlightTexture:SetPoint("BOTTOMRIGHT")
 	tabButton:SetHighlightTexture(tabButton.HighlightTexture)
 
+
 	-- Logging:Debug("CreateTabButton(%s) : %d, %d", name, tabButton:GetWidth(), tabButton:GetHeight())
 
 	tabButton:SetScript(

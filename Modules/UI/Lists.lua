@@ -933,8 +933,9 @@ function Lists:LayoutConfigGeneralTab(tab, configSupplier)
 end
 
 local ListTabs = {
-	[L["priority"]]     = L["list_list_priority_desc"],
-	[L["equipment"]]    = L["list_list_equipment_desc"],
+	[L["priority"]]        = L["list_list_priority_desc"],
+	[L["priority_active"]] = L["list_list_priority_raid_desc"],
+	[L["equipment"]]       = L["list_list_equipment_desc"],
 }
 
 function Lists:LayoutListTab(tab)
@@ -1084,7 +1085,7 @@ function Lists:LayoutListTab(tab)
 
 		MI.Update(tab, list)
 
-		-- iterate and child tabs and update their fields
+		-- iterate any child tabs and update their fields
 		for _, childTab in self.listSettings:IterateTabs() do
 			if childTab.Update then
 				childTab:Update()
@@ -1145,6 +1146,12 @@ function Lists:LayoutListTab(tab)
 
 	self:LayoutListPriorityTab(
 		tab.listSettings:GetByName(L["priority"]),
+		SelectedConfiguration,
+		SelectedList
+	)
+
+	self:LayoutListPriorityRaidTab(
+		tab.listSettings:GetByName(L["priority_active"]),
 		SelectedConfiguration,
 		SelectedList
 	)
@@ -1661,6 +1668,128 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	tab:SetScript("OnShow", function(self) self:Update() end)
 	self.listPriorityTab = tab
+end
+
+function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
+
+	local rowsPerColumn = ceil(tab:GetHeight()/(PriorityHeight+6))
+
+	local function PriorityCoord(self, xAdjust, yAdjust)
+		xAdjust = Util.Objects.IsNumber(xAdjust) and xAdjust or 0
+		yAdjust = Util.Objects.IsNumber(yAdjust) and yAdjust or 0
+
+		local column = floor((self.index - 1) / rowsPerColumn)
+		local row = ((self.index -1) % rowsPerColumn)
+		return (10 + (column * (PriorityWidth + 15))) + xAdjust, (-20 - (row  * 22)) + yAdjust
+	end
+
+	local function EditOnChange(self)
+		local playerName = self:GetText()
+		if Util.Strings.IsSet(playerName) then
+			local color = UIUtil.GetPlayerClassColor(playerName)
+			if Util.Objects.IsFunction(color.GetRGBA) then
+				self:SetTextColor(color:GetRGBA())
+			else
+				self:SetTextColor(C.Colors.ItemPoor:GetRGBA())
+			end
+		end
+
+		self:ColorBorder()
+		self:ClearTooltip()
+
+		-- if the player has alts, then color the border
+		local config = configSupplier()
+		if config and Util.Strings.IsSet(playerName) then
+			local alts = config:GetAlternates(playerName)
+			if Util.Objects.IsSet(alts) then
+				self:ColorBorder(C.Colors.LightBlue:GetRGBA())
+
+				local altsColored = {}
+				for _, alt in pairs(alts) do
+					Util.Tables.Push(
+						altsColored,
+						UIUtil.PlayerClassColorDecorator(alt:GetName()):decorate(alt:GetShortName())
+					)
+				end
+				self:Tooltip(L['list_alts'], unpack(altsColored))
+			end
+		end
+	end
+
+	-- this tracks player's priorities
+	tab.priorities = {}
+	-- create individual priority slots
+	for index = 1, 40 do
+		local priorityEdit =
+			UI:New('EditBox', tab)
+				:Size(PriorityWidth, PriorityHeight)
+				:OnChange(function(self) EditOnChange(self) end)
+		tab.priorities[index] = priorityEdit
+		priorityEdit.index = index
+		priorityEdit:BackgroundText(tostring(index))
+		priorityEdit.Reset = function(self)
+			local otcFn = self:GetScript("OnTextChanged")
+			self:OnChange(nil)
+			self:Set(nil)
+			self:OnChange(otcFn)
+		end
+		priorityEdit.Set = function(self, text)
+			self:SetText(text or "")
+			if Util.Objects.IsEmpty(text) then
+				self:BackgroundText(tostring(self.index))
+			else
+				self:BackgroundText(nil)
+			end
+			self:SetCursorPosition(1)
+		end
+		priorityEdit:SetEnabled(false)
+		priorityEdit:Point("TOPLEFT", PriorityCoord(priorityEdit))
+		priorityEdit:SetMovable(false)
+	end
+
+
+	tab.UpdatePriorities = function(self)
+		local ac, list = Lists:GetActiveConfiguration(), listSupplier()
+
+		local priorityCount = 0
+
+		if ac and list then
+			--- @type Models.List.List
+			local al = ac:GetActiveList(list.id)
+			local players = al:GetPlayers(true, true)
+			Logging:Trace("UpdatePriorities() : %s", Util.Objects.ToString(players))
+			priorityCount = #players
+
+			local player
+			for priority = 1, priorityCount do
+				self.priorities[priority]:Reset()
+				player = Player.Resolve(players[priority])
+				self.priorities[priority]:Set(player and player:GetShortName() or L['unknown'])
+			end
+		end
+
+		for priority = priorityCount + 1, #self.priorities do
+			self.priorities[priority]:Set(nil)
+		end
+	end
+
+	tab.Update = function(self)
+		Logging:Trace("List.PriorityRaid(Tab).Update(%s)", tostring(self:IsVisible()))
+
+		-- this tab is only visible when in a raid and there is an active configuration
+		if (IsInRaid() or AddOn:DevModeEnabled()) and Lists:HasActiveConfiguration() then
+			self.button:Show()
+		else
+			self.button:Hide()
+		end
+
+		if self:IsVisible() then
+			self:UpdatePriorities()
+		end
+	end
+
+	tab:SetScript("OnShow", function(self) self:Update() end)
+	self.listPriorityRaidTab = tab
 end
 
 local FullDf = DateFormat:new("mm/dd/yyyy HH:MM:SS")

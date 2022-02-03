@@ -95,6 +95,13 @@ function Lists:SubscribeToComms()
 				self:OnActivateConfigReceived(sender, unpack(data))
 			end
 		end,
+		[C.Commands.DeactivateConfig] = function(data, sender)
+			Logging:Debug("DeactivateConfig from %s", tostring(sender))
+			-- path for the ML deactivating configuration doesn't flow through communications (messaging)
+			if not AddOn:IsMasterLooter() then
+				self:DeactivateConfiguration(unpack(data))
+			end
+		end
 	})
 end
 
@@ -356,6 +363,18 @@ end
 -- along with the specified player's priority
 function Lists:GetOverallListAndPriority(equipment, player)
 	return GetListAndPriority(self, equipment, player, false)
+end
+
+function Lists:DeactivateConfiguration(idOrConfig)
+	local id = Util.Objects.IsInstanceOf(idOrConfig, Configuration) and idOrConfig.id or idOrConfig
+	Logging:Debug("DeactivateConfiguration(%s)", tostring(idOrConfig))
+	if self:HasActiveConfiguration() then
+		local currentActive = self.activeConfig
+		if Util.Strings.Equal(id, currentActive.config.id) then
+			self.activeConfig = nil
+			AddOn:Print(format(L["deactivated_configuration"], tostring(currentActive.config.name)))
+		end
+	end
 end
 
 --- @param idOrConfig string|Models.List.Configuration the configuration to activate
