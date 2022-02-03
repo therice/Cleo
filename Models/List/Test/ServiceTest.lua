@@ -499,6 +499,12 @@ describe("Service Model", function()
 		end)
 
 		it("handles player joined event (duplicate)", function()
+			local ML = AddOn:MasterLooterModule()
+			local _IsMasterLooter = AddOn.IsMasterLooter
+			local _IsHandled = ML.IsHandled
+			AddOn.IsMasterLooter = function(self) return true end
+			ML.IsHandled = function(self) return true end
+
 			local cs = S:Configurations(true, true)
 			local c = Util.Tables.Values(cs)[1]
 			--- @type  Models.List.ActiveConfiguration
@@ -514,9 +520,20 @@ describe("Service Model", function()
 					},
 					list:GetPlayers(true, true)
 			)
+
+			finally(function()
+				AddOn.IsMasterLooter = _IsMasterLooter
+				ML._IsHandled = _IsHandled
+			end)
 		end)
 
 		it("handles player joined event (at random and dupes)", function()
+			local ML = AddOn:MasterLooterModule()
+			local _IsMasterLooter = AddOn.IsMasterLooter
+			local _IsHandled = ML.IsHandled
+			AddOn.IsMasterLooter = function(self) return true end
+			ML.IsHandled = function(self) return true end
+
 			--- @type  Models.List.ActiveConfiguration
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
 
@@ -551,6 +568,11 @@ describe("Service Model", function()
 				print(listId .. '(extra) => ' .. Util.Objects.ToString(Util.Tables.Sub(players, #origList.players)))
 				--]]
 			end
+
+			finally(function()
+				AddOn.IsMasterLooter = _IsMasterLooter
+				ML._IsHandled = _IsHandled
+			end)
 		end)
 
 		it("handles loot event", function()
