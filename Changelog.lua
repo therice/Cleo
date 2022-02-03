@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.1 (2022-02-03)
+* resolve test which was not committed with previous change ec9a93c
+* add display of priorities for a list, filtered by players in raid 4c491b3
+* display player priority and other player's response on loot response window 7aace4b
+
 2021.4.0 (2022-02-02)
 * Merge pull request #1 from therice/feature/dataplane 7fba8ed, closes #1
 * update game version in TOC 8a8e0c3
