@@ -260,17 +260,89 @@ function ActiveConfiguration:initialize(service, config, lists)
 			)()
 end
 
-function ActiveConfiguration:__tostring()
-	return format("%s (%s)", self.config.name, self.config.id)
+--  todo : unify this logic with OnPlayerEvent()
+---
+--- this function is to create a view of the active list's priorities when
+--- it's not being actively maintained (which is case of a player where not the master looter)
+---
+--- @param self Models.List.ActiveConfiguration
+--- @param list Models.List.List
+--- @return Models.List.List
+local function CreateActiveListView(self, list)
+	--- @type Models.List.List
+	local view
+
+	if list then
+		-- get the original list from which to obtain overall priorities
+		local origList = self:GetOriginalList(list.id)
+		if origList then
+			view = list:clone()
+			view:ClearPlayers()
+
+			local player, priority
+			for name, _ in AddOn:GroupIterator() do
+				-- resolve player through configuration as it has potential to be an ALT
+				player = self.config:ResolvePlayer(name)
+				-- capture current overall priority from original ist
+				priority, _ = origList:GetPlayerPriority(player)
+				-- if for some reason could not obtain priority, ignore
+				if priority then
+					view:AddPlayer(player, priority)
+				end
+			end
+		end
+	end
+
+	return view
 end
---- @return table<string, Models.List.List> the list in it's original state when activated
+
+--- @return Models.List.List the list in it's original state when activated
 function ActiveConfiguration:GetOriginalList(listId)
 	return self.lists[listId]
 end
 
---- @return table<string, Models.List.List> the list in it's current form as a result of mutations (players add, loot given, etc.)
+--- @return Models.List.List the list in it's current form as a result of mutations (players add, loot given, etc.)
 function ActiveConfiguration:GetActiveList(listId)
-	return self.listsActive[listId]
+	local list = self.listsActive[listId]
+	if AddOn:IsMasterLooter() then
+		return list
+	else
+		return CreateActiveListView(list)
+	end
+end
+
+--- @param lists table<string,Models.List.List>
+--- @param  equipment string the equipment slot (e.g. INVTYPE_HEAD)
+--- @return  string, Models.List.List
+local function GetListByEquipment(lists, equipment)
+	return Util.Tables.FindFn(
+		lists,
+		function(list)
+			return list:AppliesToEquipment(equipment)
+		end
+	)
+end
+
+--- @param equipment string the equipment slot (e.g. INVTYPE_HEAD)
+--- @return string, Models.List.List the overall list for specified equipment slot
+function ActiveConfiguration:GetOverallListByEquipment(equipment)
+	return GetListByEquipment(self.lists, equipment)
+end
+
+--- @param equipment string the equipment slot (e.g. INVTYPE_HEAD)
+--- @return string, Models.List.List the active list for specified equipment slot
+function ActiveConfiguration:GetActiveListByEquipment(equipment)
+	local id, list = GetListByEquipment(self.listsActive, equipment)
+	if AddOn:IsMasterLooter() then
+		return id, list
+	else
+		return id, CreateActiveListView(self, list)
+	end
+end
+
+
+function ActiveConfiguration:__tostring()
+	return format("%s (%s)", self.config.name, self.config.id)
 end
 
 -- returns a table with following contents, with the following potential attributes
@@ -498,23 +570,3 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 		AddOn:PrintError(format("No list found - no change in priority will be applied for %s", player and player:GetShortName() or L["unknown"]))
 	end
 end
-
-local function GetListByEquipment(lists, equipment)
-	return Util.Tables.FindFn(
-		lists,
-		function(list)
-			return list:AppliesToEquipment(equipment)
-		end
-	)
-end
-
---- @return Models.List.List
-function ActiveConfiguration:GetOverallListByEquipment(equipment)
-	return GetListByEquipment(self.lists, equipment)
-end
-
---- @return string, Models.List.List
-function ActiveConfiguration:GetActiveListByEquipment(equipment)
-	return GetListByEquipment(self.listsActive, equipment)
-end
-

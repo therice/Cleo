@@ -127,12 +127,14 @@ function Entry:Hide()
 	self.frame:Hide()
 end
 
+--- @param item Models.Item.LootEntry
 function Entry:Update(item)
 	if not item then
 		Logging:Warn("Update() : no item provided")
 		return
 	end
 
+	--- @type Models.Item.LootEntry
 	self.item = item
 	self.itemText:SetText(
 		(item.isRoll and (_G.ROLL .. ": ") or "") ..
@@ -171,7 +173,7 @@ function Entry:UpdateButtons()
 			-- b[i]:SetText(_G.PASS)
 			b[i]:SetText(UIUtil.ColoredDecorator(C.Colors.Salmon):decorate(_G.PASS))
 			b[i]:SetMultipleScripts({
-                OnEnter = function() Loot.UpdateItemResponders(self, C.Responses.Pass) end,
+                OnEnter = function() Loot.UpdateItemResponders(self, C.Responses.Pass, b[i]) end,
                 OnLeave = function() UIUtil:HideTooltip() end,
                 OnClick = function() Loot:OnRoll(self, C.Responses.Pass) end,
             })
@@ -182,7 +184,7 @@ function Entry:UpdateButtons()
 			b[i]:SetText(UIUtil.ColoredDecorator(buttons[i].color):decorate(buttons[i].text))
 			b[i]:SetMultipleScripts({
                 OnEnter = function()
-                    Loot.UpdateItemResponders(self, i)
+                    Loot.UpdateItemResponders(self, i, b[i])
                     Loot.UpdateItemText(self)
                 end,
                 OnLeave = function()
@@ -230,12 +232,15 @@ local function GetFromPool(self, type)
 	return nil
 end
 
+--- @param item Models.Item.LootEntry
 function EntryManager:GetEntry(item)
 	if not item then
 		Logging:Warn("GetEntry(%s) : No such item", Util.Objects.ToString(item))
 		return
 	end
-	if self.entries[item] then return self.entries[item] end
+	if self.entries[item] then
+		return self.entries[item]
+	end
 
 	--- @type Loot.Entry
 	local entry
@@ -465,26 +470,24 @@ function Loot.UpdateListAndPriority(entry)
 		)
 
 	entry.listWithPrio:SetText(
-		format("|cFFE6CC80%s|r", (list and list.name or L['unknown']))
+		format(
+			"|cFFE6CC80%s|r (%s |cFFE6CC80%s|r)",
+			(list and list.name or L['unknown']),
+			L["priority"],
+			prio and tostring(prio) or "?"
+		)
 	)
-
-	-- in order to display the appropriate priority, need to handle player joined/left events
-	-- for all players, not just the master looter. currently, this is not done and needs implemented before
-	-- this can be reinstated
-	--[[
-	entry.listWithPrio:SetText(
-		format("|cFFE6CC80%s|r (|cFFE6CC80%s|r)", (list and list.name or L['unknown']), prio and tostring(prio) or "?")
-	)
-	--]]
 end
 
-function Loot.UpdateItemResponders(entry, response)
+--- @param entry  Loot.Entry
+--- @param response any
+--- @param owner any widget to which to anchor
+function Loot.UpdateItemResponders(entry, response, owner)
 	if entry and entry.item and response then
 		local responders = entry.item.responders and entry.item.responders[response] or nil
 		if responders and Util.Tables.Count(responders) > 0 then
 			local text = {}
-			for _, responder in pairs(Util.Tables.Sort(Util.Tables.Copy(responders), function (a, b) return a < b end ))
-			do
+			for _, responder in pairs(Util.Tables.Sort(Util.Tables.Copy(responders), function (a, b) return a < b end )) do
 				Util.Tables.Push(
 					text,
 					UIUtil.PlayerClassColorDecorator(responder):decorate(AddOn.Ambiguate(responder))
@@ -492,7 +495,8 @@ function Loot.UpdateItemResponders(entry, response)
 			end
 
 			if #text > 0 then
-				UIUtil.ShowTooltipLines(unpack(text))
+				--UIUtil.ShowTooltipLines(unpack(text))
+				UIUtil.ShowTooltip(owner, {"ANCHOR_BOTTOM", 0, 0}, nil, unpack(text))
 			end
 		end
 	end

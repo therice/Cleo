@@ -117,6 +117,8 @@ function List:RemoveEquipment(...)
 	self.equipment = Util(self.equipment):CopyExceptWhere(false, ...):Sort()()
 end
 
+--- @param equipment string the equipment slot (e.g. INVTYPE_HEAD)
+--- @return Models.List.List
 function List:AppliesToEquipment(equipment)
 	-- Logging:Trace("AppliesToEquipment(%s)", tostring(equipment))
 	return Util.Tables.ContainsValue(self.equipment, equipment)
