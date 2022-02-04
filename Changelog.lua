@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.3 (2022-02-04)
+* fuckity fuck fuck fuck 7564361
+
 2021.4.2 (2022-02-04)
 * resolve issue with raid priority potentially raising and error AND send active config on player reconnect 199578d
 * Rogues cannot use 1H Axes b738990
