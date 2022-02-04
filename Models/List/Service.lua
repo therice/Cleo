@@ -272,9 +272,12 @@ local function CreateActiveListView(self, list)
 	--- @type Models.List.List
 	local view
 
+	Logging:Trace("CreateActiveListView() : %s", Util.Objects.ToString(list))
+
 	if list then
 		-- get the original list from which to obtain overall priorities
 		local origList = self:GetOriginalList(list.id)
+		Logging:Trace("CreateActiveListView() : %s", Util.Objects.ToString(origList))
 		if origList then
 			view = list:clone()
 			view:ClearPlayers()
@@ -304,10 +307,12 @@ end
 --- @return Models.List.List the list in it's current form as a result of mutations (players add, loot given, etc.)
 function ActiveConfiguration:GetActiveList(listId)
 	local list = self.listsActive[listId]
+	Logging:Trace("GetActiveList(%s) : %s", tostring(listId), Util.Objects.ToString(list))
+
 	if AddOn:IsMasterLooter() then
 		return list
 	else
-		return CreateActiveListView(list)
+		return CreateActiveListView(self, list)
 	end
 end
 

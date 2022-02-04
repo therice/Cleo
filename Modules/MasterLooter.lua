@@ -959,6 +959,12 @@ function ML:OnReconnectReceived(sender)
 	-- if currently running, send the loot table
 	if self.running then
 		self:ScheduleTimer("Send", 4, player, C.Commands.LootTable, self:_GetLootTableForTransmit(true))
+
+		--- if we have an active configuration send to user
+		local ac = AddOn:ListsModule():GetActiveConfiguration()
+		if ac then
+			self:SendActiveConfig(player, ac.config)
+		end
 	end
 end
 
