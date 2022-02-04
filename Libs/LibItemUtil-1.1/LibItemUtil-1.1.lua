@@ -156,6 +156,7 @@ local DisallowedByClass = {
         [LE_ITEM_CLASS_WEAPON] = {
             [LE_ITEM_WEAPON_POLEARM] = true,
             [LE_ITEM_WEAPON_STAFF] = true,
+            [LE_ITEM_WEAPON_AXE1H] = true,
             [LE_ITEM_WEAPON_AXE2H] = true,
             [LE_ITEM_WEAPON_MACE2H] = true,
             [LE_ITEM_WEAPON_SWORD2H] = true,
