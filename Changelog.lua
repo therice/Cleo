@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.2 (2022-02-04)
+* resolve issue with raid priority potentially raising and error AND send active config on player reconnect 199578d
+* Rogues cannot use 1H Axes b738990
+
 2021.4.1 (2022-02-03)
 * resolve test which was not committed with previous change ec9a93c
 * add display of priorities for a list, filtered by players in raid 4c491b3
