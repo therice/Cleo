@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.4 (2022-02-04)
+* add tier tokens for MH and BT badc46d
+
 2021.4.3 (2022-02-04)
 * fuckity fuck fuck fuck 7564361
 
