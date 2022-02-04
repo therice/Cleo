@@ -142,7 +142,35 @@ AddOn.DefaultCustomItems = {
     [30239] = { 4, 133, "INVTYPE_HAND" },               -- Gloves of the Vanquished Champion
     [30246] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Defender
     [30247] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Hero
-    [30245] = { 4, 120, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Champion
+    [30245] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Champion
+
+    -- TBC Classic P3
+    [31097] = { 4, 146, "INVTYPE_HEAD"},                -- Helm of the Forgotten Conqueror
+    [31095] = { 4, 146, "INVTYPE_HEAD"},                -- Helm of the Forgotten Protector
+    [31096] = { 4, 146, "INVTYPE_HEAD"},                -- Helm of the Forgotten Vanquisher
+    [31101] = { 4, 146, "INVTYPE_SHOULDER"},            -- Pauldrons of the Forgotten Conqueror
+    [31103] = { 4, 146, "INVTYPE_SHOULDER"},            -- Pauldrons of the Forgotten Protector
+    [31102] = { 4, 146, "INVTYPE_SHOULDER"},            -- Pauldrons of the Forgotten Vanquisher
+    [31089] = { 4, 146, "INVTYPE_CHEST"},               -- Chestguard of the Forgotten Conqueror
+    [31091] = { 4, 146, "INVTYPE_CHEST"},               -- Chestguard of the Forgotten Protector
+    [31090] = { 4, 146, "INVTYPE_CHEST"},               -- Chestguard of the Forgotten Vanquisher
+    [31092] = { 4, 146, "INVTYPE_HAND"},                -- Gloves of the Forgotten Conqueror
+    [31094] = { 4, 146, "INVTYPE_HAND"},                -- Gloves of the Forgotten Protector
+    [31093] = { 4, 146, "INVTYPE_HAND"},                -- Gloves of the Forgotten Vanquisher
+    [31098] = { 4, 146, "INVTYPE_LEGS"},                -- Leggings of the Forgotten Conqueror
+    [31100] = { 4, 146, "INVTYPE_LEGS"},                -- Leggings of the Forgotten Protector
+    [31099] = { 4, 146, "INVTYPE_LEGS"},                -- Leggings of the Forgotten Vanquisher
+
+    -- TBC Classic P4
+    [34848] = { 4, 154, "INVTYPE_WRIST" },              -- Bracers of the Forgotten Conqueror
+    [34851] = { 4, 154, "INVTYPE_WRIST" },              -- Bracers of the Forgotten Protector
+    [34852] = { 4, 154, "INVTYPE_WRIST" },              -- Bracers of the Forgotten Vanquisher
+    [34856] = { 4, 154, "INVTYPE_FEET" },               -- Boots of the Forgotten Conqueror
+    [34857] = { 4, 154, "INVTYPE_FEET" },               -- Boots of the Forgotten Protector
+    [34858] = { 4, 154, "INVTYPE_FEET" },               -- Boots of the Forgotten Vanquisher
+    [34853] = { 4, 154, "INVTYPE_WAIST" },              -- Belt of the Forgotten Conqueror
+    [34854] = { 4, 154, "INVTYPE_WAIST" },              -- Belt of the Forgotten Protector
+    [34855] = { 4, 154, "INVTYPE_WAIST" },              -- Belt of the Forgotten Vanquisher
 
 }
 
@@ -157,7 +185,19 @@ AddOn.TestItems = {
     32944,29948,29924,29949,29986,29984,29985,29983,32515,30619,30450,30248,30249,30250,29977,29972,29966,29976,29951,
     29965,29950,32267,30446,30449,29962,29981,29982,29992,29989,29994,29990,29987,29995,29991,29998,29997,29993,29996,
     29988,30236,30237,30238,32458,32405,29905,30024,30020,30029,30026,30030,30028,30324,30322,30323,30321,30280,30282,
-    30283,30281,30308,30304,30305,30307,30306,30301,30303,30302,30183,32897
+    30283,30281,30308,30304,30305,30307,30306,30301,30303,30302,30183,32897,30871,30870,30863,30868,30864,30869,30873,
+    30866,30862,30861,30865,30872,32459,30884,30888,30885,30879,30886,30887,30880,30878,30874,30881,30883,30882,30895,
+    30916,30894,30917,30914,30891,30892,30919,30893,30915,30918,30889,30899,30898,30900,30896,30897,30901,31092,31094,
+    31093,30913,30912,30905,30907,30904,30903,30911,30910,30902,30908,30909,30906,31097,31095,31096,32590,34010,32609,
+    32592,32591,32589,34009,32946,32945,32428,32897,32285,32296,32303,32295,32298,32297,32289,32307,32239,32240,32377,
+    32241,32234,32242,32232,32243,32245,32238,32247,32237,32236,32248,32256,32252,32259,32251,32258,32250,32260,32261,
+    32257,32254,32262,32255,32253,32273,32270,32513,32265,32271,32264,32275,32276,32279,32278,32263,32268,32266,32361,
+    32337,32338,32340,32339,32334,32342,32333,32341,32335,32501,32269,32344,32343,32353,32351,32347,32352,32517,32346,
+    32354,32345,32349,32362,32350,32332,32363,32323,32329,32327,32324,32328,32510,32280,32512,32330,32348,32326,32325,
+    32367,32366,32365,32370,32368,32369,31101,31103,31102,32331,32519,32518,32376,32373,32505,31098,31100,31099,32524,
+    32525,32235,32521,32497,32483,32496,32837,32838,31089,31091,31090,32471,32500,32374,32375,32336,32590,34012,32609,
+    32593,32592,32608,32606,32591,32589,32526,32528,32527,34009,32943,34011,32228,32231,32229,32249,32230,32227,32428,
+    32897,32738,32739,32736,32737,32748,32744,32750,32751,32749,32745,32746,32747,32754,32755,32753,32752,
 }
 
 --[[
