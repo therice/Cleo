@@ -956,15 +956,16 @@ function ML:OnReconnectReceived(sender)
 	-- send the requesting player the ML Db
 	local player = Player:Get(sender)
 	MasterLooterDb:Send(player)
+
+	--- if we have an active configuration send to user
+	local ac = AddOn:ListsModule():GetActiveConfiguration()
+	if ac then
+		self:SendActiveConfig(player, ac.config)
+	end
+	
 	-- if currently running, send the loot table
 	if self.running then
 		self:ScheduleTimer("Send", 4, player, C.Commands.LootTable, self:_GetLootTableForTransmit(true))
-
-		--- if we have an active configuration send to user
-		local ac = AddOn:ListsModule():GetActiveConfiguration()
-		if ac then
-			self:SendActiveConfig(player, ac.config)
-		end
 	end
 end
 
