@@ -21,7 +21,7 @@ local UI = AddOn.Require('UI.Native')
 local CDB = AddOn.Package('Models').CompressedDb
 --- @type Models.Audit.LootRecord
 local LootRecord = AddOn.Package('Models.Audit').LootRecord
--- @type LibEncounter
+--- @type LibEncounter
 local LibEncounter = AddOn:GetLibrary("Encounter")
 --- @type UI.Util
 local UIUtil = AddOn.Require('UI.Util')

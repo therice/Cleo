@@ -21,7 +21,9 @@ local lib = LibStub("LibEncounter-1.0", true)
 --  Gruul's Lair
 --  Magtheridon's Lair
 --  Serpentshrine Cavern
---  Tempest Keep'
+--  Tempest Keep
+--  Mount Hyjal
+--  Black Temple
 
 -- Mapping from map id to details (name will be used as index for localization)
 lib.Maps = {
@@ -52,21 +54,17 @@ lib.Maps = {
         name = 'Naxxramas',
     },
     -- JournalInstance.ID = 751
-    --[[
     [564] = {
         name = 'Black Temple',
     },
-    --]]
     -- JournalInstance.ID = 746
     [565] = {
         name = 'Gruul\'s Lair',
     },
     -- JournalInstance.ID = 750
-    --[[
     [534] = {
         name = 'Hyjal Summit',
     },
-    --]]
     -- JournalInstance.ID = 745
     [532] = {
         name = 'Karazhan',
@@ -405,6 +403,57 @@ lib.Creatures = {
     },
     [19622] = {
         name = 'Kael\'thas Sunstrider'
+    },
+    [17767] = {
+        name = 'Rage Winterchill'
+    },
+    [17808] = {
+        name = 'Anetheron'
+    },
+    [17888] = {
+        name = 'Kaz\'rogal'
+    },
+    [17842] = {
+        name = 'Azgalor'
+    },
+    [17968] = {
+        name = 'Archimonde'
+    },
+    [22887] = {
+        name = 'High Warlord Naj\'entus'
+    },
+    [22898] = {
+        name = 'Supremus'
+    },
+    [22841] = {
+        name = 'Shade of Akama'
+    },
+    [22871] = {
+        name = 'Teron Gorefiend'
+    },
+    [23420] = {
+        name = 'Reliquary of Souls'
+    },
+    [22948] = {
+        name = 'Gurtogg Bloodboil'
+    },
+    [22947] = {
+        name = 'Mother Shahraz'
+    },
+    [22949] = {
+        name = 'Gathios the Shatterer'
+    },
+    [22950] = {
+        name = 'High Nethermancer Zerevor'
+    },
+    [22951] = {
+        name = 'Lady Malande'
+    },
+    [22952] = {
+        name = 'Veras Darkshadow'
+    },
+    [22917] = {
+        name = 'Illidan Stormrage'
     },
     --[] = {
     --    name = ''
@@ -828,6 +877,76 @@ lib.Encounters = {
     [733] = {
         map_id = 550,
         creature_id = {19622},
+    },
+    -- Rage Winterchill
+    [618] = {
+        map_id = 534,
+        creature_id = {17767},
+    },
+    -- Anetheron
+    [619] = {
+        map_id = 534,
+        creature_id = {17808},
+    },
+    -- Kaz'rogal
+    [620] = {
+        map_id = 534,
+        creature_id = {17888},
+    },
+    -- Azgalor
+    [621] = {
+        map_id = 534,
+        creature_id = {17842},
+    },
+    -- Archimonde
+    [622] = {
+        map_id = 534,
+        creature_id = {17968},
+    },
+    -- High Warlord Naj'entus
+    [601] = {
+        map_id = 564,
+        creature_id = {22887},
+    },
+    -- Supremus
+    [602] = {
+        map_id = 564,
+        creature_id = {22898},
+    },
+    -- Shade of Akama
+    [603] = {
+        map_id = 564,
+        creature_id = {22841},
+    },
+    -- Teron Gorefiend
+    [604] = {
+        map_id = 564,
+        creature_id = {22871},
+    },
+    -- Reliquary of Souls
+    [606] = {
+        map_id = 564,
+        creature_id = {23420},
+    },
+    -- Gurtogg Bloodboil
+    [605] = {
+        map_id = 564,
+        creature_id = {22948},
+    },
+    -- Mother Shahraz
+    [607] = {
+        map_id = 564,
+        creature_id = {22947},
+    },
+    -- Illidari Council
+    [608] = {
+        map_id = 564,
+        creature_id = {22949, 22950, 22951, 22952},
+    },
+    -- Illidan
+    [609] = {
+        map_id = 564,
+        creature_id = {22917},
     },
     --[] = {
     --    map_id = ,
