@@ -570,7 +570,7 @@ function Lists:OnAwardItem(itemAward)
 		end
 
 		if not list then
-			list = self:GetActiveConfiguration():GetActiveListByEquipment(itemAward.equipLoc)
+			_, list = self:GetActiveConfiguration():GetActiveListByEquipment(itemAward.equipLoc)
 		end
 
 		local audit = LootRecord.FromItemAward(itemAward)
