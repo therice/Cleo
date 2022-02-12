@@ -46,7 +46,10 @@ local ScrollColumns =
     :build()
 
 local DateFilterColumns, ActionFilterColumns, ResourceFilterColumns  =
-	ST.ColumnBuilder():column(L['date']):width(80):sort(STColumnBuilder.Descending):build(),
+	ST.ColumnBuilder():column(L['date']):width(80)
+		:sort(STColumnBuilder.Descending):defaultsort(STColumnBuilder.Descending)
+		:comparesort(ST.SortFn(function(row) return Util.Tables.Max(row.timestamps) end))
+		:build(),
 	ST.ColumnBuilder():column(L['action']):width(50):sort(STColumnBuilder.Ascending):build(),
 	ST.ColumnBuilder():column(L['resource']):width(75):sort(STColumnBuilder.Ascending):build()
 

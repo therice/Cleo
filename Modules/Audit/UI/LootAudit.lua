@@ -53,7 +53,10 @@ local ScrollColumns =
   :build()
 
 local DateFilterColumns, InstanceFilterColumns, NameFilterColumns =
-	ST.ColumnBuilder():column(L['date']):width(80):sort(STColumnBuilder.Descending):build(),
+	ST.ColumnBuilder():column(L['date']):width(80)
+		:sort(STColumnBuilder.Descending):defaultsort(STColumnBuilder.Descending)
+		:comparesort(ST.SortFn(function(row) return Util.Tables.Max(row.timestamps) end))
+		:build(),
 	ST.ColumnBuilder():column(L['instance']):width(100):sort(STColumnBuilder.Ascending):build(),
 	ST.ColumnBuilder():column(""):width(20):column(_G.NAME):width(100):sort(STColumnBuilder.Ascending):build()
 

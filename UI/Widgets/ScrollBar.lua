@@ -224,7 +224,7 @@ function ScrollBar.UpdateSliderButtons(self)
 end
 
 function ScrollBar.ButtonClick(self, up)
-	Logging:Debug("ButtonClick(%s)", tostring(up))
+	Logging:Trace("ButtonClick(%s)", tostring(up))
 	local scrollBar = self:GetParent()
 	if not scrollBar.GetMinMaxValues then
 		scrollBar = scrollBar.slider
@@ -234,7 +234,7 @@ function ScrollBar.ButtonClick(self, up)
 	local val = scrollBar:GetValue()
 	local clickRange = self:GetParent().clickRange
 
-	Logging:Debug("ButtonClick(%s) : %d, %d / %d, %d", tostring(up), min, max, val, clickRange)
+	Logging:Trace("ButtonClick(%s) : %d, %d / %d, %d", tostring(up), min, max, val, clickRange)
 	if up then
 		if (val - clickRange) < min then
 			scrollBar:SetValue(min)
@@ -251,7 +251,7 @@ function ScrollBar.ButtonClick(self, up)
 end
 
 function ScrollBar.OnMouseDown(self, up)
-	Logging:Debug("OnMouseDown(%s)", tostring(up))
+	Logging:Trace("OnMouseDown(%s)", tostring(up))
 	local counter = 0
 	self.ticker = C_Timer.NewTicker(.03,function()
 		counter = counter + 1
