@@ -27,7 +27,7 @@ local UIUtil = AddOn.Require('UI.Util')
 --- @type TrafficAudit
 local TrafficAudit = AddOn:GetModule("TrafficAudit", true)
 
-local FilterMenu, FilterSelection = nil, {dates = nil, action = nil, resource = nil}
+local FilterSelection = {dates = nil, action = nil, resource = nil}
 
 local ScrollColumns =
 	ST.ColumnBuilder()
@@ -194,8 +194,8 @@ TrafficAudit.SortByTimestamp =
 
 
 function TrafficAudit:FilterFunc(_, row)
-	-- Logging:Trace("FilterFunc() : %s", Util.Objects.ToString(FilterSelection))
-	local settings = AddOn:ModuleSettings(self:GetName())
+	--Logging:Trace("FilterFunc() : %s", Util.Objects.ToString(FilterSelection))
+	--local settings = AddOn:ModuleSettings(self:GetName())
 
 	local function SelectionFilter(entry)
 		local include = true
@@ -285,6 +285,7 @@ function TrafficAudit:BuildData(container)
 end
 
 function TrafficAudit:Update()
+	--[[
 	local function IsFiltering()
 		local settings = AddOn:ModuleSettings(self:GetName())
 		for _, v in pairs(settings.filters.class) do
@@ -295,6 +296,7 @@ function TrafficAudit:Update()
 		end
 		return false
 	end
+	--]]
 
 	local interfaceFrame = self.interfaceFrame
 

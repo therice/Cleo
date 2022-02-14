@@ -52,23 +52,26 @@ local ScrollColumns =
         :column(""):width(20)                                                                       -- 9 (delete icon)
   :build()
 
-local DateFilterColumns, InstanceFilterColumns, NameFilterColumns =
+local DateFilterColumns, InstanceFilterColumns, NameFilterColumns, DroppedByFilterColumns =
 	ST.ColumnBuilder():column(L['date']):width(80)
 		:sort(STColumnBuilder.Descending):defaultsort(STColumnBuilder.Descending)
 		:comparesort(ST.SortFn(function(row) return Util.Tables.Max(row.timestamps) end))
 		:build(),
 	ST.ColumnBuilder():column(L['instance']):width(100):sort(STColumnBuilder.Ascending):build(),
-	ST.ColumnBuilder():column(""):width(20):column(_G.NAME):width(100):sort(STColumnBuilder.Ascending):build()
+	ST.ColumnBuilder():column(""):width(20):column(_G.NAME):width(100):sort(STColumnBuilder.Ascending):build(),
+	ST.ColumnBuilder():column(L['dropped_by']):width(200):sort(STColumnBuilder.Ascending):build()
 
 local FilterMenu, FilterSelection, RecordSelection = nil,
 	{
 		dates = nil,
 		instance = nil,
 		name = nil,
+		encounterId = nil,
 		Clear = function(self)
 			self.dates = nil
 			self.instance = nil
 			self.name = nil
+			self.droppedBy = nil
 		end
 	},
 	{
@@ -82,6 +85,8 @@ local FilterMenu, FilterSelection, RecordSelection = nil,
 			self.id = nil
 		end
 	}
+
+local EncounterCreatures
 
 function LootAudit:LayoutInterface(container)
 	Logging:Debug("LayoutInterface(%s)", tostring(container:GetName()))
@@ -194,6 +199,32 @@ function LootAudit:LayoutInterface(container)
 				end
 		)
 
+	container.droppedBy = ST.New(DroppedByFilterColumns, 5, 20, nil, container, false)
+	container.droppedBy.frame:SetPoint("TOPLEFT", container.instance.frame, "TOPRIGHT", 20, 0)
+	container.droppedBy:EnableSelection(true)
+	container.droppedBy:RegisterEvents({
+		["OnClick"] = function(_, _, data, _, row, realrow, column, _, button, ...)
+			if button == C.Buttons.Left and row then
+				FilterSelection.encounterId = data[realrow].encounterId or nil
+				self:Update()
+			end
+			return false
+		end
+	})
+
+	container.droppedByClear =
+		UI:New('ButtonClose', container)
+	        :Point("BOTTOMRIGHT", container.droppedBy.frame, "TOPRIGHT", 5, 5)
+	        :Size(18,18)
+	        :Tooltip(format(L["clear_x_filter"], Util.Strings.Lower(L['dropped_by'])))
+	        :OnClick(
+				function(self)
+					FilterSelection.encounterId = nil
+					self:GetParent().droppedBy:ClearSelection()
+					module:Update()
+				end
+			)
+
 	container.warning =
 		UI:New('Text', container, L["warning_record_filter_applied"])
 	        :Point("LEFT", container.banner, "LEFT", 20, 0)
@@ -256,11 +287,12 @@ function LootAudit:BuildData(container)
 	table.sort(data)
 	container.rows = {}
 
-	local tsData, instanceData, nameData, row = {}, {}, {}, 1
+	local tsData, instanceData, nameData, droppedByData, row = {}, {}, {}, {}, 1
 	for _, names in pairs(data) do
 		for _, entries in pairs(names) do
 			for index, entry in pairs(entries) do
 				local instanceName = LibEncounter:GetMapName(entry.instanceId) or "N/A"
+				local droppedBy = EncounterCreatures(entry.encounterId) or L['unknown']
 				local player = AddOn.Ambiguate(entry.owner)
 				container.rows[row] = {
 					rownum = row,   -- this is the index in the rows table
@@ -280,7 +312,7 @@ function LootAudit:BuildData(container)
 								function(_, d, r)
 									local name, num = d[r].entry.owner, d[r].num
 
-									Logging:Debug("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
+									Logging:Trace("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
 
 									local history = self:GetHistory()
 									history:del(name, num)
@@ -296,7 +328,7 @@ function LootAudit:BuildData(container)
 
 									local charHistory = history:get(name)
 									if #charHistory == 0 then
-										Logging:Debug("Last LootAudit entry deleted, removing %s", tostring(name))
+										Logging:Trace("Last LootAudit entry deleted, removing %s", tostring(name))
 										history:del(name)
 									end
 								end
@@ -313,6 +345,10 @@ function LootAudit:BuildData(container)
 
 				if not Util.Tables.ContainsKey(instanceData, instanceName) then
 					instanceData[instanceName] = {instanceName, instanceId = entry.instanceId}
+				end
+
+				if not Util.Tables.ContainsKey(droppedByData, droppedBy) then
+					droppedByData[droppedBy] = {droppedBy, encounterId = entry.encounterId}
 				end
 
 				if not Util.Tables.ContainsKey(nameData, player) then
@@ -333,6 +369,7 @@ function LootAudit:BuildData(container)
 	container.date:SetData(Util.Tables.Values(tsData), true)
 	container.instance:SetData(Util.Tables.Values(instanceData), true)
 	container.name:SetData(Util.Tables.Values(nameData), true)
+	container.droppedBy:SetData(Util.Tables.Values(droppedByData), true)
 end
 
 function LootAudit:ClearFilter()
@@ -400,6 +437,10 @@ function LootAudit:FilterFunc(_, row)
 
 		if include and Util.Objects.IsNumber(FilterSelection.instance) then
 			include = entry.instanceId == FilterSelection.instance
+		end
+
+		if include and Util.Objects.IsNumber(FilterSelection.encounterId) then
+			include = entry.encounterId == FilterSelection.encounterId
 		end
 
 		if include and Util.Strings.IsSet(FilterSelection.name) then
@@ -546,6 +587,7 @@ LootAudit.FilterMenu = DropDown.RightClickMenu(
 
 
 function LootAudit:Update()
+	--[[
 	local function IsFiltering()
 		local settings = AddOn:ModuleSettings(self:GetName())
 		for _, v in pairs(settings.filters.class) do
@@ -556,6 +598,7 @@ function LootAudit:Update()
 		end
 		return false
 	end
+	--]]
 
 	local interfaceFrame = self.interfaceFrame
 
@@ -572,7 +615,7 @@ function LootAudit:Update()
 end
 
 
-local EncounterCreatures = Util.Memoize.Memoize(
+EncounterCreatures = Util.Memoize.Memoize(
 	function(encounterId)
 		if encounterId then
 			local creatureIds = LibEncounter:GetEncounterCreatureId(encounterId)

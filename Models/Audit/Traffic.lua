@@ -3,16 +3,12 @@ local _, AddOn = ...
 local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
---- @type Models.Date
-local Date = AddOn.ImportPackage('Models').Date
 --- @type Models.Referenceable
 local Referenceable = AddOn.Require('Models.Referenceable')
 --- @type Package
 local AuditPkg = AddOn.ImportPackage('Models.Audit')
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
---- @type Models.List.Configuration
-local Configuration = AddOn.Package('Models.List').Configuration
 --- @type Models.List.Permission
 local Permission = AddOn.Package('Models.List').Permission
 --- @type LibLogging
