@@ -71,7 +71,7 @@ local FilterMenu, FilterSelection, RecordSelection = nil,
 			self.dates = nil
 			self.instance = nil
 			self.name = nil
-			self.droppedBy = nil
+			self.encounterId = nil
 		end
 	},
 	{
