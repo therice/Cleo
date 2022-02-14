@@ -2,6 +2,14 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.5 (2022-02-14)
+* add encounters and creatures for MH and BT 2cca872
+* address incorrect handling of encounter when clearing loot history filter 9ea879d
+* correct list resolution for auditing when award reason is not suicide 495ec53
+* correct text placement on sync UI and allow for cutom items to be synced e350d08
+* correctly sort dates on both loot and traffic audit UI fe14a73
+* support encounter as filter on loot history 08f5fba
+
 2021.4.4 (2022-02-04)
 * add tier tokens for MH and BT badc46d
 
