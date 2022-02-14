@@ -155,14 +155,21 @@ local ModulePrototype = {
         return nil, nil, false
     end,
     -- implement to provide data import functionality for a module
-    ImportData = function(self, data)
+    ImportData = function(self, data, into)
         Logging:Debug("ImportData(%s)", self:GetName())
-        if not self.db then return end
+
+        into = into or (self.db and self.db.profile or nil)
+        if not into then return end
+
+        local count = 0
 
         for k, v in pairs(data) do
-            self.db.profile[k]  = v
+            Logging:Trace("ImportData(%s) : importing key %s", self:GetName(), tostring(k))
+            into[k] = v
+            count = count + 1
         end
 
+        Logging:Debug("ImportData(%s) : imported %d entries", self:GetName(), count)
         -- fire message that the configuration table has changed (this is handled on per module basis, as necessary)
         AddOn:ConfigChanged(self:GetName())
         -- notify config registry of change as well, this updates configuration UI if displayed

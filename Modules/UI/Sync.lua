@@ -190,7 +190,7 @@ function Sync:GetFrame()
 		statusBar:Hide()
 
 		statusBar.text = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-		statusBar.text:SetPoint("CENTER", f.statusBar, "CENTER", 0, 0)
+		statusBar.text:SetPoint("CENTER", statusBar, "CENTER", 0, 0)
 		statusBar.text:SetTextColor(1,1,1)
 		statusBar.text:SetText("")
 

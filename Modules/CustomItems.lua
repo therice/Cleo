@@ -31,8 +31,8 @@ function CustomItems:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify("CustomItems"), CustomItems.defaults)
 	AddOn:SyncModule():AddHandler(self:GetName(), L['custom_items_sync_text'],
-	                              function() return self.db.profile end,
-	                              function(data) self:ImportData(data) end
+	                              function() return self.db.factionrealm end,
+	                              function(data) self:ImportData(data, self.db.factionrealm) end
 	)
 end
 
