@@ -5,6 +5,7 @@ local C = AddOn.Constants
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
+local AceComm = AddOn:GetLibrary('AceComm')
 --- @type LibRx
 local Rx = AddOn:GetLibrary("Rx")
 --- @type rx.Subject
@@ -70,6 +71,8 @@ function Comms:initialize()
     self.metricsSend = Metrics("CommSent")
     self.AceComm = {}
     self.MessagePack = AddOn:GetLibrary('MessagePack')
+
+    AceComm:Embed(self.AceComm)
 end
 
 function Comms:Serialize(...)
@@ -216,18 +219,20 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
     )
 end
 
--- anything attached to 'Comm' will be available via the instance
---- @class Core.Comm
-local Comm = AddOn.Instance(
-        'Core.Comm',
+local function CreateComm(suffix)
+    return AddOn.Instance(
+        Util.Strings.Join('_', 'Core.Comm', Util.Objects.Default(suffix, "")),
         function()
             return {
                 private = Comms()
             }
         end
-)
+    )
+end
 
-AddOn:GetLibrary('AceComm'):Embed(Comm.private.AceComm)
+-- anything attached to 'Comm' will be available via the instance
+--- @class Core.Comm
+local Comm = CreateComm()
 
 function Comm:GetMetrics()
     return {self.private.metricsRecv, self.private.metricsFired, self.private.metricsSend}
@@ -285,3 +290,18 @@ function Comm:RegisterPrefix(prefix)
 end
 
 Comm.Register = Comm.RegisterPrefix
+
+if AddOn._IsTestContext() then
+    local CommCounter = 0
+    function AddOn.NewComms()
+        CommCounter = CommCounter + 1
+        local comm = CreateComm(tostring(CommCounter))
+        for k, v in pairs(Comm) do
+            if Util.Objects.IsFunction(v) then
+                comm[k] = v
+            end
+        end
+
+        return comm
+    end
+end

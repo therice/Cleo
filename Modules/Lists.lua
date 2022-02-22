@@ -520,7 +520,7 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 		-- we have missing data, request it and reschedule activation
 		if Util.Tables.Count(toRequest) > 0 then
 			Logging:Warn("OnActivateConfigReceived() : Requesting %s", Util.Objects.ToString(Util.Tables.Copy(toRequest, function(r) return tostring(r) end)))
-			ListsDp:SendRequest(AddOn.masterLooter, unpack(toRequest))
+			ListsDp:SendRequest(AddOn.masterLooter, nil, unpack(toRequest))
 			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
 			return
 		end

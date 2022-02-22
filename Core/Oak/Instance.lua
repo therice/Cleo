@@ -56,4 +56,8 @@ if AddOn._IsTestContext('Instance') then
     function AddOn.DiscardInstances()
        instances = {}
     end
+
+    function AddOn.DiscardInstance(name)
+        instances[name] = nil
+    end
 end

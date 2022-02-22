@@ -1,4 +1,4 @@
--- @type AddOn
+--- @type AddOn
 local AddOn
 local AddOnName
 local C
@@ -35,6 +35,10 @@ describe("Replication", function()
 		local players = {}
 		--- @type table<string, Models.Replication.Engine>
 		local engines = {}
+		--- @type ListsDataPlane
+		local listsDp
+		--- @type Lists
+		local lists
 
 		local function CreateStub(player)
 			print(format("CreateEngine(%s)", tostring(player)))
@@ -65,8 +69,6 @@ describe("Replication", function()
 					_Send(module, target, command, ...)
 
 					local function shouldSend(to)
-						--return true
-
 						--print(format('shouldSend(%s, %s) : %s', tostring(to), tostring(self.member.name), tostring(target)))
 						-- everyone in the test is  in our group, guild, and part
 						if Util.Objects.In(Util.Strings.Lower(target), C.group, C.guild, C.party) then
@@ -78,17 +80,16 @@ describe("Replication", function()
 					end
 
 					local data = { ... }
+
 					for _, e in pairs(engines) do
-						--[[
-						if command == "rer" then
-							print(
-								format(
-									"/ rer to=%s, from=%s, engine=%s, shouldSend=%s",
-									tostring(target), tostring(self.member.name), tostring(e.member.name), tostring(shouldSend(e.member.name))
-								)
-							)
-						end
-						--]]
+						--if command == "rpu" then
+						--	print(
+						--		format(
+						--			"/ %s to=%s, from=%s, engine=%s, shouldSend=%s",
+						--			tostring(command), tostring(target), tostring(self.member.name), tostring(e.member.name), tostring(shouldSend(e.member.name))
+						--		)
+						--	)
+						--end
 						if e:IsInitialized() and shouldSend(e.member.name) then
 							e.comms.private:FireCommand(
 								C.CommPrefixes.Replication,
@@ -109,11 +110,15 @@ describe("Replication", function()
 			return engine
 		end
 
-		local function LeaderCallback(pname, delegate)
-			return function(replica, leader)
-				print(format("LeaderCallback(%s) : %s (%s)", tostring(pname), tostring(replica), tostring(leader)))
+		local function LeaderCallback(pname, dp, delegate)
+			return function(replica)
+				print(format("LeaderCallback(%s) : %s (%s)", tostring(pname), tostring(replica), tostring(replica.leader)))
 				if delegate then
-					delegate(replica, leader)
+					delegate(replica)
+				end
+
+				if dp then
+					dp:OnReplicaLeaderChanged(replica)
 				end
 			end
 		end
@@ -137,6 +142,8 @@ describe("Replication", function()
 
 		before_each(function()
 			CreateEngines()
+			listsDp = AddOn:ListsDataPlaneModule()
+			lists = AddOn:ListsModule()
 		end)
 
 		after_each(function()
@@ -148,19 +155,21 @@ describe("Replication", function()
 
 		it("does the needful", Async(
 			function(as)
-
 				local leadershipChanges = {}
-
-				local function cbtracker(replica, leader)
+				local function cbtracker(replica)
+					local id, leader = replica.id, replica.leader
 					if leader == nil then
 						leader = "LOST"
+					else
+						leader = leader.id
 					end
 
-					local ls = leadershipChanges[replica]
+					local ls = leadershipChanges[id]
 					if not ls then
 						ls = {}
-						leadershipChanges[replica] = ls
+						leadershipChanges[id] = ls
 					end
+
 
 					local l = ls[leader]
 					if not l then
@@ -171,7 +180,7 @@ describe("Replication", function()
 				end
 
 				for pname, engine in pairs(engines) do
-					engine:Initialize(AddOn.Require('Core.Comm'), LeaderCallback(pname, cbtracker))
+					engine:Initialize(AddOn.NewComms(), LeaderCallback(pname, listsDp, cbtracker))
 				end
 
 				while not as.finished() do
@@ -194,12 +203,6 @@ describe("Replication", function()
 
 				engines['Player3-Realm2']:Shutdown()
 				engines['Player3-Realm2'] = nil
-
-				--for _, engine in pairs(engines) do
-				--	if engine:IsInitialized() then
-				--		engine:OnPeerStatusChanged("Player3-Realm2", false)
-				--	end
-				--end
 
 				while not as.finished() do
 					as.sleep(1)
@@ -234,6 +237,72 @@ describe("Replication", function()
 				lc = leadershipChanges['List:61534E26-36A0-4F24-51D7-BE511B88B834']
 				assert(Util.Tables.Count(lc), 1)
 				assert(Util.Tables.ContainsKey(lc, 'Eliovak-Atiesh'))
+
+				-- up to this point the data plane is not handling data replication due to
+				-- messages not being sent and consumed
+
+				-- this is hokey as hell, but trying to emulate multiple players having addon loaded
+				-- in separate games within same process
+				listsDp.Send = function(_, to, cmd, data)
+					print(format("ListDataPlane.Send() : %s, %s, %s",  tostring(to), tostring(cmd), Util.Objects.ToString(data)))
+
+					local sender
+					if Util.Objects.Equals(to, "Eliovak-Atiesh") then
+						sender = "Gnomechómsky-Atiesh"
+					else
+						sender = "Eliovak-Atiesh"
+					end
+
+					local originalService, replacementSevice =  lists:GetService(), engines[to]:EntityProvider()
+
+					Util.Functions.try(
+						function()
+							lists.listsService = replacementSevice
+
+							if Util.Objects.Equals(cmd, C.Commands.ConfigResourceRequest) then
+								listsDp:OnResourceRequest(sender, data:toTable())
+							elseif Util.Objects.Equals(cmd, C.Commands.ConfigResourceResponse) then
+								listsDp:OnResourceResponse(sender, data:toTable())
+							end
+						end
+					).finally(
+						function()
+							lists.listsService = originalService
+						end
+					)
+				end
+
+				-- perform an update on an entity, resulting in an update to peers and new election
+				local entityProvider = engines['Eliovak-Atiesh']:EntityProvider()
+				local config = entityProvider.Configuration:Get("614A4F87-AF52-34B4-E983-B9E8929D44AF")
+				config.name = "Engine Integration Configuration (Modified)"
+				entityProvider.Configuration:Update(config, "name")
+
+				while not as.finished() do
+					as.sleep(1)
+				end
+
+				for _, engine in pairs(engines) do
+					for _, r in pairs(engine.replicas) do
+						--print(format("%s => %s", tostring(r), tostring(r.leader)))
+						if Util.Strings.Equal(r.id, "Configuration:614A4F87-AF52-34B4-E983-B9E8929D44AF") then
+							assert.equal(r.leader.id, "Eliovak-Atiesh")
+						elseif Util.Strings.Equal(r.id, "List:6154C617-5A91-7304-3DAD-EBE283795429") then
+							assert.equal(r.leader.id, "Gnomechómsky-Atiesh")
+						elseif Util.Strings.Equal(r.id, "List:61534E26-36A0-4F24-51D7-BE511B88B834") then
+							assert.equal(r.leader.id, "Eliovak-Atiesh")
+						end
+					end
+				end
+
+				local leaderEngine, followerEngine =
+					engines["Eliovak-Atiesh"], engines["Gnomechómsky-Atiesh"]
+				local leaderReplica, followerReplica =
+					leaderEngine.replicas["Configuration:614A4F87-AF52-34B4-E983-B9E8929D44AF"],
+					followerEngine.replicas["Configuration:614A4F87-AF52-34B4-E983-B9E8929D44AF"]
+				local leaderTerm, _ = leaderReplica:LocalMember():Term()
+				local followerTerm, _ = followerReplica:LocalMember():Term()
+				assert.equal(leaderTerm, followerTerm)
 			end
 		))
 	end)

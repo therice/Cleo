@@ -47,6 +47,11 @@ function List:initialize(configId, id, name)
 	self.players = {}
 end
 
+function List:__tostring()
+	return self.name
+end
+
+
 local PlayerSerializer = function(p) return p:ForTransmit() end
 --- we only want to serialize the player's stripped guid which is enough
 function List:toTable()

@@ -262,16 +262,18 @@ describe("Lists", function()
 				response = listsDp:ReconstructResponse(payload)
 			end
 
-			listsDp:SendRequest(AddOn.player, listsDp:CreateRequest(Configuration.name, "614A4F87-AF52-34B4-E983-B9E8929D44AF"))
+			listsDp:SendRequest(AddOn.player, nil, listsDp:CreateRequest(Configuration.name, "614A4F87-AF52-34B4-E983-B9E8929D44AF"))
 
 			assert(response)
 			local config = response:ResolvePayload()
 			assert(config)
 			assert.equal("614A4F87-AF52-34B4-E983-B9E8929D44AF", config.id)
 
+			local cbCalled = false
 			response = nil
-			listsDp:SendRequest(AddOn.player, listsDp:CreateRequest(List.name, "615247A9-311F-57E4-0503-CC3F53E61597"))
+			listsDp:SendRequest(AddOn.player, function() cbCalled = true end, listsDp:CreateRequest(List.name, "615247A9-311F-57E4-0503-CC3F53E61597"))
 			assert(response)
+			assert(cbCalled)
 			local list = response:ResolvePayload()
 			assert(list)
 			assert.equal("615247A9-311F-57E4-0503-CC3F53E61597", list.id)

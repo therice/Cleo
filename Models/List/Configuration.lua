@@ -83,6 +83,10 @@ function Configuration:initialize(id, name)
 	self.default = false
 end
 
+function Configuration:__tostring()
+	return self.name
+end
+
 function Configuration:toTable()
 	local t = Configuration.super.toTable(self)
 	t['alts'] =
@@ -338,10 +342,6 @@ function Configuration:ResolvePlayer(player)
 	end
 
 	return player
-end
-
-function Configuration:__tostring()
-	return self.name
 end
 
 function Configuration.CreateInstance(...)

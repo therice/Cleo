@@ -20,6 +20,8 @@ local Events = {
 	EntityUpdated   =   "EntityUpdated",
 }
 
+
+---@alias EventDetail table<string, any>
 local function EventDetail(entity, attr, diff, ref, ...)
 	return {
 		entity = entity,

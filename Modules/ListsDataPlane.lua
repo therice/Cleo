@@ -35,8 +35,6 @@ end
 
 function ListsDP:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
-	-- for tracking leadership by replica
-	self.replicas = {}
 	self:SubscribeToComms()
 	self:RegisterMessage(C.Messages.ModeChanged, "OnModeChange")
 	self:ScheduleTimer(
@@ -51,7 +49,6 @@ end
 
 function ListsDP:OnDisable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
-	self.replicas = nil
 	self:UnsubscribeFromComms()
 	self:UnregisterMessage(C.Messages.ModeChanged)
 end
@@ -128,8 +125,10 @@ function ListsDP:CreateRequest(type, id)
 	return Request(type, id)
 end
 
-function ListsDP:SendRequest(to, ...)
+function ListsDP:SendRequest(to, callback, ...)
 	to = to or AddOn.masterLooter
+	callback = callback or Util.Functions.Noop
+
 	Logging:Trace("SendRequest(%s)", (to and tostring(to) or nil))
 
 	if not to then
@@ -138,18 +137,18 @@ function ListsDP:SendRequest(to, ...)
 	end
 
 	for _, r in Util.Objects.Each(Util.Tables.Temp(...)) do
-		self.requestsTemp[r.cid] = true
+		self.requestsTemp[r.cid] = callback
 		self:Send(to, C.Commands.ConfigResourceRequest, r)
 	end
 end
 
-
 function ListsDP:OnResourceRequest(sender, payload)
-	Logging:Trace("OnResourceRequest(%s)", tostring(sender))
+	Logging:Trace("OnResourceRequest() : from %s", tostring(sender))
 
+	--- @type Lists.Request
 	local request = Request:reconstitute(payload)
 	if request then
-		Logging:Trace("OnResourceRequest() : %s", tostring(request))
+		Logging:Trace("OnResourceRequest() : %s from %s", tostring(request), tostring(sender))
 		if request:IsValid() then
 			local resource
 
@@ -171,10 +170,10 @@ end
 
 function ListsDP:SendResponse(to, ...)
 	if not to then
-		Logging:Warn("_SendResponse() : target not specified, not sending")
+		Logging:Warn("SendResponse() : target not specified, not sending")
 		return
 	end
-	Logging:Trace("_SendResponse(%s)", tostring(to))
+	Logging:Trace("SendResponse() : to %s", tostring(to))
 
 	for _, r in Util.Objects.Each(Util.Tables.Temp(...)) do
 		self:Send(to, C.Commands.ConfigResourceResponse, r)
@@ -185,21 +184,23 @@ function ListsDP:OnResourceResponse(sender, payload)
 	-- Logging:Trace("OnResourceResponse(%s) : %s", tostring(sender), Util.Objects.ToString(payload))
 	--- @type Lists.Response
 	local response = Response:reconstitute(payload)
-	Logging:Trace("OnResourceResponse(%s) : %s", tostring(sender), tostring(response and response or nil))
+	Logging:Trace("OnResourceResponse() : %s from %s", tostring(response and response or nil), tostring(sender))
 	if response then
 		local resource = response:ResolvePayload()
 		if resource then
-			if not self.requestsTemp[response.cid] then
-				Logging:Warn("OnResourceResponse(%s, %s) : no pending request found", tostring(sender), tostring(response.cid))
+
+			local callback = self.requestsTemp[response.cid]
+			if Util.Objects.IsNil(callback) then
+				Logging:Warn("OnResourceResponse() : no pending request %s for response from %s", tostring(response.cid),  tostring(sender))
 				return
 			end
 
-			Logging:Trace("OnResourceResponse(%s) : Adding %s (%s)", tostring(sender), tostring(resource.clazz.name), tostring(resource.id))
-			-- persist the payload
+			Logging:Trace("OnResourceResponse() : Adding %s (%s) from %s",  tostring(resource.clazz.name), tostring(resource.id), tostring(sender))
 			-- todo : should add some logic here for ignoring the update if two admins (or owner) are interacting
 			-- todo : as they could have different/conflicting versions of resource
 			-- todo : this is unlikely to be right place to do that though and instead in the requesting code
 
+			-- persist the payload
 			-- intentionally do not fire callbacks on the adds as they could result in
 			-- traffic audit events being generated, configuration re-activation (when unnecessary), etc.
 			-- these adds are a direct result of a resource being out of date or missing with another authoritative player
@@ -209,8 +210,17 @@ function ListsDP:OnResourceResponse(sender, payload)
 				Lists:GetService().List:Add(resource, false)
 			end
 
-			self:SendMessage(C.Messages.ResourceRequestCompleted, resource)
-			self.requestsTemp[response.cid] = nil
+			Util.Functions.try(
+				function()
+					Logging:Trace("OnResourceResponse() : invoking callback with %s (from %s)", tostring(resource), tostring(sender))
+					callback(resource)
+				end
+			).finally(
+				function()
+					self.requestsTemp[response.cid] = nil
+					self:SendMessage(C.Messages.ResourceRequestCompleted, resource)
+				end
+			)
 		end
 	end
 end
@@ -239,21 +249,55 @@ function ListsDP:OnBroadcastReceived(payload)
 	if config then
 		local lists = Util.Tables.Map(payload.lists, function(v) return List:reconstitute(v) end)
 		Logging:Debug("OnBroadcastReceived() : config id = %s, list count = %d", tostring(config.id), Util.Tables.Count(lists))
-		-- add will overwrite any current data (no need to delete in advance)
+		local service = Lists:GetService()
 		-- todo : fire callbacks?
-		Lists:GetService().Configuration:Add(config, false)
+		-- add will overwrite any current data (no need to delete in advance)
+		service.Configuration:Add(config, false)
 		Logging:Debug("OnBroadcastReceived() : updated/added config id = %s", tostring(config.id))
 
 		for _, list in pairs(lists) do
-			Lists:GetService().List:Add(list, false)
+			service.List:Add(list, false)
 			Logging:Debug("OnBroadcastReceived() : updated/added config id = %s, list id = %s", tostring(config.id), tostring(list.id))
 		end
 
-		-- todo : refresh UI if visible
+		Lists:Refresh()
+
+		-- we just received a broadcast of a configuration and the associated lists
+		-- could re-query peers for updated details, but easier to just restart replication
+		-- and let normal bootstrap process update them
+		self:RestartReplication()
 	end
 end
 
-function ListsDP:OnModeChange(_, mode, flag, enabled)
+--- @param replica Models.Replication.Replica the replica for which the leader has changed
+function ListsDP:OnReplicaLeaderChanged(replica)
+	Logging:Debug("OnReplicaLeaderChanged() : %s", tostring(replica))
+
+	local localMember, leader = replica:LocalMember(), replica.leader
+	-- if a leader was established then see if we need to request an update on data (not us and term is greater)
+	if leader and not Util.Objects.Equals(leader, localMember) then
+		local behind = localMember:IsBehind(leader)
+		Logging:Debug(
+			"OnReplicaLeaderChanged(%s - %s [LOCAL]) : %s [LEADER] BEHIND(%s)",
+			tostring(replica), tostring(localMember), tostring(leader), tostring(behind)
+		)
+
+		if behind then
+			local typeAndId = Util.Strings.Split(replica.id, ':')
+			self:SendRequest(leader.id, function() replica:LocalMemberUpdated(false) end, self:CreateRequest(typeAndId[1], typeAndId[2]))
+		end
+	end
+end
+
+function ListsDP:GetReplicaLeader(entity)
+	if Replicate():IsRunning() then
+		return Replicate():GetLeader(entity)
+	else
+		return nil
+	end
+end
+
+function ListsDP:OnModeChange(_, _, flag, enabled)
 	-- ignore it unless the flag was replication
 	if flag == C.Modes.Replication then
 		local running = Replicate():IsRunning()
@@ -261,32 +305,37 @@ function ListsDP:OnModeChange(_, mode, flag, enabled)
 			self:InitiateReplication()
 		elseif not enabled and running then
 			Replicate():Shutdown()
-			self.replicas = {}
 		end
 	end
 end
 
-function ListsDP:GetReplicaLeader(entity)
-	if entity then
-		local replica = Util.Strings.Join(':', entity.clazz.name, entity.id)
-		return self.replicas[replica]
+function ListsDP:OnGroupEvent()
+	if AddOn:ReplicationModeEnabled() then
+		local inGroup, replicationRunning = IsInGroup(), Replicate():IsRunning()
+		-- in a group and replication is running, stop it
+		if inGroup and replicationRunning then
+			Replicate:Shutdown()
+			-- not in a group and replication is not running, start it
+		elseif not inGroup and not replicationRunning then
+			self:InitiateReplication()
+		end
 	end
-
-	return nil
 end
 
-function ListsDP:OnReplicaLeaderChange(replica, leader)
-	Logging:Debug("OnReplicaLeaderChange(%s) : %s", tostring(replica), tostring(leader))
-	local replicaFragments = Util.Strings.Split(replica, ':')
-	if replicaFragments and Util.Tables.Count(replicaFragments) == 2 then
-		self.replicas[replica] = leader
+function ListsDP:RestartReplication()
+	Logging:Debug("RestartReplication()")
+	if AddOn:ReplicationModeEnabled() and Replicate:IsRunning() then
+		Replicate():Shutdown()
+		-- use a random delay between 2 and 5 seconds so replication election is somewhat
+		-- staggered between players
+		AddOn.Timer.After(math.random(2, 5), function() self:InitiateReplication() end)
 	end
 end
 
 function ListsDP:InitiateReplication()
 	Logging:Debug("InitiateReplication()")
 	if AddOn:ReplicationModeEnabled() then
-		Replicate():Initialize(Comm(), function(...) self:OnReplicaLeaderChange(...) end)
+		Replicate():Initialize(Comm(), function(...) self:OnReplicaLeaderChanged(...) end)
 	end
 end
 

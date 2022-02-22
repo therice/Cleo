@@ -65,6 +65,12 @@ function AddOn:PartyEvent(event, ...)
     self:NewMasterLooterCheck()
 end
 
+-- GroupFormed, GroupJoined, GroupLeft
+function AddOn:GroupEvent(event, ...)
+    Logging:Debug("GroupEvent(%s)", event)
+    AddOn:ListsDataPlaneModule():OnGroupEvent(...)
+end
+
 -- https://wow.gamepedia.com/LOOT_READY
 -- This is fired when looting begins, but before the loot window is shown.
 -- Loot functions like GetNumLootItems will be available until LOOT_CLOSED is fired.

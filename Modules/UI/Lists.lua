@@ -100,6 +100,26 @@ function Lists:OnResourceRequestCompleted(_, resource)
 	end
 end
 
+-- will refresh any displayed UI element with updated data
+function Lists:Refresh()
+	local ok, msg = pcall(
+		function()
+			if self.interfaceFrame then
+				if self.configTab:IsVisible() then
+					self.configTab:Refresh()
+				end
+				if self.listTab:IsVisible() then
+					self.listTab:Refresh()
+				end
+			end
+		end
+	)
+
+	if not ok then
+		Logging:Error("Refresh() : %s", tostring(msg))
+	end
+end
+
 function Lists:Players(mapFn, ...)
 	mapFn = Util.Objects.IsFunction(mapFn) and mapFn or Util.Objects.Noop
 
