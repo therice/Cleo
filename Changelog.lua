@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.6 (2022-02-22)
+* implement config/list data replication within guild context (disabled by default) 1b7b40f
+
 2021.4.5 (2022-02-14)
 * add encounters and creatures for MH and BT 2cca872
 * address incorrect handling of encounter when clearing loot history filter 9ea879d
