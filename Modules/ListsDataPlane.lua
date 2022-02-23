@@ -314,7 +314,7 @@ function ListsDP:OnGroupEvent()
 		local inGroup, replicationRunning = IsInGroup(), Replicate():IsRunning()
 		-- in a group and replication is running, stop it
 		if inGroup and replicationRunning then
-			Replicate:Shutdown()
+			Replicate():Shutdown()
 			-- not in a group and replication is not running, start it
 		elseif not inGroup and not replicationRunning then
 			self:InitiateReplication()
