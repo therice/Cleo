@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.7 (2022-02-23)
+* update README with link to CI 
+* when joining a group with replication running, it's not being terminated due to exception 24b3e7a
+
 2021.4.6 (2022-02-22)
 * implement config/list data replication within guild context (disabled by default) 1b7b40f
 
