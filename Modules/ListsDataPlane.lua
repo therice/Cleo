@@ -324,7 +324,7 @@ end
 
 function ListsDP:RestartReplication()
 	Logging:Debug("RestartReplication()")
-	if AddOn:ReplicationModeEnabled() and Replicate:IsRunning() then
+	if AddOn:ReplicationModeEnabled() and Replicate():IsRunning() then
 		Replicate():Shutdown()
 		-- use a random delay between 2 and 5 seconds so replication election is somewhat
 		-- staggered between players
