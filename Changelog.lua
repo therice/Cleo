@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.8 (2022-02-24)
+* correct issue with restarting replication 2ede1c5
+
 2021.4.7 (2022-02-23)
 * update README with link to CI 
 * when joining a group with replication running, it's not being terminated due to exception 24b3e7a
