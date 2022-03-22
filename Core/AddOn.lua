@@ -97,6 +97,13 @@ function AddOn:OnEnable()
 
     --- @type Models.Player
     self.player = Player:Get("player")
+    -- seems to be client regression introduced in 2.5.4 where the needed API calls to get a player's information
+    -- isn't always available on initial login, so reschedule
+    if not self.player then
+        self:ScheduleTimer(function() self:OnEnable() end, 2)
+        Logging:Warn("OnEnable(%s) : unable to determine player, rescheduling enable in 2 seconds", self:GetName())
+        return
+    end
 
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))
     local configSupplements, lpadSupplements = {}, {}

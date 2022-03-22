@@ -34,10 +34,12 @@ local function Put(player)
     cache[player.guid] = player:toTable()
 end
 
+local DEV_CACHE_TIME, NON_DEV_CACHE_TIME =  (60 * 60 * 24 * 0), (60 * 60 * 24 * 30) -- 30 days
+
 -- none of the cached stuff is going to change, bump retention from 2 days to 30
 local CACHE_TIME = Util.Memoize.Memoize(
     function()
-        return (AddOn._IsTestContext() or AddOn:DevModeEnabled()) and 0 or (60 * 60 * 24 * 30) -- 30 days
+        return (AddOn._IsTestContext() or AddOn:DevModeEnabled()) and DEV_CACHE_TIME or NON_DEV_CACHE_TIME
     end
 )
 
@@ -129,6 +131,7 @@ function Player.Create(guid, info)
     -- localizedClass, englishClass, localizedRace, englishRace, sex, name, realm
     local _, class, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
     --Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
+
     -- if the name is not set, means the query did not complete. likely because the player was not
     -- encountered. therefore, just return nil
     if Util.Objects.IsEmpty(name) then
@@ -159,11 +162,13 @@ function Player:Get(input)
 
     if Util.Strings.IsSet(input) then
         guid = Player.ParseGuid(input)
+        -- Logging:Debug("Get(%s) : %s", tostring(input), tostring(guid))
 
         if Util.Objects.IsNil(guid) then
             local name = Ambiguate(input, "short")
             -- For players: Player-[server ID]-[player UID] (Example: "Player-976-0002FD64")
             guid = UnitGUID(name)
+            -- Logging:Debug("Get(%s) : %s / %s", tostring(input), tostring(name), tostring(guid))
             -- GUID(s) are only available for people we're grouped with
             -- so attempt a few other approaches if not available
             --
