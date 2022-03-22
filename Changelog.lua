@@ -2,6 +2,17 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.9 (2022-03-22)
+* another lanes version attempt 1f595f6
+* attempt to resolve build failures be explicitly including server 04568dc
+* attempt to resolve build failures be explicitly installing required dependencies 289cf53
+* enable verbose logging for installing lanes module a5e22f8
+* enable verbose logging for installing lanes module (fix typo) 29c6c58
+* FFS 2be6821
+* specify explicit version of lanes that does not have the git+https url 2661d0b
+* try a different ubuntu dist for build c147319
+* update interface version for new patch 9c614f2
+
 2021.4.8 (2022-02-24)
 * correct issue with restarting replication 2ede1c5
 
