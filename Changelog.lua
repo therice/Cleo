@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.10 (2022-03-22)
+* cleanup the build file after resolving luarocks build issue c994e3f
+* address issue introduced in game version 2.5.4 where GetPlayerInfoByGUID not reliably available on initial login 406b1d8
+
 2021.4.9 (2022-03-22)
 * another lanes version attempt 1f595f6
 * attempt to resolve build failures be explicitly including server 04568dc
