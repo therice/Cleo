@@ -1,5 +1,5 @@
-## Interface: 20503
-## X-Min-Interface: 20503
+## Interface: 20504
+## X-Min-Interface: 20504
 ## Title: |cfffe7b2cCleo|r
 ## Notes: Cleo - Suicide Kings AddOn for World of Warcraft (TBC Classic)
 ## Author: Jackburtón-Atiesh
