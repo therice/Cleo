@@ -31,7 +31,7 @@ before_script:
   - luarocks install --local --lua-version=5.1 --only-server=https://luarocks.org penlight
   - luarocks install --local --lua-version=5.1 --only-server=https://luarocks.org bitlib
   - luarocks install --local --lua-version=5.1 --only-server=https://luarocks.org luasec
-  - luarocks install --local --verobse --lua-version=5.1 --only-server=https://luarocks.org lanes
+  - luarocks install --local --verbose --lua-version=5.1 --only-server=https://luarocks.org lanes
   - luarocks install --local --lua-version=5.1 --only-server=https://luarocks.org copas
   - luarocks install --local --lua-version=5.1 --only-server=https://luarocks.org copas-async
   - luarocks install --local --lua-version=5.1 --only-server=https://luarocks.org luacov
