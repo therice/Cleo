@@ -61,7 +61,7 @@ local DateFilterColumns, InstanceFilterColumns, NameFilterColumns, DroppedByFilt
 	ST.ColumnBuilder():column(""):width(20):column(_G.NAME):width(100):sort(STColumnBuilder.Ascending):build(),
 	ST.ColumnBuilder():column(L['dropped_by']):width(200):sort(STColumnBuilder.Ascending):build()
 
-local FilterMenu, FilterSelection, RecordSelection = nil,
+local RightClickMenu, FilterSelection, RecordSelection = nil,
 	{
 		dates = nil,
 		instance = nil,
@@ -95,9 +95,9 @@ function LootAudit:LayoutInterface(container)
 	local module = self
 	container:SetWide(1000)
 
-	FilterMenu = MSA_DropDownMenu_Create(C.DropDowns.LootAuditFilter, container)
-	FilterMenu.module = module
-	MSA_DropDownMenu_Initialize(FilterMenu, self.FilterMenu)
+	RightClickMenu = MSA_DropDownMenu_Create(C.DropDowns.LootAuditActions, container)
+	RightClickMenu.module = module
+	MSA_DropDownMenu_Initialize(RightClickMenu, self.RightClickMenu)
 
 	local st = ST.New(ScrollColumns, 20, 20, nil, container)
 	st:RegisterEvents({
@@ -105,7 +105,7 @@ function LootAudit:LayoutInterface(container)
 			if button == C.Buttons.Left and row then
 				MI.Update(container, data, realrow)
 			elseif button == C.Buttons.Right then
-				MSA_ToggleDropDownMenu(1, nil, FilterMenu, cellFrame, 0, 0)
+				MSA_ToggleDropDownMenu(1, nil, RightClickMenu, cellFrame, 0, 0)
 			end
 
 			return false
@@ -490,23 +490,25 @@ function LootAudit:FilterFunc(_, row)
 	return selectionFilter and classFilter and responseFilter
 end
 
-local FilterMenuEntriesBuilder =
+local RightClickMenuEntriesBuilder =
 	DropDown.EntryBuilder()
 		-- level 1
 		:nextlevel()
 			:add():text(_G.FILTER):set('isTitle', true):checkable(false):disabled(true)
-			:add():text(""):checkable(false):disabled(true)
-			:add():text(_G.CLASS):value("CLASS"):checkable(false):arrow(true)
-			:add():text(L["reason"]):value("REASON"):checkable(false):arrow(true)
+			:add():text(_G.CLASS):value("FILTER_CLASS"):checkable(false):arrow(true)
+			:add():text(L["reason"]):value("FILTER_REASON"):checkable(false):arrow(true)
+			:add():text(L["delete"]):set('isTitle', true):checkable(false):disabled(true)
+			:add():text(L["older_than"]):value("DELETE_OLDER_THAN"):checkable(false):arrow(true)
 		-- level 2
 		:nextlevel()
-			:add():set('special', "CLASS")
-			:add():set('special', "REASON")
+			:add():set('special', "FILTER_CLASS")
+			:add():set('special', "FILTER_REASON")
+			:add():set('special', "DELETE_OLDER_THAN")
 
-LootAudit.FilterMenuEntries = FilterMenuEntriesBuilder:build()
-LootAudit.FilterMenu = DropDown.RightClickMenu(
+LootAudit.RightClickMenuEntries = RightClickMenuEntriesBuilder:build()
+LootAudit.RightClickMenu = DropDown.RightClickMenu(
 		Util.Functions.True,
-		LootAudit.FilterMenuEntries,
+		LootAudit.RightClickMenuEntries,
 		function(info, menu, level, entry, value)
 			local self = menu.module
 			local settings = AddOn:ModuleSettings(self:GetName())
@@ -521,7 +523,9 @@ LootAudit.FilterMenu = DropDown.RightClickMenu(
 				end
 			end
 
-			if Util.Strings.Equal(value, "CLASS") and Util.Strings.Equal(entry.special, value) then
+			Logging:Debug("%s : %s", tostring(value), Util.Objects.ToString(entry))
+
+			if Util.Strings.Equal(value, "FILTER_CLASS") and Util.Strings.Equal(entry.special, value) then
 				-- these will be a table of sorted display class names
 				local classes =
 					Util(ItemUtil.ClassDisplayNameToId)
@@ -546,12 +550,12 @@ LootAudit.FilterMenu = DropDown.RightClickMenu(
 				info.func = function()
 					for _, k in pairs(classes) do
 						setfilter('class', k, false)
-						MSA_DropDownMenu_SetSelectedName(FilterMenu, k, false)
+						MSA_DropDownMenu_SetSelectedName(RightClickMenu, k, false)
 					end
 					self:Update()
 				end
 				MSA_DropDownMenu_AddButton(info, level)
-			elseif Util.Strings.Equal(value, "REASON") and Util.Strings.Equal(entry.special, value) then
+			elseif Util.Strings.Equal(value, "FILTER_REASON") and Util.Strings.Equal(entry.special, value) then
 				local data = { }
 
 				for i = 1, AddOn:GetButtonCount() do
@@ -580,7 +584,18 @@ LootAudit.FilterMenu = DropDown.RightClickMenu(
 						info = MSA_DropDownMenu_CreateInfo()
 					end
 				end
-
+			elseif Util.Strings.Equal(value, "DELETE_OLDER_THAN") and Util.Strings.Equal(entry.special, value) then
+				for _, days in pairs({7, 30, 60, 90, 120, 365}) do
+					info.text = format(L['n_days'], days)
+					info.checkable = false
+					info.arg1 = days
+					info.func = function(_, ageInDays)
+						self:Delete(ageInDays)
+						self:RefreshData()
+					end
+					MSA_DropDownMenu_AddButton(info, level)
+					info = MSA_DropDownMenu_CreateInfo()
+				end
 			end
 		end
 )

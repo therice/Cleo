@@ -92,7 +92,6 @@ end
 function LootAudit:Broadcast(record)
 	-- if in test mode and not development mode, return
 	if (AddOn:TestModeEnabled() and not AddOn:DevModeEnabled()) then return end
-
 	self:Send(C.group, C.Commands.LootAuditAdd, record)
 end
 
@@ -221,7 +220,34 @@ function LootAudit:ImportDataFromSync(data)
 	else
 		AddOn:Print(format(L['import_successful_with_count'], AddOn.GetDateTime(), self:GetName(), 0))
 	end
+end
 
+function LootAudit:Delete(ageInDays)
+	if ageInDays then
+		local cutoff = Date()
+		cutoff:add{day = -ageInDays}
+		Logging:Debug("Delete(%d) : Deleting history before %s", ageInDays, tostring(cutoff))
+		local history = self:GetHistory()
+		for name, data in cpairs(history) do
+			local retain = {}
+
+			for i = #data, 1, -1 do
+				local entry = LootRecord:reconstitute(data[i])
+				local ts = Date(entry.timestamp)
+				if ts < cutoff then
+					Logging:Debug("Delete() : deleting index %d/%d for %s (%s)", i, #data, name, tostring(ts))
+				else
+					Util.Tables.Push(retain, data[i])
+				end
+			end
+
+			if #retain == 0 then
+				history:del(name)
+			else
+				history:put(name, retain)
+			end
+		end
+	end
 end
 
 function LootAudit:LaunchpadSupplement()

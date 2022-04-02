@@ -1658,8 +1658,14 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 				function(awarded, cause)
 					if awarded then
 						self:AnnounceAward(winner, item, awardReason.text, nil, nil, false, true)
+						-- disabled due to volume of auto-award items causing a glut of loot audit
+						-- records, eventually resulting in frame drops due to processing
+						-- this was due to them typically being awarded to same person and their
+						-- compressed loot history becoming excessively large
+						--[[
 						local audit = LootRecord.FromAutoAward(item, winner, awardReason)
 						AddOn:LootAuditModule():Broadcast(audit)
+						--]]
 						return true
 					else
 						AddOn:Print(L["cannot_auto_award"])

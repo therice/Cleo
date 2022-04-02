@@ -134,14 +134,14 @@ AddOn.Constants = {
     },
 
     DropDowns = {
-        AllocateRightClick      = name .. "_AllocateRightClick",
-        AllocateFilter          = name .. "_AllocateFilter",
-        ConfigActions           = name .. "_ConfigActions",
-        ConfigAltActions        = name .. "_ConfigAltActions",
-        Enchanters              = name .. "_AllocateEnchantersMenu",
-        ListPriorityActions     = name .. "_ListPriorityActions",
-        ListPlayerActions       = name .. "_ListPlayerActions",
-        LootAuditFilter         = name .. "_LootAuditFilter",
+        AllocateRightClick  = name .. "_AllocateRightClick",
+        AllocateFilter      = name .. "_AllocateFilter",
+        ConfigActions       = name .. "_ConfigActions",
+        ConfigAltActions    = name .. "_ConfigAltActions",
+        Enchanters          = name .. "_AllocateEnchantersMenu",
+        ListPriorityActions = name .. "_ListPriorityActions",
+        ListPlayerActions   = name .. "_ListPlayerActions",
+        LootAuditActions    = name .. "_LootAuditActions",
     },
 
     Events = {
