@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.11 (2022-04-02)
+* add missing translation for version being out of date 330a669
+* add support for purging loot audit records and don't record loot audit for auto-award a499a9b
+
 2021.4.10 (2022-03-22)
 * cleanup the build file after resolving luarocks build issue c994e3f
 * address issue introduced in game version 2.5.4 where GetPlayerInfoByGUID not reliably available on initial login 406b1d8
