@@ -182,6 +182,7 @@ function Lists:LayoutConfigurationTab(tab)
 	-- returns the currently selected configuration
 	--- @return Models.List.Configuration
 	local function SelectedConfiguration()
+		Logging:Trace("SelectedConfiguration()")
 		return tab.configList:Selected()
 	end
 
@@ -591,11 +592,13 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	tab.playersInRaid:SetSize(14, 14)
 
 	tab.HasPendingChanges = function(self)
-		local config = configSupplier()
+		local config, changes = configSupplier(), false
 		if config then
-			return not Util.Tables.Equals(config:GetAlternates(), self:ProcessPlayers(), true)
+			changes = not Util.Tables.Equals(config:GetAlternates(), self:ProcessPlayers(), true)
 		end
-		return false
+
+		Logging:Trace("HasPendingChanges(%s)", tostring(changes))
+		return changes
 	end
 
 	tab.playersCache = {}
@@ -674,9 +677,16 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	end
 
 	tab.SavePlayers = function(self)
+		Logging:Trace("SavePlayers()")
+		--- @type Models.List.Configuration
 		local config = configSupplier()
 		if config then
 			if self:HasPendingChanges() then
+				-- clear out any current alt mappings, they will be re-created on save
+				-- technically, should be able to determine the delta and only update those
+				-- but this is "easier"
+				config:ResetAlternates()
+
 				for main, alts in pairs(self:ProcessPlayers()) do
 					local compacted = Util.Tables.Compact(alts)
 					config:SetAlternates(Player.Resolve(main), unpack(compacted))
@@ -1444,6 +1454,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				function(self, button)
 					if Util.Strings.Equal(C.Buttons.Right, button) then
 						PriorityActionsMenu.module = module
+						PriorityActionsMenu.name = self:GetText()
+						PriorityActionsMenu.entry = tab.priorities[self.index]
 						DropDown.ToggleMenu(1, PriorityActionsMenu, self)
 					end
 				end
@@ -1514,7 +1526,9 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	tab.playersInRaid:SetSize(14, 14)
 
 	tab.HasPendingChanges = function(self)
-		return not Util.Tables.Equals(self.prioritiesOrig, self.priorities, true)
+		local result = not Util.Tables.Equals(self.prioritiesOrig, self.priorities, true)
+		Logging:Debug("HasPendingChanges(%s)", tostring(result))
+		return result
 	end
 
 	tab.UpdatePriorities = function(self, reload, list)
@@ -1588,6 +1602,61 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 			Logging:Trace("SetPriority(%s, %s) : %d", tostring(player), tostring(first), Util.Tables.Count(self.priorities))
 			self:UpdatePriorities(false)
+		end
+	end
+
+	tab.SetPriorityRelative = function(self, player, other, after)
+		-- if after wasn't specified, default to true
+		after = Util.Objects.Default(after, true)
+		Logging:Debug("SetPriorityRelative(%s) : %s / %s", tostring(after), tostring(player), tostring(other))
+
+		if not player and not other then
+			return
+		end
+
+		local list = listSupplier()
+		if list then
+			local priorities, modifier, handled = {}, 0, false
+			for priority, p in Util.Tables.Sparse.ipairs(self.priorities) do
+				if p ~= player and p ~= other then
+					priorities[priority + modifier] = p
+				else
+					if not handled and p == other then
+						priorities[priority + modifier] = after and p or player
+						priorities[priority + modifier + 1] = after and player or p
+						modifier, handled = (modifier + 1), true
+					end
+
+					if p == player then
+						modifier = (modifier - 1)
+					end
+				end
+			end
+
+			if handled then
+				self.priorities = priorities
+				self:UpdatePriorities(false)
+			end
+		end
+	end
+
+	tab.AdjustPriority = function(self, player, amount)
+		amount = Util.Objects.Default(tonumber(amount), 0)
+		if amount ~= 0 then
+			local compacted = Util.Tables.Compact(self.priorities)
+			local priority = Util.Tables.Find(compacted, player)
+			if priority then
+				local newPriority, other = priority + amount, nil
+				if newPriority < 0 then
+					other = compacted[1]
+				elseif newPriority > #compacted then
+					other = compacted[#compacted]
+				else
+					other = compacted[newPriority]
+				end
+
+				self:SetPriorityRelative(player, other, (amount > 0))
+			end
 		end
 	end
 
@@ -1858,30 +1927,94 @@ function Lists:SelectListModuleFn()
 end
 
 do
+	local PriorityAction = {
+		All     = "ALL",
+		Player  = "PLAYER"
+	}
+
+	local PlayerAction = {
+		After  = "AFTER",
+		Before = "BEFORE",
+		Down   = "DOWN"
+	}
+
 	local PriorityActionsEntryBuilder =
 		DropDown.EntryBuilder()
 			:nextlevel()
-				:add():text(L["priorities"]):checkable(false):title(true)
-				:add():text(L["save"]):checkable(false)
-					:disabled(function(_, _, self) return not self.listPriorityTab:HasPendingChanges() end)
-					:fn(
-						function(_, _, self)
-							self.listPriorityTab:SavePriorities()
-						end
-					)
-				:add():text(L["revert"]):checkable(false)
-					:disabled(function(_, _, self) return not self.listPriorityTab:HasPendingChanges() end)
-					:fn(
-						function(_, _, self)
-							self.listPriorityTab:UpdatePriorities()
-						end
-					)
+				:add():text(L["all"])
+					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemArtifact:GetRGBA()))
+					:value(PriorityAction.All)
+					:checkable(false):arrow(true)
+				:add():text(function(name, entry) return UIUtil.ClassColorDecorator(entry.class):decorate(name) end)
+					:value(PriorityAction.Player)
+					:checkable(false):arrow(true)
+			:nextlevel()
+				:add():set('special', PriorityAction.All)
+				:add():set('special', PriorityAction.Player)
+			:nextlevel()
+				:add():set('special', PlayerAction.After)
+				:add():set('special', PlayerAction.Before)
+				:add():set('special', PlayerAction.Down)
+
 
 	Lists.PriorityActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
-		PriorityActionsEntryBuilder:build()
-	)
+		PriorityActionsEntryBuilder:build(),
+		function(info, menu, level, entry, value)
+			Logging:Warn("%s / %s / %s", tostring(level), tostring(value) ,Util.Objects.ToString(entry))
 
+			local player, self = menu.entry, menu.module
+			if value == PriorityAction.All and entry.special == value then
+				info.text = L['save']
+				info.notCheckable = true
+				info.disabled = not self.listPriorityTab:HasPendingChanges()
+				info.func = function() self.listPriorityTab:SavePriorities() end
+				MSA_DropDownMenu_AddButton(info, level)
+
+				info.text = L['revert']
+				info.notCheckable = true
+				info.disabled = not self.listPriorityTab:HasPendingChanges()
+				info.func = function() self.listPriorityTab:UpdatePriorities() end
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif value == PriorityAction.Player and entry.special == value then
+				info.text = L['move_after']
+				info.notCheckable = true
+				info.hasArrow = true
+				info.value = PlayerAction.After
+				MSA_DropDownMenu_AddButton(info, level)
+
+				info.text = L['move_before']
+				info.notCheckable = true
+				info.hasArrow = true
+				info.value = PlayerAction.Before
+				MSA_DropDownMenu_AddButton(info, level)
+
+				info.text = L['move_down']
+				info.notCheckable = true
+				info.hasArrow = true
+				info.value = PlayerAction.Down
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif Util.Objects.In(value, PlayerAction.After, PlayerAction.Before) and entry.special == value then
+				for _, pplayer in pairs(self.listPriorityTab.priorities) do
+					if not Util.Objects.Equals(player, pplayer) then
+						info = MSA_DropDownMenu_CreateInfo()
+						info.text = UIUtil.ClassColorDecorator(pplayer.class):decorate(pplayer.name)
+						info.notCheckable = true
+						info.func = function()
+							Logging:Warn("%s(%s, %s)", entry.special, tostring(player), tostring(pplayer))
+							self.listPriorityTab:SetPriorityRelative(player, pplayer, value == PlayerAction.After or false)
+						end
+						MSA_DropDownMenu_AddButton(info, level)
+					end
+				end
+			elseif value == PlayerAction.Down and entry.special == value then
+				info.text = format(L['n_positions'], 5)
+				info.notCheckable = true
+				info.func = function() self.listPriorityTab:AdjustPriority(player, 5) end
+				MSA_DropDownMenu_AddButton(info, level)
+			end
+		end
+	)
 	local PlayerActionsEntryBuilder =
 		DropDown.EntryBuilder()
 			:nextlevel()
@@ -1946,7 +2079,7 @@ do
 	local ConfigActionsMenuEntryBuilder =
 		DropDown.EntryBuilder()
 	        :nextlevel()
-				:add():text(function(_, config, _)return config.name end):checkable(false):title(true)
+				:add():text(function(_, config, _) return config.name end):checkable(false):title(true)
 				:add():text(L["broadcast"]):checkable(false):arrow(true)
 			:nextlevel()
 				:add():text(L["guild"]):checkable(false)

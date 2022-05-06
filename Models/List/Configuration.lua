@@ -292,6 +292,10 @@ function Configuration:SetOwner(player)
 	self:GrantPermissions(player, Configuration.Permissions.Owner)
 end
 
+function Configuration:ResetAlternates()
+	self.alts = {}
+end
+
 function Configuration:SetAlternates(player, ...)
 	player = Player.Resolve(player)
 	local alts = {}

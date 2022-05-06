@@ -1,10 +1,10 @@
 --- MSA-DropDownMenu-1.0 - DropDown menu for non-Blizzard addons
---- Copyright (c) 2016-2020, Marouan Sabbagh <mar.sabbagh@gmail.com>
+--- Copyright (c) 2016-2022, Marouan Sabbagh <mar.sabbagh@gmail.com>
 --- All Rights Reserved.
 ---
 --- https://www.curseforge.com/wow/addons/msa-dropdownmenu-10
 
-local name, version = "MSA-DropDownMenu-1.0", 12
+local name, version = "MSA-DropDownMenu-1.0", 13
 
 local lib, oldVersion = LibStub:NewLibrary(name, version)
 if not lib then return end
@@ -212,18 +212,18 @@ local function CreateDropDownList(name, parent)
     end
     frame1:SetAllPoints()
     frame1:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true,
-        tileSize = 32,
-        edgeSize = 32,
-        insets = {
-            left = 11,
-            right = 12,
-            top = 12,
-            bottom = 9,
-        },
-    })
+                           bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+                           edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+                           tile = true,
+                           tileSize = 32,
+                           edgeSize = 32,
+                           insets = {
+                               left = 11,
+                               right = 12,
+                               top = 12,
+                               bottom = 9,
+                           },
+                       })
 
     local frame2
     if oldVersion and oldVersion > 8 then  -- WoW 9.0 compatibility
@@ -233,18 +233,18 @@ local function CreateDropDownList(name, parent)
     end
     frame2:SetAllPoints()
     frame2:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets = {
-            left = 5,
-            right = 5,
-            top = 5,
-            bottom = 4,
-        },
-    })
+                           bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                           edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                           tile = true,
+                           tileSize = 16,
+                           edgeSize = 16,
+                           insets = {
+                               left = 5,
+                               right = 5,
+                               top = 5,
+                               bottom = 4,
+                           },
+                       })
     frame2:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b)
     frame2:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b)
 
@@ -646,12 +646,12 @@ function MSA_DropDownMenu_AddSeparator(info, level)
     info.tSizeY = 8;
     info.tFitDropDownSizeX = true;
     info.iconInfo = { tCoordLeft = info.tCoordLeft,
-        tCoordRight = info.tCoordRight,
-        tCoordTop = info.tCoordTop,
-        tCoordBottom = info.tCoordBottom,
-        tSizeX = info.tSizeX,
-        tSizeY = info.tSizeY,
-        tFitDropDownSizeX = info.tFitDropDownSizeX };
+                      tCoordRight = info.tCoordRight,
+                      tCoordTop = info.tCoordTop,
+                      tCoordBottom = info.tCoordBottom,
+                      tSizeX = info.tSizeX,
+                      tSizeY = info.tSizeY,
+                      tFitDropDownSizeX = info.tFitDropDownSizeX };
 
     MSA_DropDownMenu_AddButton(info, level);
 
@@ -1701,8 +1701,8 @@ local function LoadSkin_Aurora()
     if not IsAddOnLoaded("Aurora") then return end
     local Skin = _G.Aurora.Skin
     for i = 1, MSA_DROPDOWNMENU_MAXLEVELS do
-        Skin.TooltipBackdropTemplate(_G["MSA_DropDownList"..i.."MenuBackdrop"])
-        Skin.TooltipBackdropTemplate(_G["MSA_DropDownList"..i.."Backdrop"])
+        Skin.FrameTypeFrame(_G["MSA_DropDownList"..i.."MenuBackdrop"])
+        Skin.FrameTypeFrame(_G["MSA_DropDownList"..i.."Backdrop"])
     end
 end
 
