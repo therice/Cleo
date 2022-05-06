@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.12 (2022-05-06)
+* add support for capturing logging for forensics ef11b06
+* add support for intuitive repositioning of players in loot lists 8d9bfdc
+
 2021.4.11 (2022-04-02)
 * add missing translation for version being out of date 330a669
 * add support for purging loot audit records and don't record loot audit for auto-award a499a9b
