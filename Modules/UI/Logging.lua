@@ -44,10 +44,19 @@ function Logging:BuildFrame()
         frame.msg = msg
 
         local clear = UI:NewNamed("Button", frame.content or frame, "Clear", L['clear'])
-        --clear:SetText(L['clear'])
         clear:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -13, 5)
         clear:SetScript("OnClick", function() frame.msg:Clear() end)
         frame.clear = clear
+
+        local capture = UI:NewNamed("Button", frame.content or frame, "Capture", L['capture'])
+        capture:SetPoint("RIGHT", clear, "LEFT", -5, 0)
+        capture:SetScript("OnClick", function() self:WriteHistory() end)
+        frame.capture = capture
+
+        local captureAndClear = UI:NewNamed("Button", frame.content or frame, "CaptureAndClear", L['capture_and_clear'])
+        captureAndClear:SetPoint("RIGHT", capture, "LEFT", -5, 0)
+        captureAndClear:SetScript("OnClick", function() self:WriteHistory(); frame.msg:Clear() end)
+        frame.captureAndClear = captureAndClear
 
         --- @type UI.Widgets.Dropdown
         local threshold = CreateLevelDropdown(frame.content or frame)

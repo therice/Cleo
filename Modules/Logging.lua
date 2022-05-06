@@ -28,8 +28,18 @@ local LoggingLevels = {
     [Log:GetThreshold(Log.Level.Trace)]    = Log.Level.Trace,
 }
 
+Logging.defaults = {
+    profile = {
+        history = {
+
+        }
+    }
+}
+
 function Logging:OnInitialize()
     Log:Debug("OnInitialize(%s)", self:GetName())
+    self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('LogAudit'), Logging.defaults)
+
     self:BuildFrame()
     --@debug@
     self:Toggle()
@@ -50,6 +60,15 @@ end
 
 function Logging.GetLoggingLevels()
     return Util.Tables.Copy(LoggingLevels)
+end
+
+function Logging:WriteHistory()
+    local history = {}
+    for index = 1, self.frame.msg:GetNumMessages() do
+        Util.Tables.Push(history,  self.frame.msg:GetMessageInfo(index))
+    end
+
+    self.db.profile.history[AddOn.GetDateTime()] = history
 end
 
 function Logging:SetLoggingThreshold(threshold)
