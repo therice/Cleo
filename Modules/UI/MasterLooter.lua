@@ -669,7 +669,7 @@ function ML:LayoutResponsesTab(tab)
 		UI:New('InlineGroup',tab)
 			:Point("TOPLEFT", tab.visibilityGroup, "BOTTOMLEFT",  0, -5)
 			:Point("TOPRIGHT", tab.visibilityGroup, "BOTTOMRIGHT",0, 0)
-			:SetHeight(175)
+			:SetHeight(225)
 			:Title(L["whispers"])
 	content = tab.whispersGroup.content
 	tab.acceptWhispers =
@@ -700,9 +700,9 @@ function ML:LayoutResponsesTab(tab)
 			self.whisperResponses = {}
 
 			local buttons, content = module.db.profile.buttons, self.whispersGroup.content
-			for i = 1, buttons.numButtons do
-				local button = buttons[i]
-				Logging:Trace("Button = %s", Util.Objects.ToString(button))
+			for i, index in pairs(buttons.ordering) do
+				local button = buttons[index]
+				--Logging:Warn("Button(%d) = %s", index, Util.Objects.ToString(button))
 				local anchorPoint = (i==1) and self.whispersDesc or self.whisperResponses[i - 1]
 				self.whisperResponses[i] =
 					UI:New('EditBox', content)

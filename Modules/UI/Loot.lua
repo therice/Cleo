@@ -161,16 +161,14 @@ end
 
 function Entry:UpdateButtons()
 	local b = self.buttons
-	local numButtons = AddOn:GetButtonCount()
-	local buttons = AddOn:GetButtons()
+	local numButtons, buttons, ordering = AddOn:GetButtonCount(), AddOn:GetButtons(), AddOn:GetButtonOrder()
 	-- (IconWidth (63) + indent(9)) + pass button (5) +  + numButton * space(5)
 	local width = 95 + numButtons * 5
-	-- +1 is for the numButtons entry, which we map to the pass button
-	for i = 1, numButtons + 1 do
-		-- todo : color them buttons
+	-- +1 to numButtons is for mapping to the pass button
+	Util.Tables.Push(ordering, numButtons + 1)
+	for i, index in pairs(ordering) do
 		if i > numButtons then
 			b[i] = b[i] or UI:New('Button', self.frame)
-			-- b[i]:SetText(_G.PASS)
 			b[i]:SetText(UIUtil.ColoredDecorator(C.Colors.Salmon):decorate(_G.PASS))
 			b[i]:SetMultipleScripts({
                 OnEnter = function() Loot.UpdateItemResponders(self, C.Responses.Pass, b[i]) end,
@@ -179,21 +177,21 @@ function Entry:UpdateButtons()
             })
 		else
 			b[i] = b[i] or UI:New('Button', self.frame)
-			-- b[i]:SetText(buttons[i].text)
 			-- this is kind of ugly, but ...
-			b[i]:SetText(UIUtil.ColoredDecorator(buttons[i].color):decorate(buttons[i].text))
+			b[i]:SetText(UIUtil.ColoredDecorator(buttons[index].color):decorate(buttons[index].text))
 			b[i]:SetMultipleScripts({
                 OnEnter = function()
-                    Loot.UpdateItemResponders(self, i, b[i])
+                    Loot.UpdateItemResponders(self, index, b[i])
                     Loot.UpdateItemText(self)
                 end,
                 OnLeave = function()
                     UIUtil:HideTooltip()
                     Loot.UpdateItemText(self)
                 end,
-                OnClick = function() Loot:OnRoll(self, i) end,
+                OnClick = function() Loot:OnRoll(self, index) end,
             })
 		end
+
 		b[i]:SetWidth(b[i]:GetTextWidth() + 10)
 		if b[i]:GetWidth() < MIN_BUTTON_WIDTH then b[i]:SetWidth(MIN_BUTTON_WIDTH) end
 		width = width + b[i]:GetWidth()
@@ -498,6 +496,8 @@ function Loot.UpdateItemResponders(entry, response, owner)
 				--UIUtil.ShowTooltipLines(unpack(text))
 				UIUtil.ShowTooltip(owner, {"ANCHOR_BOTTOM", 0, 0}, nil, unpack(text))
 			end
+		elseif AddOn:TestModeEnabled() then
+			UIUtil.ShowTooltip(owner, {"ANCHOR_BOTTOM", 0, 0}, nil, unpack({format('Player #1 (%s)', tostring(response))}))
 		end
 	end
 end

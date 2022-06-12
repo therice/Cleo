@@ -555,6 +555,26 @@ function AddOn:GetButtonCount()
     return self:MasterLooterDbValue('buttons.numButtons') or 0
 end
 
+function AddOn:GetButtonOrder()
+    local ordering
+    if not self:HaveMasterLooterDb() or not self:MasterLooterDbValue('buttons') then
+        local buttons = self:MasterLooterModule():GetDbValue('buttons')
+        ordering = buttons.ordering
+    else
+        ordering = self:MasterLooterDbValue('buttons.ordering')
+    end
+
+    if Util.Objects.IsNil(ordering) or Util.Tables.Count(ordering) == 0 then
+        ordering = {}
+
+        for i = 1, self:GetButtonCount() do
+            ordering[i] = i
+        end
+    end
+
+    return Util.Tables.Copy(ordering)
+end
+
 function AddOn:GetButtons()
     return self:MasterLooterDbValue('buttons') or {}
 end
@@ -564,7 +584,7 @@ end
 --- @see MasterLooterDb
 --- @return table a table of attributes for named response, if available
 function AddOn:GetResponse(name)
-    -- Logging:Trace('GetResponse(%s)', tostring(name))
+    --Logging:Warn('GetResponse(%s)', tostring(name))
 
     -- this is the MasterLooter profile db, for use in fallback cases
     -- it's not guaranteed to be consistent with the master looter in situations where

@@ -45,15 +45,23 @@ ML.AutoAwardRepItemsMode = {
 
 -- these are reasons for an item award, some user visible and some are not
 ML.AwardReasons = {
-	ms_need = {
-		user_visible = true,
-		suicide      = true,
-		color        = C.Colors.Evergreen,
+	ms_need       = {
+		user_visible  = true,
+		suicide       = true,
+		color         = C.Colors.Evergreen,
+		display_order = 1,
 	},
-	os_greed = {
-		user_visible = true,
-		suicide      = false,
-		color        = C.Colors.RogueYellow,
+	minor_upgrade = {
+		user_visible  = true,
+		suicide       = false,
+		color         = C.Colors.PaladinPink,
+		display_order = 2,
+	},
+	os_greed      = {
+		user_visible  = true,
+		suicide       = false,
+		color         = C.Colors.RogueYellow,
+		display_order = 3,
 	},
 	disenchant = {
 		user_visible = false,
@@ -179,6 +187,7 @@ ML.defaults = {
 		buttons = {
 			--[[
 			  numButtons = 2,
+			  ordering = {},
 			  { text = L["ms_need"],          whisperKey = L["whisperkey_ms_need"], },
 			  { text = L["os_greed"],         whisperKey = L["whisperkey_os_greed"], },
 			--]]
@@ -222,16 +231,22 @@ do
 		Util(ML.AwardReasons)
 			:CopyFilter(function (v) return not v.user_visible end, true, nil, true)()
 
-	-- establish the number of user visible buttons
+	-- establish the number of user visible buttons and display order
 	DefaultButtons.numButtons = Util.Tables.Count(UserVisibleResponses)
+	DefaultButtons.ordering = { }
+
 	local index = 1
 	for response, value in pairs(UserVisibleResponses) do
+		DefaultButtons.ordering[value.display_order] = index
 		-- these are entries that represent buttons available to player at time of loot decision
 		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response], key = response})
 		-- the are entries of the universe of possible responses, which are a super set of ones presented to the player
 		Util.Tables.Push(DefaultResponses, {color = value.color, sort = index, text = L[response], key = response})
 		index = index + 1
 	end
+
+	Util.Tables.Compact(DefaultButtons.ordering)
+	--Logging:Warn("%s", Util.Objects.ToString(DefaultButtons.ordering))
 
 	for response, value in pairs(UserNonVisibleResponses) do
 		ML.NonVisibleAwardReasons[response] = UIUtil.ColoredDecorator(value.color):decorate(L[response])
@@ -458,7 +473,7 @@ function ML:GetItemsFromMessage(msg, sender)
 	local response = 1
 	local whisperKeys = {}
 	for k, v in pairs(self.db.profile.buttons) do
-		if k ~= 'numButtons' then
+		if k ~= 'numButtons' and k ~= 'ordering' then
 			-- extract the whisperKeys to a table
 			gsub(v.whisperKey, '[%w]+', function(x) tinsert(whisperKeys, {key = x, num = k}) end)
 		end
