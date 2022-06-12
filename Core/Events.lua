@@ -19,7 +19,20 @@ function AddOn:SubscribeToEvents()
     local events = {}
     for event, method in pairs(self.Events) do
         Logging:Trace("SubscribeToEvents(%s) : %s", self:GetName(), event)
-        events[event] = function(evt, ...) self[method](self, evt, ...) end
+        events[event] = function(evt, ...)
+
+            local args = {...}
+
+            local function HandleEvent()
+                self[method](self, evt, unpack(args))
+            end
+
+            if not self.player or not self.player:IsValid() then
+                self:ScheduleTimer(function() HandleEvent() end, 1)
+            else
+                HandleEvent()
+            end
+        end
     end
     self.eventSubscriptions = Event:BulkSubscribe(events)
 end
@@ -34,6 +47,7 @@ function AddOn:UnsubscribeFromEvents()
     end
 end
 
+
 -- track whether initial load of addon or has it been reloaded (either via login or explicit reload)
 local initialLoad = true
 -- this event is triggered when the player logs in, /reloads the UI, or zones between map instances
@@ -44,7 +58,7 @@ local initialLoad = true
 -- instance zone event = false, false
 function AddOn:PlayerEnteringWorld(_, isLogin, isReload)
     Logging:Debug("PlayerEnteringWorld(%s) : isLogin=%s, isReload=%s, initialLoad=%s",
-                  AddOn.player:GetName(), tostring(isLogin), tostring(isReload), tostring(initialLoad)
+          self.player:GetName(), tostring(isLogin), tostring(isReload), tostring(initialLoad)
     )
     self:NewMasterLooterCheck()
     -- if we have not yet handled the initial entering world event
@@ -116,7 +130,6 @@ function AddOn:EncounterEnd(_, ...)
     Logging:Debug("EncounterEnd()")
     self.encounter = Encounter(...)
 end
-
 
 -- https://wow.gamepedia.com/RAID_INSTANCE_WELCOME
 function AddOn:RaidInstanceEnter(_, ...)
