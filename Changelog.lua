@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.13 (2022-06-12)
+* if player information is not available upon login, defer event handling until available 5eae017
+
 2021.4.12 (2022-05-06)
 * add support for capturing logging for forensics ef11b06
 * add support for intuitive repositioning of players in loot lists 8d9bfdc
