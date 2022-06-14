@@ -167,6 +167,7 @@ local _build = function(self, ml)
             Util.Tables.Get(mlDefaults, 'buttons.numButtons') or
             0
 
+    -- todo : send order?
     local buttons = {
         numButtons = numButtons
     }

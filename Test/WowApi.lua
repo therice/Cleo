@@ -369,6 +369,24 @@ local PlayerToGuid = {
         realm = "Realm2",
         class = "WARRIOR"
     },
+    Bud = {
+        guid = "Player-1111-00000001",
+        name = "Bud-Realm2",
+        realm = "Realm2",
+        class = "PRIEST"
+    },
+    Dee = {
+        guid = "Player-2222-00000002",
+        name = "Dee-Realm2",
+        realm = "Realm2",
+        class = "ROGUE"
+    },
+    Guy = {
+        guid = "Player-3333-00000003",
+        name = "Guy-Realm2",
+        realm = "Realm2",
+        class = "WARLOCK"
+    },
 }
 
 local PlayerGuidInfo = {}

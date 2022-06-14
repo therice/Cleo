@@ -48,12 +48,14 @@ ML.AwardReasons = {
 	ms_need       = {
 		user_visible  = true,
 		suicide       = true,
+		suicide_amt   = nil,
 		color         = C.Colors.Evergreen,
 		display_order = 1,
 	},
 	minor_upgrade = {
 		user_visible  = true,
-		suicide       = false,
+		suicide       = true,
+		suicide_amt   = 5,
 		color         = C.Colors.PaladinPink,
 		display_order = 2,
 	},
@@ -239,7 +241,7 @@ do
 	for response, value in pairs(UserVisibleResponses) do
 		DefaultButtons.ordering[value.display_order] = index
 		-- these are entries that represent buttons available to player at time of loot decision
-		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response], key = response})
+		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response], suicide_amt = value.suicide_amt, key = response})
 		-- the are entries of the universe of possible responses, which are a super set of ones presented to the player
 		Util.Tables.Push(DefaultResponses, {color = value.color, sort = index, text = L[response], key = response})
 		index = index + 1

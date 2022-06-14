@@ -265,22 +265,27 @@ end
 --- all players with a lower priority will be promoted into the previous priority on the list
 --- the dropped player will be added back with lowest priority
 --- @param player Models.Player player to drop
-function List:DropPlayer(player)
-	local priority, _ = self:RemovePlayer(player, false)
+--- @param count number|nil the number of slots to drop the player (optional, if nil will drop to bottom)
+function List:DropPlayer(player, count)
+	count = tonumber(Util.Objects.Default(count, nil))
+	Logging:Trace("DropPlayer() : Evaluating %s [count=%s]", tostring(player), tostring(count))
 
+	local priority, _ = self:RemovePlayer(player, false)
 	if priority then
+		local floor = (count and count > 0) and (priority + count) or nil
 		ReorderPlayers(
 				self,
 				function(prio, p)
 					Logging:Trace("DropPlayer() : Evaluating %s [%d]", tostring(p), prio)
 					local newPriority = prio
 					if prio > priority then
-						newPriority = priority
-						priority = prio
+						if not floor or prio <= floor then
+							newPriority = priority
+							priority = prio
+						end
 					end
 
 					Logging:Trace("DropPlayer() : Result %s [%d => %d]", tostring(p), prio, newPriority)
-
 					return newPriority, p
 				end
 		)

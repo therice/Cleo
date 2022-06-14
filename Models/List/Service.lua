@@ -507,23 +507,26 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 	end
 end
 
+--- @param player string|Models.Player the player receiving the loot
+--- @param equipment string the equipment slot for loot (e.g. INVTYPE_HEAD)
+--- @param count number|nil the number of slots to drop the player on list as result of receiving item
 --- @return string, number, number, number, number :
 ---     list id, active prio (before), active prio (after), original prio (before), orginal prio (after)
-function ActiveConfiguration:OnLootEvent(player, equipment)
-	Logging:Debug("OnLootEvent(%s, %s)", tostring(player), tostring(equipment))
+function ActiveConfiguration:OnLootEvent(player, equipment, count)
+	Logging:Debug("OnLootEvent(%s, %s, %s)", tostring(player), tostring(equipment), tostring(count))
 	-- resolve player through configuration as it has potential to be an ALT
 	-- if that is the case, all priorities will be tied to the main with which it is associated
 	-- otherwise, the player stands alone
 	player = self.config:ResolvePlayer(player)
-	Logging:Debug("OnLootEvent(%s, %s)", tostring(player), tostring(equipment))
+	Logging:Debug("OnLootEvent(%s, %s, %s)", tostring(player), tostring(equipment), tostring(count))
 
 	-- locate the current active list for the equipment
 	local listId, list = self:GetActiveListByEquipment(equipment)
 
 	if (listId and list) then
 		Logging:Trace(
-			"OnLootEvent(%s, %s) : Located List(%s, '%s'), 'suiciding' player",
-			tostring(player), tostring(equipment), tostring(listId), list.name
+			"OnLootEvent(%s, %s, %s) : Located List(%s, '%s'), 'suiciding' player (with respect to count of spots to drop)",
+			tostring(player), tostring(equipment), tostring(count), tostring(listId), list.name
 		)
 
 		-- apb : active priority before
@@ -532,8 +535,9 @@ function ActiveConfiguration:OnLootEvent(player, equipment)
 		-- opa : original priority after
 
 		-- 'suicide' the player on active list and then apply to master list
+		-- note that this may not result in a drop to bottom of list if a count was specified
 		local apb = list:GetPlayerPriority(player, true)
-		list:DropPlayer(player)
+		list:DropPlayer(player, count)
 		local apa = list:GetPlayerPriority(player, true)
 		-- apply the adjusted priorities back to master (original) list
 		local origList = self.lists[listId]

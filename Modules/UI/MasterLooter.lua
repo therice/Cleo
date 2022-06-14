@@ -665,10 +665,61 @@ function ML:LayoutResponsesTab(tab)
 			)
 	tab.showLootResponses:SetSize(14, 14)
 
+	tab.suicideGroup =
+		UI:New('InlineGroup',tab)
+		  :Point("TOPLEFT", tab.visibilityGroup, "BOTTOMLEFT",  0, -5)
+		  :Point("TOPRIGHT", tab.visibilityGroup, "BOTTOMRIGHT",0, 0)
+		  :SetHeight(130)
+		  :Title(L["suicide_settings"])
+	content = tab.suicideGroup.content
+	tab.suicideDesc =
+		UI:New('Text', content, L["suicide_settings_desc"])
+		  :Color(C.Colors.White.r, C.Colors.White.g, C.Colors.White.b, C.Colors.White.a)
+		  :Point("TOPLEFT", tab.suicideGroup, "TOPLEFT", 15, -15)
+		  :Point("RIGHT", content, "RIGHT", 0, 0)
+
+	tab.AddSuicideAmounts = function(self)
+		if not self.suicideAmounts then
+			self.suicideAmounts = {}
+			local buttons, content = module.db.profile.buttons, tab.suicideGroup.content
+			for _, index in pairs(buttons.ordering) do
+				local button = buttons[index]
+				local reason = module.AwardReasons[button.key]
+				local count = #self.suicideAmounts
+
+				if reason and Util.Objects.Default(reason.suicide, false) and reason.suicide_amt then
+					local anchorPoint = count > 0 and self.suicideAmounts[count] or self.suicideDesc
+					self.suicideAmounts[count + 1] =
+						UI:New('Slider', content, true)
+					        :SetText(L[button.key])
+							:Tooltip(L["suicide_amount_desc"])
+					        :Size(250)
+					        :EditBox()
+					        :Range(0, 25)
+					        :Datasource(
+								module,
+								module.db.profile.buttons[index],
+								'suicide_amt'
+							)
+
+					self.suicideAmounts[count+1].Text:SetTextColor(button.color.r, button.color.g, button.color.b, button.color.a)
+
+					if count > 0 then
+						self.suicideAmounts[count + 1]:Point("LEFT", anchorPoint, "RIGHT", 15, 0)
+					else
+						self.suicideAmounts[count + 1]:Point("TOPLEFT", anchorPoint, "BOTTOMLEFT", 10, -15)
+					end
+
+					count = count +1
+				end
+			end
+		end
+	end
+
 	tab.whispersGroup =
 		UI:New('InlineGroup',tab)
-			:Point("TOPLEFT", tab.visibilityGroup, "BOTTOMLEFT",  0, -5)
-			:Point("TOPRIGHT", tab.visibilityGroup, "BOTTOMRIGHT",0, 0)
+			:Point("TOPLEFT", tab.suicideGroup, "BOTTOMLEFT",  0, -5)
+			:Point("TOPRIGHT", tab.suicideGroup, "BOTTOMRIGHT",0, 0)
 			:SetHeight(225)
 			:Title(L["whispers"])
 	content = tab.whispersGroup.content
@@ -745,6 +796,7 @@ function ML:LayoutResponsesTab(tab)
 	tab:SetScript(
 			"OnShow",
 			function(self)
+				self:AddSuicideAmounts()
 				self:AddWhisperResponses()
 				self:UpdateFields()
 			end
