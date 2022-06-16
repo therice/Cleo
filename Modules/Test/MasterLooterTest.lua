@@ -238,6 +238,9 @@ describe("MasterLooter", function()
 		end)
 
 		it("sends LootTable", function()
+			-- override testing behavior for test suite
+			_G.LootSlotHasItem = function() return true end
+
 			WoWAPI_FireEvent("LOOT_READY")
 			WoWAPI_FireEvent("LOOT_OPENED")
 			WoWAPI_FireUpdate(GetTime()+10)
@@ -302,6 +305,16 @@ describe("MasterLooter", function()
 				assert.equal("ms_need", award.awardReason)
 			end
 
+			WoWAPI_FireUpdate(GetTime() + 10)
+
+			-- partial suicide workflow
+			la:OnResponseReceived(2, "Player504-Realm1", {response = 3})
+			local award = AddOn:LootAllocateModule():GetItemAward(2, "Player504-Realm1")
+			ml:Award(award, Util.Functions.Noop, award)
+			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 2)
+			WoWAPI_FireUpdate(GetTime() + 10)
+
+			-- normal suicide workflow
 			AddOn:SendResponse(C.group, 1, 1)
 			WoWAPI_FireUpdate(GetTime() + 10)
 			local award = AddOn:LootAllocateModule():GetItemAward(1, AddOn.player:GetName())
@@ -311,8 +324,8 @@ describe("MasterLooter", function()
 			WoWAPI_FireUpdate(GetTime() + 10)
 
 			-- this handles the testing of alt mapping
-			la:OnResponseReceived(2, "Player525-Realm1", {response = 1})
-			award = AddOn:LootAllocateModule():GetItemAward(2, "Player525-Realm1")
+			la:OnResponseReceived(3, "Player525-Realm1", {response = 1})
+			award = AddOn:LootAllocateModule():GetItemAward(3, "Player525-Realm1")
 			ml:Award(award, Util.Functions.Noop, award)
 			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 3)
 		end)

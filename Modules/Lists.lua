@@ -555,10 +555,13 @@ function Lists:OnAwardItem(itemAward)
 			-- you cannot access the required meta-information
 			--
 			-- locate the button associated with the award reason to see if there is a modifier for suicide (spots)
-			local _, button = Util.Tables.Find(AddOn:MasterLooterModule().db.profile.buttons, function(b) return b.key == itemAward.awardReason end)
+			local _, button = Util.Tables.FindFn(AddOn:MasterLooterModule().db.profile.buttons, function(b) return b.key == itemAward.awardReason end)
 			if button and button.suicide_amt then
 				suicideAmt = tonumber(button.suicide_amt)
 			end
+
+			--Logging:Trace("OnAwardItem - %s", Util.Objects.ToString(AddOn:MasterLooterModule().db.profile.buttons))
+			--Logging:Trace("OnAwardItem(%s, %s, %s)", tostring(itemAward.winner), tostring(itemAward.equipLoc), tostring(suicideAmt))
 
 			local lid, apb, apa, opb, opa =
 				self:GetActiveConfiguration():OnLootEvent(

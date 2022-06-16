@@ -188,24 +188,13 @@ function List:GetPlayerPriority(player, relative)
 
 	if relative then
 		local index = 1
-		local flipped =
-			Util(self.players)
-				:Flip(
-					function()
-						local key = index
-						index = index + 1
-						return key
-					end
-				)()
-
-		_, priority =
-			Util.Tables.FindFn(
-				flipped,
-				function(_, prioPlayer)
-					return prioPlayer == player
-				end,
-				true
-			)
+		for _, p in Util.Tables.Sparse.ipairs(self.players) do
+			if  p == player then
+				priority = index
+				break
+			end
+			index = index + 1
+		end
 	else
 		priority, _ = Util.Tables.Find(self.players, player)
 	end
@@ -268,9 +257,9 @@ end
 --- @param count number|nil the number of slots to drop the player (optional, if nil will drop to bottom)
 function List:DropPlayer(player, count)
 	count = tonumber(Util.Objects.Default(count, nil))
-	Logging:Trace("DropPlayer() : Evaluating %s [count=%s]", tostring(player), tostring(count))
-
 	local priority, _ = self:RemovePlayer(player, false)
+	Logging:Trace("DropPlayer() : Dropping %s [priority=%s, count=%s]", tostring(player), tostring(priority), tostring(count))
+
 	if priority then
 		local floor = (count and count > 0) and (priority + count) or nil
 		ReorderPlayers(
@@ -290,6 +279,7 @@ function List:DropPlayer(player, count)
 				end
 		)
 		self:AddPlayer(player, priority)
+		Logging:Trace("DropPlayer() : Re-added %s at %d", tostring(player), priority)
 	end
 end
 
