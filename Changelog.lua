@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.15 (2022-06-16)
+* fix issue with partial suicide not working and incorret priorities being displayed in announcements 7d2e92c
+
 2021.4.14 (2022-06-14)
 * add minor upgrade as a response option 584f78a
 * if player information is not available upon login, defer enabling addon until available 9535f85
