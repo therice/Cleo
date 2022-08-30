@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.16 (2022-08-30)
+* Update manifest for Wrath e2e4130
+
 2021.4.15 (2022-06-16)
 * fix issue with partial suicide not working and incorret priorities being displayed in announcements 7d2e92c
 
