@@ -1,12 +1,12 @@
-## Interface: 20504
-## X-Min-Interface: 20504
+## Interface: 30400
+## X-Min-Interface: 30400
 ## Title: |cfffe7b2cCleo|r
-## Notes: Cleo - Suicide Kings AddOn for World of Warcraft (TBC Classic)
+## Notes: Cleo - Suicide Kings AddOn for World of Warcraft (WOTLK Classic)
 ## Author: Jackburtón-Atiesh
 ## Version: @project-version@
 ## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit
 ## X-AddonName: Cleo
-## X-InterfaceName: Cleo (TBC Classic)
+## X-InterfaceName: Cleo (WOTLK Classic)
 
 ## Required Libraries
 Libs\Libs.xml
