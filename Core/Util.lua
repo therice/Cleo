@@ -366,6 +366,22 @@ function AddOn.Unsubscribe(subscriptions)
     end
 end
 
+local GuildRanks = Util.Memoize.Memoize(
+    function()
+        local ranks = {}
+        if IsInGuild() then
+            GuildRoster()
+            for i = 1, GuildControlGetNumRanks() do
+                ranks[GuildControlGetRankName(i)] = i
+            end
+        end
+        return ranks
+    end
+)
+function AddOn.GetGuildRanks()
+    return GuildRanks()
+end
+
 function AddOn.GetDateTime()
     return date("%m/%d/%y %H:%M:%S", time())
 end

@@ -449,6 +449,11 @@ function AddOn:UpdateGroupMembers()
         -- make sure we are present
         -- e.g. {'Jackburtón-Atiesh' = true}
         group[self:UnitName(self.player:GetName())] = true
+        --[[
+        group[self:UnitName("Avalona-Atiesh")] = true
+        group[self:UnitName("Octane-Atiesh")] = true
+        group[self:UnitName("Djbrave-Atiesh")] = true
+        --]]
 
         -- go through previous state and dispatch player messages (as necessary)
         -- self.group is the previous state (reflects previous roster)

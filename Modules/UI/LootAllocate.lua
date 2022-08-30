@@ -31,13 +31,15 @@ local RightClickMenu, FilterMenu, Enchanters
 
 local ScrollColumns, ScrollColumnCells =
 	ST.ColumnBuilder()
-		:column(""):set("col", "class"):sortnext(2):width(20)                                   -- 1
-		:column(_G.NAME):set("col", "name"):defaultsort(STColumnBuilder.Ascending):width(120)   -- 2
+		:column(""):set("col", "class"):sortnext(5):width(20)                                   -- 1
+		:column(_G.NAME):set("col", "name"):width(120)                                          -- 2
 		:column(_G.RANK):set("col", "rank"):sortnext(4):width(95)                               -- 3
 			:comparesort(function(...) return LA.SortByRank(...) end)
-		:column(L["response"]):set("col", "response"):sortnext(5):width(240)                    -- 4
+		:column(L["response"]):set("col", "response"):width(240)                                -- 4
+			:defaultsort(STColumnBuilder.Ascending):sortnext(5)
 			:comparesort(function(...) return LA.SortByResponse(...) end)
-		:column(L["priority_active"]):set("col", "pa"):sortnext(6):width(100)                   -- 5
+		:column(L["priority_active"]):set("col", "pa"):width(100)                               -- 5
+			:defaultsort(STColumnBuilder.Ascending):sortnext(6)
 			:comparesort(function(...) return LA.SortByActivePrio(...) end)
 		:column(L["priority_overall"]):set("col", "po"):sortnext(11):width(100)                 -- 6
 			:comparesort(function(...) return LA.SortByOverallPrio(...) end)
@@ -374,7 +376,7 @@ LA.SortByRank =
 	ST.SortFn(
 		function(row)
 			local cr = LA:CurrentEntry():GetCandidateResponse(row.name)
-			return AddOn.GetGuildRanks()[cr.rank] or 100
+			return AddOn.GetGuildRanks()[cr.guildRank] or 100
 		end
 	)
 

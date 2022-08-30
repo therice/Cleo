@@ -1731,6 +1731,11 @@ function ML:Test(items)
 			local activeConfiguration = AddOn:ListsModule():GetActiveConfiguration()
 			if activeConfiguration then
 				activeConfiguration:OnPlayerEvent(AddOn.player, true)
+				--[[
+				activeConfiguration:OnPlayerEvent("Avalona", true)
+				activeConfiguration:OnPlayerEvent("Octane", true)
+				activeConfiguration:OnPlayerEvent("Djbrave", true)
+				--]]
 				return true
 			end
 
