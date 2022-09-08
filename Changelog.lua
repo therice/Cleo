@@ -3,7 +3,7 @@ local _, AddOn = ...
 
 AddOn.Changelog = [=[
 2021.4.17 (2022-09-08)
-* misc 036621e
+* Minor modifications related to sorting and guild ranks for loot allocation 036621e
 
 2021.4.16 (2022-08-30)
 * Update manifest for Wrath e2e4130
