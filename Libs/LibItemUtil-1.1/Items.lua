@@ -115,8 +115,33 @@ lib.TokenEquipmentLocations = {
     [30246] = { "LegsSlot" },                   -- Leggings of the Vanquished Defender
     [30247] = { "LegsSlot" },                   -- Leggings of the Vanquished Hero
     [30245] = { "LegsSlot" },                   -- Leggings of the Vanquished Champion
-    [32405] = { "NeckSlot"},                    -- Verdant Sphere
-    -- TBC Classic P3 (T6) TODO
+    [32405] = { "NeckSlot"} ,                    -- Verdant Sphere
+    -- TBC Classic P3 (T6)
+    [31097] = { "HeadSlot"},                    -- Helm of the Forgotten Conqueror
+    [31095] = { "HeadSlot"},                    -- Helm of the Forgotten Protector
+    [31096] = { "HeadSlot"},                    -- Helm of the Forgotten Vanquisher
+    [31101] = { "ShoulderSlot"},                -- Pauldrons of the Forgotten Conqueror
+    [31103] = { "ShoulderSlot"},                -- Pauldrons of the Forgotten Protector
+    [31102] = { "ShoulderSlot"},                -- Pauldrons of the Forgotten Vanquisher
+    [31089] = { "ChestSlot"},                   -- Chestguard of the Forgotten Conqueror
+    [31091] = { "ChestSlot"},                   -- Chestguard of the Forgotten Protector
+    [31090] = { "ChestSlot"},                   -- Chestguard of the Forgotten Vanquisher
+    [31092] = { "HandsSlot"},                   -- Gloves of the Forgotten Conqueror
+    [31094] = { "HandsSlot"},                   -- Gloves of the Forgotten Protector
+    [31093] = { "HandsSlot"},                   -- Gloves of the Forgotten Vanquisher
+    [31098] = { "LegsSlot"},                    -- Leggings of the Forgotten Conqueror
+    [31100] = { "LegsSlot"},                    -- Leggings of the Forgotten Protector
+    [31099] = { "LegsSlot"},                    -- Leggings of the Forgotten Vanquisher
+    -- TBC Classic P3 (T6)
+    [34848] = { "WristSlot" },                  -- Bracers of the Forgotten Conqueror
+    [34851] = { "WristSlot" },                  -- Bracers of the Forgotten Protector
+    [34852] = { "WristSlot" },                  -- Bracers of the Forgotten Vanquisher
+    [34856] = { "FeetSlot" },                   -- Boots of the Forgotten Conqueror
+    [34857] = { "FeetSlot" },                   -- Boots of the Forgotten Protector
+    [34858] = { "FeetSlot" },                   -- Boots of the Forgotten Vanquisher
+    [34853] = { "WaistSlot" },                  -- Belt of the Forgotten Conqueror
+    [34854] = { "WaistSlot" },                  -- Belt of the Forgotten Protector
+    [34855] = { "WaistSlot" },                  -- Belt of the Forgotten Vanquisher
 }
 
 -- mapping from token to items (id) which are rewarded from turning in
@@ -157,5 +182,30 @@ lib.TokenItems = {
     [30247] = { 30142, 30207, 30213 },                              -- Leggings of the Vanquished Hero
     [30245] = { 30132, 30137, 30126, 30148, 30172, 30167, 30192 },  -- Leggings of the Vanquished Champion
     [32405] = { 30018, 30017, 30007, 30015 },                       -- Verdant Sphere
-    -- TBC Classic P3 (T6) TODO
+    -- TBC Classic P3 (T6)
+    [31097] = { 31063, 31064, 31051, 30987, 30988, 30989 },         -- Helm of the Forgotten Conqueror
+    [31095] = { 31003, 30972, 30974, 31015, 31014, 31012 },         -- Helm of the Forgotten Protector
+    [31096] = { 31056, 31037, 31040, 31039, 31027 },                -- Helm of the Forgotten Vanquisher
+    [31101] = { 30996, 30997, 30998, 31069, 31054, 31070 },         -- Pauldrons of the Forgotten Conqueror
+    [31103] = { 31006, 30979, 30980, 31023, 31024, 31002 },         -- Pauldrons of the Forgotten Protector
+    [31102] = { 31059, 31030, 31048, 31049, 31047 },                -- Pauldrons of the Forgotten Vanquisher
+    [31089] = { 30990, 30991, 30992, 31052, 31065, 31066 },         -- Chestguard of the Forgotten Conqueror
+    [31091] = { 31004, 30975, 30976, 31017, 31016, 31018 },         -- Chestguard of the Forgotten Protector
+    [31090] = { 31057, 31028, 31042, 31041, 31043 },                -- Chestguard of the Forgotten Vanquisher
+    [31092] = { 31060, 31050, 31061, 30982, 30983, 30985 },         -- Gloves of the Forgotten Conqueror
+    [31094] = { 31001, 30969, 30970, 31008, 31007, 31011 },         -- Gloves of the Forgotten Protector
+    [31093] = { 31055, 31026, 31034, 31032, 31035 },                -- Gloves of the Forgotten Vanquisher
+    [31098] = { 31068, 31067, 31053, 30993, 30994, 30995 },         -- Leggings of the Forgotten Conqueror
+    [31100] = { 31005, 30977, 30978, 31019, 31020, 31021 },         -- Leggings of the Forgotten Protector
+    [31099] = { 31058, 31029, 31044, 31045, 31046 },                -- Leggings of the Forgotten Vanquisher
+    -- TBC Classic P4 (T6)
+    [34848] = { 34434, 34436, 34435, 34431, 34432, 34433 },         -- Bracers of the Forgotten Conqueror
+    [34851] = { 34443, 34441, 34442, 34437, 34438, 34439 },         -- Bracers of the Forgotten Protector
+    [34852] = { 34447, 34448, 34446, 34445, 34444 },                -- Bracers of the Forgotten Vanquisher
+    [34856] = { 34562, 34564, 34561, 34560, 34559, 34563 },         -- Boots of the Forgotten Conqueror
+    [34857] = { 34570, 34568, 34569, 34565, 34567, 34566 },         -- Boots of the Forgotten Protector
+    [34858] = { 34574, 34575, 34571, 34572, 34573 },                -- Boots of the Forgotten Vanquisher
+    [34853] = { 34527, 34541, 34528, 34487, 34485, 34488 },         -- Belt of the Forgotten Conqueror
+    [34854] = { 34549, 34546, 34547, 34543, 34542, 34545 },         -- Belt of the Forgotten Protector
+    [34855] = { 34557, 34558, 34554, 34555, 34556 },                -- Belt of the Forgotten Vanquisher
 }
