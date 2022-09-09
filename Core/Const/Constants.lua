@@ -157,6 +157,7 @@ AddOn.Constants = {
         LootReady               =   "LOOT_READY",
         LootSlotCleared         =   "LOOT_SLOT_CLEARED",
         PlayerEnteringWorld     =   "PLAYER_ENTERING_WORLD",
+        PlayerLogin             =   "PLAYER_LOGIN",
         PartyLootMethodChanged  =   "PARTY_LOOT_METHOD_CHANGED",
         PartyLeaderChanged      =   "PARTY_LEADER_CHANGED",
         PlayerRegenEnabled      =   "PLAYER_REGEN_ENABLED",

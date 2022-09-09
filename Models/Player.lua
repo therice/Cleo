@@ -1,6 +1,9 @@
 --- @type AddOn
 local _, AddOn = ...
-local Util, Logging, GuildStorage = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging"), AddOn:GetLibrary("GuildStorage")
+--- @type LibUtil
+local Util = AddOn:GetLibrary("Util")
+local Logging = AddOn:GetLibrary("Logging")
+local GuildStorage = AddOn:GetLibrary("GuildStorage")
 
 --- @class Models.Player
 local Player = AddOn.Package('Models'):Class('Player')
@@ -122,7 +125,7 @@ Player.Nobody.class = "DEATHKNIGHT"
 Player.Nobody.guid = "Player-9999-XXXXXXXX"
 
 function Player.Create(guid, info)
-    --Logging:Trace("Create(%s) : info=%s", tostring(guid), tostring(Util.Objects.IsSet(info)))
+    --Logging:Debug("Create(%s) : info=%s", tostring(guid), tostring(Util.Objects.IsSet(info)))
     if Util.Strings.IsEmpty(guid) then return Player(nil, 'Unknown', nil, nil) end
 
     -- https://wow.gamepedia.com/API_GetPlayerInfoByGUID
@@ -130,14 +133,14 @@ function Player.Create(guid, info)
     -- the client has encountered the queried GUID.
     -- localizedClass, englishClass, localizedRace, englishRace, sex, name, realm
     local _, class, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
-    --Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
+    --Logging:Debug("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
 
     -- if the name is not set, means the query did not complete. likely because the player was not
     -- encountered. therefore, just return nil
     if Util.Objects.IsEmpty(name) then
-        Logging:Warn("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
+        Logging:Debug("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
         if info and Util.Strings.IsSet(info.name) then
-            --Logging:Trace("Create(%s) : Using provided player information", guid)
+            --Logging:Debug("Create(%s) : Using provided player information", guid)
             name = info.name
             class = info.classTag or info.class
         else
@@ -148,7 +151,7 @@ function Player.Create(guid, info)
     if Util.Objects.IsEmpty(realm) then realm = select(2, UnitFullName("player")) end
 
     local player = Player(guid, name, class, realm)
-    --Logging:Trace("Create(%s) : created %s", guid, Util.Objects.ToString(player:toTable()))
+    Logging:Debug("Create(%s) : created %s", guid, Util.Objects.ToString(player:toTable()))
     Put(player)
     return player
 end
@@ -158,17 +161,17 @@ end
 --/run print(Cleo.Package('Models').Player:Get('Gnomechómsky'))
 function Player:Get(input)
     local guid, info
-    -- Logging:Debug("Get(%s)", tostring(input))
+    Logging:Trace("Get(%s)", tostring(input))
 
     if Util.Strings.IsSet(input) then
         guid = Player.ParseGuid(input)
-        -- Logging:Debug("Get(%s) : %s", tostring(input), tostring(guid))
+        --Logging:Debug("Get(%s) : %s", tostring(input), tostring(guid))
 
         if Util.Objects.IsNil(guid) then
             local name = Ambiguate(input, "short")
             -- For players: Player-[server ID]-[player UID] (Example: "Player-976-0002FD64")
             guid = UnitGUID(name)
-            -- Logging:Debug("Get(%s) : %s / %s", tostring(input), tostring(name), tostring(guid))
+            --Logging:Debug("Get(%s) : %s / %s", tostring(input), tostring(name), tostring(guid))
             -- GUID(s) are only available for people we're grouped with
             -- so attempt a few other approaches if not available
             --
@@ -181,6 +184,18 @@ function Player:Get(input)
                     info = GuildStorage:GetMember(AddOn:UnitName(name))
                     if info then guid = info.guid end
                 end
+            end
+
+            -- if the name is 'player', grab some extra information in case it's not available at login
+            -- this is an edge case for player using addon on initial login
+            if Util.Strings.Equal(Util.Strings.Lower(name), AddOn.Constants.player) and not info then
+                local n, _ = UnitName(name)
+                local _, c = UnitClass(name)
+
+                info = {
+                    name = n,
+                    class = c,
+                }
             end
         end
     else

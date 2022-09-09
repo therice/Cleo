@@ -235,12 +235,11 @@ function AddOn:IsMasterLooter(unit)
 end
 
 function AddOn:GetMasterLooter()
-    Logging:Debug("GetMasterLooter()")
     local lootMethod, mlPartyId, mlRaidId = GetLootMethod()
     self.lootMethod = lootMethod
-    Logging:Trace(
-            "GetMasterLooter() : lootMethod='%s', mlPartyId=%s, mlRaidId=%s",
-            self.lootMethod, tostring(mlPartyId), tostring(mlRaidId)
+    Logging:Debug(
+        "GetMasterLooter() : lootMethod='%s', mlPartyId=%s, mlRaidId=%s",
+        self.lootMethod, tostring(mlPartyId), tostring(mlRaidId)
     )
 
     -- always the player when testing alone
@@ -256,6 +255,7 @@ function AddOn:GetMasterLooter()
                 end,
                 5
         )
+        Logging:Debug("GetMasterLooter() : ML is '%s' (no group or test/dev mode)", tostring(self.player))
         return true, self.player
     end
 
@@ -289,17 +289,20 @@ function AddOn:NewMasterLooterCheck()
 
     -- ML is set, but it's an unknown player
     if Util.Objects.IsSet(self.masterLooter) and
-            (
-                Util.Strings.Equal(self.masterLooter:GetName(), "Unknown") or
-                Util.Strings.Equal(Ambiguate(self.masterLooter:GetName(), "short"):lower(), _G.UNKNOWNOBJECT:lower())
-            )
+        (
+            Util.Strings.Equal(self.masterLooter:GetName(), "Unknown") or
+            Util.Strings.Equal(Ambiguate(self.masterLooter:GetName(), "short"):lower(), _G.UNKNOWNOBJECT:lower())
+        )
     then
         Logging:Warn("NewMasterLooterCheck() : Unknown Master Looter")
-        return self:ScheduleTimer("NewMasterLooterCheck", 1)
+        self:ScheduleTimer("NewMasterLooterCheck", 1)
+        return
     end
 
     -- at this point we can check if we're the ML, it's not changing
     local isML = self:IsMasterLooter()
+    Logging:Debug("NewMasterLooterCheck() : isML=%s", tostring(isML))
+
     -- old ML is us, but no longer ML
     if self.UnitIsUnit(oldMl, "player") and not isML then
         self:StopHandleLoot()
@@ -339,19 +342,19 @@ function AddOn:NewMasterLooterCheck()
 
     -- Someone else has become ML, nothing additional to do
     if not isML and Util.Objects.IsSet(self.masterLooter) then
-        Logging:Trace("NewMasterLooterCheck() : Another player is the Master Looter")
+        Logging:Debug("NewMasterLooterCheck() : Another player is the Master Looter")
         return
     end
 
     -- not in raid and setting is to only use in raids
     if not IsInRaid() and ML:GetDbValue('onlyUseInRaids') then
-        Logging:Trace("NewMasterLooterCheck() : Not in raid and configuration specifies not to use")
+        Logging:Debug("NewMasterLooterCheck() : Not in raid and configuration specifies not to use")
         return
     end
 
     -- already handling loot, just bail
     if self.handleLoot then
-        Logging:Trace("NewMasterLooterCheck() : Already handling loot")
+        Logging:Debug("NewMasterLooterCheck() : Already handling loot")
         return
     end
 

@@ -95,12 +95,16 @@ function AddOn:OnEnable()
     -- it can be disabled as needed through /cleo pm
     self.mode:Enable(AddOn.Constants.Modes.Persistence)
 
-    --- @type Models.Player
-    self.player = Player:Get("player")
     -- seems to be client regression introduced in 2.5.4 where the needed API calls to get a player's information
     -- isn't always available on initial login, so reschedule
+    --
+    -- be aware though, if rescheduled the initial set of events won't be fired through this code paths
+    -- and will rely upon future ones to do the needful
+    --- @type Models.Player
+    self.player = Player:Get("player")
     if not self.player or not self.player:IsValid() then
-        self:ScheduleTimer(function() self:OnEnable() end, 2)
+        self.player = nil
+        self:ScheduleTimer(function() self:OnEnable() end, 1)
         Logging:Warn("OnEnable(%s) : unable to determine player, rescheduling enable in 2 seconds", self:GetName())
         return
     end
