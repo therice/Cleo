@@ -1,6 +1,5 @@
 local lib = LibStub("LibEncounter-1.0", true)
--- todo : possibly collapse all into encounters
---
+
 -- Currently supports the following raids
 --
 -- (40 person)
@@ -24,6 +23,7 @@ local lib = LibStub("LibEncounter-1.0", true)
 --  Tempest Keep
 --  Mount Hyjal
 --  Black Temple
+--  Sunwell Plateau
 
 -- Mapping from map id to details (name will be used as index for localization)
 lib.Maps = {
@@ -78,11 +78,9 @@ lib.Maps = {
         name = 'Serpentshrine Cavern',
     },
     -- JournalInstance.ID = 752
-    --[[
     [580] = {
         name = 'Sunwell Plateau',
     },
-    --]]
     -- JournalInstance.ID = 749
     [550] = {
         name = 'Tempest Keep',
@@ -454,6 +452,33 @@ lib.Creatures = {
     },
     [22917] = {
         name = 'Illidan Stormrage'
+    },
+    [24850] = {
+        name = 'Kalecgos'
+    },
+    [24892] = {
+        name = 'Sathrovarr the Corruptor'
+    },
+    [24882] = {
+        name = 'Brutallus'
+    },
+    [25038] = {
+        name = 'Felmyst'
+    },
+    [25166] = {
+        name = 'Grand Warlock Alythess'
+    },
+    [25165] = {
+        name = 'Lady Sacrolash'
+    },
+    [25741] = {
+        name = 'M\'uru'
+    },
+    [25840] = {
+        name = 'Entropius'
+    },
+    [25315] = {
+        name = 'Kil\'jaeden the Deceiver'
     },
     --[] = {
     --    name = ''
@@ -947,6 +972,36 @@ lib.Encounters = {
     [609] = {
         map_id = 564,
         creature_id = {22917},
+    },
+    -- Kalecgos
+    [724] = {
+        map_id = 580,
+        creature_id = {24850, 24892},
+    },
+    -- Brutallus
+    [725] = {
+        map_id = 580,
+        creature_id = {24882},
+    },
+    -- Felmyst
+    [726] = {
+        map_id = 580,
+        creature_id = {25038},
+    },
+    -- Eredar Twins
+    [727] = {
+        map_id = 580,
+        creature_id = {25166, 25165},
+    },
+    -- M'uru
+    [728] = {
+        map_id = 580,
+        creature_id = {25741, 25840},
+    },
+    -- Kil'jaeden
+    [729] = {
+        map_id = 580,
+        creature_id = {25315},
     },
     --[] = {
     --    map_id = ,

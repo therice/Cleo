@@ -1527,7 +1527,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	tab.HasPendingChanges = function(self)
 		local result = not Util.Tables.Equals(self.prioritiesOrig, self.priorities, true)
-		Logging:Debug("HasPendingChanges(%s)", tostring(result))
+		Logging:Trace("HasPendingChanges(%s)", tostring(result))
 		return result
 	end
 
