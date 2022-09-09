@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.18 (2022-09-09)
+* revise change log 
+* Add T6 Tokens and Death Knight support to LibItemUtil 525f668
+* Address issue with player information not being available on initia login 6a188c7
+* Retroactively add SWP encounters to LibEncounter 2a909ab
+
 2021.4.17 (2022-09-08)
 * Minor modifications related to sorting and guild ranks for loot allocation 036621e
 
