@@ -243,7 +243,7 @@ do
 		-- these are entries that represent buttons available to player at time of loot decision
 		Util.Tables.Push(DefaultButtons, {color = value.color, text = L[response], whisperKey = L['whisperkey_' .. response], suicide_amt = value.suicide_amt, key = response})
 		-- the are entries of the universe of possible responses, which are a super set of ones presented to the player
-		Util.Tables.Push(DefaultResponses, {color = value.color, sort = index, text = L[response], key = response})
+		Util.Tables.Push(DefaultResponses, {color = value.color, sort = value.display_order or index, text = L[response], key = response})
 		index = index + 1
 	end
 
@@ -285,6 +285,9 @@ function ML:OnEnable()
 	-- item(s) the ML has attempted to give out and waiting
 	--- @type table<number, Models.Item.LootQueueEntry>
 	self.lootQueue = {}
+	--- extra players to add to group for testing
+	--- @type table<number, string>
+	self.testGroupMembers = nil
 	-- is a session in flight
 	self.running = false
 	self:SubscribeToEvents()
@@ -580,6 +583,7 @@ function ML:EndSession()
 		AddOn:StopHandleLoot()
 		AddOn:ScheduleTimer("NewMasterLooterCheck", 1)
 		AddOn.mode:Disable(C.Modes.Test)
+		self.testGroupMembers = nil
 	end
 end
 
@@ -1712,8 +1716,10 @@ function ML.AwardOnClickYes(_, award)
 	ML:Award(award)
 end
 
-function ML:Test(items)
-	Logging:Debug("Test(%d)", #items)
+--- @param items table<number>
+--- @param players table<string>
+function ML:Test(items, players)
+	Logging:Debug("Test(%d, %d)", #items, players and #players or -1)
 
 	AddOn:StartHandleLoot()
 
@@ -1731,11 +1737,15 @@ function ML:Test(items)
 			local activeConfiguration = AddOn:ListsModule():GetActiveConfiguration()
 			if activeConfiguration then
 				activeConfiguration:OnPlayerEvent(AddOn.player, true)
-				--[[
-				activeConfiguration:OnPlayerEvent("Avalona", true)
-				activeConfiguration:OnPlayerEvent("Octane", true)
-				activeConfiguration:OnPlayerEvent("Djbrave", true)
-				--]]
+
+				if Util.Objects.IsTable(players) then
+					self.testGroupMembers = players
+					for _, p in pairs(self.testGroupMembers) do
+						-- e.g. activeConfiguration:OnPlayerEvent("Avalona", true)
+						activeConfiguration:OnPlayerEvent(p, true)
+					end
+				end
+
 				return true
 			end
 

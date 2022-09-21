@@ -267,6 +267,7 @@ function ScrollingTable.Decorate(st)
     st.Hook = function(self)
         self.scrollframe.ScrollBar:OnChange(
                 function(_, offset)
+                    --print("OnChange : " .. tostring(offset))
                     FauxScrollFrame_OnVerticalScroll(self.scrollframe, offset, st.rowHeight, function() st:Refresh() end)
                 end
         )
@@ -275,8 +276,11 @@ function ScrollingTable.Decorate(st)
             -- Logging:Debug("SetData(): %d, %d, %d", #st.filtered, st.displayRows, st.rowHeight)
             -- max =  (total height for all rows) - (total height for displayed rows)
             local max = (#self.filtered * self.rowHeight) - (self.displayRows * self.rowHeight)
-            self.scrollframe.ScrollBar:Range(0, math.max(0, max), st.rowHeight)
-            self.scrollframe.ScrollBar:SetValue(0)
+            local min, cmax =  self.scrollframe.ScrollBar:GetMinMaxValues()
+            -- these next two lines are important to make sure we don't "jump" around for current scroll position
+            -- should data be updated. keep current location and rely upon user to reposition
+            self.scrollframe.ScrollBar:Range(0, math.max(0, max), st.rowHeight, (math.max(0, max) == cmax and min == 0))
+            self.scrollframe.ScrollBar:SetValue(self.scrollframe.ScrollBar:GetValue() or 0)
             self.scrollframe.ScrollBar:UpdateButtons()
             if not self.scrollframe.ScrollBar.buttonUp:IsEnabled() and not self.scrollframe.ScrollBar.buttonDown:IsEnabled() then
                 self.scrollframe.ScrollBar:Hide()

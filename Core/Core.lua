@@ -221,8 +221,8 @@ function AddOn:RegisterChatCommands()
             {
                 {'test', 't'},
                 L['chat_commands_test'],
-                function(count)
-                    self:Test(tonumber(count) or 2)
+                function(count, players)
+                    self:Test(tonumber(count) or 2, players and tonumber(players) or nil)
                 end
             }
     )
@@ -429,6 +429,20 @@ function AddOn:OnMasterLooterDbReceived(mlDb)
     Logging:Trace("OnMasterLooterDbReceived() : %s", Util.Objects.ToString(self.mlDb, 4))
 end
 
+
+
+--- this only returns a value when in test mode and a number of players has been specified, never relevant outside
+--- of test mode
+---
+--- @param self AddOn
+local function ExtraGroupMembers(self)
+    if AddOn:TestModeEnabled() and AddOn:IsMasterLooter() then
+        return AddOn:MasterLooterModule().testGroupMembers
+    end
+
+    return nil
+end
+
 function AddOn:UpdateGroupMembers()
     Logging:Trace("UpdateGroupMembers() : current count is %d", #self.group)
 
@@ -452,11 +466,14 @@ function AddOn:UpdateGroupMembers()
         -- make sure we are present
         -- e.g. {'Jackburtón-Atiesh' = true}
         group[self:UnitName(self.player:GetName())] = true
-        --[[
-        group[self:UnitName("Avalona-Atiesh")] = true
-        group[self:UnitName("Octane-Atiesh")] = true
-        group[self:UnitName("Djbrave-Atiesh")] = true
-        --]]
+
+        local testGroupMembers = ExtraGroupMembers(self)
+        if Util.Objects.IsTable(testGroupMembers) and Util.Tables.Count(testGroupMembers) > 0 then
+            for _, p in pairs(testGroupMembers) do
+                -- e.g. group[self:UnitName("Avalona-Atiesh")] = true
+                group[self:UnitName(p)] = true
+            end
+        end
 
         -- go through previous state and dispatch player messages (as necessary)
         -- self.group is the previous state (reflects previous roster)

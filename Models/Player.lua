@@ -151,7 +151,7 @@ function Player.Create(guid, info)
     if Util.Objects.IsEmpty(realm) then realm = select(2, UnitFullName("player")) end
 
     local player = Player(guid, name, class, realm)
-    Logging:Debug("Create(%s) : created %s", guid, Util.Objects.ToString(player:toTable()))
+    Logging:Trace("Create(%s) : created %s", guid, Util.Objects.ToString(player:toTable()))
     Put(player)
     return player
 end

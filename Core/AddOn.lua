@@ -194,12 +194,42 @@ function AddOn:OnDisable()
     SlashCommands:Unregister()
 end
 
-function AddOn:Test(count)
-    Logging:Debug("Test(%d)", count)
+--- @param itemCount number
+--- @param playerCount number
+function AddOn:Test(itemCount, playerCount)
+    playerCount = Util.Objects.IsSet(playerCount) and tonumber(playerCount) or nil
+    Logging:Debug("Test(%d, %d)", itemCount, playerCount or -1)
+
     local items = Util.Tables.Temp()
-    for _ =1, count do
+    for _ = 1, itemCount do
         Util.Tables.Push(items, AddOn.TestItems[random(1, #AddOn.TestItems)])
     end
+
+    local players = {}
+    if Util.Objects.IsNumber(playerCount) and IsInGuild() then
+        local candidates = Util.Tables.Keys(GuildStorage:GetMembers())
+        --Logging:Debug("%s", Util.Objects.ToString(candidates))
+        Util.Tables.Shuffle(candidates)
+        --Logging:Debug("%s", Util.Objects.ToString(candidates))
+
+        for _ , name in pairs(candidates) do
+            if Util.Objects.IsNil(name) then
+                break
+            end
+
+            if not Util.Strings.Equal(AddOn.player:GetName(), name) and Player.Resolve(name) then
+                Util.Tables.Push(players, name)
+
+                playerCount = playerCount - 1
+                if playerCount <= 0 then
+                    break
+                end
+            end
+        end
+
+        --Logging:Debug("%s", Util.Objects.ToString(players))
+    end
+
 
     self.mode:Enable(C.Modes.Test)
     self.isMasterLooter, self.masterLooter = self:GetMasterLooter()
@@ -213,5 +243,5 @@ function AddOn:Test(count)
     self:CallModule("MasterLooter")
     local ML = self:MasterLooterModule()
     ML:NewMasterLooter(self.masterLooter)
-    ML:Test(items)
+    ML:Test(items, Util.Tables.Count(players) > 0 and players or nil)
 end
