@@ -1373,8 +1373,6 @@ function ML:RegisterAndAnnounceAward(award)
 		AddOn:Print(L["all_items_have_been_awarded"])
 		self:ScheduleTimer('EndSession', 2)
 	end
-
-	return true
 end
 
 function ML:PrintLootError(cause, item, winner)
