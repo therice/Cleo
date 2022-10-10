@@ -301,6 +301,8 @@ local EquipLocationToGearSlots = {
     INVTYPE_FINGER          = {"Finger0Slot", "Finger1Slot"},
     INVTYPE_HOLDABLE        = {"SecondaryHandSlot", ["or"] = "MainHandSlot"},
     INVTYPE_TRINKET         = {"Trinket0Slot", "Trinket1Slot"},
+    -- https://wowpedia.fandom.com/wiki/Relic
+    -- Includes, Idols, Librams, Totems, and Sigils
     INVTYPE_RELIC           = {"SecondaryHandSlot"},
 }
 
