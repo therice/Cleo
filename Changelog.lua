@@ -3,7 +3,6 @@ local _, AddOn = ...
 
 AddOn.Changelog = [=[
 2021.4.20 (2022-10-10)
-* Merge branch 'master' of https://github.com/therice/Cleo bd7bf79
 * Add support for player names with utf8 characters as first character in name 42e57b5
 * Add tokens from WOTLK Phase 1 7155ea3
 * Address regression with UTF8 handling in strings 0f62b24
