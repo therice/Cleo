@@ -1945,7 +1945,7 @@ do
 					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemArtifact:GetRGBA()))
 					:value(PriorityAction.All)
 					:checkable(false):arrow(true)
-				:add():text(function(name, entry) return UIUtil.ClassColorDecorator(entry.class):decorate(name) end)
+				:add():text(function(name, entry) return entry and UIUtil.ClassColorDecorator(entry.class):decorate(name) or L["na"] end)
 					:value(PriorityAction.Player)
 					:checkable(false):arrow(true)
 			:nextlevel()
@@ -1977,21 +1977,26 @@ do
 				info.func = function() self.listPriorityTab:UpdatePriorities() end
 				MSA_DropDownMenu_AddButton(info, level)
 			elseif value == PriorityAction.Player and entry.special == value then
+				local enabled = not Util.Objects.IsEmpty(player)
+
 				info.text = L['move_after']
 				info.notCheckable = true
-				info.hasArrow = true
+				info.hasArrow = enabled
+				info.disabled = not enabled
 				info.value = PlayerAction.After
 				MSA_DropDownMenu_AddButton(info, level)
 
 				info.text = L['move_before']
 				info.notCheckable = true
-				info.hasArrow = true
+				info.hasArrow = enabled
+				info.disabled = not enabled
 				info.value = PlayerAction.Before
 				MSA_DropDownMenu_AddButton(info, level)
 
 				info.text = L['move_down']
 				info.notCheckable = true
-				info.hasArrow = true
+				info.hasArrow = enabled
+				info.disabled = not enabled
 				info.value = PlayerAction.Down
 				MSA_DropDownMenu_AddButton(info, level)
 			elseif Util.Objects.In(value, PlayerAction.After, PlayerAction.Before) and entry.special == value then
