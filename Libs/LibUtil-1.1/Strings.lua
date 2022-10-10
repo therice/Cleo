@@ -4,6 +4,7 @@ local MINOR_VERSION = 20502
 local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Strings) or (minor or 0) > MINOR_VERSION then return end
 
+--- @type LibUtil
 local Util = lib
 --- @class LibUtil.Strings
 local Self = Util.Strings
@@ -83,6 +84,11 @@ function Self.LcFirst(str)
     return str:sub(1, 1):lower() .. str:sub(2)
 end
 
+
+local utf8 = Util.Utf8
+function Self.UcFirstUtf8(str)
+    return utf8.Utf8Upper(utf8.Utf8Sub(str, 1, 1)) .. utf8.Utf8Sub(str, 2)
+end
 
 function Self.Lower(str)
     return string.lower(str or "")

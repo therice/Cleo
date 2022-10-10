@@ -11,4 +11,6 @@
     <Script file="Lists.lua"/>
     <Script file="UUID.lua"/>
     <Script file="Patch.lua"/>
+    <Script file="Utf8.lua"/>
+    <Script file="Utf8Mapping.lua"/>
 </Ui>

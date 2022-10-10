@@ -45,11 +45,14 @@ local UnitNames = {}
 -- @param u Any unit, except those that include '-' like "name-target".
 -- @return Titlecased "unitName-realmName"
 function AddOn:UnitName(u)
+    --Logging:Debug("UnitName(%s)", tostring(u))
     if Util.Objects.IsEmpty(u) then return nil end
     if UnitNames[u] then return UnitNames[u] end
 
     local function qualify(name, realm)
-        name = name:lower():gsub("^%l", string.upper)
+        --Logging:Debug("UnitName.qualify(%s, %s)", tostring(name), tostring(realm))
+        -- name = name:lower():gsub("^%l", string.upper)
+        name = Util.Strings.UcFirstUtf8(name)
         return name .. "-" .. realm
     end
 
@@ -61,7 +64,8 @@ function AddOn:UnitName(u)
     if find and find < #unit then
         -- Let's give it same treatment as below so we're sure it's the same
         local name, realm = strsplit("-", unit, 2)
-        name = name:lower():gsub("^%l", string.upper)
+        -- name = name:lower():gsub("^%l", string.upper)
+        name = Util.Strings.UcFirstUtf8(name)
         return qualify(name, realm)
     end
     -- Apparently functions like GetRaidRosterInfo() will return "real" name, while UnitName() won't
@@ -76,6 +80,7 @@ function AddOn:UnitName(u)
     -- Below won't work without name
     -- We also want to make sure the returned name is always title cased (it might not always be! ty Blizzard)
     local qualified = qualify(name, realm)
+    --Logging:Debug("UnitName(%s) => %s", tostring(u), tostring(qualified))
     UnitNames[u] = qualified
     return qualified
 end

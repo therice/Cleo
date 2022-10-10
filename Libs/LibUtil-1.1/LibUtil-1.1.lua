@@ -9,6 +9,7 @@ local MINOR_VERSION = 20502
 --- @field public Objects LibUtil.Objects
 --- @field public Compression LibUtil.Compression
 --- @field public Memoize LibUtil.Memoize
+--- @field public Utf8 LibUtil.Utf8
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 
@@ -25,7 +26,8 @@ local Modules = {
     "UUID",
     "Bitfield",
     "Lists",
-    "Patch"
+    "Patch",
+    "Utf8",
 }
 
 local Module = {
