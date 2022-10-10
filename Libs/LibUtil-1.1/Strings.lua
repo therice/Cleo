@@ -86,6 +86,7 @@ end
 
 
 local utf8 = Util.Utf8
+-- todo : this may be unneeded and WOW's version of LUA supports upper/lower conversion on UTF8
 function Self.UcFirstUtf8(str)
     return utf8.Utf8Upper(utf8.Utf8Sub(str, 1, 1)) .. utf8.Utf8Sub(str, 2)
 end
