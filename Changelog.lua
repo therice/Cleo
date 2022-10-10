@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.19 (2022-10-04)
+* Add support for dummy players in test mode and don't move scroll on scrolling table refresh 2e191de
+* Remove unnecessary boolean return on award announcement fb4d4ee
+
 2021.4.18 (2022-09-09)
 * revise change log 
 * Add T6 Tokens and Death Knight support to LibItemUtil 525f668
