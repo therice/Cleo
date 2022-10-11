@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.4.21 (2022-10-11)
+* revise change log 
+* Add support for populating lists randomly from guild ranks. Also, sort lists alphabetically 06850d2
+* hide right-click options if context is missing a player 9b4f7f9
+
 2021.4.20 (2022-10-10)
 * Add support for player names with utf8 characters as first character in name 42e57b5
 * Add tokens from WOTLK Phase 1 7155ea3
