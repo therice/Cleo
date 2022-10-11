@@ -335,6 +335,17 @@ function Tabs.ButtonOnLeave(self)
 	UIUtil:HideTooltip()
 end
 
+local TabFont = Util.Memoize.Memoize(
+	function()
+		local f = CreateFont(AddOn.name .. "TabFont")
+		f:SetFont(GameFontNormalSmall:GetFont())
+		f:SetShadowColor(0,0,0)
+		f:SetShadowOffset(1,-1)
+		f:SetTextColor(0.63,0.68,0.69)
+		return f
+	end
+)
+
 function Tabs.CreateTabButton(parent, name)
 	-- Logging:Debug("CreateTabButton(%s)", name)
 
@@ -369,16 +380,15 @@ function Tabs.CreateTabButton(parent, name)
 	tabButton.Text:SetPoint("CENTER", 0, -3)
 	tabButton:SetFontString(tabButton.Text)
 
-	tabButton:SetNormalFontObject(BaseWidget.FontGrayName)
-	tabButton:SetHighlightFontObject("GameFontHighlightSmall")
-	tabButton:SetDisabledFontObject("GameFontNormalSmall")
+	tabButton:SetNormalFontObject(TabFont())
+	tabButton:SetHighlightFontObject(GameFontHighlightSmall)
+	tabButton:SetDisabledFontObject(GameFontNormalSmall)
 
 	tabButton.HighlightTexture = tabButton:CreateTexture()
 	tabButton.HighlightTexture:SetColorTexture(1, 1, 1, .3)
 	tabButton.HighlightTexture:SetPoint("TOPLEFT", 0, -4)
 	tabButton.HighlightTexture:SetPoint("BOTTOMRIGHT")
 	tabButton:SetHighlightTexture(tabButton.HighlightTexture)
-
 
 	-- Logging:Debug("CreateTabButton(%s) : %d, %d", name, tabButton:GetWidth(), tabButton:GetHeight())
 

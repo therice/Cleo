@@ -9,27 +9,6 @@ local pkg = AddOn.Package('UI.Native')
 --- @class UI.Native.Widget
 local Widget = pkg:Class('Widget')
 
-Widget.FontNormalName = AddOn.name .. "FontNormal"
-Widget.FontNormal = CreateFont(Widget.FontNormalName)
-Widget.FontNormal:SetFont(GameFontNormal:GetFont())
-Widget.FontNormal:SetShadowColor(0,0,0)
-Widget.FontNormal:SetShadowOffset(1,-1)
-Widget.FontNormal:SetTextColor(1,.82,0)
--- Widget.FontNormal:SetTextColor(C.Colors.ItemArtifact.r, C.Colors.ItemArtifact.g, C.Colors.ItemArtifact.b)
-
-Widget.FontGrayName = AddOn.name .. "FontGray"
-Widget.FontGray = CreateFont(Widget.FontGrayName)
-Widget.FontGray:SetFont(GameFontHighlightSmall:GetFont())
-Widget.FontGray:SetShadowColor(0,0,0)
-Widget.FontGray:SetShadowOffset(1,-1)
-Widget.FontGray:SetTextColor(0.63,0.68,0.69)
-
-Widget.FontNormalSmallName = AddOn.name .. "FontNormalSmall"
-Widget.FontNormalSmall = CreateFont(Widget.FontNormalSmallName)
-Widget.FontNormalSmall:SetFont(GameFontHighlightSmall:GetFont())
-Widget.FontNormalSmall:SetShadowColor(0,0,0)
-Widget.FontNormalSmall:SetShadowOffset(1,-1)
-
 function Widget:initialize(parent, name)
     self.parent = parent
     self.name = name

@@ -29,7 +29,7 @@ function EditBox:Create()
     eb.Background:SetPoint("TOPLEFT")
     eb.Background:SetPoint("BOTTOMRIGHT")
 
-    eb:SetFontObject("ChatFontNormal")
+    eb:SetFontObject("GameFontHighlightSmall")
     eb:SetTextInsets(4, 4, 0, 0)
 
     eb:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -62,8 +62,6 @@ function EditBox:Create()
         'AddXButton', EditBox.AddXButton,
         'Color', EditBox.Color
     )
-
-    eb:SetFontObject(BaseWidget.FontNormal)
 
     return eb
 end
@@ -192,7 +190,7 @@ end
 function EditBox.AddBackgroundText(self,text)
     if not self.backgroundText then
         self.backgroundText =
-            NativeUI:New('Text', self, nil, 12, "ChatFontNormal"):Point("LEFT",2,0):Point("RIGHT",-2,0):Color(.5,.5,.5)
+            NativeUI:New('Text', self, nil, 12, "GameFontNormalSmall"):Point("LEFT",2,0):Point("RIGHT",-2,0):Color(.5,.5,.5)
     end
 
     local function FocusGained(self)

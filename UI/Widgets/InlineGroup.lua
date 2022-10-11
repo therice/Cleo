@@ -14,7 +14,7 @@ local BorderColor = C.Colors.ItemPoor
 
 function InlineGroup:initialize(parent, name, font)
 	BaseWidget.initialize(self, parent, name)
-	self.font = font or BaseWidget.FontNormalName
+	self.font = font or "GameFontNormal"
 end
 
 function InlineGroup:Create()

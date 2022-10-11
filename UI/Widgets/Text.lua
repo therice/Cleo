@@ -11,8 +11,8 @@ local Text = AddOn.Package('UI.Widgets'):Class('Text', BaseWidget)
 function Text:initialize(parent, name, text, size, font)
     BaseWidget.initialize(self, parent, name)
     self.text = text or ""
-    self.size = size
-    self.font = font or BaseWidget.FontNormalName
+    self.size = size or 12
+    self.font = font or "GameFontNormalSmall"
 end
 
 function Text:Create()

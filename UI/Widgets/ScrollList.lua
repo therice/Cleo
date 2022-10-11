@@ -32,7 +32,7 @@ function ScrollList:Create()
 
 	-- these are all reasonable defaults, but can be changed
 	sl.linesPerPage, sl.lineHeight, sl.linePaddingLeft, sl.scrollWidth = 1, 16, 7, 0
-	sl.fontName, sl.fontSize, sl.lineTexture, sl.ignoreBlend  = nil, 10, BaseWidget.ResolveTexture('white'), true
+	sl.fontName, sl.fontSize, sl.lineTexture, sl.ignoreBlend  = "GameFontNormalSmall", 12, BaseWidget.ResolveTexture('white'), true
 	sl.lineTextureHeight, sl.lineTextureColorHL, sl.lineTextureColorP = 24, DefaultHL, DefaultP
 	sl.enableHoverAnimation, sl.lineTextFormatter = true, nil
 
