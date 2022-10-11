@@ -23,7 +23,6 @@ local DefaultHL, DefaultP = {C.Colors.Grey:GetRGBA()}, {C.Colors.Salmon:GetRGBA(
 DefaultHL[4] = 0.5
 DefaultP[4] = 0.9
 
-
 function ScrollList:Create()
 	local sl = CreateFrame("Frame", self.name, self.parent)
 	sl.frame = NativeUI:New('ScrollFrame', sl):Point(0, 0)
@@ -33,7 +32,7 @@ function ScrollList:Create()
 
 	-- these are all reasonable defaults, but can be changed
 	sl.linesPerPage, sl.lineHeight, sl.linePaddingLeft, sl.scrollWidth = 1, 16, 7, 0
-	sl.fontName, sl.fontSize, sl.lineTexture, sl.ignoreBlend  = nil, 12, BaseWidget.ResolveTexture('white'), true
+	sl.fontName, sl.fontSize, sl.lineTexture, sl.ignoreBlend  = nil, 10, BaseWidget.ResolveTexture('white'), true
 	sl.lineTextureHeight, sl.lineTextureColorHL, sl.lineTextureColorP = 24, DefaultHL, DefaultP
 	sl.enableHoverAnimation, sl.lineTextFormatter = true, nil
 
@@ -138,7 +137,7 @@ function ScrollList.SetLineTextFormatter(self, formatter)
 	return self
 end
 
-function ScrollList.FontSize(self,size)
+function ScrollList.FontSize(self, size)
 	self.fontSize = size
 	for i=1,#self.List do
 		self.List[i].text:SetFont(self.List[i].text:GetFont(),size)
@@ -449,7 +448,7 @@ function ScrollList.AddLine(self, index)
 	line:SetPoint("TOPLEFT", 0, -(index - 1) * self.lineHeight)
 	line:SetPoint("BOTTOMRIGHT", self.frame.content, "TOPRIGHT", 0, -index * self.lineHeight)
 	line.text =
-		NativeUI:New('Text', line, "List" .. tostring(index), self.fontSize or 12)
+		NativeUI:New('Text', line, "List" .. tostring(index), self.fontSize or 12, self.fontName or nil)
 			:Point("LEFT", --[[(self.isCheckList and 24 or 3)--]] 3  + self.linePaddingLeft ,0)
 			:Point("RIGHT",-3,0)
 			:Size(0, self.lineHeight)

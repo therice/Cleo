@@ -139,6 +139,7 @@ AddOn.Constants = {
         ConfigActions       = name .. "_ConfigActions",
         ConfigAltActions    = name .. "_ConfigAltActions",
         Enchanters          = name .. "_AllocateEnchantersMenu",
+        ListActions         = name .. "_ListActions",
         ListPriorityActions = name .. "_ListPriorityActions",
         ListPlayerActions   = name .. "_ListPlayerActions",
         LootAuditActions    = name .. "_LootAuditActions",

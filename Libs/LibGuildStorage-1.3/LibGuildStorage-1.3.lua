@@ -89,19 +89,19 @@ local state, initialized, index, cache, guildInfo, guildName =
 local GuildStorageEntry = Class('GuildStorageEntry')
 
 -- class : String - The class (Mage, Warrior, etc) of the player.
--- classTag : String - Upper-case English classname - localisation independant.
+-- classTag : String - Upper-case English classname - localisation independent
 -- rank : String - The member's rank in the guild ( Guild Master, Member ...)
 -- rankIndex : Number - The number corresponding to the guild's rank (already with 1 added to API return value)
 -- guid : String - The player's globally unique id, https://wowwiki.fandom.com/wiki/API_UnitGUID
 function GuildStorageEntry:initialize(
-        name, class, classTag, rank,
-        rankIndex, officerNote, guid, online
+        name, class, classTag, rank, rankIndex, level, officerNote, guid, online
 )
     self.name = name
     self.class = class
     self.classTag = classTag
     self.rank = rank
     self.rankIndex = rankIndex
+    self.level = level
     self.officerNote = officerNote
     self.guid = guid
     self.online = online or false
@@ -309,7 +309,7 @@ local function OnUpdate()
     Logging:Trace("Processing guild members from %d to %s", index, lastIndex)
     for i = index, lastIndex do
         -- https://wowwiki.fandom.com/wiki/API_GetGuildRosterInfo
-        local name, rank, rankIndex, _, class, _, _, officerNote, online, _, classTag, _, _, _, _, _, guid =
+        local name, rank, rankIndex, level, class, _, _, officerNote, online, _, classTag, _, _, _, _, _, guid =
             GetGuildRosterInfo(i)
         -- The Rank Index starts at 0, add 1 to correspond with the index
         -- for usage in GuildControlGetRankName(index)
@@ -319,11 +319,12 @@ local function OnUpdate()
             local entry = lib:GetMember(name)
             -- Logging:Trace("BEFORE(%s) = %s", name, Util.Objects.ToString(entry))
             if not entry then
-                entry = GuildStorageEntry(name, class, classTag, rank, rankIndex, officerNote, guid, online)
+                entry = GuildStorageEntry(name, class, classTag, rank, rankIndex, level, officerNote, guid, online)
                 cache[name] = entry
             else
                 entry.rank = rank
                 entry.rankIndex = rankIndex
+                entry.level = level
                 entry.class = class
                 entry.classTag = classTag
                 entry.guid = guid

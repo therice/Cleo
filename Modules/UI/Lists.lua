@@ -13,8 +13,6 @@ local UIUtil = AddOn.Require('UI.Util')
 local DropDown = AddOn.Require('UI.DropDown')
 --- @type UI.MoreInfo
 local MI = AddOn.Require('UI.MoreInfo')
---- @type Models.Date
-local Date = AddOn.ImportPackage('Models').Date
 --- @type Models.DateFormat
 local DateFormat = AddOn.ImportPackage('Models').DateFormat
 --- @type LibDialog
@@ -31,11 +29,23 @@ local Dao = AddOn.Package('Models').Dao
 local Lists = AddOn:GetModule("Lists", true)
 --- @type ListsDataPlane
 local ListsDp = AddOn:GetModule("ListsDataPlane", true)
+--- @type LibGuildStorage
+local GuildStorage = AddOn:GetLibrary("GuildStorage")
 
 local Tabs = {
 	[L["list_configs"]]     = L["list_configs_desc"],
 	[L["list_lists"]]       = L["list_lists_desc"],
 }
+
+
+local function AlphabeticalOrder(list)
+	local order, index = {}, 1
+	for v, _ in Util.Tables.OrderedPairs(Util.Tables.Flip(list, function(c) return c.name end)) do
+		order[index] = v.id
+		index = index + 1
+	end
+	return order
+end
 
 function Lists:LayoutInterface(container)
 	container:SetWide(1000)
@@ -177,7 +187,9 @@ function Lists:LayoutConfigurationTab(tab)
 			end
 		)
 	end
-	tab.configList:SetList(module:GetService():Configurations())
+
+	local configs = module:GetService():Configurations()
+	tab.configList:SetList(configs, AlphabeticalOrder(configs))
 
 	-- returns the currently selected configuration
 	--- @return Models.List.Configuration
@@ -268,7 +280,8 @@ function Lists:LayoutConfigurationTab(tab)
 	end
 
 	tab.Refresh = function(self, config)
-		self.configList:SetList(module:GetService():Configurations())
+		local cs = module:GetService():Configurations()
+		self.configList:SetList(cs, AlphabeticalOrder(cs))
 		self:ConfigurationUpdated(nil, {entity=config})
 	end
 
@@ -968,8 +981,14 @@ local ListTabs = {
 	[L["equipment"]]       = L["list_list_equipment_desc"],
 }
 
+local ListActionsMenu
+
 function Lists:LayoutListTab(tab)
 	local module = self
+
+	ListActionsMenu = MSA_DropDownMenu_Create(C.DropDowns.ListActions, tab)
+	MSA_DropDownMenu_Initialize(ListActionsMenu, self.ListActionsMenuInitializer, "MENU")
+	ListActionsMenu.module = module
 
 	tab.lists =
 		UI:New('ScrollList', tab)
@@ -984,9 +1003,19 @@ function Lists:LayoutListTab(tab)
 	tab.lists.frame.ScrollBar.buttonUp:HideBorders()
 	tab.lists.frame.ScrollBar.buttonDown:HideBorders()
 	-- invoked when a list item is clicked, where index is the numeric id within the list
-	tab.lists.SetListValue = function(self, index)
+	tab.lists.SetListValue = function(self, index,...)
 		Logging:Trace("List(Tab).Lists.SetListValue(%d)", index)
 		self:GetParent():Update()
+		self.List[index]:SetScript(
+			"OnMouseDown",
+			function(self, button)
+				if Util.Strings.Equal(C.Buttons.Right, button) then
+					Logging:Trace("List(Tab).List.OnMouseDown(%s)", tostring(index))
+					ListActionsMenu.entry = tab.lists:Selected()
+					DropDown.ToggleMenu(1, ListActionsMenu, self, 100)
+				end
+			end
+		)
 	end
 
 	-- wide bar in which buttons and drop down are located
@@ -1049,13 +1078,17 @@ function Lists:LayoutListTab(tab)
 			:SetTextDecorator(function(item) return item.value.name end)
 			:Tooltip(L["configuration"], L["list_config_dd_desc"])
 			:OnShow(
-				function(self) self:SetList(module:GetService():Configurations()) end, false
+				function(self)
+					local configs = module:GetService():Configurations()
+					self:SetList(configs, AlphabeticalOrder(configs))
+				end, false
 			)
 			:OnValueChanged(
 				function(item)
 					local config = item.value
 					Logging:Trace("List.Config.OnValueChanged(%s)", tostring(config.id))
-					tab.lists:SetList(module:GetService():Lists(config.id))
+					local lists = module:GetService():Lists(config.id)
+					tab.lists:SetList(lists, AlphabeticalOrder(lists))
 					tab.lists:ClearSelection()
 					tab:Update()
 					tab:SetButtonsEnabled(config)
@@ -1124,7 +1157,8 @@ function Lists:LayoutListTab(tab)
 	end
 
 	tab.Refresh = function(self, list)
-		self.config:SetList(module:GetService():Configurations())
+		local configs = module:GetService():Configurations()
+		self.config:SetList(configs, AlphabeticalOrder(configs))
 		self:ListUpdated(nil, {entity=list})
 	end
 
@@ -1574,6 +1608,46 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		end
 	end
 
+	tab.ClearPriorities = function(self)
+		self.priorities = {}
+		self:UpdatePriorities(false)
+	end
+
+	--- @param rank number numeric rank of guild
+	--- @param modifier LibUtil.Optional if empty, only the specified rank. if present and true, that rank and any rank "higher", if presentfalse, that rank and any rank "lower"
+	tab.ClearAndPopulatePrioritiesViaGuild = function(self, rank, modifier)
+		modifier = modifier or Util.Optional.empty()
+		Logging:Debug("ClearAndPopulatePrioritiesViaGuild(%d, %s)", tonumber(rank), tostring(modifier))
+		-- guild ranks are inverted, with highest rank having lowest number (e.g. guild mater) and lowest rank having highest number (e.g. noob)
+		self.priorities = {}
+		local priorities = {}
+		for name, _ in AddOn:GuildIterator() do
+			local sname = AddOn.Ambiguate(name)
+			local player = GuildStorage:GetMember(sname)
+			local index = player.rankIndex
+
+			if  (modifier:isEmpty() and index == rank) or
+				(modifier:ifPresent(function(v) if v then return index <= rank else return index >= rank end end)) then
+				--Logging:Debug("%s", Util.Objects.ToString(AddOn.Ambiguate(name)))
+				local resolved = configSupplier():ResolvePlayer(sname)
+				-- only add players which resolve to themselves (i.e. not an ALT) and make sure their level is
+				-- reasonable for raiding (in this case 71+)
+				if resolved and Util.Strings.Equal(resolved:GetShortName(), sname) and player.level >= 71 then
+					Util.Tables.Push(priorities, resolved)
+				end
+			end
+		end
+
+		if #priorities > 0 then
+			Util.Tables.Shuffle(priorities)
+			for _, player in pairs(priorities) do
+				Util.Tables.Push(self.priorities, player)
+			end
+
+			self:UpdatePriorities(false)
+		end
+	end
+
 	tab.SavePriorities = function(self)
 		local list = listSupplier()
 		if list then
@@ -1961,20 +2035,20 @@ do
 		Util.Functions.True,
 		PriorityActionsEntryBuilder:build(),
 		function(info, menu, level, entry, value)
-			Logging:Warn("%s / %s / %s", tostring(level), tostring(value) ,Util.Objects.ToString(entry))
+			--Logging:Warn("%s / %s / %s", tostring(level), tostring(value) ,Util.Objects.ToString(entry))
 
 			local player, self = menu.entry, menu.module
 			if value == PriorityAction.All and entry.special == value then
-				info.text = L['save']
-				info.notCheckable = true
-				info.disabled = not self.listPriorityTab:HasPendingChanges()
-				info.func = function() self.listPriorityTab:SavePriorities() end
-				MSA_DropDownMenu_AddButton(info, level)
-
 				info.text = L['revert']
 				info.notCheckable = true
 				info.disabled = not self.listPriorityTab:HasPendingChanges()
 				info.func = function() self.listPriorityTab:UpdatePriorities() end
+				MSA_DropDownMenu_AddButton(info, level)
+
+				info.text = L['save']
+				info.notCheckable = true
+				info.disabled = not self.listPriorityTab:HasPendingChanges()
+				info.func = function() self.listPriorityTab:SavePriorities() end
 				MSA_DropDownMenu_AddButton(info, level)
 			elseif value == PriorityAction.Player and entry.special == value then
 				local enabled = not Util.Objects.IsEmpty(player)
@@ -2099,5 +2173,84 @@ do
 	Lists.ConfigActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
 		ConfigActionsMenuEntryBuilder:build()
+	)
+
+	local ListAction = {
+		Populate = "POPULATE",
+	}
+
+	local PopulateVia = {
+		Guild = "GUILD"
+	}
+
+	local GuildAction = {
+		Rank = "RANK"
+	}
+
+	local GuildActionQualifiers = {
+		{ L["this_rank_only"], C.Colors.Blue, Util.Optional.empty() },
+		{ L["this_rank_and_higher"], C.Colors.Green, Util.Optional.of(true) },
+		{ L["this_rank_and_lower"], C.Colors.ItemLegendary, Util.Optional.of(false) },
+	}
+
+	--- @param list Models.List.List
+	--- @param module Lists
+	local function ListActionDisabled(_, list, module)
+		local config = module:GetService().Configuration:Get(list.configId)
+		Logging:Warn("%s", Util.Objects.ToString(config))
+		return config and ConfigActionDisabled(_, config) or false
+	end
+
+	local ListActionsMenuEntryBuilder =
+		DropDown.EntryBuilder()
+			:nextlevel()
+				:add():text(function(_, list, _) return list.name end):checkable(false):title(true)
+				:add():text(L["clear"]):checkable(false):arrow(false)
+					:disabled(ListActionDisabled)
+					:fn(function(_, _, module) module.listPriorityTab:ClearPriorities() end)
+				:add():text(format("%s and %s", L["clear"], L["randomize"])):checkable(false):arrow(true)
+					:disabled(ListActionDisabled)
+					:value(ListAction.Populate)
+			:nextlevel()
+				:add():set('special', ListAction.Populate)
+			:nextlevel()
+				:add():set('special', PopulateVia.Guild)
+			:nextlevel()
+				:add():set('special', GuildAction.Rank)
+
+	Lists.ListActionsMenuInitializer = DropDown.RightClickMenu(
+		Util.Functions.True,
+		ListActionsMenuEntryBuilder:build(),
+		function(info, menu, level, entry, value)
+			local self = menu.module
+			--Logging:Warn("%s / %s / %s", tostring(level), tostring(value), tostring(entry.special))
+			if value == ListAction.Populate and entry.special == value then
+				info.text = format("%s %s",  L['via'], UIUtil.ColoredDecorator(C.Colors.Green):decorate(L['guild']))
+				info.notCheckable = true
+				info.hasArrow = true
+				info.value = PopulateVia.Guild
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif value == PopulateVia.Guild and entry.special == value then
+				for rank, name in pairs(Util.Tables.Sort2(AddOn.GetGuildRanks(), true)) do
+					info = MSA_DropDownMenu_CreateInfo()
+					info.notCheckable = true
+					info.text = name
+					info.hasArrow = true
+					info.value = {GuildAction.Rank, rank}
+					MSA_DropDownMenu_AddButton(info, level)
+				end
+			elseif Util.Objects.IsTable(value) and value[1] == GuildAction.Rank and entry.special == value[1] then
+				local rank = value[2]
+				for _, qualifier in pairs(GuildActionQualifiers) do
+					info = MSA_DropDownMenu_CreateInfo()
+					info.notCheckable = true
+					info.text = UIUtil.ColoredDecorator(qualifier[2]):decorate(qualifier[1])
+					info.func = function()
+						self.listPriorityTab:ClearAndPopulatePrioritiesViaGuild(rank, qualifier[3])
+					end
+					MSA_DropDownMenu_AddButton(info, level)
+				end
+			end
+		end
 	)
 end

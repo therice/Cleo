@@ -24,6 +24,12 @@ Widget.FontGray:SetShadowColor(0,0,0)
 Widget.FontGray:SetShadowOffset(1,-1)
 Widget.FontGray:SetTextColor(0.63,0.68,0.69)
 
+Widget.FontNormalSmallName = AddOn.name .. "FontNormalSmall"
+Widget.FontNormalSmall = CreateFont(Widget.FontNormalSmallName)
+Widget.FontNormalSmall:SetFont(GameFontHighlightSmall:GetFont())
+Widget.FontNormalSmall:SetShadowColor(0,0,0)
+Widget.FontNormalSmall:SetShadowOffset(1,-1)
+
 function Widget:initialize(parent, name)
     self.parent = parent
     self.name = name
