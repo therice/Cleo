@@ -1316,8 +1316,9 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 end
 
 
-local PriorityWidth, PriorityHeight = 150, 18
+local PriorityWidth, PriorityHeight, AttendanceInterval = 150, 18, 30
 local PriorityActionsMenu, PlayerActionsMenu
+local PlayerTooltip
 
 function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	local module = self
@@ -1326,6 +1327,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	PlayerActionsMenu = MSA_DropDownMenu_Create(C.DropDowns.ListPlayerActions, tab)
 	MSA_DropDownMenu_Initialize(PriorityActionsMenu, self.PriorityActionsMenuInitializer, "MENU")
 	MSA_DropDownMenu_Initialize(PlayerActionsMenu, self.PlayerActionsMenuInitializer, "MENU")
+
+	PlayerTooltip = UIUtil.CreateGameTooltip(module, tab)
 
 	local rowsPerColumn, columns = ceil(tab:GetHeight()/(PriorityHeight+6)), min(3, floor(tab:GetWidth()/(PriorityWidth + 25)))
 	Logging:Trace("rowsPerColumn=%d, columns=%d", rowsPerColumn, columns)
@@ -1414,16 +1417,39 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				local alts = config:GetAlternates(playerName)
 				if Util.Objects.IsSet(alts) then
 					self:ColorBorder(C.Colors.LightBlue:GetRGBA())
-
-					local altsColored = {}
-					for _, alt in pairs(alts) do
-						Util.Tables.Push(
-							altsColored,
-							UIUtil.PlayerClassColorDecorator(alt:GetName()):decorate(alt:GetShortName())
-						)
-					end
-					self:Tooltip(L['list_alts'], unpack(altsColored))
 				end
+
+				-- handle tooltips inline as extra stuff to add
+				self:SetScript(
+					'OnEnter',
+					function(self)
+						PlayerTooltip:SetOwner(self, 'ANCHOR_RIGHT')
+						PlayerTooltip:AddLine(L['raid_attendance'])
+						PlayerTooltip:AddLine(" ")
+						local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(AttendanceInterval)
+						local pct = stats[AddOn.Ambiguate(playerName)]
+						pct = pct and (pct * 100.0) or (0.0)
+
+						PlayerTooltip:AddDoubleLine(
+							format("%s %s", L['past'], format(L["n_days"], AttendanceInterval)),
+							format("%.2f %%", pct),
+							0.90, 0.80, 0.50,
+							1, 1, 1
+						)
+
+						if Util.Tables.Count(alts) > 0 then
+							PlayerTooltip:AddLine(" ")
+							PlayerTooltip:AddLine(L['list_alts'])
+							PlayerTooltip:AddLine(" ")
+							for _, alt in pairs(alts) do
+								PlayerTooltip:AddLine(UIUtil.PlayerClassColorDecorator(alt:GetName()):decorate(alt:GetShortName()))
+							end
+						end
+
+						PlayerTooltip:Show()
+					end
+				)
+				self:SetScript("OnLeave", function() PlayerTooltip:Hide() end)
 			end
 
 			if tab:HasPendingChanges() then

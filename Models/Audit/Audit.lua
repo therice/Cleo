@@ -45,3 +45,6 @@ end
 function Audit:TimestampAsDate()
 	return Date(self.timestamp)
 end
+
+--- @type Models.DateFormat
+Audit.ShortDf = shortDf

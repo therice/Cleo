@@ -13,6 +13,8 @@ local Comm = AddOn.RequireOnUse('Core.Comm')
 local Date = AddOn.ImportPackage('Models').Date
 --- @type Models.Audit.RaidRosterRecord
 local RaidRosterRecord =  AddOn.ImportPackage('Models.Audit').RaidRosterRecord
+--- @type Models.Audit.RaidAttendanceStatistics
+local RaidAttendanceStatistics =  AddOn.ImportPackage('Models.Audit').RaidAttendanceStatistics
 
 --- @class RaidAudit
 local RA = AddOn:NewModule("RaidAudit")
@@ -37,6 +39,16 @@ function RA:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('RaidAudit'), RA.defaults)
 	self.history = CDB(self.db.factionrealm)
+	-- cache of various stats which could be used elsewhere
+	self.stats = {
+		attendance = {
+			stale = true,
+			value = nil,
+		},
+		MarkAsStale = function(self)
+			self.attendance.stale = true
+		end
+	}
 	self.Send = Comm():GetSender(C.CommPrefixes.Audit)
 	AddOn:SyncModule():AddHandler(
 		self:GetName(),
@@ -100,6 +112,7 @@ end
 function RA:OnRecordAdd(record)
 	Logging:Trace("OnRecordAdd() : %s", Util.Objects.ToString(record and record:toTable() or {}))
 	self:GetHistory():insert(record:toTable())
+	self.stats:MarkAsStale()
 end
 
 --- @param record Models.Audit.RaidRosterRecord
@@ -111,6 +124,30 @@ function RA:Broadcast(record)
 end
 
 local cpairs = CDB.static.pairs
+
+function RA:GetAttendanceStatistics(intervalInDays)
+	Logging:Trace("GetAttendanceStatistics()")
+	local check, ret = pcall(
+		function()
+			if self.stats.attendance.stale or Util.Objects.IsNil(self.stats.attendance.value) then
+				local stats = RaidAttendanceStatistics.For(function() return cpairs(self:GetHistory()) end)
+				if stats then
+					self.stats.attendance.value = stats:GetTotals(intervalInDays)
+					self.stats.attendance.stale = false
+				end
+			end
+
+			return self.stats.attendance.value or {}
+		end
+	)
+
+	if not check then
+		Logging:Warn("Error processing Raid Audit : %s", tostring(ret))
+		AddOn:Print("Error processing Raid Audit")
+	else
+		return ret
+	end
+end
 
 function RA:GetDataForSync()
 	Logging:Debug("GetDataForSync()")
@@ -193,6 +230,7 @@ function RA:ImportDataFromSync(data)
 		end
 
 		if imported > 0 then
+			self.stats:MarkAsStale()
 			self:RefreshData()
 		end
 

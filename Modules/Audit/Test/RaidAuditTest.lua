@@ -12,6 +12,8 @@ end
 
 --- @type Models.Audit.RaidRosterRecord
 local RaidRosterRecord
+--- @type Models.Audit.RaidAttendanceStatistics
+local RaidAttendanceStatistics
 
 describe("Raid Audit", function()
 	setup(function()
@@ -19,6 +21,7 @@ describe("Raid Audit", function()
 		loadfile('Modules/Audit/Test/RaidAuditTestData.lua')()
 		Util, CDB, Encounter = AddOn:GetLibrary('Util'), AddOn.ImportPackage('Models').CompressedDb, AddOn:GetLibrary("Encounter")
 		RaidRosterRecord = AddOn.Package('Models.Audit').RaidRosterRecord
+		RaidAttendanceStatistics = AddOn.Package('Models.Audit').RaidAttendanceStatistics
 		AddOnLoaded(AddOnName, true)
 	end)
 
@@ -61,15 +64,13 @@ describe("Raid Audit", function()
 			ra = nil
 		end)
 
-		it("scratch", function()
+		it("attendance statistics", function()
 			NewTrafficAuditDb(ra, RaidAuditTestData_1)
-			local history = ra:GetHistory()
-			for i, r in cpairs(history) do
-				local record = RaidRosterRecord:reconstitute(r)
-				print(Util.Objects.ToString(record:toTable()))
-				print(tostring(Encounter:GetMapName(record.instanceId)))
-				print(Util.Objects.ToString(Encounter:GetEncounterCreatureId(record.encounterId)))
-			end
+			local stats =
+				RaidAttendanceStatistics.For(function() return cpairs(ra:GetHistory()) end)
+			local totals = stats:GetTotals(30)
+			print(Util.Objects.ToString(totals))
+			assert(Util.Tables.Count(totals) > 0)
 		end)
 	end)
 end)
