@@ -58,19 +58,27 @@ describe("Events", function()
 			WoWAPI_FireEvent("ENCOUNTER_START", 100, "AnEncounter", 1, 40)
 			assert(AddOn.encounter)
 			assert.equal(AddOn.encounter.id, 100)
-			assert.equal(AddOn.encounter:IsSuccess(), false)
+			assert.equal(AddOn.encounter:IsSuccess():isEmpty(), true)
 		end)
 		it("ENCOUNTER_END", function()
-			WoWAPI_FireEvent("ENCOUNTER_END", 100, "AnEncounter", 1, 40, 0)
+			WoWAPI_FireEvent("ENCOUNTER_END", 200, "AnEncounter", 1, 40, 0)
 			assert(AddOn.encounter)
 			assert.equal(AddOn.encounter.id, 100)
-			assert.equal(AddOn.encounter:IsSuccess(), false)
+			assert.equal(AddOn.encounter:IsSuccess():get(), false)
+
 			-- flip tp false to not fire the EP portions
 			AddOn.handleLoot = false
 			WoWAPI_FireEvent("ENCOUNTER_END", 716, "encounterName", 1, 40, 1)
 			assert(AddOn.encounter)
 			assert.equal(AddOn.encounter.id, 716)
-			assert.equal(AddOn.encounter:IsSuccess(), true)
+			assert.equal(AddOn.encounter:IsSuccess():get(), true)
+
+			AddOn.encounter = nil
+			WoWAPI_FireEvent("ENCOUNTER_END", 999, "encounterName2", 1, 40, 0)
+			assert(AddOn.encounter)
+			assert.equal(AddOn.encounter.id, 999)
+			assert.equal(AddOn.encounter:IsSuccess():get(), false)
+
 			AddOn.handleLoot = true
 		end)
 		it("PLAYER_REGEN_DISABLED", function()

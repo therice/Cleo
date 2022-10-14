@@ -17,6 +17,8 @@ local lib = LibStub("LibEncounter-1.0", true)
 --  Karazhan
 --
 -- (25 person)
+--
+-- TBC
 --  Gruul's Lair
 --  Magtheridon's Lair
 --  Serpentshrine Cavern
@@ -24,8 +26,20 @@ local lib = LibStub("LibEncounter-1.0", true)
 --  Mount Hyjal
 --  Black Temple
 --  Sunwell Plateau
-
+--
+-- WOTLK
+-- 	The Eye of Eternity
+--  The Obsidian Sanctum
+-- 	Vault of Archavon
+--  Naxxramas (redux)
+-- 	Icecrown Citadel
+--  The Ruby Sanctum (TODO)
+--  Onyxia's Lair (redux) (TODO)
+--  Trial of the Crusader (TODO)
+-- 	Ulduar (TODO)
+--
 -- Mapping from map id to details (name will be used as index for localization)
+-- e.g. https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749
 lib.Maps = {
     [309] = {
         name = 'Ancient Zul\'Gurub',
@@ -39,6 +53,7 @@ lib.Maps = {
         name = 'Molten Core',
     },
     -- JournalInstance.ID = 760
+    -- 'Classic' and 'WOTLK'
     [249] = {
         name = 'Onyxia\'s Lair',
     },
@@ -50,6 +65,7 @@ lib.Maps = {
     [531] = {
         name = 'Temple of Ahn\'Qiraj',
     },
+    -- 'Classic' and 'WOTLK'
     [533] = {
         name = 'Naxxramas',
     },
@@ -85,10 +101,45 @@ lib.Maps = {
     [550] = {
         name = 'Tempest Keep',
     },
+    -- JournalInstance.ID = 755
+    [615] = {
+        name = 'The Obsidian Sanctum'
+    },
+    -- JournalInstance.ID = 756
+    [616] = {
+        name = 'The Eye of Eternity'
+    },
+    -- JournalInstance.ID = 753
+    [624] = {
+        name = 'Vault of Archavon'
+    },
+    -- JournalInstance.ID = 758
+    [631] = {
+        name = 'Icecrown Citadel'
+    },
+    -- JournalInstance.ID = 761
+    [724] = {
+        name = 'The Ruby Sanctum'
+    },
+    -- JournalInstance.ID = 757
+    [649] = {
+        name = 'Trial of the Crusader'
+    },
+    -- JournalInstance.ID = 759
+    [603] = {
+        name = 'Ulduar'
+    },
 }
 
--- Mapping from creature id to details (name will be used as index for localization)
--- key is Creature.ID
+
+-- DungeonEncounter.ID <=> JournalEncounter.DungeonEncounterID
+-- JournalEncounter.ID <=> JournalEncounterCreature.JournalEncounterID
+--
+--
+--
+-- Mapping from creature id to details (name will be used as index for localization),
+-- key is Creature.ID, but mappings can get confusing and impossible to track confusing
+-- the table mappings above. easier just to look at DBM for the encounter and creature ids
 lib.Creatures = {
     [15348] = {
         name = 'Kurinnaxx',
@@ -480,6 +531,78 @@ lib.Creatures = {
     [25315] = {
         name = 'Kil\'jaeden the Deceiver'
     },
+    [28860] = {
+        name = 'Sartharion'
+    },
+    [30451] = {
+        name = 'Shadron'
+    },
+    [30452] = {
+        name = 'Tenebron'
+    },
+    [30449] = {
+        name = 'Vesperon'
+    },
+    [28859] = {
+        name = 'Malygos'
+    },
+    [31125] = {
+        name = 'Archavon'
+    },
+    [33993] = {
+        name = 'Emalon'
+    },
+    [35013] = {
+        name = 'Koralon'
+    },
+    [38433] = {
+        name = 'Toravon'
+    },
+    [36626] = {
+        name = 'Festergut'
+    },
+    [36678] = {
+        name = 'Putricide'
+    },
+    [36627] = {
+        name = 'Rotface'
+    },
+    [37813] = {
+        name = 'Deathbringer Saurfang'
+    },
+    [36855] = {
+        name = 'Lady Deathwhisper"'
+    },
+    [37215] = {
+        name =  'Orgrim\'s Hammer'
+    },
+    [37540] = {
+        name =  'The Skybreaker'
+    },
+    [36612] = {
+        name =  'Lord Marrowgar'
+    },
+    [36597] = {
+        name = 'The Lich King'
+    },
+    [37970] = {
+        name = 'Prince Valanar'
+    },
+    [37972] = {
+        name = 'Prince Keleseth'
+    },
+    [37973] = {
+        name = 'Prince Taldaram'
+    },
+    [37955] = {
+        name = 'Blood-Queen Lana\'thel'
+    },
+    [36853] = {
+        name = 'Sindragosa'
+    },
+    [36789] = {
+        name = 'Valithria Dreamwalker'
+    },
     --[] = {
     --    name = ''
     --},
@@ -487,6 +610,8 @@ lib.Creatures = {
 
 -- Mapping from encounter id to details
 -- key is DungeonEncounter.ID
+-- https://wow.tools/dbc/?dbc=dungeonencounter&build=3.4.0.45942#page=1&colFilter[1]=726
+-- https://wow.tools/dbc/?dbc=journalencounter#page=1&colFilter[6]=726
 lib.Encounters = {
     -- Kurinaxx
     [718] = {
@@ -1002,6 +1127,96 @@ lib.Encounters = {
     [729] = {
         map_id = 580,
         creature_id = {25315},
+    },
+    -- Sartharion
+    [1090] = {
+        map_id = 615,
+        creature_id = {28860},
+    },
+    -- Malygos
+    [1094] = {
+        map_id = 616,
+        creature_id = {28859},
+    },
+    -- Archavon
+    [1126] = {
+        map_id = 624,
+        creature_id = {31125},
+    },
+    -- Emalon
+    [1127] = {
+        map_id = 624,
+        creature_id = {33993},
+    },
+    -- Koralon
+    [1128] = {
+        map_id = 624,
+        creature_id = {35013},
+    },
+    -- Toravon
+    [1129] = {
+        map_id = 624,
+        creature_id = {38433},
+    },
+    -- Festergut
+    [1097] = {
+        map_id = 631,
+        creature_id = {36626},
+    },
+    -- Putricide
+    [1102] = {
+        map_id = 631,
+        creature_id = {36678},
+    },
+    -- Rotface
+    [1104] = {
+        map_id = 631,
+        creature_id = {36627},
+    },
+    -- Deathbringer Saurfang
+    [1096] = {
+        map_id = 631,
+        creature_id = {37813},
+    },
+    -- Lady Deathwhisper"
+    [1100] = {
+        map_id = 631,
+        creature_id = {36855},
+    },
+    -- Icecrown Gunship Battle
+    [1099] = {
+        map_id = 631,
+        creature_id = {37215, 37540},
+    },
+    -- Lord Marrowgar
+    [1101] = {
+        map_id = 631,
+        creature_id = {36612},
+    },
+    -- Lich King
+    [1106] = {
+        map_id = 631,
+        creature_id = {36597},
+    },
+    -- The Blood Council
+    [1095] = {
+        map_id = 631,
+        creature_id = {37970, 37972, 37973},
+    },
+    -- Blood-Queen Lana'thel
+    [1103] = {
+        map_id = 631,
+        creature_id = {37955},
+    },
+    -- Sindragosa
+    [1105] = {
+        map_id = 631,
+        creature_id = {36853},
+    },
+    -- Valithria
+    [1098] = {
+        map_id = 631,
+        creature_id = {36789},
     },
     --[] = {
     --    map_id = ,

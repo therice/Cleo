@@ -499,7 +499,7 @@ function UnitHealthMax() return 100  end
 
 function UnitHealth() return 50 end
 
-_G.MAX_RAID_MEMBERS = 25
+_G.MAX_RAID_MEMBERS = 40
 
 function GetNumRaidMembers() return _G.MAX_RAID_MEMBERS  end
 
@@ -785,6 +785,7 @@ end
 _G.GetFont = _G.CreateFont()
 _G.GameFontNormal = _G.CreateFont()
 _G.GameFontHighlightSmall = _G.CreateFont()
+_G.GameFontNormalSmall = _G.CreateFont()
 
 
 _G.RAID_CLASS_COLORS = {}

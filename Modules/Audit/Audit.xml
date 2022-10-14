@@ -1,4 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <Script file="RaidAudit.lua"/>
     <Script file="LootAudit.lua"/>
     <Script file="TrafficAudit.lua"/>
     <Include file="UI\UI.xml"/>

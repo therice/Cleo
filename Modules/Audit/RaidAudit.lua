@@ -7,90 +7,112 @@ local Logging =  AddOn:GetLibrary("Logging")
 local Util = AddOn:GetLibrary("Util")
 --- @type Models.CompressedDb
 local CDB = AddOn.ImportPackage('Models').CompressedDb
---- @type Models.Date
-local Date = AddOn.ImportPackage('Models').Date
 --- @type Core.Comm
 local Comm = AddOn.RequireOnUse('Core.Comm')
---- @type Models.Audit.TrafficRecord
-local TrafficRecord = AddOn.ImportPackage('Models.Audit').TrafficRecord
+--- @type Models.Date
+local Date = AddOn.ImportPackage('Models').Date
+--- @type Models.Audit.RaidRosterRecord
+local RaidRosterRecord =  AddOn.ImportPackage('Models.Audit').RaidRosterRecord
 
---- @class TrafficAudit
-local TrafficAudit = AddOn:NewModule("TrafficAudit")
+--- @class RaidAudit
+local RA = AddOn:NewModule("RaidAudit")
 
-TrafficAudit.defaults = {
-	profile = {
-		enabled = true,
+RA.TrackingType = {
+	EncounterStart       = 1,
+	EncounterEnd         = 2,
+	EncounterStartAndEnd = 3,
+}
+
+RA.defaults = {
+	profile  = {
+		enabled      = true,
+		trackingType = RA.TrackingType.EncounterEnd
 	},
 	factionrealm = {
 
 	}
 }
-TrafficAudit.StatsIntervalInDays = 90
 
-
-function TrafficAudit:OnInitialize()
+function RA:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
-	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('TrafficAudit'), TrafficAudit.defaults)
+	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('RaidAudit'), RA.defaults)
 	self.history = CDB(self.db.factionrealm)
 	self.Send = Comm():GetSender(C.CommPrefixes.Audit)
 	AddOn:SyncModule():AddHandler(
-			self:GetName(),
-			L['traffic_audit'],
-			function () return self:GetDataForSync() end,
-			function(data) self:ImportDataFromSync(data) end
+		self:GetName(),
+		L['attendance_audit'],
+		function () return self:GetDataForSync() end,
+		function(data) self:ImportDataFromSync(data) end
 	)
 end
 
-function TrafficAudit:OnEnable()
+function RA:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
 	self:SubscribeToComms()
 end
 
-function TrafficAudit:OnDisable()
+function RA:OnDisable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
 	self:UnsubscribeFromComms()
 end
 
 --- @return Models.CompressedDb
-function TrafficAudit:GetHistory()
+function RA:GetHistory()
 	return self.history
 end
 
-function TrafficAudit:SubscribeToComms()
+function RA:SubscribeToComms()
 	Logging:Debug("SubscribeToComms(%s)", self:GetName())
 	self.commSubscriptions = Comm():BulkSubscribe(C.CommPrefixes.Audit, {
-		[C.Commands.TrafficAuditAdd] = function(data, sender)
-			Logging:Debug("TrafficAuditAdd from %s", tostring(sender))
-			local record = TrafficRecord:reconstitute(unpack(data))
+		[C.Commands.RaidRosterAuditAdd] = function(data, sender)
+			Logging:Debug("RaidRosterAuditAdd from %s", tostring(sender))
+			local record = RaidRosterRecord:reconstitute(unpack(data))
 			self:OnRecordAdd(record)
 		end
 	})
 end
 
-function TrafficAudit:UnsubscribeFromComms()
+function RA:UnsubscribeFromComms()
 	Logging:Debug("UnsubscribeFromComms(%s)", self:GetName())
 	AddOn.Unsubscribe(self.commSubscriptions)
 	self.commSubscriptions = nil
 end
 
---- @param record Models.Audit.TrafficRecord
-function TrafficAudit:OnRecordAdd(record)
+--- @param encounter Models.Encounter
+function RA:OnEncounterEvent(encounter)
+	Logging:Trace("OnEncounterEvent() : %s", Util.Objects.ToString())
+	-- create record and broadcast if settings dictate it should be done
+	-- pre-requisites for this being called is already evaluated (valid encounter, is ML, and Cleo handling loot)
+	local enabled, trigger = self.db.profile.enabled, self.db.profile.trackingType
+	-- we are tracking raids and
+	--  'encounter start' and no success data OR
+	--  'encounter end' and success data
+	--  'encounter start and end'
+	if enabled and
+		((trigger == RA.TrackingType.EncounterStart and encounter.success == nil) or
+		 (trigger == RA.TrackingType.EncounterEnd and encounter.success ~= nil) or
+		 (trigger == RA.TrackingType.EncounterStartAndEnd)) then
+		self:Broadcast(RaidRosterRecord.For(encounter))
+	end
+end
+
+--- @param record Models.Audit.RaidRosterRecord
+function RA:OnRecordAdd(record)
 	Logging:Trace("OnRecordAdd() : %s", Util.Objects.ToString(record and record:toTable() or {}))
 	self:GetHistory():insert(record:toTable())
 end
 
---- @param record Models.Audit.TrafficRecord
-function TrafficAudit:Broadcast(record)
+--- @param record Models.Audit.RaidRosterRecord
+function RA:Broadcast(record)
 	-- if in test mode and not development mode, return
 	if (AddOn:TestModeEnabled() and not AddOn:DevModeEnabled()) then return end
-
 	local channel = (IsInRaid() or IsInGroup()) and C.group or (IsInGuild() and C.guild or C.player)
-	self:Send(channel, C.Commands.TrafficAuditAdd, record)
+	self:Send(channel, C.Commands.RaidRosterAuditAdd, record)
 end
 
 local cpairs = CDB.static.pairs
 
-function TrafficAudit:GetDataForSync()
+function RA:GetDataForSync()
 	Logging:Debug("GetDataForSync()")
 	if AddOn:DevModeEnabled() then
 		Logging:Debug("GetDataForSync() : count=%d", Util.Tables.Count(self.db.factionrealm))
@@ -105,7 +127,6 @@ function TrafficAudit:GetDataForSync()
 			end
 		end
 
-
 		Logging:Debug("GetDataForSync() : randomly selected entries count is %d", #send)
 		return send
 	else
@@ -113,10 +134,11 @@ function TrafficAudit:GetDataForSync()
 	end
 end
 
-function TrafficAudit:ImportDataFromSync(data)
-	Logging:Debug("ImportDataFromSync() : current history count is %d, import history count is %d",
-	              Util.Tables.Count(self.db.factionrealm),
-	              Util.Tables.Count(data)
+function RA:ImportDataFromSync(data)
+	Logging:Debug(
+		"ImportDataFromSync() : current history count is %d, import history count is %d",
+		Util.Tables.Count(self.db.factionrealm),
+		Util.Tables.Count(data)
 	)
 
 	local persist = (not AddOn:DevModeEnabled() and AddOn:PersistenceModeEnabled()) or AddOn._IsTestContext()
@@ -152,6 +174,7 @@ function TrafficAudit:ImportDataFromSync(data)
 			end
 		end
 
+
 		local cdb = CDB(data)
 		local imported, skipped = 0, 0
 		for _, entryTable in cpairs(cdb) do
@@ -185,7 +208,7 @@ function TrafficAudit:ImportDataFromSync(data)
 	end
 end
 
-function TrafficAudit:Delete(ageInDays)
+function RA:Delete(ageInDays)
 	if ageInDays then
 		local cutoff = Date()
 		cutoff:add{day = -ageInDays}
@@ -195,8 +218,8 @@ function TrafficAudit:Delete(ageInDays)
 		-- cannot mutate as you iterated, so capture data to retain
 		local retain, deleteCount = {}, 0
 		for row, data in cpairs(history) do
-			--- @type Models.Audit.TrafficRecord
-			local entry = TrafficRecord:reconstitute(data)
+			--- @type Models.Audit.RaidRosterRecord
+			local entry = RaidRosterRecord:reconstitute(data)
 			local ts = Date(entry.timestamp)
 			if ts < cutoff then
 				Logging:Debug("Delete() : deleting entry %s (%s)", row, tostring(ts))
@@ -217,6 +240,11 @@ function TrafficAudit:Delete(ageInDays)
 	end
 end
 
-function TrafficAudit:LaunchpadSupplement()
-	return L["traffic_audit"], function(container) self:LayoutInterface(container) end , true
+
+function RA:ConfigSupplement()
+	return L["attendance_audit"], function(container) self:LayoutConfigSettings(container) end
+end
+
+function RA:LaunchpadSupplement()
+	return L["attendance_audit"], function(container) self:LayoutInterface(container) end , true
 end

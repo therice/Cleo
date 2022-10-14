@@ -5,6 +5,9 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
+
 local UIPackage, UIUtilPackage = AddOn.Package('UI'), AddOn.Package('UI.Util')
 -- @type UI.Native
 local UI = AddOn.Require('UI.Native')
@@ -298,6 +301,7 @@ function U.GetClassColorRGB(class)
 end
 
 function U.GetClassColor(class)
+    class = Util.Objects.IsNumber(class) and ItemUtil.ClassIdToFileName[class] or class
     local color = class and RAID_CLASS_COLORS[class:upper()] or nil
     -- if class not found, return epic color.
     if not color then

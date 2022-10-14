@@ -11,8 +11,10 @@ local function LayoutGeneralConfig(container)
 	container.minimizeInCombat =
 		UI:New('Checkbox', container, L["minimize_in_combat"])
 			:Point(20, -30)
+			:TextSize(12)
 			:Tooltip(L['minimize_in_combat_desc'])
 			:Datasource(AddOn, AddOn.db.profile, "minimizeInCombat")
+	container.minimizeInCombat:SetSize(14, 14)
 	container.test =
 		UI:New("Button", container, L["test"])
 			:Size(150, 20)

@@ -19,6 +19,8 @@ local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local UI = AddOn.Require('UI.Native')
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 
 --- @class UI.ScrollingTable
 local ScrollingTable = AddOn.Instance(
@@ -149,6 +151,14 @@ end
 --- @return Cell
 function CellBuilder:cell(value)
     return self:entry(Cell, value)
+end
+
+function CellBuilder:classAndPlayerIconColoredNameCell(class, player)
+    if Util.Objects.IsNumber(class) then
+        class = ItemUtil.ClassIdToFileName[class]
+    end
+
+    return self:classIconCell(class):classColoredCell(player, class)
 end
 
 function CellBuilder:playerIconAndColoredNameCell(player)

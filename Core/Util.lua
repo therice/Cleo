@@ -11,6 +11,8 @@ local ItemUtil = AddOn:GetLibrary("ItemUtil")
 local Player = AddOn.ImportPackage('Models').Player
 --- @type LibUtil.Bitfield.Bitfield
 local Bitfield = Util.Bitfield.Bitfield
+--- @type LibEncounter
+local LibEncounter = AddOn:GetLibrary("Encounter")
 
 --- @class Core.Mode
 local Mode = AddOn.Package('Core'):Class('Mode', Bitfield)
@@ -31,6 +33,8 @@ function AddOn:IsInNonInstance()
     end
 end
 
+--- @param name string|Models.Player the player name
+--- @return string the player's name with the realm stripped
 function AddOn.Ambiguate(name)
     if Util.Objects.IsTable(name) then name = name.name end
     if Util.Objects.IsEmpty(name) then error("name not specified") end
@@ -389,6 +393,43 @@ end
 
 function AddOn.GetDateTime()
     return date("%m/%d/%y %H:%M:%S", time())
+end
+
+
+local EncounterCreatures = Util.Memoize.Memoize(
+    function(encounterId)
+        if encounterId then
+            local creatureIds = LibEncounter:GetEncounterCreatureId(encounterId)
+            if creatureIds then
+                local creatureNames =
+                Util(creatureIds):Copy()
+                 :Map(
+                    function(id)
+                        local eh, name = geterrorhandler()
+                        Util.Functions.try(
+                            function()
+                                seterrorhandler(function(msg) Logging:Warn("%s", msg) end)
+                                name = LibEncounter:GetCreatureName(id)
+                            end
+                        ).finally(
+                            function()
+                                seterrorhandler(eh)
+                            end
+                        )
+
+                        return name
+                    end
+                )()
+                return Util.Strings.Join(", ", Util.Tables.Values(creatureNames))
+            end
+        end
+
+        return nil
+    end
+)
+
+function AddOn.GetEncounterCreatures(...)
+    return EncounterCreatures(...)
 end
 
 function AddOn:PrintError(msg)

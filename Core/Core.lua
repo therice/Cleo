@@ -143,6 +143,11 @@ function AddOn:TrafficAuditModule()
     return self:GetModule("TrafficAudit")
 end
 
+--- @return RaidAudit
+function AddOn:RaidAuditModule()
+    return self:GetModule("RaidAudit")
+end
+
 --- @return Sync
 function AddOn:SyncModule()
     return self:GetModule("Sync")
@@ -444,29 +449,32 @@ local function ExtraGroupMembers(self)
 end
 
 function AddOn:UpdateGroupMembers()
-    Logging:Trace("UpdateGroupMembers() : current count is %d", #self.group)
+    Logging:Trace("UpdateGroupMembers() : current count is %d", Util.Tables.Count(self.group))
 
-    local group, name, reschedule = {}, nil, false
-    for i = 1, GetNumGroupMembers() do
+    local group, groupCount, name = {}, GetNumGroupMembers(), nil
+    -- need to look at all 40 raid slots, as the raid members don't need to be in the raid contiguously
+    -- for example, could have 20 players, but in slots 1-19 and 21
+    for i = 1, _G.MAX_RAID_MEMBERS do
         name = GetRaidRosterInfo(i)
-        if not name then
-            Logging:Warn("UpdateGroupMembers(%d) : raid roster info not yet available, rescheduling", i)
-            reschedule = true
-            break
+        if Util.Objects.IsSet(name) then
+            group[self:UnitName(name)] = true
+        else
+            Logging:Debug("UpdateGroupMembers(%d) : raid roster info (at slot) not yet available", i)
         end
-
-        group[self:UnitName(name)] = true
     end
 
+    -- make sure we are present in the group, no reason we should be omitted
+    -- this is just a "safety net"
+    -- e.g. {'Jackburtón-Atiesh' = true}
+    group[self:UnitName(self.player:GetName())] = true
 
-    if reschedule then
+    -- if the number of collected group members is less than the count of members, reschedule it
+    -- this shouldn't happen, but GetRaidRosterInfo has been shown to intermittently not return results
+    if  (Util.Tables.Count(group) < groupCount) then
         -- reschedule another attempt, don't mutate current state
+        Logging:Warn("UpdateGroupMembers( : raid roster incomplete, rescheduling")
         self:ScheduleTimer("UpdateGroupMembers", 1)
     else
-        -- make sure we are present
-        -- e.g. {'Jackburtón-Atiesh' = true}
-        group[self:UnitName(self.player:GetName())] = true
-
         local testGroupMembers = ExtraGroupMembers(self)
         if Util.Objects.IsTable(testGroupMembers) and Util.Tables.Count(testGroupMembers) > 0 then
             for _, p in pairs(testGroupMembers) do
@@ -542,6 +550,9 @@ function AddOn:GuildIterator()
     end
 end
 
+--- @param group boolean should group members be included
+--- @param guild boolean should guild members be included
+--- @param ambiguate boolean should player names be disambiguated (no realm name included)
 --- @return table<string, Models.Player>
 function AddOn:Players(group, guild, ambiguate)
     group = Util.Objects.Default(group, false)

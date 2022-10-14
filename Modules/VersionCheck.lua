@@ -58,14 +58,14 @@ function VersionCheck:Query(target)
 		GuildRoster()
 		for i = 1, GetNumGuildMembers() do
 			local name, _, _,_,_,_,_,_, online,_, class = GetGuildRosterInfo(i)
-			if online then
+			if Util.Objects.IsSet(name) and online then
 				self:AddEntry(name, class)
 			end
 		end
 	elseif Util.Strings.Equal(C.group, target) then
-		for i = 1, GetNumGroupMembers() do
+		for i = 1, _G.MAX_RAID_MEMBERS do
 			local name, _, _, _, _, class, _, online = GetRaidRosterInfo(i)
-			if online then
+			if Util.Objects.IsSet(name) and online then
 				self:AddEntry(name, class)
 			end
 		end
@@ -217,9 +217,9 @@ function VersionCheck:DisplayOutOfDateClients()
 	local notInstalled = {}
 	-- show who doesn't have the add-on installed, either in group or guild
 	if isGrouped then
-		for i = 1, GetNumGroupMembers() do
+		for i = 1, _G.MAX_RAID_MEMBERS do
 			local name, _, _, _, _, _, _, online = GetRaidRosterInfo(i)
-			if online and not AddOn.UnitIsUnit(name, C.player) and not versions[name] then
+			if Util.Objects.IsSet(name) and online and not AddOn.UnitIsUnit(name, C.player) and not versions[name] then
 				Util.Tables.Push(notInstalled, UIUtil.PlayerClassColorDecorator(name):decorate(name))
 			end
 		end
@@ -227,7 +227,7 @@ function VersionCheck:DisplayOutOfDateClients()
 		GuildRoster()
 		for i = 1, GetNumGuildMembers() do
 			local name, _, _,_,_,_,_,_, online = GetGuildRosterInfo(i)
-			if online and not AddOn.UnitIsUnit(name, C.player) and not versions[name] then
+			if Util.Objects.IsSet(name) and online and not AddOn.UnitIsUnit(name, C.player) and not versions[name] then
 				Util.Tables.Push(notInstalled, UIUtil.PlayerClassColorDecorator(name):decorate(name))
 			end
 		end

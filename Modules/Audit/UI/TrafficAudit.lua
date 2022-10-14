@@ -23,6 +23,8 @@ local Player = AddOn.Package('Models').Player
 local TrafficRecord = AddOn.ImportPackage('Models.Audit').TrafficRecord
 --- @type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
+--- @type UI.DropDown
+local DropDown = AddOn.Require('UI.DropDown')
 
 --- @type TrafficAudit
 local TrafficAudit = AddOn:GetModule("TrafficAudit", true)
@@ -31,14 +33,14 @@ local FilterSelection = {dates = nil, action = nil, resource = nil}
 
 local ScrollColumns =
 	ST.ColumnBuilder()
-		:column(""):width(20)                                                                   -- 1 (actor class icon)
+		:column(""):width(20)                                                            -- 1 (actor class icon)
         :column(L['actor']):width(100)                                                          -- 2 (actor)
         :column(L['date']):width(125)                                                           -- 3 (date)
             :defaultsort(STColumnBuilder.Descending):sort(STColumnBuilder.Descending)
             :comparesort(function(...) return TrafficAudit.SortByTimestamp(... )end)
-		:column(""):width(20)                                                                   -- 6 (loot icon)
-		:column(L['action']):width(50)                                                          -- 4 (action)
-		:column(L['resource']):width(75)                                                        -- 5 (resource)
+		:column(""):width(20)                                                                   -- 4 (loot icon)
+		:column(L['action']):width(50)                                                          -- 5 (action)
+		:column(L['resource']):width(75)                                                        -- 6 (resource)
 		:column(L['name']):width(150)                                                           -- 7 (resource name)
 		:column(L['attribute']):width(75)                                                       -- 8 (resource attribute)
 		:column(L['value']):width(200)                                                          -- 9 (resource attribute value)
@@ -75,6 +77,8 @@ do
 	end
 end
 
+local RightClickMenu
+
 function TrafficAudit:LayoutInterface(container)
 	Logging:Debug("LayoutInterface(%s)", tostring(container:GetName()))
 
@@ -82,13 +86,17 @@ function TrafficAudit:LayoutInterface(container)
 	local module = self
 	container:SetWide(1000)
 
+	RightClickMenu = MSA_DropDownMenu_Create(C.DropDowns.TrafficAuditActions, container)
+	RightClickMenu.module = module
+	MSA_DropDownMenu_Initialize(RightClickMenu, self.RightClickMenu)
+
 	local st = ST.New(ScrollColumns, 20, 20, nil, container)
 	st:RegisterEvents({
 		["OnClick"] = function(_, cellFrame, data, _, row, realrow, _, _, button, ...)
 			if button == C.Buttons.Left and row then
 				MI.Update(container, data, realrow)
 		    elseif button == C.Buttons.Right then
-				-- MSA_ToggleDropDownMenu(1, nil, FilterMenu, cellFrame, 0, 0)
+				MSA_ToggleDropDownMenu(1, nil, RightClickMenu, cellFrame, 0, 0)
 		    end
 
 			return false
@@ -411,7 +419,7 @@ function TrafficAudit:SetCellLootRecord(_, frame, data, _, _, realrow, _, _)
 				-- select the loot audit tab
 				AddOn:LootAuditModule():SelectRecord(player:GetName(), lrId)
 				self.interfaceFrame:GetLaunchPad()
-					:SetModuleIndex(self.interfaceFrame.moduleIndex - 2)
+					:SetModuleIndex(self.interfaceFrame.moduleIndex - 3)
 			end
 		)
 	else
@@ -565,3 +573,34 @@ function TrafficAudit:UpdateMoreInfo(f, data, row)
 		tip:SetAnchorType("ANCHOR_RIGHT", 0, -tip:GetHeight())
 	end
 end
+
+local RightClickMenuEntriesBuilder =
+	DropDown.EntryBuilder()
+		-- level 1
+        :nextlevel()
+	        :add():text(L["delete"]):set('isTitle', true):checkable(false):disabled(true)
+	        :add():text(L["older_than"]):value("DELETE_OLDER_THAN"):checkable(false):arrow(true)
+		-- level 2
+	        :nextlevel()
+	            :add():set('special', "DELETE_OLDER_THAN")
+TrafficAudit.RightClickMenuEntries = RightClickMenuEntriesBuilder:build()
+TrafficAudit.RightClickMenu = DropDown.RightClickMenu(
+	Util.Functions.True,
+	TrafficAudit.RightClickMenuEntries,
+	function(info, menu, level, entry, value)
+		local self = menu.module
+		if Util.Strings.Equal(value, "DELETE_OLDER_THAN") and Util.Strings.Equal(entry.special, value) then
+			for _, days in pairs({7, 30, 60, 90, 120, 365}) do
+				info.text = format(L['n_days'], days)
+				info.checkable = false
+				info.arg1 = days
+				info.func = function(_, ageInDays)
+					self:Delete(ageInDays)
+					self:RefreshData()
+				end
+				MSA_DropDownMenu_AddButton(info, level)
+				info = MSA_DropDownMenu_CreateInfo()
+			end
+		end
+	end
+)

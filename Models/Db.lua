@@ -73,6 +73,10 @@ function CompressedDb:compress(data)
     return compress(data)
 end
 
+function CompressedDb:clear()
+    wipe(self.db)
+end
+
 function CompressedDb:get(key)
     return self:decompress(self.db[key])
 end

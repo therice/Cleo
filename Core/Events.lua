@@ -116,11 +116,20 @@ function AddOn:LootSlotCleared(_, ...)
     self:MasterLooterModule():OnLootSlotCleared(...)
 end
 
+--- @param self AddOn
+local function DispatchEncounterEvent(self)
+    -- only dispatch the encounter if it's set and we are the master looter w/ cleo is handling loot
+    if self.encounter and (self.encounter ~= Encounter.None) and self:MasterLooterModule():IsHandled() then
+        self:ScheduleTimer(function()  AddOn:RaidAuditModule():OnEncounterEvent(self.encounter) end, 2)
+    end
+end
+
 -- https://wow.gamepedia.com/ENCOUNTER_START
 -- ENCOUNTER_START: encounterID, "encounterName", difficultyID, groupSize
 function AddOn:EncounterStart(_, ...)
     Logging:Debug("EncounterStart()")
-    self.encounter = Encounter(...)
+    self.encounter = Encounter.Start(...)
+    DispatchEncounterEvent(self)
     self:UpdatePlayerData()
 end
 
@@ -128,7 +137,8 @@ end
 -- ENCOUNTER_END: encounterID, "encounterName", difficultyID, groupSize, success
 function AddOn:EncounterEnd(_, ...)
     Logging:Debug("EncounterEnd()")
-    self.encounter = Encounter(...)
+    self.encounter = Encounter.End(self.encounter, ...)
+    DispatchEncounterEvent(self)
 end
 
 -- https://wow.gamepedia.com/RAID_INSTANCE_WELCOME

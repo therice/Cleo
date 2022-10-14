@@ -117,6 +117,7 @@ AddOn.Constants = {
         PeerUpdate              =   "rpu",      -- replication based message (update of an existing peer)
         PlayerInfo              =   "pi",
         PlayerInfoRequest       =   "pir",
+        RaidRosterAuditAdd      =   "rraa",
         Reconnect               =   "rct",
         Response                =   "rsp",
         ReRoll                  =   "rer",
@@ -143,6 +144,8 @@ AddOn.Constants = {
         ListPriorityActions = name .. "_ListPriorityActions",
         ListPlayerActions   = name .. "_ListPlayerActions",
         LootAuditActions    = name .. "_LootAuditActions",
+        RaidAuditActions    = name .. "_RaidAuditActions",
+        TrafficAuditActions = name .. "_TrafficAuditActions"
     },
 
     Events = {

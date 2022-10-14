@@ -24,6 +24,7 @@ local Tabs = {
 }
 
 function ML:LayoutConfigSettings(container)
+	container:Tooltip(L["master_looter_desc"])
 	container.tabs = UI:New('Tabs', container, unpack(Util.Tables.Sort(Util.Tables.Keys(Tabs))))
 							:Point(0, -36):Size(container:GetWidth(), container:GetHeight()):SetTo(1)
 	container.tabs:SetBackdropBorderColor(0, 0, 0, 0)

@@ -33,10 +33,9 @@ end
 
 function Sync:AvailableGroupTargets()
 	local name, online, class, targets = nil, nil, nil, {}
-
-	for i = 1, GetNumGroupMembers() do
+	for i = 1, _G.MAX_RAID_MEMBERS do
 		name, _, _, _, _, class, _, online = GetRaidRosterInfo(i)
-		if online then
+		if Util.Objects.IsSet(name) and online then
 			AddNameToList(targets, AddOn:UnitName(name), class)
 		end
 	end

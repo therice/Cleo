@@ -92,7 +92,8 @@ end
 function LootAudit:Broadcast(record)
 	-- if in test mode and not development mode, return
 	if (AddOn:TestModeEnabled() and not AddOn:DevModeEnabled()) then return end
-	self:Send(C.group, C.Commands.LootAuditAdd, record)
+	local channel = (IsInRaid() or IsInGroup()) and C.group or (IsInGuild() and C.guild or C.player)
+	self:Send(channel, C.Commands.LootAuditAdd, record)
 end
 
 local cpairs = CDB.static.pairs

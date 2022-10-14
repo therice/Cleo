@@ -78,6 +78,7 @@ read_globals = {
 	"GameFontHighlightSmall",
 	"GameFontHighlightSmallLeft",
 	"GameFontNormal",
+	"GameFontNormalSmall",
 	"GetAddOnMetadata",
 	"GetContainerNumFreeSlots",
 	"GetGuildRosterInfo",

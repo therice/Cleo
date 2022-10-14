@@ -18,4 +18,5 @@
     <Script file="Audit\Audit.lua"/>
     <Script file="Audit\Loot.lua"/>
     <Script file="Audit\Traffic.lua"/>
+    <Script file="Audit\RaidRoster.lua"/>
 </Ui>

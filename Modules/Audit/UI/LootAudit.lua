@@ -33,7 +33,7 @@ local LootAudit = AddOn:GetModule("LootAudit", true)
 
 local ScrollColumns =
 	ST.ColumnBuilder()
-        :column(""):width(20):sortnext(2)                                                           -- 1 (class icon)
+        :column(""):width(20):sortnext(2)                                                    -- 1 (class icon)
         :column(_G.NAME):width(100):sortnext(3):defaultsort(STColumnBuilder.Ascending)              -- 2 (player name)
         :column(L['date']):width(125)                                                               -- 3 (date)
 			:defaultsort(STColumnBuilder.Descending):sort(STColumnBuilder.Descending)
@@ -85,8 +85,6 @@ local RightClickMenu, FilterSelection, RecordSelection = nil,
 			self.id = nil
 		end
 	}
-
-local EncounterCreatures
 
 function LootAudit:LayoutInterface(container)
 	Logging:Debug("LayoutInterface(%s)", tostring(container:GetName()))
@@ -292,7 +290,7 @@ function LootAudit:BuildData(container)
 		for _, entries in pairs(names) do
 			for index, entry in pairs(entries) do
 				local instanceName = LibEncounter:GetMapName(entry.instanceId) or "N/A"
-				local droppedBy = EncounterCreatures(entry.encounterId) or L['unknown']
+				local droppedBy = AddOn.GetEncounterCreatures(entry.encounterId) or L['unknown']
 				local player = AddOn.Ambiguate(entry.owner)
 				container.rows[row] = {
 					rownum = row,   -- this is the index in the rows table
@@ -629,39 +627,6 @@ function LootAudit:Update()
 	end
 end
 
-
-EncounterCreatures = Util.Memoize.Memoize(
-	function(encounterId)
-		if encounterId then
-			local creatureIds = LibEncounter:GetEncounterCreatureId(encounterId)
-			if creatureIds then
-				local creatureNames =
-					Util(creatureIds):Copy()
-						:Map(
-							function(id)
-								local eh, name = geterrorhandler()
-								Util.Functions.try(
-									function()
-										seterrorhandler(function(msg) Logging:Warn("%s", msg) end)
-										name = LibEncounter:GetCreatureName(id)
-									end
-								).finally(
-									function()
-										seterrorhandler(eh)
-									end
-								)
-
-								return name
-							end
-						)()
-				return Util.Strings.Join(", ", Util.Tables.Values(creatureNames))
-			end
-		end
-
-		return nil
-	end
-)
-
 function LootAudit:UpdateMoreInfo(f, data, row)
 	local proceed, entry = MI.Context(f, data, row, 'entry')
 	if proceed then
@@ -672,7 +637,7 @@ function LootAudit:UpdateMoreInfo(f, data, row)
 		tip:AddLine(" ")
 		tip:AddDoubleLine(L["date"] .. ":", entry:FormattedTimestamp() or _G.UNKNOWN, 1,1,1, 1,1,1)
 		tip:AddDoubleLine(L["loot_won"] .. ":", entry.item or _G.UNKNOWN, 1,1,1, 1,1,1)
-		tip:AddDoubleLine(L["dropped_by"] .. ":", EncounterCreatures(entry.encounterId) or _G.UNKNOWN, 1,1,1, 0.862745, 0.0784314, 0.235294)
+		tip:AddDoubleLine(L["dropped_by"] .. ":", AddOn.GetEncounterCreatures(entry.encounterId) or _G.UNKNOWN, 1,1,1, 0.862745, 0.0784314, 0.235294)
 		tip:AddLine(" ")
 
 		local stats, interval = self:GetStatistics():Get(entry.owner), LootAudit.StatsIntervalInDays

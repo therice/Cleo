@@ -47,6 +47,7 @@ function AddOn:OnInitialize()
     -- are we currently engaged in combat
     self.inCombat = false
     -- the current encounter
+    --- @type Models.Encounter
     self.encounter = Encounter.None
     ---@type table<number, Models.Item.ItemRef>
     self.lootTable = {}

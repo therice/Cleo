@@ -3,7 +3,10 @@ local _, AddOn = ...
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 local Logging = AddOn:GetLibrary("Logging")
+--- @type LibGuildStorage
 local GuildStorage = AddOn:GetLibrary("GuildStorage")
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 
 --- @class Models.Player
 local Player = AddOn.Package('Models'):Class('Player')
@@ -90,6 +93,10 @@ end
 
 function Player:GetShortName()
     return Ambiguate(self.name, "short")
+end
+
+function Player:GetClassId()
+    return self.class and ItemUtil.ClassTagNameToId[self.class] or 0
 end
 
 function Player:ForTransmit()
@@ -235,6 +242,11 @@ end
 
 function Player.StripGuidPrefix(input)
     return gsub(input, GuidPatternPremable, "")
+end
+
+function Player.IsUnknown(p)
+    local player = Player.Resolve(p)
+    return Util.Objects.IsNil(player) or Util.Strings.Equal(player:GetShortName(), 'Unknown')
 end
 
 function Player.Unknown(guid)

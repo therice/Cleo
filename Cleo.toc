@@ -4,7 +4,7 @@
 ## Notes: Cleo - Suicide Kings AddOn for World of Warcraft (WOTLK Classic)
 ## Author: Jackburtón-Atiesh
 ## Version: @project-version@
-## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit
+## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit, Cleo_RaidAudit
 ## X-AddonName: Cleo
 ## X-InterfaceName: Cleo (WOTLK Classic)
 

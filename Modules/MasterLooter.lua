@@ -1447,7 +1447,7 @@ function ML:GiveLoot(slot, winner, callback, ...)
 
 		Util.Tables.Push(self.lootQueue, lqEntry)
 
-		for i = 1, MAX_RAID_MEMBERS do
+		for i = 1, _G.MAX_RAID_MEMBERS do
 			if AddOn.UnitIsUnit(GetMasterLootCandidate(slot, i), winner) then
 				Logging:Debug("GiveLoot(%d, %d)", slot, i)
 				GiveMasterLoot(slot, i)
