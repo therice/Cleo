@@ -120,6 +120,7 @@ function RaidAttendanceStatistics:GetTotals(intervalInDays)
 	--print(Util.Objects.ToString(raids))
 
 	--- no go through players and retain raids and attendance that are within the window
+	--print(Util.Objects.ToString(self.players))
 	local players = Util.Tables.Copy(
 		self.players,
 		function(praids)
@@ -160,7 +161,7 @@ local function AddRaidIfNotPresent(self, record)
 	if record then
 		local instanceId = record.instanceId
 		-- each raid has an instance id, which is key for occurrences
-		if not self.raids[instanceId] then
+		if Util.Objects.IsNil(self.raids[instanceId])then
 			self.raids[instanceId] = {}
 		end
 		-- consider combination of instance id and date as a raid occurrence
@@ -172,11 +173,11 @@ local function AddRaidIfNotPresent(self, record)
 		for _, player in pairs(record.players) do
 			local playerName = player[2]
 
-			if not self.players[playerName] then
+			if Util.Objects.IsNil(self.players[playerName]) then
 				self.players[playerName] = {}
 			end
 
-			if not Util.Tables.ContainsValue(self.players[playerName], instanceId) then
+			if not Util.Tables.ContainsKey(self.players[playerName], instanceId) then
 				self.players[playerName][instanceId] = {}
 			end
 
