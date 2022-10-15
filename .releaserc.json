@@ -16,7 +16,7 @@
 				{ "type": "revert", "release": "patch" },
 				{ "type": "style", "release": "minor" },
 				{ "type": "test", "release": false },
-				{ "type": "breaking", "breaking": true, "release": "major"}
+				{ "type": "breaking", "release": "major"}
 			],
 			"parserOpts": {
 				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
@@ -36,7 +36,7 @@
 				{ "type": "revert", "release": "patch" },
 				{ "type": "style", "release": "minor" },
 				{ "type": "test", "release": false },
-				{ "type": "breaking", "breaking": true, "release": "major"}
+				{ "type": "breaking", "release": "major"}
 			],
 			"parserOpts": {
 				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
