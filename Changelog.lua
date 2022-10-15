@@ -3,10 +3,9 @@ local _, AddOn = ...
 
 AddOn.Changelog = [=[
 2021.5.1 (2022-10-15)
-* fix : address syntax error in release file 478c130
-* fix : re-attempt bump major version 4dff293
-* newmajor : bump major version 87c7289
-* BREAKING CHANGES 044bb1b
+* address syntax error in release file 478c130
+* re-attempt bump major version 4dff293
+* bump major version 87c7289
 
 2021.5.0 (2022-10-15)
 * feat: Add support for raid tracking a7e0469
