@@ -3,7 +3,7 @@ local _, AddOn = ...
 
 AddOn.Changelog = [=[
 2021.5.0 (2022-10-15)
-* feat!: Add support for raid tracking a7e0469
+* feat: Add support for raid tracking a7e0469
 * Update README to reflect WOTLK 
 * Show raid attendance via player priority on list 6de96b9
 * address issue with not all raids being included for attendance 8aa40e9
