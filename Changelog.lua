@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.0.0 (2022-10-15)
+* c'mon man ce4091b
+* WTF ed4ae73
+
 2021.5.1 (2022-10-15)
 * address syntax error in release file 478c130
 * re-attempt bump major version 4dff293
