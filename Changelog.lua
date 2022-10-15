@@ -2,6 +2,13 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2021.5.0 (2022-10-15)
+* feat!: Add support for raid tracking a7e0469
+* Update README to reflect WOTLK 
+* Show raid attendance via player priority on list 6de96b9
+* address issue with not all raids being included for attendance 8aa40e9
+* Cleanup font usage to be consistent 7039ac7
+
 2021.4.21 (2022-10-11)
 * revise change log 
 * Add support for populating lists randomly from guild ranks. Also, sort lists alphabetically 06850d2
