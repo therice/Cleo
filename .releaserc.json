@@ -15,7 +15,7 @@
 				{ "type": "refactor", "release": "patch" },
 				{ "type": "revert", "release": "patch" },
 				{ "type": "style", "release": "minor" },
-				{ "type": "test", "release": false },
+				{ "type": "test", "release": false }
 			],
 			"parserOpts": {
 				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
@@ -34,7 +34,7 @@
 				{ "type": "refactor", "release": "patch" },
 				{ "type": "revert", "release": "patch" },
 				{ "type": "style", "release": "minor" },
-				{ "type": "test", "release": false },
+				{ "type": "test", "release": false }
 			],
 			"parserOpts": {
 				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
