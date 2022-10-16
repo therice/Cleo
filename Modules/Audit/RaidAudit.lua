@@ -43,7 +43,7 @@ function RA:OnInitialize()
 	self.stats = {
 		attendance = {
 			stale = true,
-			value = nil,
+			value = { },
 		},
 		MarkAsStale = function(self)
 			self.attendance.stale = true
@@ -129,15 +129,17 @@ function RA:GetAttendanceStatistics(intervalInDays)
 	Logging:Trace("GetAttendanceStatistics()")
 	local check, ret = pcall(
 		function()
-			if self.stats.attendance.stale or Util.Objects.IsNil(self.stats.attendance.value) then
+			if  self.stats.attendance.stale or
+				Util.Tables.IsEmpty(self.stats.attendance.value) or
+				Util.Tables.IsEmpty(self.stats.attendance.value[intervalInDays]) then
 				local stats = RaidAttendanceStatistics.For(function() return cpairs(self:GetHistory()) end)
 				if stats then
-					self.stats.attendance.value = stats:GetTotals(intervalInDays)
+					self.stats.attendance.value[intervalInDays] = stats:GetTotals(intervalInDays)
 					self.stats.attendance.stale = false
 				end
 			end
 
-			return self.stats.attendance.value or {}
+			return self.stats.attendance.value[intervalInDays] or {}
 		end
 	)
 

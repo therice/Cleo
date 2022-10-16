@@ -1643,34 +1643,71 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	--- @param modifier LibUtil.Optional if empty, only the specified rank. if present and true, that rank and any rank "higher", if presentfalse, that rank and any rank "lower"
 	tab.ClearAndPopulatePrioritiesViaGuild = function(self, rank, modifier)
 		modifier = modifier or Util.Optional.empty()
-		Logging:Debug("ClearAndPopulatePrioritiesViaGuild(%d, %s)", tonumber(rank), tostring(modifier))
-		-- guild ranks are inverted, with highest rank having lowest number (e.g. guild mater) and lowest rank having highest number (e.g. noob)
-		self.priorities = {}
-		local priorities = {}
-		for name, _ in AddOn:GuildIterator() do
-			local sname = AddOn.Ambiguate(name)
-			local player = GuildStorage:GetMember(sname)
-			local index = player.rankIndex
+		local list = listSupplier()
+		if list then
+			Logging:Debug("ClearAndPopulatePrioritiesViaGuild(%d, %s)", tonumber(rank), tostring(modifier))
+			-- guild ranks are inverted, with highest rank having lowest number (e.g. guild mater) and lowest rank having highest number (e.g. noob)
+			self.priorities = {}
+			local priorities = {}
+			for name, _ in AddOn:GuildIterator() do
+				local sname = AddOn.Ambiguate(name)
+				local player = GuildStorage:GetMember(sname)
+				local index = player.rankIndex
 
-			if  (modifier:isEmpty() and index == rank) or
-				(modifier:ifPresent(function(v) if v then return index <= rank else return index >= rank end end)) then
-				--Logging:Debug("%s", Util.Objects.ToString(AddOn.Ambiguate(name)))
-				local resolved = configSupplier():ResolvePlayer(sname)
-				-- only add players which resolve to themselves (i.e. not an ALT) and make sure their level is
-				-- reasonable for raiding (in this case 71+)
-				if resolved and Util.Strings.Equal(resolved:GetShortName(), sname) and player.level >= 71 then
-					Util.Tables.Push(priorities, resolved)
+				if  (modifier:isEmpty() and index == rank) or
+					(modifier:ifPresent(function(v) if v then return index <= rank else return index >= rank end end)) then
+					--Logging:Debug("%s", Util.Objects.ToString(AddOn.Ambiguate(name)))
+					local resolved = configSupplier():ResolvePlayer(sname)
+					-- only add players which resolve to themselves (i.e. not an ALT) and make sure their level is
+					-- reasonable for raiding (in this case 71+)
+					if resolved and Util.Strings.Equal(resolved:GetShortName(), sname) and player.level >= 71 then
+						Util.Tables.Push(priorities, resolved)
+					end
 				end
 			end
-		end
 
-		if #priorities > 0 then
-			Util.Tables.Shuffle(priorities)
-			for _, player in pairs(priorities) do
-				Util.Tables.Push(self.priorities, player)
+			if #priorities > 0 then
+				Util.Tables.Shuffle(priorities)
+				for _, player in pairs(priorities) do
+					Util.Tables.Push(self.priorities, player)
+				end
+
+				self:UpdatePriorities(false)
 			end
+		end
+	end
 
-			self:UpdatePriorities(false)
+	--- @param self
+	--- @param intervalInDays number
+	--- @param pct number
+	--- @param remove boolean true == remove player(s), false == drop player(s) to bottom
+	tab.UpdatePrioritiesViaAttendance = function(self, intervalInDays, pct, remove)
+		assert(Util.Objects.IsNumber(intervalInDays), "Interval must be a number")
+		assert(Util.Objects.IsNumber(pct), "Percentage must be a number")
+		if pct > 1.0 then pct = (pct / 100.0) end
+		remove = Util.Objects.Default(remove, false)
+
+		Logging:Debug("UpdatePrioritiesViaAttendance(%d, %.2f, %s)", intervalInDays, pct, tostring(boolean))
+
+		local list = listSupplier()
+		if list then
+			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(intervalInDays)
+			if stats then
+				for priority, player in Util.Tables.Sparse.ipairs(self.priorities) do
+					if player then
+						local ppct = stats[AddOn.Ambiguate(player:GetShortName())] or 0
+						Logging:Debug("%s (%d) => %.2f", player:GetShortName(), priority, ppct)
+						if ppct < pct then
+							self.priorities[priority] = nil
+							if not remove then
+								Util.Tables.Insert(self.priorities, table.maxn(self.priorities) + 1, player)
+							end
+						end
+					end
+				end
+
+				self:UpdatePriorities(false)
+			end
 		end
 	end
 
@@ -1810,7 +1847,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 			local playerIndex = index + floor(self.playersScroll:GetValue() + 0.5)
 			if playerIndex > #available then playerIndex = index end
-			
+
 			Logging:Trace("UpdateAvailablePlayers() : index=%d, playerIndex=%d", index, playerIndex)
 			playerEdit:SetText(available[playerIndex]:GetShortName())
 			playerEdit:SetCursorPosition(1)
@@ -2202,15 +2239,18 @@ do
 	)
 
 	local ListAction = {
-		Populate = "POPULATE",
+		Populate       = "POPULATE",
+		RaidAttendance = "RAID_ATTENDANCE",
 	}
 
 	local PopulateVia = {
-		Guild = "GUILD"
+		Guild = "GUILD",
+		Rank  = "RANK",
 	}
 
-	local GuildAction = {
-		Rank = "RANK"
+	local RaidAttendance = {
+		Interval    = "INTERVAL",
+		Percentage  = "PERCENT",
 	}
 
 	local GuildActionQualifiers = {
@@ -2230,26 +2270,36 @@ do
 	local ListActionsMenuEntryBuilder =
 		DropDown.EntryBuilder()
 			:nextlevel()
-				:add():text(function(_, list, _) return list.name end):checkable(false):title(true)
-				:add():text(L["clear"]):checkable(false):arrow(false)
+				:add():text(function(_, list, _) return list.name end)
+					:checkable(false):title(true)
+				:add():text(L["clear"])
+					:checkable(false):arrow(false)
 					:disabled(ListActionDisabled)
 					:fn(function(_, _, module) module.listPriorityTab:ClearPriorities() end)
-				:add():text(format("%s and %s", L["clear"], L["randomize"])):checkable(false):arrow(true)
+				:add():text(format("%s and %s", L["clear"], L["randomize"]))
+					:checkable(false):arrow(true)
 					:disabled(ListActionDisabled)
 					:value(ListAction.Populate)
+				:add():text(L["raid_attendance"])
+					:checkable(false):arrow(true)
+					:disabled(ListActionDisabled)
+					:value(ListAction.RaidAttendance)
 			:nextlevel()
 				:add():set('special', ListAction.Populate)
+				:add():set('special', ListAction.RaidAttendance)
 			:nextlevel()
 				:add():set('special', PopulateVia.Guild)
+				:add():set('special', RaidAttendance.Interval)
 			:nextlevel()
-				:add():set('special', GuildAction.Rank)
+				:add():set('special', PopulateVia.Rank)
+				:add():set('special', RaidAttendance.Percentage)
 
 	Lists.ListActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
 		ListActionsMenuEntryBuilder:build(),
 		function(info, menu, level, entry, value)
 			local self = menu.module
-			--Logging:Warn("%s / %s / %s", tostring(level), tostring(value), tostring(entry.special))
+			--Logging:Warn("%s / %s / %s", tostring(level), Util.Objects.ToString(value), tostring(entry.special))
 			if value == ListAction.Populate and entry.special == value then
 				info.text = format("%s %s",  L['via'], UIUtil.ColoredDecorator(C.Colors.Green):decorate(L['guild']))
 				info.notCheckable = true
@@ -2262,10 +2312,10 @@ do
 					info.notCheckable = true
 					info.text = name
 					info.hasArrow = true
-					info.value = {GuildAction.Rank, rank}
+					info.value = {PopulateVia.Rank, rank}
 					MSA_DropDownMenu_AddButton(info, level)
 				end
-			elseif Util.Objects.IsTable(value) and value[1] == GuildAction.Rank and entry.special == value[1] then
+			elseif Util.Objects.IsTable(value) and value[1] == PopulateVia.Rank and entry.special == value[1] then
 				local rank = value[2]
 				for _, qualifier in pairs(GuildActionQualifiers) do
 					info = MSA_DropDownMenu_CreateInfo()
@@ -2276,6 +2326,40 @@ do
 					end
 					MSA_DropDownMenu_AddButton(info, level)
 				end
+			elseif value == ListAction.RaidAttendance and entry.special == value then
+				for _, days in pairs({30}) do
+					info = MSA_DropDownMenu_CreateInfo()
+					info.notCheckable = true
+					info.text = name
+					info.hasArrow = true
+					info.value = {RaidAttendance.Interval, days}
+					info.text = format("%s %s", L['past'], format(L["n_days"], days))
+					MSA_DropDownMenu_AddButton(info, level)
+				end
+			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.Interval and entry.special == value[1] then
+				for _, pct in pairs({25, 50, 75}) do
+					info = MSA_DropDownMenu_CreateInfo()
+					info.notCheckable = true
+					info.hasArrow = true
+					info.text = format("< %d%%", pct)
+					info.value = {RaidAttendance.Percentage, value[2], pct}
+					MSA_DropDownMenu_AddButton(info, level)
+				end
+			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.Percentage and entry.special == value[1] then
+				info.notCheckable = true
+				info.text = L['move_to_bottom']
+				info.func = function()
+					self.listPriorityTab:UpdatePrioritiesViaAttendance(value[2] --[[ days --]], value[3] --[[ pct --]], false --[[ drop or remove --]])
+				end
+				MSA_DropDownMenu_AddButton(info, level)
+
+				info = MSA_DropDownMenu_CreateInfo()
+				info.notCheckable = true
+				info.text = L['remove']
+				info.func = function()
+					self.listPriorityTab:UpdatePrioritiesViaAttendance(value[2] --[[ days --]], value[3] --[[ pct --]], true --[[ drop or remove --]])
+				end
+				MSA_DropDownMenu_AddButton(info, level)
 			end
 		end
 	)

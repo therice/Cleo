@@ -168,7 +168,7 @@ end
 --/run print(Cleo.Package('Models').Player:Get('Gnomechómsky'))
 function Player:Get(input)
     local guid, info
-    Logging:Trace("Get(%s)", tostring(input))
+    --Logging:Trace("Get(%s)", tostring(input))
 
     if Util.Strings.IsSet(input) then
         guid = Player.ParseGuid(input)

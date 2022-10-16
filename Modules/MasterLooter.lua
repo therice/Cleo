@@ -752,6 +752,8 @@ function ML:OnHandleLootStart(...)
 end
 
 function ML:SendActiveConfig(target, config)
+	--if AddOn._IsTestContext() then return end
+
 	if self:IsHandled() then
 		Logging:Debug("SendActiveConfig(%s) : %s", tostring(target), tostring(config.id))
 		-- dispatch the config activation message to target
