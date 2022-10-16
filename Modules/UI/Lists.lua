@@ -1687,7 +1687,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		if pct > 1.0 then pct = (pct / 100.0) end
 		remove = Util.Objects.Default(remove, false)
 
-		Logging:Debug("UpdatePrioritiesViaAttendance(%d, %.2f, %s)", intervalInDays, pct, tostring(boolean))
+		Logging:Debug("UpdatePrioritiesViaAttendance(%d, %.2f, %s)", intervalInDays, pct, tostring(remove))
 
 		local list = listSupplier()
 		if list then
@@ -2330,7 +2330,6 @@ do
 				for _, days in pairs({30}) do
 					info = MSA_DropDownMenu_CreateInfo()
 					info.notCheckable = true
-					info.text = name
 					info.hasArrow = true
 					info.value = {RaidAttendance.Interval, days}
 					info.text = format("%s %s", L['past'], format(L["n_days"], days))
