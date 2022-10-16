@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.0 (2022-10-16)
+* Add support for changing priorities based upon raid attendance d411770
+* Address luacheck regressions 15c41c7
+
 2022.0.0 (2022-10-15)
 * c'mon man ce4091b
 * WTF ed4ae73
