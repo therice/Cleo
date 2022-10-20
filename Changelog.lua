@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.1 (2022-10-20)
+* Add additional views/statistics for raid history aa0ea7b
+* Allow broadcast to remove a configuration 7bf80fa
+* Change open roll to a suicide amount of 2 (by default) a989bb0
+
 2022.1.0 (2022-10-16)
 * Add support for changing priorities based upon raid attendance d411770
 * Address luacheck regressions 15c41c7
