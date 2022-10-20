@@ -2216,16 +2216,25 @@ do
 		ConfigAltsMenuEntryBuilder:build()
 	)
 
-	local function ConfigActionDisabled(_, config)
+	local function ConfigActionDisabled(config)
 		return not config:IsAdminOrOwner(AddOn.player)
 	end
+
+	local ConfigAction = {
+		BroadcastAddUpdate  =   "BAU",
+		BroadcastRemove     =   "BR",
+	}
 
 	local ConfigActionsMenuEntryBuilder =
 		DropDown.EntryBuilder()
 	        :nextlevel()
 				:add():text(function(_, config, _) return config.name end):checkable(false):title(true)
-				:add():text(L["broadcast"]):checkable(false):arrow(true)
+				:add():text(L["broadcast"]):checkable(false):arrow(true):value(ConfigAction.BroadcastAddUpdate)
+				:add():text(L["broadcast_remove"]):checkable(false):arrow(true):value(ConfigAction.BroadcastRemove)
 			:nextlevel()
+				:add():set('special', ConfigAction.BroadcastAddUpdate)
+				:add():set('special', ConfigAction.BroadcastRemove)
+--[[
 				:add():text(L["guild"]):checkable(false)
 					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA()))
 					:disabled(ConfigActionDisabled)
@@ -2234,10 +2243,44 @@ do
 					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA()))
 					:disabled(ConfigActionDisabled)
 					:fn(function(_, config) ListsDp:Broadcast(config.id, C.group) end)
+--]]
 
 	Lists.ConfigActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
-		ConfigActionsMenuEntryBuilder:build()
+		ConfigActionsMenuEntryBuilder:build(),
+		function(info, menu, level, entry, value)
+			if value == ConfigAction.BroadcastAddUpdate and entry.special == value then
+				info.text = L["guild"]
+				info.checkable = true
+				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA())
+				info.disabled = ConfigActionDisabled(menu.entry)
+				info.func = function(_, config) ListsDp:Broadcast(config.id, C.guild) end
+				MSA_DropDownMenu_AddButton(info, level)
+
+				info = MSA_DropDownMenu_CreateInfo()
+				info.text = L["raid"]
+				info.checkable = true
+				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA())
+				info.disabled = ConfigActionDisabled(menu.entry)
+				info.func = function(_, config) ListsDp:Broadcast(config.id, C.group) end
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif value == ConfigAction.BroadcastRemove and entry.special == value then
+				info.text = L["guild"]
+				info.checkable = true
+				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA())
+				info.disabled = ConfigActionDisabled(menu.entry)
+				info.func = function(_, config) ListsDp:BroadcastRemove(config.id, C.guild) end
+				MSA_DropDownMenu_AddButton(info, level)
+
+				info = MSA_DropDownMenu_CreateInfo()
+				info.text = L["raid"]
+				info.checkable = true
+				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA())
+				info.disabled = ConfigActionDisabled(menu.entry)
+				info.func = function(_, config) ListsDp:BroadcastRemove(config.id, C.group) end
+				MSA_DropDownMenu_AddButton(info, level)
+			end
+		end
 	)
 
 	local ListAction = {
@@ -2265,8 +2308,7 @@ do
 	--- @param module Lists
 	local function ListActionDisabled(_, list, module)
 		local config = module:GetService().Configuration:Get(list.configId)
-		Logging:Warn("%s", Util.Objects.ToString(config))
-		return config and ConfigActionDisabled(_, config) or false
+		return config and ConfigActionDisabled(config) or false
 	end
 
 	local ListActionsMenuEntryBuilder =

@@ -75,6 +75,13 @@ function ListsDP:SubscribeToComms()
 				self:OnBroadcastReceived(unpack(data))
 			end
 		end,
+		[C.Commands.ConfigBroadcastRemove] = function(data, sender)
+			Logging:Debug("ConfigBroadcastRemove from %s", tostring(sender))
+			--don't consume our own broadcast (unless we're in dev mode)
+			if not AddOn.UnitIsUnit(sender, AddOn.player) or AddOn:DevModeEnabled() then
+				self:OnBroadcastRemoveReceived(unpack(data))
+			end
+		end,
 	})
 end
 
@@ -225,7 +232,7 @@ function ListsDP:OnResourceResponse(sender, payload)
 	end
 end
 
---- broadcasts the specified configuration and any associated lists to specified target
+--- broadcasts the specified configuration and any associated lists (for add or update) to specified target
 ---
 --- @param configId number the configuration identifier
 --- @param target string the target channel to which to broadcast
@@ -237,6 +244,20 @@ function ListsDP:Broadcast(configId, target)
 		if config and config:IsAdminOrOwner(AddOn.player) then
 			local lists = Lists:GetService():Lists(configId)
 			self:Send(target, C.Commands.ConfigBroadcast, {config = config, lists = lists or {}})
+		end
+	end
+end
+
+--- broadcasts the specified configuration (for remove) to specified target
+---
+--- @param configId number the configuration identifier
+--- @param target string the target channel to which to broadcast
+function ListsDP:BroadcastRemove(configId, target)
+	Logging:Debug("BroadcastRemove(%s, %s)", tostring(configId), tostring(target))
+	if Util.Strings.IsSet(configId) and Util.Strings.IsSet(target) then
+		local config = Lists:GetService().Configuration:Get(configId)
+		if config then
+			self:Send(target, C.Commands.ConfigBroadcastRemove, {config = config.id})
 		end
 	end
 end
@@ -265,6 +286,26 @@ function ListsDP:OnBroadcastReceived(payload)
 		-- we just received a broadcast of a configuration and the associated lists
 		-- could re-query peers for updated details, but easier to just restart replication
 		-- and let normal bootstrap process update them
+		self:RestartReplication()
+	end
+end
+
+function ListsDP:OnBroadcastRemoveReceived(payload)
+	local id = payload.config
+	Logging:Debug("OnBroadcastRemoveReceived(%s)", tostring(id))
+	local service = Lists:GetService()
+	local config = service.Configuration:Get(id)
+	if config then
+		-- need to remove the associated lists as well
+		local lists = service.List:GetAll(function(list) return list.configId == id end)
+		if lists then
+			for _, list in pairs(lists) do
+				service.List:Remove(list, false)
+			end
+		end
+
+		service.Configuration:Remove(config, false)
+		Lists:Refresh()
 		self:RestartReplication()
 	end
 end
