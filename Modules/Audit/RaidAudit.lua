@@ -15,6 +15,8 @@ local Date = AddOn.ImportPackage('Models').Date
 local RaidRosterRecord =  AddOn.ImportPackage('Models.Audit').RaidRosterRecord
 --- @type Models.Audit.RaidAttendanceStatistics
 local RaidAttendanceStatistics =  AddOn.ImportPackage('Models.Audit').RaidAttendanceStatistics
+--- @type Models.Audit.RaidStatistics
+local RaidStatistics =  AddOn.ImportPackage('Models.Audit').RaidStatistics
 
 --- @class RaidAudit
 local RA = AddOn:NewModule("RaidAudit")
@@ -45,8 +47,13 @@ function RA:OnInitialize()
 			stale = true,
 			value = { },
 		},
+		raid = {
+			stale = true,
+			value = { },
+		},
 		MarkAsStale = function(self)
 			self.attendance.stale = true
+			self.attendance.raid = true
 		end
 	}
 	self.Send = Comm():GetSender(C.CommPrefixes.Audit)
@@ -126,7 +133,6 @@ end
 local cpairs = CDB.static.pairs
 
 function RA:GetAttendanceStatistics(intervalInDays)
-	Logging:Trace("GetAttendanceStatistics()")
 	local check, ret = pcall(
 		function()
 			if  self.stats.attendance.stale or
@@ -149,6 +155,33 @@ function RA:GetAttendanceStatistics(intervalInDays)
 	else
 		return ret
 	end
+end
+
+
+function RA:GetRaidStatistics(intervalInDays)
+	local check, ret = pcall(
+		function()
+			if  self.stats.raid.stale or
+				Util.Tables.IsEmpty(self.stats.raid.value) or
+				Util.Tables.IsEmpty(self.stats.raid.value[intervalInDays]) then
+				local stats = RaidStatistics.For(function() return cpairs(self:GetHistory()) end)
+				if stats then
+					self.stats.raid.value[intervalInDays] = stats:GetTotals(intervalInDays)
+					self.stats.raid.stale = false
+				end
+			end
+
+			return self.stats.raid.value[intervalInDays] or {}
+		end
+	)
+
+	if not check then
+		Logging:Warn("Error processing Raid Audit : %s", tostring(ret))
+		AddOn:Print("Error processing Raid Audit")
+	else
+		return ret
+	end
+
 end
 
 function RA:GetDataForSync()
@@ -233,7 +266,7 @@ function RA:ImportDataFromSync(data)
 
 		if imported > 0 then
 			self.stats:MarkAsStale()
-			self:RefreshData()
+			self:Refresh()
 		end
 
 		Logging:Debug("ImportDataFromSync(%s) : imported %s history entries, skipped %d import history entries, new history entry count is %d",

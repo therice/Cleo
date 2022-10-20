@@ -1427,7 +1427,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 						PlayerTooltip:AddLine(L['raid_attendance'])
 						PlayerTooltip:AddLine(" ")
 						local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(AttendanceInterval)
-						local pct = stats[AddOn.Ambiguate(playerName)]
+						local playerStats = stats.players[AddOn.Ambiguate(playerName)]
+						local pct = playerStats and playerStats.pct
 						pct = pct and (pct * 100.0) or (0.0)
 
 						PlayerTooltip:AddDoubleLine(
@@ -1695,7 +1696,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			if stats then
 				for priority, player in Util.Tables.Sparse.ipairs(self.priorities) do
 					if player then
-						local ppct = stats[AddOn.Ambiguate(player:GetShortName())] or 0
+						local pstats = stats.players[AddOn.Ambiguate(player:GetShortName())]
+						local ppct = pstats and pstats.pct or 0
 						Logging:Debug("%s (%d) => %.2f", player:GetShortName(), priority, ppct)
 						if ppct < pct then
 							self.priorities[priority] = nil

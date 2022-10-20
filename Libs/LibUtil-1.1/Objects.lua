@@ -209,6 +209,8 @@ function Self.ToString(val, depth)
                         if i ~= j then
                             if type(i) == 'table' then
                                 s = s .. Self.ToString(i, depth - 1) .. " = "
+                            elseif type(i) == 'boolean' then
+                                s = s .. tostring(i) .. " = "
                             else
                                 s = s .. i .. " = "
                             end

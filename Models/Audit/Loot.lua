@@ -1,4 +1,4 @@
---- @type AddOn
+	--- @type AddOn
 local _, AddOn = ...
 local L = AddOn.Locale
 --- @type LibUtil

@@ -14,6 +14,8 @@ end
 local RaidRosterRecord
 --- @type Models.Audit.RaidAttendanceStatistics
 local RaidAttendanceStatistics
+--- @type Models.Audit.RaidStatistics
+local RaidStatistics
 
 describe("Raid Audit", function()
 	setup(function()
@@ -22,6 +24,7 @@ describe("Raid Audit", function()
 		Util, CDB, Encounter = AddOn:GetLibrary('Util'), AddOn.ImportPackage('Models').CompressedDb, AddOn:GetLibrary("Encounter")
 		RaidRosterRecord = AddOn.Package('Models.Audit').RaidRosterRecord
 		RaidAttendanceStatistics = AddOn.Package('Models.Audit').RaidAttendanceStatistics
+		RaidStatistics = AddOn.Package('Models.Audit').RaidStatistics
 		AddOnLoaded(AddOnName, true)
 	end)
 
@@ -64,10 +67,19 @@ describe("Raid Audit", function()
 			ra = nil
 		end)
 
+		--[[
+		it("statistics", function()
+			NewTrafficAuditDb(ra, RaidAuditTestData_1)
+			local stats = RaidStatistics.For(function() return cpairs(ra:GetHistory()) end)
+			local totals = stats:GetTotals(7)
+			--print(Util.Objects.ToString(totals, 10))
+			assert(Util.Tables.Count(totals.instances) == 3)
+		end)
+		--]]
+
 		it("attendance statistics", function()
 			NewTrafficAuditDb(ra, RaidAuditTestData_1)
-			local stats =
-				RaidAttendanceStatistics.For(function() return cpairs(ra:GetHistory()) end)
+			local stats = RaidAttendanceStatistics.For(function() return cpairs(ra:GetHistory()) end)
 			local totals = stats:GetTotals(30)
 			print(Util.Objects.ToString(totals))
 			assert(Util.Tables.Count(totals) > 0)
