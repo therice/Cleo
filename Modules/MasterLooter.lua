@@ -61,7 +61,8 @@ ML.AwardReasons = {
 	},
 	os_greed      = {
 		user_visible  = true,
-		suicide       = false,
+		suicide       = true,
+		suicide_amt   = 2,
 		color         = C.Colors.RogueYellow,
 		display_order = 3,
 	},

@@ -168,8 +168,8 @@ function RaidAttendanceStatistics:GetTotals(intervalInDays)
 				function(d) return Audit.ShortDf:parse(d).time end
 			)
 		local raidCount = Util.Tables.Count(Util.Tables.Flatten(Util.Tables.Values(praids)))
-		local pct =  Util.Numbers.Round2(raidCount / totalRaids, 2)
-		pct = Util.Objects.Check(tostring(v) == "-nan", 0, pct)
+		local pct = Util.Numbers.Round2(raidCount / totalRaids, 2)
+		pct = Util.Objects.Check(tostring(pct) == "-nan", 0, pct)
 
 		stats.players[player] = {
 			count = raidCount or 0,
