@@ -2254,7 +2254,10 @@ do
 				info.checkable = true
 				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA())
 				info.disabled = ConfigActionDisabled(menu.entry)
-				info.func = function(_, config) ListsDp:Broadcast(config.id, C.guild) end
+				info.func = function()
+					local config = menu.entry
+					ListsDp:Broadcast(config.id, C.guild)
+				end
 				MSA_DropDownMenu_AddButton(info, level)
 
 				info = MSA_DropDownMenu_CreateInfo()
@@ -2262,14 +2265,20 @@ do
 				info.checkable = true
 				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA())
 				info.disabled = ConfigActionDisabled(menu.entry)
-				info.func = function(_, config) ListsDp:Broadcast(config.id, C.group) end
+				info.func = function()
+					local config = menu.entry
+					ListsDp:Broadcast(config.id, C.group)
+				end
 				MSA_DropDownMenu_AddButton(info, level)
 			elseif value == ConfigAction.BroadcastRemove and entry.special == value then
 				info.text = L["guild"]
 				info.checkable = true
 				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA())
 				info.disabled = ConfigActionDisabled(menu.entry)
-				info.func = function(_, config) ListsDp:BroadcastRemove(config.id, C.guild) end
+				info.func = function()
+					local config = menu.entry
+					ListsDp:BroadcastRemove(config.id, C.guild)
+				end
 				MSA_DropDownMenu_AddButton(info, level)
 
 				info = MSA_DropDownMenu_CreateInfo()
@@ -2277,7 +2286,10 @@ do
 				info.checkable = true
 				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA())
 				info.disabled = ConfigActionDisabled(menu.entry)
-				info.func = function(_, config) ListsDp:BroadcastRemove(config.id, C.group) end
+				info.func = function()
+					local config = menu.entry
+					ListsDp:BroadcastRemove(config.id, C.group)
+				end
 				MSA_DropDownMenu_AddButton(info, level)
 			end
 		end
