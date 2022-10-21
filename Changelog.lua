@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.2 (2022-10-21)
+* Address broadcast functions not being initialized correctly 707b1eb
+
 2022.1.1 (2022-10-20)
 * Add additional views/statistics for raid history aa0ea7b
 * Allow broadcast to remove a configuration 7bf80fa
