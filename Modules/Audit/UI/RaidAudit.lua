@@ -362,7 +362,7 @@ function RaidTab:BuildData()
 						function(_, d, r)
 							local num = d[r].num
 							Logging:Debug("RaidHistory : Deleting %s", tostring(num))
-							local history = self:GetHistory()
+							local history = RA:GetHistory()
 							history:del(num)
 							tremove(d, r)
 							for _, v in pairs(d) do
