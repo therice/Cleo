@@ -610,6 +610,7 @@ lib.Creatures = {
 
 -- Mapping from encounter id to details
 -- key is DungeonEncounter.ID
+-- https://wow.tools/dbc/?dbc=dungeonencounter&build=3.4.0.46368
 -- https://wow.tools/dbc/?dbc=dungeonencounter&build=3.4.0.45942#page=1&colFilter[1]=726
 -- https://wow.tools/dbc/?dbc=journalencounter#page=1&colFilter[6]=726
 lib.Encounters = {
@@ -1129,20 +1130,24 @@ lib.Encounters = {
         creature_id = {25315},
     },
     -- Sartharion
-    [1090] = {
+    -- [1090] = {
+    [742] = {
         map_id = 615,
         creature_id = {28860},
     },
     -- Malygos
-    [1094] = {
+    -- [1094] = {
+    [734] = {
         map_id = 616,
         creature_id = {28859},
     },
     -- Archavon
-    [1126] = {
+    --[1126] = {
+    [772] = {
         map_id = 624,
         creature_id = {31125},
     },
+    -- todo : encounter ids for stuff beyond this point need verified, they don't reconcile with `DungeonEncounter` in DB
     -- Emalon
     [1127] = {
         map_id = 624,
