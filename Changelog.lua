@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.3 (2022-11-01)
+* Merge branch 'master' of https://github.com/therice/Cleo ac3325b
+* Address loot allocation session not always being ended after last item is distributed 5413fc6
+* Correct encounter ids for P1 raids 34d5e1f
+* Correct issue that prevented deletion of raid audit entries c109897
+
 2022.1.2 (2022-10-21)
 * Address broadcast functions not being initialized correctly 707b1eb
 
