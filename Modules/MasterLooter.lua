@@ -1374,7 +1374,7 @@ function ML:RegisterAndAnnounceAward(award)
 	-- not more items to award, end the session
 	if not self:HaveUnawardedItems() then
 		AddOn:Print(L["all_items_have_been_awarded"])
-		self:ScheduleTimer('EndSession', 2)
+		self:ScheduleTimer('EndSession', 1)
 	end
 end
 

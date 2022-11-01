@@ -302,7 +302,9 @@ end
 function LA:Show()
 	Logging:Trace("Show()")
 	if self.frame and self.lootTable[self.session] then
-		if self:HaveUnawardedItems() then self.active = true end
+		if self:HaveUnawardedItems() then
+			self.active = true
+		end
 		self.frame:Show()
 		self:SwitchSession(self.session)
 	else
@@ -515,9 +517,7 @@ end
 function LA:Update(forceUpdate)
 	forceUpdate = Util.Objects.Default(forceUpdate, false)
 	-- Logging:Trace('Update(%s)', tostring(forceUpdate))
-	if not forceUpdate then
-		return
-	end
+	if not forceUpdate then return end
 
 	if not self.frame then return end
 	if not self:CurrentEntry() then

@@ -95,12 +95,10 @@ function LA:EnableOnStartup()
 end
 
 function LA:EndSession(hide)
-	if self.active then
-		Logging:Debug("EndSession(%s)", tostring(hide))
-		self.active = false
-		self:Update(true)
-		self:Disable()
-	end
+	Logging:Debug("EndSession(%s)", tostring(hide))
+	self.active = false
+	self:Update(true)
+	self:Disable()
 
 	if hide then self:Hide() end
 end

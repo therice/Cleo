@@ -2234,16 +2234,6 @@ do
 			:nextlevel()
 				:add():set('special', ConfigAction.BroadcastAddUpdate)
 				:add():set('special', ConfigAction.BroadcastRemove)
---[[
-				:add():text(L["guild"]):checkable(false)
-					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.Green:GetRGBA()))
-					:disabled(ConfigActionDisabled)
-					:fn(function(_, config) ListsDp:Broadcast(config.id, C.guild) end)
-				:add():text(L["raid"]):checkable(false)
-					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemLegendary:GetRGBA()))
-					:disabled(ConfigActionDisabled)
-					:fn(function(_, config) ListsDp:Broadcast(config.id, C.group) end)
---]]
 
 	Lists.ConfigActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
