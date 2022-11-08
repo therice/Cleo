@@ -61,7 +61,11 @@ end
 function LA:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.db:RegisterNamespace(self:GetName(), LA.defaults)
-	self.alarm = AddOn.Alarm(1.5, function() self:Update(true) end)
+	-- trigger an update to allocation window every 1/2 a second
+	-- this may not always result in an actual update based upon when it was last refreshed
+	self.alarm = AddOn.Alarm(0.5, function() self:Update() end)
+	-- stopwatch that tracks how long since last refresh (update) occurred
+	self.sw = AddOn.Stopwatch()
 end
 
 function LA:OnEnable()
@@ -71,7 +75,7 @@ function LA:OnEnable()
 	--- @type table<number, Models.Item.LootAllocateEntry>
 	self.lootTable = {}
 	self:GetFrame()
-	self.alarm:Start()
+	self.alarm:Enable()
 	self:SubscribeToComms()
 	self:RegisterMessage(C.Messages.LootTableAddition, "OnLootTableAddReceived")
 	self:RegisterBucketEvent({"UNIT_PHASE", "ZONE_CHANGED_NEW_AREA"}, 1, "Update")
@@ -84,7 +88,7 @@ function LA:OnDisable()
 	-- intentionally don't wipe loot table on disable
 	-- as the UI may still be visible and doing so will make it unsuable
 	-- wipe(self.lootTable)
-	self.alarm:Stop()
+	self.alarm:Disable()
 	self:UnregisterAllMessages()
 	self:UnregisterAllBuckets()
 	self:UnsubscribeFromComms()

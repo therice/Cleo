@@ -441,6 +441,7 @@ function CreateFrame(kind, name, parent, template)
     tinsert(frames, frame)
     frame.index = #frames
     if name then _G[name] = frame end
+    --print('Created Frame : ' .. tostring(name))
     return frame
 end
 
@@ -593,11 +594,12 @@ function WoWAPI_FireUpdate(forceNow)
     if forceNow then  _time = forceNow end
     local now = GetTime()
     for _,frame in pairs(frames) do
+        --print('WoWAPI_FireUpdate('.. tostring(frame:GetName()) .. ') : isShow (' .. tostring(frame.isShow) .. ') OnUpdate(' .. tostring(frame.scripts.OnUpdate) .. ')')
         if frame.isShow and frame.scripts.OnUpdate then
             -- reset back in case we reset the clock for more testing
             if now == 0 then frame.timer = 0 end
             _G.arg1 = now - frame.timer
-            -- print('OnUpdate(' .. tostring(frame:GetName()).. ') => ' .. tostring(now - frame.timer))
+            --print('OnUpdate(' .. tostring(frame:GetName()).. ') => ' .. tostring(now - frame.timer))
             frame.scripts.OnUpdate(frame, now - frame.timer)
             frame.timer = now
         end

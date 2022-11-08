@@ -293,12 +293,7 @@ function AddOn:NewMasterLooterCheck()
     self.lootMethod = GetLootMethod()
 
     -- ML is set, but it's an unknown player
-    if Util.Objects.IsSet(self.masterLooter) and
-        (
-            Util.Strings.Equal(self.masterLooter:GetName(), "Unknown") or
-            Util.Strings.Equal(Ambiguate(self.masterLooter:GetName(), "short"):lower(), _G.UNKNOWNOBJECT:lower())
-        )
-    then
+    if Util.Objects.IsSet(self.masterLooter) and Player.IsUnknown(self.masterLooter) then
         Logging:Warn("NewMasterLooterCheck() : Unknown Master Looter")
         self:ScheduleTimer("NewMasterLooterCheck", 1)
         return
@@ -332,7 +327,7 @@ function AddOn:NewMasterLooterCheck()
         return
     end
 
-    -- request ML DB if not received within 15 seconds
+    -- request ML DB if not received within 5 seconds
     self:ScheduleTimer(
             function()
                 if Util.Objects.IsSet(self.masterLooter) then
@@ -342,7 +337,7 @@ function AddOn:NewMasterLooterCheck()
                     end
                 end
             end,
-            15
+            5
     )
 
     -- Someone else has become ML, nothing additional to do

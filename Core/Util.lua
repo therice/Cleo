@@ -444,21 +444,20 @@ function Alarm:initialize(interval, fn)
 end
 
 function Alarm:_Fire()
-    -- Logging:Trace("Alarm:_Fire()")
+    Logging:Trace("Alarm:_Fire()")
     self.fn()
 end
 
-function Alarm:Start()
-    Logging:Trace('Start')
-    -- the backing API for the scheduling stuff isn't available in test mode (or I haven't properly implemented it)
-    -- don't register the schedule
-    if not self.timer and not AddOn._IsTestContext() then
+function Alarm:Enable()
+    Logging:Trace('Enable(%d)', tonumber(self.interval))
+    -- the backing API for the scheduling stuff isn't available in test mode unless run in async mode
+    if not self.timer and (not AddOn._IsTestContext() or (AddOn._IsTestContext() and _G.IsAsync())) then
         self.timer = AddOn:ScheduleRepeatingTimer(function() self:_Fire() end, self.interval)
     end
 end
 
-function Alarm:Stop()
-    Logging:Trace('Stop')
+function Alarm:Disable()
+    Logging:Trace('Disable')
     if self.timer then
         AddOn:CancelTimer(self.timer)
         self.timer = nil
@@ -470,6 +469,57 @@ function AddOn.Alarm(interval, fn)
     -- something odd is going on in the test framework in which events/messages aren't being
     -- fired without a frame with the name 'AlarmFrame', so create it here under those conditions
     -- it probably merits some extra investigation
-    if AddOn._IsTestContext() then CreateFrame('Frame', 'AlarmFrame')  end
+    if AddOn._IsTestContext() then CreateFrame('Frame', 'AlarmFrame') end
     return alarm
+end
+
+local Stopwatch = AddOn.Class('Stopwatch')
+function Stopwatch:initialize(ticker)
+    self.ticker = Util.Objects.IsFunction(ticker) and ticker or _G.debugprofilestop
+    self.isRunning = false
+    self.startTick = 0
+    self.elapsed = 0
+end
+
+function Stopwatch:IsRunning()
+    return self.isRunning
+end
+
+function Stopwatch:Start()
+    assert(not self.isRunning, "this stopwatch is already running")
+    self.isRunning = true
+    self.startTick = self.ticker()
+    return self
+end
+
+function Stopwatch:Stop()
+    local tick = self.ticker()
+    assert(self.isRunning, "this stopwatch is already stopped")
+    self.isRunning = false
+    self.elapsed =  self.elapsed + (tick - self.startTick)
+    return self
+end
+
+function Stopwatch:Reset()
+    self.elapsed = 0
+    self.isRunning = false
+    return self
+end
+
+function Stopwatch:Restart()
+    self:Reset():Start()
+end
+
+function Stopwatch:Elapsed()
+    return self.isRunning and (self.ticker() - self.startTick) or self.elapsed
+end
+
+function Stopwatch:__tostring()
+    local elapsed = self:Elapsed()
+
+    return format("Stopwatch(%s, %d, %.2f)", tostring(self.isRunning), self.startTick, elapsed)
+end
+
+function AddOn.Stopwatch()
+    return Stopwatch()
 end

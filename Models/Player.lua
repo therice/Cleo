@@ -246,7 +246,9 @@ end
 
 function Player.IsUnknown(p)
     local player = Player.Resolve(p)
-    return Util.Objects.IsNil(player) or Util.Strings.Equal(player:GetShortName(), 'Unknown')
+    return Util.Objects.IsNil(player) or
+            Util.Strings.Equal(player:GetShortName(), 'Unknown') or
+            Util.Strings.Equal(Ambiguate(player:GetName(), "short"):lower(), _G.UNKNOWNOBJECT:lower())
 end
 
 function Player.Unknown(guid)

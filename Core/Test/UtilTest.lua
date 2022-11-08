@@ -57,33 +57,51 @@ describe("Util", function()
         end)
     end)
 
-    --[[
     describe("Alarm", function()
-        local invoked, completed, alarm = 0, 0
+        local invoked, tick, interval, alarm = 0, 0, 1.5, nil
 
-        local function AlarmFn(viaAlarm)
-            viaAlarm = Util.Objects.Default(viaAlarm, false)
-            invoked = invoked + 1
-            if not viaAlarm then return end
-            completed = completed + 1
+        local function Elapsed()
+            return (os.time() - tick)
         end
 
+        local function AlarmFn(viaAlarm)
+            local elapsed = Elapsed()
+            --print(format('AlarmFn(%s, %.2f)',tostring(viaAlarm), elapsed))
+            assert(Util.Objects.Default(viaAlarm, false))
+
+            invoked = invoked + 1
+            if elapsed >= 4.0 then
+                alarm:Disable()
+            end
+        end
+
+        it("functions", Async(function(as)
+            alarm = AddOn.Alarm(interval, function() AlarmFn(true) end)
+            tick = os.time()
+            alarm:Enable()
+
+            while not as.finished() do
+                as.sleep(1)
+            end
+
+            assert.is.near(invoked, 3, 1)
+        end))
+    end)
+
+    describe("Stopwatch", function()
+        local sw = AddOn.Stopwatch()
+
         it("functions", function()
-            alarm = AddOn.Alarm(500, function() AlarmFn(true) end)
-            alarm:Start()
-            AlarmFn()
-            WoWAPI_FireUpdate(GetTime() + 100)
-            AlarmFn()
-            WoWAPI_FireUpdate(GetTime() + 100)
-            AlarmFn()
-            WoWAPI_FireUpdate(GetTime() + 200)
-            AlarmFn()
-            assert(invoked == 4)
-            assert(completed == 0)
-            WoWAPI_FireUpdate(GetTime() + 200)
-            assert(invoked == 5)
-            assert(completed == 1)
+            sw:Start()
+            sleep(0.5)
+            sw:Stop()
+            --print(tostring(sw))
+            assert.is.near(sw:Elapsed(), 500.0, 0.10)
+            sw:Restart()
+            sleep(0.2)
+            sw:Stop()
+            --print(tostring(sw))
+            assert.is.near(sw:Elapsed(), 200.0, 0.10)
         end)
     end)
-    --]]
 end)

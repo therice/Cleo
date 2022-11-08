@@ -169,13 +169,14 @@ function C_Timer.After(duration, callback)
     local ref = timerCount
     timerCount = timerCount + 1
 
-    print(format('C_Timer.After[START](%d, %d, %d)', ref, duration, os.time()))
+    print(format('C_Timer.After[START](%d, %d, %d) Async(%s)', ref, duration, os.time(), tostring(_G.IsAsync())))
     if _G.IsAsync() then
         return timer.new({
              delay = duration,
              recurring = false,
              callback = function()
                  print(format('C_Timer.After[END](%d, %d, %d)', ref, duration, os.time()))
+                 SetTime()
                  callback()
              end
          })
@@ -185,8 +186,8 @@ function C_Timer.After(duration, callback)
     end
 end
 
-function C_Timer.NewTimer(duration, callback)  end
-function C_Timer.NewTicker(duration, callback, iterations)  end
+function C_Timer.NewTimer(duration, callback)  print('NewTimer') end
+function C_Timer.NewTicker(duration, callback, iterations)  print('NewTicker') end
 function C_Timer.Cancel(t)
     print(format('C_Timer.Cancel[EVAL]()'))
     if t and t.cancel then

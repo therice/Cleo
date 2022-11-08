@@ -68,6 +68,9 @@ function LA:GetFrame()
 			end
 		)
 
+		f:SetScript("OnShow", function(_) self.sw:Restart() end)
+		f:SetScript("OnHide", function(_) self.sw:Stop() end)
+
 		RightClickMenu = MSA_DropDownMenu_Create(C.DropDowns.AllocateRightClick, f.content)
 		FilterMenu = MSA_DropDownMenu_Create(C.DropDowns.AllocateFilter, f.content)
 		Enchanters = MSA_DropDownMenu_Create(C.DropDowns.Enchanters, f.content)
@@ -514,17 +517,27 @@ end
 -- SetCellX END
 --
 
+local UPDATE_THRESHOLD_IN_MS = 1000.0 -- 1 second
+
 function LA:Update(forceUpdate)
+	local elapsed = self.sw:Elapsed()
 	forceUpdate = Util.Objects.Default(forceUpdate, false)
-	-- Logging:Trace('Update(%s)', tostring(forceUpdate))
-	if not forceUpdate then return end
+	Logging:Trace('Update(%s, %.2f)', tostring(forceUpdate), elapsed)
 
 	if not self.frame then return end
+
 	if not self:CurrentEntry() then
 		Logging:Warn("Update() : No Loot Table entry for session %d", self.session)
 		return
 	end
 
+	-- if not a forced update, check to see if time elapsed has exceeded threshold
+	if not forceUpdate and (elapsed < UPDATE_THRESHOLD_IN_MS) then
+		return
+	end
+
+	-- doing an actual update, restart timer
+	self.sw:Restart()
 	self.frame.st:SortData()
 	self.frame.st:SortData()
 	

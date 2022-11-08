@@ -243,6 +243,8 @@ local wowApi = thisDir .. '/WowApi.lua'
 print('Loading WowApi @ ' .. wowApi)
 loadfile(wowApi)()
 
+SetTime()
+
 local True = function(...) return true end
 local name, addon
 
