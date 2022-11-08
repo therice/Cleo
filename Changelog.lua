@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.4 (2022-11-08)
+* Attempt to address issue with loot allocation window button not transitioning to 'close' and minor cleanup in detection of 'unknown' player 2b3083b
+
 2022.1.3 (2022-11-01)
 * Merge branch 'master' of https://github.com/therice/Cleo ac3325b
 * Address loot allocation session not always being ended after last item is distributed 5413fc6
