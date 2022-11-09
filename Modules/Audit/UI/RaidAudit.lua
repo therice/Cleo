@@ -707,8 +707,17 @@ end
 
 function RaidStatsTab.SetCellPercent(_, frame, data, _, _, realrow, column, ...)
 	local stats = data[realrow].entry
-	frame.text:SetText(format("%d%%", Util.Numbers.Round(stats.pct, 2) * 100))
-	data[realrow].cols[column].value = stats.pct
+	Util.Functions.try(
+		function()
+			frame.text:SetText(format("%d%%", Util.Numbers.Round(stats.pct, 2) * 100))
+			data[realrow].cols[column].value = stats.pct
+		end
+	).catch(
+		function(err)
+			frame.text:SetText("0%")
+			data[realrow].cols[column].value = 0
+		end
+	)
 end
 
 local PlayerStatsTab = AddOn.Class('PlayerStatsTab', TabContainer)
@@ -848,6 +857,17 @@ PlayerStatsTab.SortByTimestamp =
 
 function PlayerStatsTab.SetCellPercent(_, frame, data, _, _, realrow, column, ...)
 	local stats = data[realrow].entry
-	frame.text:SetText(format("%d%%", Util.Numbers.Round(stats.pct, 2) * 100))
-	data[realrow].cols[column].value = stats.pct
+
+	Util.Functions.try(
+		function()
+			frame.text:SetText(format("%d%%", Util.Numbers.Round(stats.pct, 2) * 100))
+			data[realrow].cols[column].value = stats.pct
+		end
+	).catch(
+		function(err)
+			frame.text:SetText("0%")
+			data[realrow].cols[column].value = 0
+		end
+	)
+
 end

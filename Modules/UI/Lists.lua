@@ -1431,9 +1431,23 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 						local pct = playerStats and playerStats.pct
 						pct = pct and (pct * 100.0) or (0.0)
 
+						local lrd = playerStats and playerStats.lastRaid or nil
+						if lrd then
+							lrd = DateFormat.Short:format(lrd)
+						else
+							lrd = L['none']
+						end
+
 						PlayerTooltip:AddDoubleLine(
 							format("%s %s", L['past'], format(L["n_days"], AttendanceInterval)),
 							format("%.2f %%", pct),
+							0.90, 0.80, 0.50,
+							1, 1, 1
+						)
+
+						PlayerTooltip:AddDoubleLine(
+							L["last_raid_date"],
+							lrd,
 							0.90, 0.80, 0.50,
 							1, 1, 1
 						)
