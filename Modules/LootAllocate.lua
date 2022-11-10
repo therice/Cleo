@@ -70,7 +70,6 @@ end
 
 function LA:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
-	self.active = false
 	self.session = 1
 	--- @type table<number, Models.Item.LootAllocateEntry>
 	self.lootTable = {}
@@ -83,7 +82,6 @@ end
 
 function LA:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())
-	self.active = false
 	self.session = 1
 	-- intentionally don't wipe loot table on disable
 	-- as the UI may still be visible and doing so will make it unsuable
@@ -99,10 +97,11 @@ function LA:EnableOnStartup()
 end
 
 function LA:EndSession(hide)
-	Logging:Debug("EndSession(%s)", tostring(hide))
-	self.active = false
-	self:Update(true)
-	self:Disable()
+	Logging:Debug("EndSession(%s) : enabled=%s", tostring(hide), tostring(self:IsEnabled()))
+	if self:IsEnabled() then
+		self:Update(true)
+		self:Disable()
+	end
 
 	if hide then self:Hide() end
 end
@@ -148,7 +147,6 @@ end
 ---@param lt table<number, Models.Item.ItemRef>
 function LA:ReceiveLootTable(lt)
 	Logging:Debug("ReceiveLootTable(%d) : START", #lt)
-	self.active = true
 	self.lootTable =
 		Util(lt):Copy()
 			:Map(

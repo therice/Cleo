@@ -233,9 +233,9 @@ function AddOn:Test(itemCount, playerCount)
 
 
     self.mode:Enable(C.Modes.Test)
-    self.isMasterLooter, self.masterLooter = self:GetMasterLooter()
+    _, self.masterLooter = self:GetMasterLooter()
 
-    if not self.isMasterLooter then
+    if not self:IsMasterLooter() then
         self:Print(L["error_test_as_non_leader"])
         self.mode:Disable(C.Modes.Test)
         return

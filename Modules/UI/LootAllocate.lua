@@ -178,7 +178,7 @@ function LA:GetFrame()
 		abort:SetText(_G.CLOSE)
 		abort:SetPoint("TOPRIGHT", f, "TOPRIGHT", -10, -50)
 		abort:SetScript("OnClick", function()
-			if AddOn:IsMasterLooter() and self.active then
+			if AddOn:IsMasterLooter() and self:HaveUnawardedItems() then
 				Dialog:Spawn(C.Popups.ConfirmAbort)
 			else
 				self:EndSession(true)
@@ -305,9 +305,6 @@ end
 function LA:Show()
 	Logging:Trace("Show()")
 	if self.frame and self.lootTable[self.session] then
-		if self:HaveUnawardedItems() then
-			self.active = true
-		end
 		self.frame:Show()
 		self:SwitchSession(self.session)
 	else
@@ -536,6 +533,8 @@ function LA:Update(forceUpdate)
 		return
 	end
 
+	Logging:Trace('Update(%s, %.2f) : Proceeding with update. Unawarded Items ? %s', tostring(forceUpdate), elapsed, tostring(self:HaveUnawardedItems()))
+
 	-- doing an actual update, restart timer
 	self.sw:Restart()
 	self.frame.st:SortData()
@@ -559,7 +558,7 @@ function LA:Update(forceUpdate)
 	end
 
 	if AddOn:IsMasterLooter() then
-		if self.active then
+		if self:HaveUnawardedItems() then
 			self.frame.abort:SetText(L["abort"])
 		else
 			self.frame.abort:SetText(_G.CLOSE)

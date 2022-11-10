@@ -887,7 +887,7 @@ AddOn.NonUserVisibleResponse = Util.Memoize.Memoize(
         local _, response = Util.Tables.FindFn(
             reasons,
             -- the extra check w/ subtraction of 400 is due to a previous regression where some non user visible
-            -- award resasons had 400 added to them, but not consistent throughout usage
+            -- award reasons had 400 added to them, but not consistent throughout usage
             function(e) return (e.sort == responseId) or (responseId > 400 and e.sort == (responseId - 400)) end
         )
         return response

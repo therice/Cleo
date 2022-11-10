@@ -1086,7 +1086,7 @@ function ML:_UpdateLootSlots()
 			if not itemEntry.awarded and not updatedLootSlots[session] then
 				if AddOn.ItemIsItem(item, itemEntry.item) then
 					if slot ~= itemEntry.slot then
-						Logging:Debug("_UpdateLootSlots(%d) : previously at %d, not at %d", session, itemEntry.slot, slot)
+						Logging:Debug("_UpdateLootSlots(%d) : previously at %d, now at %d", session, itemEntry.slot, slot)
 					end
 					itemEntry.slot = slot
 					updatedLootSlots[session] = true
@@ -1348,20 +1348,21 @@ function ML:RegisterAndAnnounceAward(award)
 
 	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
 	local ltEntry = self:_GetLootTableEntry(session)
-	local previousWinner = ltEntry.awarded
-	ltEntry.awarded = winner
+	local previouslyAwarded = ltEntry.awarded
+	ltEntry.awarded = true
 
 	self:Send(C.group, C.Commands.Awarded, session, winner)
 	-- perform award announcement first (as the priority will be changed after actual award)
 	Util.Functions.try(
 		function()
+			-- winner, link, response, roll, session, changeAward, isAuto
 			self:AnnounceAward(
 				winner,
 				ltEntry.item,
 				reason and reason.text or response,
 				AddOn:LootAllocateModule():GetCandidateData(session, winner, LAR.Roll),
 				session,
-				previousWinner
+				previouslyAwarded
 			)
 
 		end
