@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.6 (2022-11-10)
+* Merge branch 'master' of https://github.com/therice/Cleo e991143
+* Correct loot allocation window's status to be based upon actual loot table rather than tracked flag bb64ccc
+* Do 
+
 2022.1.5 (2022-11-10)
 * Add last attended raid to tooltip for player on lists and correct issue with rounding errors on calcuating percentages 83e66ab
 * Adjust priority adjustment based upon attendance to adhere to our loot rules 349c8fb
