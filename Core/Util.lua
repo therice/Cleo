@@ -41,8 +41,6 @@ function AddOn.Ambiguate(name)
     return Ambiguate(name, "none")
 end
 
-local UnitNames = {}
-
 -- Gets a unit's name formatted with realmName.
 -- If the unit contains a '-' it's assumed it belongs to the realmName part.
 -- Note: If 'unit' is a playername, that player must be in our raid or party!
@@ -51,7 +49,6 @@ local UnitNames = {}
 function AddOn:UnitName(u)
     --Logging:Debug("UnitName(%s)", tostring(u))
     if Util.Objects.IsEmpty(u) then return nil end
-    if UnitNames[u] then return UnitNames[u] end
 
     local function qualify(name, realm)
         --Logging:Debug("UnitName.qualify(%s, %s)", tostring(name), tostring(realm))
@@ -85,7 +82,7 @@ function AddOn:UnitName(u)
     -- We also want to make sure the returned name is always title cased (it might not always be! ty Blizzard)
     local qualified = qualify(name, realm)
     --Logging:Debug("UnitName(%s) => %s", tostring(u), tostring(qualified))
-    UnitNames[u] = qualified
+
     return qualified
 end
 
