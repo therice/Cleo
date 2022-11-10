@@ -6,6 +6,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale(name, "enUS", true, true)
 if not L then return end
 
 L["abort"] = "Abort"
+L["absent"] = "Absent"
 L["accept_whispers"] = "Accept Whispers"
 L["accept_whispers_desc"] = "Allows players to use whispers to indicate their response for an item"
 L["action"] = "Action"
@@ -279,6 +280,7 @@ L["n_ago"] = "%s ago"
 L["n_days"] = "%s day(s)"
 L["n_months_and_n_days"] = "%d month(s) and %s"
 L["n_positions"] = "%d Positions"
+L["n_weeks"] =  "%s week(s)"
 L["n_years_and_n_months_and_n_days"] = "%d year(s) and %d month(s) and %s"
 L["nobody"] = "Nobody"
 L["none"] = "None"

@@ -1695,29 +1695,38 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	--- @param self
 	--- @param intervalInDays number
 	--- @param pct number
-	--- @param remove boolean true == remove player(s), false == drop player(s) to bottom
-	tab.UpdatePrioritiesViaAttendance = function(self, intervalInDays, pct, remove)
+	--- @param amount number positive value means move down that many spots, a nil value means remove
+	--- @param skip table<Models.Player> list of players to skup
+	tab.UpdatePrioritiesViaAttendance = function(self, intervalInDays, pct, amount, skip)
 		assert(Util.Objects.IsNumber(intervalInDays), "Interval must be a number")
 		assert(Util.Objects.IsNumber(pct), "Percentage must be a number")
 		if pct > 1.0 then pct = (pct / 100.0) end
-		remove = Util.Objects.Default(remove, false)
+		amount = Util.Objects.IsNumber(amount) and amount or nil
+		skip = Util.Objects.IsTable(skip) and skip or {}
 
-		Logging:Debug("UpdatePrioritiesViaAttendance(%d, %.2f, %s)", intervalInDays, pct, tostring(remove))
+		Logging:Debug("UpdatePrioritiesViaAttendance(%d, %.2f, %s)", intervalInDays, pct, tostring(amount))
 
-		local list = listSupplier()
+		local list, updated = listSupplier(), {}
 		if list then
 			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(intervalInDays)
 			if stats then
 				for priority, player in Util.Tables.Sparse.ipairs(self.priorities) do
 					if player then
-						local pstats = stats.players[AddOn.Ambiguate(player:GetShortName())]
-						local ppct = pstats and pstats.pct or 0
-						Logging:Debug("%s (%d) => %.2f", player:GetShortName(), priority, ppct)
-						if ppct < pct then
-							self.priorities[priority] = nil
-							if not remove then
-								Util.Tables.Insert(self.priorities, table.maxn(self.priorities) + 1, player)
+						if not Util.Tables.ContainsValue(skip, player) then
+							local pstats = stats.players[AddOn.Ambiguate(player:GetShortName())]
+							local ppct = pstats and pstats.pct or 0
+							Logging:Debug("%s (%d) => %.2f", player:GetShortName(), priority, ppct)
+							if ppct <= pct then
+								if Util.Objects.IsNil(amount) then
+									self.priorities[priority] = nil
+								else
+									self:AdjustPriority(player, amount)
+								end
+
+								Util.Tables.Push(updated, player)
 							end
+						else
+							Logging:Trace("UpdatePrioritiesViaAttendance() : Skipping %s", tostring(player))
 						end
 					end
 				end
@@ -1725,6 +1734,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				self:UpdatePriorities(false)
 			end
 		end
+
+		return updated
 	end
 
 	tab.SavePriorities = function(self)
@@ -1795,6 +1806,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	tab.AdjustPriority = function(self, player, amount)
 		amount = Util.Objects.Default(tonumber(amount), 0)
+		Logging:Debug("AdjustPriority(%s, %d)", tostring(player), amount)
+
 		if amount ~= 0 then
 			local compacted = Util.Tables.Compact(self.priorities)
 			local priority = Util.Tables.Find(compacted, player)
@@ -2310,8 +2323,9 @@ do
 	}
 
 	local RaidAttendance = {
-		Interval    = "INTERVAL",
-		Percentage  = "PERCENT",
+		Interval        = "INTERVAL",
+		ActionDrop      = "ACTION_DROP",
+		ActionRemove    = "ACTION_REMOVE",
 	}
 
 	local GuildActionQualifiers = {
@@ -2352,7 +2366,8 @@ do
 				:add():set('special', RaidAttendance.Interval)
 			:nextlevel()
 				:add():set('special', PopulateVia.Rank)
-				:add():set('special', RaidAttendance.Percentage)
+				:add():set('special', RaidAttendance.ActionDrop)
+				:add():set('special', RaidAttendance.ActionRemove)
 
 	Lists.ListActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -2387,36 +2402,45 @@ do
 					MSA_DropDownMenu_AddButton(info, level)
 				end
 			elseif value == ListAction.RaidAttendance and entry.special == value then
-				for _, days in pairs({30}) do
-					info = MSA_DropDownMenu_CreateInfo()
-					info.notCheckable = true
-					info.hasArrow = true
-					info.value = {RaidAttendance.Interval, days}
-					info.text = format("%s %s", L['past'], format(L["n_days"], days))
-					MSA_DropDownMenu_AddButton(info, level)
-				end
-			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.Interval and entry.special == value[1] then
-				for _, pct in pairs({25, 50, 75}) do
-					info = MSA_DropDownMenu_CreateInfo()
-					info.notCheckable = true
-					info.hasArrow = true
-					info.text = format("< %d%%", pct)
-					info.value = {RaidAttendance.Percentage, value[2], pct}
-					MSA_DropDownMenu_AddButton(info, level)
-				end
-			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.Percentage and entry.special == value[1] then
+				info.text = L["absent"]
 				info.notCheckable = true
-				info.text = L['move_to_bottom']
-				info.func = function()
-					self.listPriorityTab:UpdatePrioritiesViaAttendance(value[2] --[[ days --]], value[3] --[[ pct --]], false --[[ drop or remove --]])
-				end
+				info.hasArrow = true
+				info.value = RaidAttendance.Interval
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif value == RaidAttendance.Interval and entry.special == value then
+
+				info = MSA_DropDownMenu_CreateInfo()
+				info.notCheckable = true
+				info.hasArrow = true
+				info.value = { RaidAttendance.ActionDrop, {27, 21, 14} }
+				info.text = format("%s %s", L['past'], format(L["n_weeks"], "2-4"))
 				MSA_DropDownMenu_AddButton(info, level)
 
 				info = MSA_DropDownMenu_CreateInfo()
 				info.notCheckable = true
+				info.hasArrow = true
+				info.value = { RaidAttendance.ActionRemove, 28 }
+				info.text = format("%s %s", L['past'], format(L["n_weeks"], "4+"))
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.ActionDrop and entry.special == value[1] then
+				info = MSA_DropDownMenu_CreateInfo()
+				info.notCheckable = true
+				info.text = format("%s %s", L["move_down"], format(L['n_positions'], 5))
+				info.func = function()
+					local skip, updated = {}
+					for _, days in pairs(value[2]) do
+						updated =
+							self.listPriorityTab:UpdatePrioritiesViaAttendance(days --[[ days --]], 0 --[[ pct --]], 5 --[[ positions --]], skip)
+						skip = Util.Tables.Merge(skip, updated)
+						--Logging:Debug("Updated => %s", Util.Objects.ToString(skip))
+					end
+				end
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.ActionRemove and entry.special == value[1] then
+				info.notCheckable = true
 				info.text = L['remove']
 				info.func = function()
-					self.listPriorityTab:UpdatePrioritiesViaAttendance(value[2] --[[ days --]], value[3] --[[ pct --]], true --[[ drop or remove --]])
+					self.listPriorityTab:UpdatePrioritiesViaAttendance(value[2] --[[ days --]], 0 --[[ pct --]], nil --[[ positions --]])
 				end
 				MSA_DropDownMenu_AddButton(info, level)
 			end
