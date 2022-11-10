@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.5 (2022-11-10)
+* Add last attended raid to tooltip for player on lists and correct issue with rounding errors on calcuating percentages 83e66ab
+* Adjust priority adjustment based upon attendance to adhere to our loot rules 349c8fb
+
 2022.1.4 (2022-11-08)
 * Attempt to address issue with loot allocation window button not transitioning to 'close' and minor cleanup in detection of 'unknown' player 2b3083b
 
