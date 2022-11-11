@@ -40,20 +40,23 @@ local function Put(player)
     cache[player.guid] = player:toTable()
 end
 
-local DEV_CACHE_TIME, NON_DEV_CACHE_TIME =  (60 * 60 * 24 * 0), (60 * 60 * 24 * 30) -- 30 days
+local SECS_IN_DAY = (60 * 60 * 24) -- seconds in a day
+local DEFAULT_CACHE_DURATION = (SECS_IN_DAY * 7) -- 7 days
+local CacheDuration = Util.Optional.empty()
 
--- none of the cached stuff is going to change, bump retention from 2 days to 30
-local CACHE_TIME = Util.Memoize.Memoize(
-    function()
-        return (AddOn._IsTestContext() or AddOn:DevModeEnabled()) and DEV_CACHE_TIME or NON_DEV_CACHE_TIME
+local function GetCacheDuration()
+    if AddOn._IsTestContext() then
+        return 0
+    else
+        return CacheDuration:orElse(DEFAULT_CACHE_DURATION)
     end
-)
+end
 
 local function Get(guid)
     local player = cache[guid]
     if player then
         --Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
-        if GetServerTime() - player.timestamp <= CACHE_TIME() then
+        if GetServerTime() - player.timestamp <= GetCacheDuration() then
             return Player:reconstitute(player)
         else
             Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
@@ -253,6 +256,18 @@ end
 
 function Player.Unknown(guid)
     return Player(Player.ParseGuid(guid), 'Unknown','DEATHKNIGHT', select(2, UnitFullName("player")))
+end
+
+function Player.ToggleCache()
+    if CacheDuration:isEmpty() then
+        CacheDuration = Util.Optional.of(0)
+    else
+        CacheDuration = Util.Optional.empty()
+    end
+end
+
+function Player.GetCacheDurationInDays()
+    return GetCacheDuration() / SECS_IN_DAY
 end
 
 function Player.ClearCache()

@@ -171,6 +171,21 @@ function AddOn:RegisterChatCommands()
                 end,
             },
             {
+                {'togglepc', 'tpc'},
+                L['toggle_player_cache_desc'],
+                function()
+                    AddOn.Package('Models').Player.ToggleCache()
+                    self:Print(format("Player cache duration = %d days", AddOn.Package('Models').Player.GetCacheDurationInDays()))
+                end,
+            },
+            {
+                {'durationpc', 'dpc'},
+                L['duration_player_cache_desc'],
+                function()
+                    self:Print(format("Player cache duration = %d days", AddOn.Package('Models').Player.GetCacheDurationInDays()))
+                end,
+            },
+            {
                 {'clearic', 'cic'},
                 L['clear_item_cache_desc'],
                 function()
