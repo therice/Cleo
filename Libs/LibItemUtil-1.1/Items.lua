@@ -115,7 +115,7 @@ lib.TokenEquipmentLocations = {
     [30246] = { "LegsSlot" },                   -- Leggings of the Vanquished Defender
     [30247] = { "LegsSlot" },                   -- Leggings of the Vanquished Hero
     [30245] = { "LegsSlot" },                   -- Leggings of the Vanquished Champion
-    [32405] = { "NeckSlot"} ,                    -- Verdant Sphere
+    [32405] = { "NeckSlot" },                  -- Verdant Sphere
     -- TBC Classic P3 (T6)
     [31097] = { "HeadSlot" },                   -- Helm of the Forgotten Conqueror
     [31095] = { "HeadSlot" },                   -- Helm of the Forgotten Protector
@@ -159,6 +159,7 @@ lib.TokenEquipmentLocations = {
     [40622] = { "ShoulderSlot" },               -- Spaulders of the Lost Conqueror
     [40623] = { "ShoulderSlot" },               -- Spaulders of the Lost Protector
     [40624] = { "ShoulderSlot" },               -- Spaulders of the Lost Vanquisher
+    [44569] = { "NeckSlot" },                   -- Key to the Focusing Iris
     -- 25 player
     [40631] = { "HeadSlot" },                   -- Crown of the Lost Conqueror
     [40632] = { "HeadSlot" },                   -- Crown of the Lost Protector
@@ -175,6 +176,7 @@ lib.TokenEquipmentLocations = {
     [40637] = { "ShoulderSlot" },               -- Mantle of the Lost Conqueror
     [40638] = { "ShoulderSlot" },               -- Mantle of the Lost Protector
     [40639] = { "ShoulderSlot" },               -- Mantle of the Lost Vanquisher
+    [44577] = { "NeckSlot" },                   -- Heroic Key to the Focusing Iris
 }
 
 -- mapping from token to items (id) which are rewarded from turning in
@@ -275,5 +277,5 @@ lib.TokenItems = {
     [40637] = { 40424, 40450, 40459, 40573, 40578, 40584 },         -- Mantle of the Lost Conqueror
     [40638] = { 40530, 40548, 40507, 40513, 40518, 40524 },         -- Mantle of the Lost Protector
     [40639] = { 40465, 40470, 40494, 40502, 40419, 40557, 40568 },  -- Mantle of the Lost Vanquisher
-    [44577] = { 44581},                                             -- Heroic Key to the Focusing Iris
+    [44577] = { 44581 },                                            -- Heroic Key to the Focusing Iris
 }
