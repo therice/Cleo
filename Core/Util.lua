@@ -215,17 +215,29 @@ function AddOn.IsItemBop(item)
     return AddOn.IsItemBindType(item, LE_ITEM_BIND_ON_ACQUIRE)
 end
 
+local IGNORED_ITEM_SLOTS = {INVSLOT_BODY, INVSLOT_TABARD}
+
+local function IsIgnoredItemSlot(slot)
+    return Util.Objects.IsNil(slot) or Util.Tables.ContainsValue(IGNORED_ITEM_SLOTS, slot)
+end
+
 local function GetAverageItemLevel()
+    --Logging:Debug("%s", Util.Objects.ToString(IGNORED_ITEM_SLOTS))
     local sum, count = 0, 0
     for i = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
-        local link = GetInventoryItemLink(C.player, i)
-        if not Util.Strings.IsEmpty(link)  then
-            local ilvl = select(4, GetItemInfo(link)) or 0
-            sum = sum + ilvl
-            count = count + 1
+        if not IsIgnoredItemSlot(i) then
+            local link = GetInventoryItemLink(C.player, i)
+            if not Util.Strings.IsEmpty(link)  then
+                local ilvl = select(4, GetItemInfo(link)) or 0
+                sum = sum + ilvl
+                count = count + 1
+            end
         end
     end
-    return Util.Numbers.Round(sum / count, 2)
+
+    local avgItemLevel = Util.Numbers.Round(sum / count, 2)
+    Logging:Debug("GetAverageItemLevel() : %d", avgItemLevel)
+    return avgItemLevel
 end
 
 local enchanting_localized_name
@@ -255,16 +267,18 @@ function AddOn:UpdatePlayerGear(startSlot, endSlot)
     endSlot = endSlot or INVSLOT_LAST_EQUIPPED
     Logging:Trace("UpdatePlayerGear(%d, %d)", startSlot, endSlot)
     for i = startSlot, endSlot do
-        local link = GetInventoryItemLink("player", i)
-        if link then
-            local name = GetItemInfo(link)
-            if name then
-                self.playerData.gear[i] = link
+        if not IsIgnoredItemSlot(i) then
+            local link = GetInventoryItemLink("player", i)
+            if link then
+                local name = GetItemInfo(link)
+                if name then
+                    self.playerData.gear[i] = link
+                else
+                    self:ScheduleTimer("UpdatePlayerGear", 1, i, i)
+                end
             else
-                self:ScheduleTimer("UpdatePlayerGear", 1, i, i)
+                self.playerData.gear[i] = nil
             end
-        else
-            self.playerData.gear[i] = nil
         end
     end
 end
