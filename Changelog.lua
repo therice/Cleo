@@ -2,6 +2,13 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.1.7 (2022-11-13)
+* revise change log 
+* Correct failing test due to undefined symbol f22debe
+* Do not include shirt and tabard in any gear gathering or calculations d8068a5
+* Key to Focusing Iris to token based items 70798f2
+* Use consistent player cache duration unless in test mode, which resolves issues with extra information not being available (such as if player is an enchanter) e86d946
+
 2022.1.6 (2022-11-10)
 * Merge branch 'master' of https://github.com/therice/Cleo e991143
 * Correct loot allocation window's status to be based upon actual loot table rather than tracked flag bb64ccc
