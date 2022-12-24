@@ -64,6 +64,7 @@ function ScrollList:Create()
 		'ClearSelection', ScrollList.ClearSelection,
 		'Clear', ScrollList.Clear,
 		'SetList', ScrollList.SetList,
+		'GetList', ScrollList.GetList,
 		'Selected', ScrollList.Selected,
 		'LineTextFormatter', ScrollList.SetLineTextFormatter,
 		'Tooltip', ScrollList.SetTooltip
@@ -229,6 +230,10 @@ function ScrollList.SetList(self, list, order)
 		end
 	end
 	return self
+end
+
+function ScrollList.GetList(self)
+	return self.L
 end
 
 -- this always adds to end of the list

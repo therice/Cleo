@@ -1006,6 +1006,7 @@ function Lists:LayoutListTab(tab)
 	tab.lists.SetListValue = function(self, index,...)
 		Logging:Trace("List(Tab).Lists.SetListValue(%d)", index)
 		self:GetParent():Update()
+		module.bulkManageFrame:Update()
 		self.List[index]:SetScript(
 			"OnMouseDown",
 			function(self, button)
@@ -1202,6 +1203,8 @@ function Lists:LayoutListTab(tab)
 		}
 	})
 
+	self:LayoutListPriorityBulkManageFrame(SelectedConfiguration, SelectedList)
+
 	self:LayoutListEquipmentTab(
 		tab.listSettings:GetByName(L["equipment"]),
 		SelectedConfiguration,
@@ -1316,7 +1319,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 end
 
 
-local PriorityWidth, PriorityHeight, AttendanceInterval = 150, 18, 30
+local PriorityWidth, PriorityHeight, AttendanceInterval, AttendanceIntervalWeeks = 150, 18, 30, 28
 local PriorityActionsMenu, PlayerActionsMenu
 local PlayerTooltip
 
@@ -1426,6 +1429,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 						PlayerTooltip:SetOwner(self, 'ANCHOR_RIGHT')
 						PlayerTooltip:AddLine(L['raid_attendance'])
 						PlayerTooltip:AddLine(" ")
+
 						local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(AttendanceInterval)
 						local playerStats = stats.players[AddOn.Ambiguate(playerName)]
 						local pct = playerStats and playerStats.pct
@@ -1440,6 +1444,19 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 						PlayerTooltip:AddDoubleLine(
 							format("%s %s", L['past'], format(L["n_days"], AttendanceInterval)),
+							format("%.2f %%", pct),
+							0.90, 0.80, 0.50,
+							1, 1, 1
+						)
+
+						local sd, ed = AddOn:RaidAuditModule():GetNormalizedInterval(AttendanceIntervalWeeks)
+						stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed)
+						playerStats = stats.players[AddOn.Ambiguate(playerName)]
+						pct = playerStats and playerStats.pct
+						pct = pct and (pct * 100.0) or (0.0)
+
+						PlayerTooltip:AddDoubleLine(
+							format("%s %s", L['past'], format(L["n_raid_weeks"], AttendanceIntervalWeeks / 7)),
 							format("%.2f %%", pct),
 							0.90, 0.80, 0.50,
 							1, 1, 1
@@ -1654,6 +1671,10 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		self:UpdatePriorities(false)
 	end
 
+	tab.GetPriorities = function(self)
+		return self.priorities
+	end
+
 	--- @param rank number numeric rank of guild
 	--- @param modifier LibUtil.Optional if empty, only the specified rank. if present and true, that rank and any rank "higher", if presentfalse, that rank and any rank "lower"
 	tab.ClearAndPopulatePrioritiesViaGuild = function(self, rank, modifier)
@@ -1690,52 +1711,6 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				self:UpdatePriorities(false)
 			end
 		end
-	end
-
-	--- @param self
-	--- @param intervalInDays number
-	--- @param pct number
-	--- @param amount number positive value means move down that many spots, a nil value means remove
-	--- @param skip table<Models.Player> list of players to skup
-	tab.UpdatePrioritiesViaAttendance = function(self, intervalInDays, pct, amount, skip)
-		assert(Util.Objects.IsNumber(intervalInDays), "Interval must be a number")
-		assert(Util.Objects.IsNumber(pct), "Percentage must be a number")
-		if pct > 1.0 then pct = (pct / 100.0) end
-		amount = Util.Objects.IsNumber(amount) and amount or nil
-		skip = Util.Objects.IsTable(skip) and skip or {}
-
-		Logging:Debug("UpdatePrioritiesViaAttendance(%d, %.2f, %s)", intervalInDays, pct, tostring(amount))
-
-		local list, updated = listSupplier(), {}
-		if list then
-			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(intervalInDays)
-			if stats then
-				for priority, player in Util.Tables.Sparse.ipairs(self.priorities) do
-					if player then
-						if not Util.Tables.ContainsValue(skip, player) then
-							local pstats = stats.players[AddOn.Ambiguate(player:GetShortName())]
-							local ppct = pstats and pstats.pct or 0
-							Logging:Debug("%s (%d) => %.2f", player:GetShortName(), priority, ppct)
-							if ppct <= pct then
-								if Util.Objects.IsNil(amount) then
-									self.priorities[priority] = nil
-								else
-									self:AdjustPriority(player, amount)
-								end
-
-								Util.Tables.Push(updated, player)
-							end
-						else
-							Logging:Trace("UpdatePrioritiesViaAttendance() : Skipping %s", tostring(player))
-						end
-					end
-				end
-
-				self:UpdatePriorities(false)
-			end
-		end
-
-		return updated
 	end
 
 	tab.SavePriorities = function(self)
@@ -1799,6 +1774,17 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 			if handled then
 				self.priorities = priorities
+				self:UpdatePriorities(false)
+			end
+		end
+	end
+
+	tab.RemovePlayer = function(self, player)
+		local list = listSupplier()
+		if list and player then
+			local priority = Util.Tables.Find(self.priorities, player)
+			if priority then
+				self.priorities[priority] = nil
 				self:UpdatePriorities(false)
 			end
 		end
@@ -2005,7 +1991,6 @@ function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
 
 	tab.UpdatePriorities = function(self)
 		local ac, list = Lists:GetActiveConfiguration(), listSupplier()
-
 		local priorityCount = 0
 
 		if ac and list then
@@ -2092,6 +2077,280 @@ function Lists:SelectListModuleFn()
 	end
 end
 
+--- @class BulkManageBase
+local BulkManageBase = AddOn.Class('BulkManageBase')
+function BulkManageBase:initialize(text)
+	self.text = text
+end
+
+function BulkManageBase:__tostring()
+	return self.text
+end
+
+--- @class BulkManageMeasure
+local BulkManageMeasure = AddOn.Class('BulkManageMeasure', BulkManageBase)
+function BulkManageMeasure:initialize(text, criteria)
+	BulkManageBase.initialize(self, text)
+	self.criteria = Util.Objects.Default(criteria, {})
+end
+
+function BulkManageMeasure:HasCriteria()
+	return not Util.Objects.IsEmpty(self.criteria)
+end
+
+function BulkManageMeasure:GetCriteria()
+	return self.criteria
+end
+
+function BulkManageMeasure:Evaluate(...) error("Evaluate() not implemented") end
+
+--- @class NoMeasure
+local NoMeasure = AddOn.Class('NoMeasure', BulkManageMeasure)
+function NoMeasure:initialize()
+	BulkManageMeasure.initialize(self, L['none'])
+end
+
+function NoMeasure:Evaluate(...)
+	return Util.Tables.Copy(Lists.listPriorityTab:GetPriorities())
+end
+
+--- @class AttendanceMeasure
+local AttendanceMeasure = AddOn.Class('AttendanceMeasure', BulkManageMeasure)
+function AttendanceMeasure:initialize(criteria)
+	BulkManageMeasure.initialize(self, L['attendance'], criteria)
+end
+
+function AttendanceMeasure:Evaluate(...)
+	local evaluation, criteria, priorities = {}, select(1, ...), Lists.listPriorityTab:GetPriorities()
+	if Util.Objects.IsSet(criteria) and Util.Tables.ContainsValue(self.criteria, criteria) then
+		for _, days in pairs(criteria.interval) do
+			Logging:Debug("Evaluate(%s) : %d days", tostring(criteria), days)
+			local sd, ed = AddOn:RaidAuditModule():GetNormalizedInterval(days)
+			Logging:Debug(
+				"Evaluate(%s) : %d days => '%s' -> '%s' (%d days)",
+				tostring(criteria), days, tostring(sd), tostring(ed), interval
+			)
+
+			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed)
+			if stats then
+				for _, player in Util.Tables.Sparse.ipairs(priorities) do
+					local pstats = stats.players[AddOn.Ambiguate(player:GetShortName())]
+					local ppct = pstats and pstats.pct or 0
+					if ppct <= 0 and not Util.Tables.ContainsValue(evaluation, player) then
+						Util.Tables.Push(evaluation, player)
+					end
+				end
+			end
+		end
+	end
+
+	return evaluation
+end
+
+--- @class BulkManageCriteria
+local BulkManageCriteria = AddOn.Class('BulkManageCriteria', BulkManageBase)
+function BulkManageCriteria:initialize(text)
+	BulkManageBase.initialize(self, text)
+end
+
+local AbsentCriteria = AddOn.Class('AbsentCriteria', BulkManageCriteria)
+function AbsentCriteria:initialize(text, ...)
+	BulkManageCriteria.initialize(self, text)
+	self.interval = Util.Tables.New(...)
+end
+
+local BulkManageCriterion = {
+	Absent2To4  = AbsentCriteria(
+		format("%s : %s %s", L['absent'], L['past'], format(L["n_raid_weeks"], "2-4")),
+		14, 21
+	),
+	Absent4Plus = AbsentCriteria(
+		format("%s : %s %s", L['absent'], L['past'], format(L["n_raid_weeks"], "4+")),
+		28
+	)
+}
+
+local BulkManageMeasures = {
+	Attendance = AttendanceMeasure({BulkManageCriterion.Absent2To4, BulkManageCriterion.Absent4Plus}),
+	None       = NoMeasure(),
+}
+
+local BulkActions = {
+	Drop2  = Util.Tables.New(
+		format("%s %s", L["move_down"], format(L['n_positions'], 2)),
+		function(self, players)
+			Logging:Debug("Drop2(%d)", Util.Tables.Count(players))
+			for _, player in pairs(players) do
+				self.listPriorityTab:AdjustPriority(player, 2)
+			end
+		end
+	),
+	Drop5  = Util.Tables.New(
+		format("%s %s", L["move_down"], format(L['n_positions'], 5)),
+		function(self, players)
+			Logging:Debug("Drop5(%d)", Util.Tables.Count(players))
+			for _, player in pairs(players) do
+				self.listPriorityTab:AdjustPriority(player, 5)
+			end
+		end
+	),
+	Remove = Util.Tables.New(
+		L['remove'],
+		function(self, players)
+			Logging:Debug("Remove(%d)", Util.Tables.Count(players))
+			for _, player in pairs(players) do
+				self.listPriorityTab:RemovePlayer(player)
+			end
+		end
+	)
+}
+
+function Lists:LayoutListPriorityBulkManageFrame(_, listSupplier)
+	local module = self
+	local f = UI:Popup(UIParent, 'BulkManageListPriorities', self:GetName(), L['frame_bulk_manage_list_priorities'], 450, 520)
+	f.list = UI:New('Text', f.content):Size(200,15):Point("LEFT", f.banner, "LEFT", 20, 0):Color(C.Colors.White:GetRGB())
+
+	f.criteriaGroup =
+		UI:New('InlineGroup',f.content)
+			:Point("CENTER", f.content, "CENTER", 0, 0)
+			:Point("TOPLEFT", f.banner, "BOTTOMLEFT", 0, -15)
+			:SetWidth(450):SetHeight(350):Title(L['criteria'])
+
+	--- @type UI.Widgets.Dropdown
+	f.measure =
+		UI:New('Dropdown', f.content)
+			:SetList(Util.Tables.Copy(BulkManageMeasures)):SetWidth(200)
+			:Point("CENTER", f.criteriaGroup, "CENTER", 0, 0)
+			:Point("TOP", f.criteriaGroup, "TOP", 0, -30)
+			:OnValueChanged(function() f.criteria:Update() end)
+
+	--- @type UI.Widgets.Dropdown
+	f.criteria =
+		UI:New('Dropdown', f.content)
+			:SetWidth(200):Point("TOPRIGHT", f.measure, "BOTTOMRIGHT", 0, -10)
+			-- should only be called when a value has been selected, which infers a list of criteria has been set
+			:OnValueChanged(function() f.evaluate:Enable() end)
+	f.criteria.Update = function(self)
+		-- measure only supports a single value
+		local measure = f.measure:Selected()[1]
+		if measure then measure = measure.value end
+
+		if Util.Objects.IsNil(measure) then
+			self:SetEnabled(false)
+			self:SetList({})
+			f.evaluate:Disable()
+		else
+			self:SetEnabled(measure:HasCriteria())
+			self:SetList(measure:GetCriteria())
+			f.evaluate:SetEnabled(not measure:HasCriteria())
+		end
+
+
+		f.players:SetEnabled(false)
+		self:ClearValue()
+	end
+
+	f.evaluate =
+		UI:New('Button', f.content, L['evaluate'])
+	        :Point("CENTER", f.content, "CENTER", 0, 0)
+	        :Point("TOP", f.criteria, "BOTTOM", 0, -10)
+			:OnClick(function(self) f:Evaluate() end)
+			:Disable()
+
+	f.players =
+		UI:New('DualListbox', f.content)
+			:Point("CENTER", f.content, "CENTER", 0, 0):Point("TOP", f.evaluate, "BOTTOM", 0, -10):Height(210)
+			:SetEnabled(false)
+			:AvailableTooltip(L["matched"], L["bulk_manage_matched"])
+			:SelectedTooltip(L["selected"], L["bulk_manage_selected"])
+			:LineTextFormatter(
+				function(player)
+					return UIUtil.ClassColorDecorator(player.class):decorate(player:GetShortName())
+				end
+			)
+			:OnSelectedChanged(function() f.action:Update() end)
+
+	f.Evaluate = function(self)
+		--- @type BulkManageMeasure
+		local measure = self.measure:Selected()[1].value
+		--- @type BulkManageCriteria
+		local criteria = measure:HasCriteria() and self.criteria:Selected()[1].value or nil
+		Logging:Trace(
+			"BulkManageFrame:Evaluate() : %s, %s",
+			Util.Objects.ToString(measure:toTable()),
+			Util.Objects.ToString( Util.Tables.IsEmpty({}) and {} or criteria:toTable())
+		)
+		local priorities = measure:Evaluate(criteria)
+		f.players:Options(priorities, {}):SetEnabled(true)
+	end
+
+	f.actionGroup =
+		UI:New('InlineGroup',f.content)
+	        :Point("CENTER", f.content, "CENTER", 0, 0)
+	        :Point("TOPLEFT", f.criteriaGroup, "BOTTOMLEFT", 0, -15)
+	        :SetWidth(450):SetHeight(100):Title('Action')
+
+	--- @type UI.Widgets.Dropdown
+	f.action =
+		UI:New('Dropdown', f.content)
+			:SetList(Util.Tables.Copy(BulkActions)):SetWidth(200)
+			:SetTextDecorator(function(i) return i.value[1] end)
+			:OnValueChanged(function() f.action:Update() end)
+			:Point("CENTER", f.actionGroup, "CENTER", 0, 0)
+			:Point("TOP", f.actionGroup, "TOP", 0, -30)
+			:SetEnabled(false)
+
+	f.action.Update = function(self)
+		local selected = f.players.selected:GetList()
+		local playersSelected = (Util.Tables.Count(selected) > 0)
+
+		self:SetEnabled(playersSelected)
+
+		if not playersSelected then
+			self:ClearValue()
+			f.execute:Disable()
+		else
+			if self:HasValue() then
+				f.execute:Enable()
+			else
+				f.execute:Disable()
+			end
+		end
+	end
+
+	f.execute =
+		UI:New('Button', f.content, L['execute'])
+			:Point("CENTER", f.actionGroup, "CENTER", 0, 0)
+			:Point("TOP", f.action, "BOTTOM", 0, -10)
+			:OnClick(function(self) f:Execute() end)
+			:Disable()
+
+	f.Execute = function(self)
+		local action, selected = f.action:Selected()[1].value, f.players.selected:GetList()
+		Logging:Debug("Execute() : action=%s, players=%d", Util.Objects.ToString(action), Util.Tables.Count(selected))
+		-- index 2 will be the function to execute for action
+		action[2](module, selected)
+	end
+
+	f.Update = function(self)
+		if self:IsVisible() then
+			local list = listSupplier()
+			if list then
+				self.list:SetText(list and tostring(list) or "")
+			end
+
+			self.measure:ClearValue()
+			self.criteria:ClearValue()
+			self.players:Clear()
+			self.criteria:Update()
+			self.action:Update()
+		end
+	end
+
+	f:SetScript("OnShow", function(self) self:Update() end)
+	self.bulkManageFrame = f
+end
+
 do
 	local PriorityAction = {
 		All     = "ALL",
@@ -2106,21 +2365,21 @@ do
 
 	local PriorityActionsEntryBuilder =
 		DropDown.EntryBuilder()
-			:nextlevel()
-				:add():text(L["all"])
-					:set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemArtifact:GetRGBA()))
-					:value(PriorityAction.All)
-					:checkable(false):arrow(true)
-				:add():text(function(name, entry) return entry and UIUtil.ClassColorDecorator(entry.class):decorate(name) or L["na"] end)
-					:value(PriorityAction.Player)
-					:checkable(false):arrow(true)
-			:nextlevel()
-				:add():set('special', PriorityAction.All)
-				:add():set('special', PriorityAction.Player)
-			:nextlevel()
-				:add():set('special', PlayerAction.After)
-				:add():set('special', PlayerAction.Before)
-				:add():set('special', PlayerAction.Down)
+	        :nextlevel()
+	            :add():text(L["all"])
+	                :set('colorCode', UIUtil.RGBToHexPrefix(C.Colors.ItemArtifact:GetRGBA()))
+	                :value(PriorityAction.All)
+	                :checkable(false):arrow(true)
+	            :add():text(function(name, entry) return entry and UIUtil.ClassColorDecorator(entry.class):decorate(name) or L["na"] end)
+	                :value(PriorityAction.Player)
+	                :checkable(false):arrow(true)
+            :nextlevel()
+	            :add():set('special', PriorityAction.All)
+	            :add():set('special', PriorityAction.Player)
+	        :nextlevel()
+	            :add():set('special', PlayerAction.After)
+	            :add():set('special', PlayerAction.Before)
+	            :add():set('special', PlayerAction.Down)
 
 
 	Lists.PriorityActionsMenuInitializer = DropDown.RightClickMenu(
@@ -2179,6 +2438,11 @@ do
 					end
 				end
 			elseif value == PlayerAction.Down and entry.special == value then
+				info.text = format(L['n_positions'], 2)
+				info.notCheckable = true
+				info.func = function() self.listPriorityTab:AdjustPriority(player, 2) end
+				MSA_DropDownMenu_AddButton(info, level)
+
 				info.text = format(L['n_positions'], 5)
 				info.notCheckable = true
 				info.func = function() self.listPriorityTab:AdjustPriority(player, 5) end
@@ -2188,55 +2452,41 @@ do
 	)
 	local PlayerActionsEntryBuilder =
 		DropDown.EntryBuilder()
-			:nextlevel()
-				:add():text(
-					function(name, entry)
-						return UIUtil.ClassColorDecorator(entry.class):decorate(name)
-					end
-				):checkable(false):title(true)
-				:add():text(L["insert"]):checkable(false):arrow(true)
-			:nextlevel()
-				:add():text(L["insert_first"]):checkable(false)
-					:fn(
-						function(_, player, self)
-							self.listPriorityTab:SetPriority(player, true)
-						end
-					)
-				:add():text(L["insert_last"]):checkable(false)
-					:fn(
-						function(_, player, self)
-							self.listPriorityTab:SetPriority(player, false)
-						end
-					)
-				:add():text(L["insert_random"]):checkable(false)
-					:fn(
-						function(_, player, self)
-							self.listPriorityTab:SetPriority(player, nil)
-						end
-					)
+	            :nextlevel()
+	                :add():text(function(name, entry) return UIUtil.ClassColorDecorator(entry.class):decorate(name) end)
+						:checkable(false):title(true)
+	                :add():text(L["insert"]):checkable(false):arrow(true)
+	            :nextlevel()
+	                :add():text(L["insert_first"]):checkable(false)
+	                    :fn(function(_, player, self) self.listPriorityTab:SetPriority(player, true) end)
+	                :add():text(L["insert_last"]):checkable(false)
+	                    :fn(function(_, player, self) self.listPriorityTab:SetPriority(player, false) end)
+	                :add():text(L["insert_random"]):checkable(false)
+	                    :fn(function(_, player, self) self.listPriorityTab:SetPriority(player, nil) end)
+
 	Lists.PlayerActionsMenuInitializer = DropDown.RightClickMenu(
-			Util.Functions.True,
-			PlayerActionsEntryBuilder:build()
+		Util.Functions.True,
+		PlayerActionsEntryBuilder:build()
 	)
 
 	local ConfigAltsMenuEntryBuilder =
 		DropDown.EntryBuilder()
 	        :nextlevel()
-		        :add():text(L["list_alts"]):checkable(false):title(true)
+	            :add():text(L["list_alts"]):checkable(false):title(true)
 		        :add():text(L["save"]):checkable(false)
-			        :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
-			        :fn(
-						function(_, _, self)
-							self.configAltsTab:SavePlayers()
-						end
-					)
-		        :add():text(L["revert"]):checkable(false)
-			        :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
-			        :fn(
-						function(_, _, self)
-							self.configAltsTab:UpdatePlayers()
-						end
-					)
+		        :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
+		        :fn(
+					function(_, _, self)
+						self.configAltsTab:SavePlayers()
+					end
+				)
+	        :add():text(L["revert"]):checkable(false)
+	            :disabled(function(_, _, self) return not self.configAltsTab:HasPendingChanges() end)
+	            :fn(
+					function(_, _, self)
+						self.configAltsTab:UpdatePlayers()
+					end
+				)
 
 	Lists.ConfigAltsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -2255,12 +2505,12 @@ do
 	local ConfigActionsMenuEntryBuilder =
 		DropDown.EntryBuilder()
 	        :nextlevel()
-				:add():text(function(_, config, _) return config.name end):checkable(false):title(true)
-				:add():text(L["broadcast"]):checkable(false):arrow(true):value(ConfigAction.BroadcastAddUpdate)
-				:add():text(L["broadcast_remove"]):checkable(false):arrow(true):value(ConfigAction.BroadcastRemove)
-			:nextlevel()
-				:add():set('special', ConfigAction.BroadcastAddUpdate)
-				:add():set('special', ConfigAction.BroadcastRemove)
+	            :add():text(function(_, config, _) return config.name end):checkable(false):title(true)
+		        :add():text(L["broadcast"]):checkable(false):arrow(true):value(ConfigAction.BroadcastAddUpdate)
+		        :add():text(L["broadcast_remove"]):checkable(false):arrow(true):value(ConfigAction.BroadcastRemove)
+	        :nextlevel()
+	            :add():set('special', ConfigAction.BroadcastAddUpdate)
+	            :add():set('special', ConfigAction.BroadcastRemove)
 
 	Lists.ConfigActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -2313,21 +2563,13 @@ do
 	)
 
 	local ListAction = {
-		Populate       = "POPULATE",
-		RaidAttendance = "RAID_ATTENDANCE",
+		Populate = "POPULATE",
 	}
 
 	local PopulateVia = {
 		Guild = "GUILD",
 		Rank  = "RANK",
 	}
-
-	local RaidAttendance = {
-		Interval        = "INTERVAL",
-		ActionDrop      = "ACTION_DROP",
-		ActionRemove    = "ACTION_REMOVE",
-	}
-
 	local GuildActionQualifiers = {
 		{ L["this_rank_only"], C.Colors.Blue, Util.Optional.empty() },
 		{ L["this_rank_and_higher"], C.Colors.Green, Util.Optional.of(true) },
@@ -2343,31 +2585,27 @@ do
 
 	local ListActionsMenuEntryBuilder =
 		DropDown.EntryBuilder()
-			:nextlevel()
-				:add():text(function(_, list, _) return list.name end)
-					:checkable(false):title(true)
-				:add():text(L["clear"])
-					:checkable(false):arrow(false)
-					:disabled(ListActionDisabled)
-					:fn(function(_, _, module) module.listPriorityTab:ClearPriorities() end)
-				:add():text(format("%s and %s", L["clear"], L["randomize"]))
-					:checkable(false):arrow(true)
-					:disabled(ListActionDisabled)
-					:value(ListAction.Populate)
-				:add():text(L["raid_attendance"])
-					:checkable(false):arrow(true)
-					:disabled(ListActionDisabled)
-					:value(ListAction.RaidAttendance)
-			:nextlevel()
-				:add():set('special', ListAction.Populate)
-				:add():set('special', ListAction.RaidAttendance)
-			:nextlevel()
-				:add():set('special', PopulateVia.Guild)
-				:add():set('special', RaidAttendance.Interval)
-			:nextlevel()
-				:add():set('special', PopulateVia.Rank)
-				:add():set('special', RaidAttendance.ActionDrop)
-				:add():set('special', RaidAttendance.ActionRemove)
+	        :nextlevel()
+	            :add():text(function(_, list, _) return list.name end)
+	                :checkable(false):title(true)
+	            :add():text(L["clear"])
+	                :checkable(false):arrow(false)
+	                :disabled(ListActionDisabled)
+	                :fn(function(_, _, module) module.listPriorityTab:ClearPriorities() end)
+	            :add():text(format("%s and %s", L["clear"], L["randomize"]))
+	                :checkable(false):arrow(true)
+	                :disabled(ListActionDisabled)
+	                :value(ListAction.Populate)
+	            :add():text(L['bulk_manage_priorities'])
+	                :checkable(false):arrow(false)
+	                :disabled(ListActionDisabled)
+	                :fn(function(_, _, module) module.bulkManageFrame:Show() end)
+	        :nextlevel()
+	            :add():set('special', ListAction.Populate)
+	        :nextlevel()
+	            :add():set('special', PopulateVia.Guild)
+	        :nextlevel()
+	            :add():set('special', PopulateVia.Rank)
 
 	Lists.ListActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -2376,7 +2614,7 @@ do
 			local self = menu.module
 			--Logging:Warn("%s / %s / %s", tostring(level), Util.Objects.ToString(value), tostring(entry.special))
 			if value == ListAction.Populate and entry.special == value then
-				info.text = format("%s %s",  L['via'], UIUtil.ColoredDecorator(C.Colors.Green):decorate(L['guild']))
+				info.text = format("%s %s", L['via'], UIUtil.ColoredDecorator(C.Colors.Green):decorate(L['guild']))
 				info.notCheckable = true
 				info.hasArrow = true
 				info.value = PopulateVia.Guild
@@ -2387,7 +2625,7 @@ do
 					info.notCheckable = true
 					info.text = name
 					info.hasArrow = true
-					info.value = {PopulateVia.Rank, rank}
+					info.value = { PopulateVia.Rank, rank }
 					MSA_DropDownMenu_AddButton(info, level)
 				end
 			elseif Util.Objects.IsTable(value) and value[1] == PopulateVia.Rank and entry.special == value[1] then
@@ -2401,48 +2639,6 @@ do
 					end
 					MSA_DropDownMenu_AddButton(info, level)
 				end
-			elseif value == ListAction.RaidAttendance and entry.special == value then
-				info.text = L["absent"]
-				info.notCheckable = true
-				info.hasArrow = true
-				info.value = RaidAttendance.Interval
-				MSA_DropDownMenu_AddButton(info, level)
-			elseif value == RaidAttendance.Interval and entry.special == value then
-
-				info = MSA_DropDownMenu_CreateInfo()
-				info.notCheckable = true
-				info.hasArrow = true
-				info.value = { RaidAttendance.ActionDrop, {27, 21, 14} }
-				info.text = format("%s %s", L['past'], format(L["n_weeks"], "2-4"))
-				MSA_DropDownMenu_AddButton(info, level)
-
-				info = MSA_DropDownMenu_CreateInfo()
-				info.notCheckable = true
-				info.hasArrow = true
-				info.value = { RaidAttendance.ActionRemove, 28 }
-				info.text = format("%s %s", L['past'], format(L["n_weeks"], "4+"))
-				MSA_DropDownMenu_AddButton(info, level)
-			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.ActionDrop and entry.special == value[1] then
-				info = MSA_DropDownMenu_CreateInfo()
-				info.notCheckable = true
-				info.text = format("%s %s", L["move_down"], format(L['n_positions'], 5))
-				info.func = function()
-					local skip, updated = {}
-					for _, days in pairs(value[2]) do
-						updated =
-							self.listPriorityTab:UpdatePrioritiesViaAttendance(days --[[ days --]], 0 --[[ pct --]], 5 --[[ positions --]], skip)
-						skip = Util.Tables.Merge(skip, updated)
-						--Logging:Debug("Updated => %s", Util.Objects.ToString(skip))
-					end
-				end
-				MSA_DropDownMenu_AddButton(info, level)
-			elseif Util.Objects.IsTable(value) and value[1] == RaidAttendance.ActionRemove and entry.special == value[1] then
-				info.notCheckable = true
-				info.text = L['remove']
-				info.func = function()
-					self.listPriorityTab:UpdatePrioritiesViaAttendance(value[2] --[[ days --]], 0 --[[ pct --]], nil --[[ positions --]])
-				end
-				MSA_DropDownMenu_AddButton(info, level)
 			end
 		end
 	)

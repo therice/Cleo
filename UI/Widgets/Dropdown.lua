@@ -130,7 +130,7 @@ function Dropdown:Create()
 
 	BaseWidget.Mod(
 		dd,
-		'SetEnabled',               function(self, enabled)  self.Button:SetEnabled(enabled) end,
+		'SetEnabled',               function(self, enabled)  self.Button:SetEnabled(enabled) return self end,
 	    'SetList',                  Dropdown.SetList,
 		'GetViaKey',                Dropdown.GetViaKey,
 		'MaxLines',                 Dropdown.SetMaxLines,

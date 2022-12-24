@@ -41,7 +41,7 @@ describe("DB", function()
         it("handles compress and decompress", function()
             for _, v in pairs(TestData) do
                 local c = CompressedDb.static:compress(v)
-                print(c)
+                --print(c)
                 local d = CompressedDb.static:decompress(c)
                 assert.is.same(v, d)
             end
@@ -166,6 +166,30 @@ describe("DB", function()
                 assert(Util.Tables.Equals(v, values2[k], true))
             end
         end)
+        it("handles filtered pairs", function()
+
+            local _, cdb = NewDb()
+            local values = {["a"] = {1}, ["b"] = {2}, ["c"] = {3, 4}, ["1"] = {2, "a", "z"}, ["2"] = {}}
+            for k, _ in pairs(values) do
+                cdb:put(k, values[k])
+            end
+
+            local function eval(k, v)
+                --print('eval : ' .. tostring(k) .. ' = ' .. Util.Objects.ToString(v))
+                return Util.Tables.ContainsValue(v, 2)
+            end
+
+            local c_pairs, count = CompressedDb.static.pairs, 0
+            for k, v in c_pairs(cdb, eval) do
+                --print('Here : ' .. k .. ' -> ' .. Util.Objects.ToString(v))
+                assert(Util.Tables.ContainsKey(values, k))
+                assert(Util.Tables.ContainsValue(values[k], 2))
+                count = count + 1
+            end
+
+            assert(count == 2)
+        end)
+
         --[[
         it("detects and removes nil values (numeric index)", function()
             local db, cdb = NewDb(TestSparseData)

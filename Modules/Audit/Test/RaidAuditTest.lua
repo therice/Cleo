@@ -1,4 +1,4 @@
-local AddOnName, AddOn, Util, CDB, Encounter
+local AddOnName, AddOn, Util, CDB, Encounter, Date, DateFormat, df
 
 local function NewTrafficAuditDb(ta, data)
 	local db = NewAceDb(ta.defaults)
@@ -7,6 +7,15 @@ local function NewTrafficAuditDb(ta, data)
 	end
 	ta.db = db
 	ta.history = CDB(db.factionrealm)
+end
+
+function parse_date(s)
+	return df:parse(s)
+end
+
+function parse_utc(s)
+	local d = parse_date(s)
+	return d:toUTC()
 end
 
 
@@ -26,6 +35,8 @@ describe("Raid Audit", function()
 		RaidAttendanceStatistics = AddOn.Package('Models.Audit').RaidAttendanceStatistics
 		RaidStatistics = AddOn.Package('Models.Audit').RaidStatistics
 		AddOnLoaded(AddOnName, true)
+		Date, DateFormat = AddOn.Package('Models').Date, AddOn.Package('Models').DateFormat
+		df = DateFormat()
 	end)
 
 	teardown(function()
@@ -67,20 +78,67 @@ describe("Raid Audit", function()
 			ra = nil
 		end)
 
-		it("statistics", function()
+		it("raid statistics", function()
 			NewTrafficAuditDb(ra, RaidAuditTestData_1)
 			local stats = RaidStatistics.For(function() return cpairs(ra:GetHistory()) end)
 			local totals = stats:GetTotals(7)
-			--print(Util.Objects.ToString(totals, 10))
 			assert(Util.Tables.Count(totals.instances) == 3)
 		end)
-
+		it("raid statistics filtered by dates", function()
+			NewTrafficAuditDb(ra, RaidAuditTestData_2)
+			local sd, ed = parse_utc('2022-11-08T15:00:00Z'), parse_utc('2022-12-06T15:00:00Z')
+			local stats = ra:GetRaidStatistics(sd, ed)
+			--print(Util.Objects.ToString(stats))
+			assert(Util.Tables.Count(stats.instances) == 4)
+		end)
+		it("raid statistics filtered by days", function()
+			NewTrafficAuditDb(ra, RaidAuditTestData_2)
+			local stats = ra:GetRaidStatistics(14)
+			--print(Util.Objects.ToString(stats))
+			assert(Util.Tables.Count(stats.instances) <= 4)
+		end)
 		it("attendance statistics", function()
 			NewTrafficAuditDb(ra, RaidAuditTestData_1)
 			local stats = RaidAttendanceStatistics.For(function() return cpairs(ra:GetHistory()) end)
 			local totals = stats:GetTotals(30)
 			--print(Util.Objects.ToString(totals))
 			assert(Util.Tables.Count(totals) > 0)
+		end)
+		it("attendance statistics filtered by dates", function()
+			NewTrafficAuditDb(ra, RaidAuditTestData_2)
+			local sd, ed = parse_utc('2022-11-08T15:00:00Z'), parse_utc('2022-12-06T15:00:00Z')
+			local stats = ra:GetAttendanceStatistics(sd, ed)
+			assert(stats.total == 12)
+		end)
+		it("attendance statistics filtered by days", function()
+			NewTrafficAuditDb(ra, RaidAuditTestData_2)
+			local stats = ra:GetAttendanceStatistics(14)
+			assert(stats.total <= 8)
+		end)
+		it("normalizes interval", function()
+			NewTrafficAuditDb(ra, RaidAuditTestData_2)
+			local sd, ed, interval = ra:GetNormalizedInterval(36)
+			--print(format("%s -> %s : %s", tostring(sd:toUTC()), tostring(ed:toUTC()), tostring(interval)))
+			assert(tostring(sd:toUTC()) == '2022-11-08T15:00:00Z')
+			assert(tostring(ed:toUTC()) == '2022-12-20T15:00:00Z')
+			assert(interval == 42)
+			sd, ed, interval = ra:GetNormalizedInterval(30)
+			--print(format("%s -> %s : %s", tostring(sd:toUTC()), tostring(ed:toUTC()), tostring(interval)))
+			assert(tostring(sd:toUTC()) == '2022-11-15T15:00:00Z')
+			assert(tostring(ed:toUTC()) == '2022-12-20T15:00:00Z')
+			assert(interval == 35)
+
+			--sd, ed, interval = ra:GetNormalizedInterval(27)
+		end)
+		it("filtered iterator", function()
+			NewTrafficAuditDb(ra, RaidAuditTestData_2)
+
+			local sd, ed, d = parse_utc('2022-11-08T15:00:00Z'), parse_utc('2022-11-22T15:00:00Z')
+			for k, v in ra:GetHistoryFiltered(sd, ed)() do
+				d = Date(v.timestamp)
+				--print(tostring(k) .. ' -> ' .. tostring(Date(v.timestamp)))
+				assert(d >= sd and d <= ed)
+			end
 		end)
 	end)
 end)

@@ -93,29 +93,38 @@ function RaidAttendanceStatistics:initialize()
 	self.players = {}
 end
 
---- @param intervalInDays number number of days in past from which to perform calculation
+--- @param intervalInDays number number of days in past from which to perform calculation (can be nil)
 --- @return table<string, number> table of player name to % of raids attended
 function RaidAttendanceStatistics:GetTotals(intervalInDays)
-	intervalInDays = tonumber(intervalInDays) or 30
+	intervalInDays = tonumber(intervalInDays) or nil
 
 	--- go through the raids and collect the ones and occurrences that are within the requested window
-	local cutoff = Date()
-	cutoff:add{day = -intervalInDays}
+	local cutoff
+	if intervalInDays then
+		cutoff = Date()
+		cutoff:add{day = -intervalInDays}
+	end
 
 	--- @type table table<number, table<string>>
 	local raids = Util.Tables.Copy(
 		self.raids,
 		function(dates)
 			local filtered = {}
-			for _, date in pairs(dates) do
-				local ts = Audit.ShortDf:parse(date)
-				if ts >= cutoff then
-					Util.Tables.Push(filtered, date)
+			if cutoff then
+				for _, date in pairs(dates) do
+					local ts = Audit.ShortDf:parse(date)
+					if ts >= cutoff then
+						Util.Tables.Push(filtered, date)
+					end
 				end
+			else
+				filtered = Util.Tables.Copy(dates)
 			end
+
 			return filtered
 		end
 	)
+
 	--- now go through players and retain raids and attendance that are within the window
 	local players = Util.Tables.Copy(
 		self.players,
@@ -271,11 +280,14 @@ end
 --- @param intervalInDays number number of days in past from which to perform calculation
 --- @return table table of raid stats
 function RaidStatistics:GetTotals(intervalInDays)
-	intervalInDays = tonumber(intervalInDays) or 30
+	intervalInDays = tonumber(intervalInDays) or nil
 
 	--- go through the raids and collect the ones and occurrences that are within the requested window
-	local cutoff = Date()
-	cutoff:add{day = -intervalInDays}
+	local cutoff
+	if intervalInDays then
+		cutoff = Date()
+		cutoff:add{day = -intervalInDays}
+	end
 
 	--- @type table table<number, table<number, table<boolean, table<number>>>>
 	local raids = Util.Tables.Copy(
@@ -283,16 +295,19 @@ function RaidStatistics:GetTotals(intervalInDays)
 		function(encounters)
 			local filtered = {}
 			for encounter, results in pairs(encounters) do
-				local filteredResults =
-					Util.Tables.Copy(
-						results,
-						function(dates)
-								return Util.Tables.CopyFilter(
-									dates,
-									function(date) return Date(date) >= cutoff end
-								)
+				local filteredResults = Util.Tables.Copy(
+					results,
+					function(dates)
+						if cutoff then
+							return Util.Tables.CopyFilter(
+								dates,
+								function(date) return Date(date) >= cutoff end
+							)
+						else
+							return Util.Tables.Copy(dates)
 						end
-					)
+					end
+				)
 
 				Util.Tables.Filter(filteredResults, function(dates) return not Util.Tables.IsEmpty(dates) end)
 
@@ -300,7 +315,6 @@ function RaidStatistics:GetTotals(intervalInDays)
 					filtered[encounter] = filteredResults
 				end
 			end
-
 
 			return filtered
 		end

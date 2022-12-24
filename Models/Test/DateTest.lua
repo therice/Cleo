@@ -13,7 +13,7 @@ function parse_date(s)
     return df:parse(s)
 end
 
-function parse_utc (s)
+function parse_utc(s)
     local d = parse_date(s)
     return d:toUTC()
 end
@@ -46,6 +46,31 @@ describe("Date", function()
             local d1 = Date()
             local d2 = Date()
             assert(d1 == d2)
+        end)
+    end)
+    describe("misc", function()
+        it("dow", function()
+            local d = Date(2022, 12, 14, 00, 00, 00)
+            assert(d:weekday_name(true) == "Wednesday")
+            assert(d:weekday_name() == "Wed")
+            assert(d:wday() == 4)
+        end)
+        it("scratch", function()
+            local d, w = Date(2022, 12, 14, 00, 00, 00), 5
+            -- find previous tuesday
+            while(d:wday() ~= 3) do
+                d:add{day = -1}
+            end
+
+            assert(d:month() == 12)
+            assert(d:day() == 13)
+            assert(d:year() == 2022)
+
+            -- go back n weeks
+            d:add{day = -(w * 7)}
+            assert(d:month() == 11)
+            assert(d:day() == 08)
+            assert(d:year() == 2022)
         end)
     end)
     describe("comparison", function()

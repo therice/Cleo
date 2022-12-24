@@ -116,14 +116,26 @@ function CompressedDb:__len()
     return #self.db
 end
 
-function CompressedDb.static.pairs(cdb)
+function CompressedDb.static.pairs(cdb, filter)
+    -- an optional filter which allows restrictions on what is returned
+    filter = Util.Objects.IsFunction(filter) and filter or Util.Functions.True
+
     local function stateless_iter(tbl, k)
         local v
         k, v = next(tbl, k)
-        if k == CompressionSettingsKey then
-            k, v = next(tbl, k)
+        if k == CompressionSettingsKey then k, v = next(tbl, k) end
+
+        if v ~= nil then
+            local vd = cdb:decompress(v)
+            while vd and not filter(k, vd) do
+                k, v = next(tbl, k)
+                vd = v and cdb:decompress(v) or nil
+            end
+
+            if k and vd then
+                return k, vd
+            end
         end
-        if v ~= nil then return k, cdb:decompress(v) end
     end
     
     return stateless_iter, cdb.db, nil
@@ -133,11 +145,14 @@ function CompressedDb.static.ipairs(cdb)
     local function stateless_iter(tbl, i)
         i = i + 1
         local v = tbl[i]
-        if v ~= nil then return i, cdb:decompress(v) end
+        if v ~= nil then
+            return i, cdb:decompress(v)
+        end
     end
     
     return stateless_iter, cdb.db, 0
 end
+
 
 if AddOn._IsTestContext('Models_Db') then
     function CompressedDb.static:compress(data) return compress(data) end

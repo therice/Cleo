@@ -31,7 +31,7 @@ local ButtonMetadata = {
 
 function DualListbox:Create()
 	local dlb = CreateFrame("Frame", self.name, self.parent)
-	dlb:SetSize(400, 250)
+	dlb:SetSize(400, 210)
 
 	-- todo : sizing/positioning on these elements are not accounted for in subsequent calls
 
@@ -63,7 +63,7 @@ function DualListbox:Create()
 			:Tooltip(L["add_all"])
 			:OnClick(
 				function(self, button, down)
-					Logging:Debug("DualListbox.AllAll(OnClick) : %s, %s", tostring(button), tostring(down))
+					Logging:Trace("DualListbox.AllAll(OnClick) : %s, %s", tostring(button), tostring(down))
 					if Util.Strings.Equal(C.Buttons.Left, button) then
 						local all = dlb.available:RemoveAll()
 						if all and #all >0 then
@@ -86,9 +86,9 @@ function DualListbox:Create()
 			:Tooltip(L["add"])
 			:OnClick(
 				function(self, button, down)
-					Logging:Debug("DualListbox.Add(OnClick) : %s, %s", tostring(button), tostring(down))
+					Logging:Trace("DualListbox.Add(OnClick) : %s, %s", tostring(button), tostring(down))
 					if Util.Strings.Equal(C.Buttons.Left, button) then
-						Logging:Debug("DualListbox.Add(OnClick) : %d", dlb.available.selected)
+						Logging:Trace("DualListbox.Add(OnClick) : %d", dlb.available.selected)
 						local selected = dlb.available:RemoveSelected()
 						if selected then
 							dlb.selected:Insert(selected, function(item) return selected < item end)
@@ -108,9 +108,9 @@ function DualListbox:Create()
 			:Tooltip(L["remove"])
 			:OnClick(
 				function(self, button, down)
-					Logging:Debug("DualListbox.Remove(OnClick) : %s, %s", tostring(button), tostring(down))
+					Logging:Trace("DualListbox.Remove(OnClick) : %s, %s", tostring(button), tostring(down))
 					if Util.Strings.Equal(C.Buttons.Left, button) then
-						Logging:Debug("DualListbox.Remove(OnClick) : %d", dlb.selected.selected)
+						Logging:Trace("DualListbox.Remove(OnClick) : %d", dlb.selected.selected)
 						local selected = dlb.selected:RemoveSelected()
 						if selected then
 							dlb.available:Insert(selected, function(item) return selected < item end)
@@ -131,7 +131,7 @@ function DualListbox:Create()
 			:Tooltip(L["remove_all"])
 			:OnClick(
 				function(self, button, down)
-					Logging:Debug("DualListbox.RemoveAll(OnClick) : %s, %s", tostring(button), tostring(down))
+					Logging:Trace("DualListbox.RemoveAll(OnClick) : %s, %s", tostring(button), tostring(down))
 					if Util.Strings.Equal(C.Buttons.Left, button) then
 						local all = dlb.selected:RemoveAll()
 						if all and #all >0 then
@@ -232,6 +232,7 @@ function DualListbox.SetEnabled(self, enabled)
 	self.available:Border(ac.r, ac.g, ac.b, ac.a, 1, 0, 0)
 	--self.selected:HideBorders()
 	self.selected:Border(rc.r, rc.g, rc.b, rc.a, 1, 0, 0)
+	return self
 end
 
 function DualListbox.Clear(self)

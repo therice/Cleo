@@ -37,6 +37,8 @@ RA.defaults = {
 	}
 }
 
+local cpairs = CDB.static.pairs
+
 function RA:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify('RaidAudit'), RA.defaults)
@@ -56,6 +58,8 @@ function RA:OnInitialize()
 			self.attendance.raid = true
 		end
 	}
+	self.intervalCache = {}
+
 	self.Send = Comm():GetSender(C.CommPrefixes.Audit)
 	AddOn:SyncModule():AddHandler(
 		self:GetName(),
@@ -78,6 +82,22 @@ end
 --- @return Models.CompressedDb
 function RA:GetHistory()
 	return self.history
+end
+
+--- @param sd Models.Date the start date for history
+--- @param ed Models.Date the end date for history
+--- @return function
+function RA:GetHistoryFiltered(sd, ed)
+	assert(sd and ed, "start and end dates were not provided")
+    return function()
+	    return cpairs(
+		    self:GetHistory(),
+		    function(_, v)
+			    local d = Date(v.timestamp)
+			    return d >= sd and d <= ed
+		    end
+	    )
+    end
 end
 
 function RA:SubscribeToComms()
@@ -120,6 +140,7 @@ function RA:OnRecordAdd(record)
 	Logging:Trace("OnRecordAdd() : %s", Util.Objects.ToString(record and record:toTable() or {}))
 	self:GetHistory():insert(record:toTable())
 	self.stats:MarkAsStale()
+	Util.Tables.Wipe(self.intervalCache)
 end
 
 --- @param record Models.Audit.RaidRosterRecord
@@ -130,22 +151,159 @@ function RA:Broadcast(record)
 	self:Send(channel, C.Commands.RaidRosterAuditAdd, record)
 end
 
-local cpairs = CDB.static.pairs
+local UTCOffset = Util.Memoize.Memoize(
+	function()
+		return (Date():tzone() / 3600)
+	end
+)
 
-function RA:GetAttendanceStatistics(intervalInDays)
+
+-- this only deals with full "raid" weeks, anything less than a week will be ignored
+local function GetNormalizedInterval(self, intervalInDays)
+	assert(Util.Objects.IsNumber(intervalInDays) and intervalInDays >= 0, "intervalInDays must be a positive number")
+	-- determine number of weeks and days which make up the interval
+	local weeks, remainder, raid_weeks =
+		floor(intervalInDays / 7), (intervalInDays % 7), {}
+	local now = Date():hour(15 + UTCOffset()):min(0):sec(0)
+
+	Logging:Debug("GetNormalizedInterval(%d) : weeks=%d, remainder=%d(days) will be ignored, \"now\"=%s", intervalInDays, weeks, remainder, tostring(now))
+
+	-- weeks needs to be converted to raid weeks
+	if weeks > 0 then
+		-- US raid lockout start (week) occurs on Tuesdays at 15:00 UTC (adjust for offset)
+		local rws, rwe = Date({hour = 15 + UTCOffset(), min = 0, sec = 0})
+
+		-- (1) find previous tuesday
+		while(rws:wday() ~= 3) do
+			rws:add {day = -1}
+		end
+
+		-- iterate through the weeks, finding raid week start and end
+		while (weeks > 0) do
+			rwe = Date(rws):add { day = 7 }
+			if rwe < now then
+				Util.Tables.Push(raid_weeks, {rws, rwe, false})
+				weeks = weeks -1
+			end
+
+			rws = Date(rws):add { day = -7 }
+		end
+	else
+		Logging:Warn("GetNormalizedInterval(%d) : specified interval was less than a week", intervalInDays)
+	end
+
+	--[[
+	if Logging:IsEnabledFor(Logging.Level.Debug) then
+		Util.Tables.Call(
+			raid_weeks,
+			function(rw)
+				Logging:Debug(
+					"GetNormalizedInterval(%d) : %s (start) -> %s (end)",
+					intervalInDays,
+					tostring(rw[1]:toLocal()),
+					tostring(rw[2]:toLocal())
+				)
+			end
+		)
+	end
+	--]]
+
+	local orderedHistory = {}
+	for _, e in cpairs(self:GetHistory()) do
+		Util.Tables.Push(orderedHistory, e)
+	end
+	Util.Tables.Sort(
+		orderedHistory,
+		function(a, b) return a.timestamp > b.timestamp end
+	)
+
+	for idx, rw in pairs(raid_weeks) do
+		local rws, rwe, index = rw[1], rw[2]
+
+		for i, v in pairs(orderedHistory) do
+			local d = Date(v.timestamp)
+			if d and (d >= rws and d <= rwe) then
+				index = i
+				break
+			end
+
+			if d and (d <= rws and d <= rwe) then
+				break
+			end
+		end
+
+
+		raid_weeks[idx][3] = index and true or false
+		-- could not find a raid during the week, look for another
+		if not index then
+			local lrws, lrwe = raid_weeks[#raid_weeks][1], raid_weeks[#raid_weeks][2]
+			local _, _, lrwdd = lrwe:diff(lrws):Duration()
+			-- if the last raid week window was 7 days (full week) add another raid week to search
+			if lrwdd == 7 then
+				rwe = Date(lrws)
+				rws =  Date(rwe):add { day = -7 }
+				Util.Tables.Push(raid_weeks, {rws, rwe})
+			end
+		end
+	end
+
+	if Logging:IsEnabledFor(Logging.Level.Trace) then
+		Util.Tables.Call(
+			raid_weeks,
+			function(rw)
+				Logging:Trace(
+					"GetNormalizedInterval(%d) : %s (start) -> %s (end) / found = %s",
+					intervalInDays,
+					tostring(rw[1]:toLocal()),
+					tostring(rw[2]:toLocal()),
+					tostring(rw[3])
+				)
+			end
+		)
+	end
+
+	local sdate, edate = raid_weeks[#raid_weeks][1], raid_weeks[1][2]
+	local interval = (edate.time - sdate.time) / (24 * 60 * 60)
+
+	Logging:Debug(
+		"GetNormalizedInterval(%d) : %s (start) -> %s (end) [days=%d])",
+		intervalInDays, tostring(sdate:toLocal()), tostring(edate:toLocal()), interval
+	)
+
+	return sdate, edate, interval
+end
+
+RA.GetNormalizedInterval = Util.Memoize.Memoize(
+	function(self, intervalInDays)
+		return GetNormalizedInterval(self, intervalInDays)
+	end
+)
+
+--- @param sd Models.Date|number the start date for history, or a number specifying days will be calculated
+--- @param ed Models.Date the end date for history, can be nil if first parameter is a number
+function RA:GetAttendanceStatistics(sd, ed)
+	-- if a number, calculate the date range
+	if Util.Objects.IsNumber(sd) then
+		local now = Date()
+		local start = Date(now):add {day = -sd}
+		sd, ed = start, now
+	end
+	assert(sd and ed, "start and end dates were not provided")
+	local cacheKey = Util.Strings.Join('_', tostring(sd), tostring(ed))
+
 	local check, ret = pcall(
 		function()
 			if  self.stats.attendance.stale or
 				Util.Tables.IsEmpty(self.stats.attendance.value) or
-				Util.Tables.IsEmpty(self.stats.attendance.value[intervalInDays]) then
-				local stats = RaidAttendanceStatistics.For(function() return cpairs(self:GetHistory()) end)
+				Util.Tables.IsEmpty(self.stats.attendance.value[cacheKey]) then
+				local stats = RaidAttendanceStatistics.For(function() return self:GetHistoryFiltered(sd, ed)() end)
 				if stats then
-					self.stats.attendance.value[intervalInDays] = stats:GetTotals(intervalInDays)
+					self.stats.attendance.value[cacheKey] = stats:GetTotals()
 					self.stats.attendance.stale = false
 				end
 			end
 
-			return self.stats.attendance.value[intervalInDays] or {}
+			return self.stats.attendance.value[cacheKey] or {}
 		end
 	)
 
@@ -157,21 +315,29 @@ function RA:GetAttendanceStatistics(intervalInDays)
 	end
 end
 
+function RA:GetRaidStatistics(sd, ed)
+	-- if a number, calculate the date range
+	if Util.Objects.IsNumber(sd) then
+		local now = Date()
+		local start = Date(now):add {day = -sd}
+		sd, ed = start, now
+	end
+	assert(sd and ed, "start and end dates were not provided")
+	local cacheKey = Util.Strings.Join('_', tostring(sd), tostring(ed))
 
-function RA:GetRaidStatistics(intervalInDays)
 	local check, ret = pcall(
 		function()
 			if  self.stats.raid.stale or
 				Util.Tables.IsEmpty(self.stats.raid.value) or
-				Util.Tables.IsEmpty(self.stats.raid.value[intervalInDays]) then
-				local stats = RaidStatistics.For(function() return cpairs(self:GetHistory()) end)
+				Util.Tables.IsEmpty(self.stats.raid.value[cacheKey]) then
+				local stats = RaidStatistics.For(function() return self:GetHistoryFiltered(sd, ed)() end)
 				if stats then
-					self.stats.raid.value[intervalInDays] = stats:GetTotals(intervalInDays)
+					self.stats.raid.value[cacheKey] = stats:GetTotals()
 					self.stats.raid.stale = false
 				end
 			end
 
-			return self.stats.raid.value[intervalInDays] or {}
+			return self.stats.raid.value[cacheKey] or {}
 		end
 	)
 
@@ -181,7 +347,6 @@ function RA:GetRaidStatistics(intervalInDays)
 	else
 		return ret
 	end
-
 end
 
 function RA:GetDataForSync()
@@ -266,6 +431,7 @@ function RA:ImportDataFromSync(data)
 
 		if imported > 0 then
 			self.stats:MarkAsStale()
+			Util.Tables.Wipe(self.intervalCache)
 			self:Refresh()
 		end
 

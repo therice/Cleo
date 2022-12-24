@@ -110,9 +110,10 @@ function Date.tzone(ts)
     return difftime(os_time(lcl), os_time(utc))
 end
 
-for _, c in ipairs { 'year', 'month', 'day', 'hour', 'min', 'sec', 'yday' } do
+for _, c in ipairs { 'year', 'month', 'day', 'hour', 'min', 'sec', 'yday', 'wday' } do
     Date[c] = function(self, val)
         if val then
+	        --print(c .. '(' .. tostring(val).. ')')
             assert(Util.Objects.IsNumber(val))
             self.tab[c] = val
             self:set(os_time(self.tab))
@@ -121,6 +122,14 @@ for _, c in ipairs { 'year', 'month', 'day', 'hour', 'min', 'sec', 'yday' } do
             return self.tab[c]
         end
     end
+end
+
+function Date:clear_time()
+	return self:hour(0):min(0):sec(0)
+end
+
+function Date:end_of_day()
+	return self:hour(23):min(59):sec(59)
 end
 
 --- name of day of week.
