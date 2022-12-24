@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.0 (2022-12-24)
+* Add support for auto purging of raid, loot, and traffic history 04ab060
+
 2022.2.0 (2022-12-24)
 * Add support for bulk managing list priorities 3d0cecb
 * Correct issue with logging regression ead2993
