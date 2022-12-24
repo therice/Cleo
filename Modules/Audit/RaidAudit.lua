@@ -30,7 +30,13 @@ RA.TrackingType = {
 RA.defaults = {
 	profile  = {
 		enabled      = true,
-		trackingType = RA.TrackingType.EncounterEnd
+		trackingType = RA.TrackingType.EncounterEnd,
+		autoPurge = {
+			enabled     = false, -- is auto purging enabled
+			ageInDays   = 90,   -- purge threshold
+			recurrence  = 7,    -- how often to auto-purge
+			lts         = nil,  -- last time purge was completed
+		}
 	},
 	factionrealm = {
 
@@ -479,10 +485,11 @@ function RA:Delete(ageInDays)
 	end
 end
 
-
+--[[
 function RA:ConfigSupplement()
 	return L["attendance_audit"], function(container) self:LayoutConfigSettings(container) end
 end
+--]]
 
 function RA:LaunchpadSupplement()
 	return L["attendance_audit"], function(container) self:LayoutInterface(container) end , true

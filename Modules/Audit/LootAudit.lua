@@ -22,6 +22,12 @@ local LootAudit = AddOn:NewModule("LootAudit")
 LootAudit.defaults = {
 	profile = {
 		enabled = true,
+		autoPurge = {
+			enabled     = false, -- is auto purging enabled
+			ageInDays   = 90,   -- purge threshold
+			recurrence  = 7,    -- how often to auto-purge
+			lts         = nil,  -- last time purge was completed
+		}
 	},
 	factionrealm = {
 

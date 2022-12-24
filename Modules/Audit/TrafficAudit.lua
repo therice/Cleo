@@ -20,6 +20,12 @@ local TrafficAudit = AddOn:NewModule("TrafficAudit")
 TrafficAudit.defaults = {
 	profile = {
 		enabled = true,
+		autoPurge = {
+			enabled     = true, -- is auto purging enabled
+			ageInDays   = 45,   -- purge threshold
+			recurrence  = 7,    -- how often to auto-purge
+			lts         = nil,  -- last time purge was completed
+		}
 	},
 	factionrealm = {
 

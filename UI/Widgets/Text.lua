@@ -40,11 +40,14 @@ function Text:Create()
             'Outline', Text.Outline,
             'FontSize', Text.FontSize,
             -- 'Tooltip', Text.Tooltip,
-            'MaxLines', Text.MaxLines
+            'MaxLines', Text.MaxLines,
+            'OnDatasourceConfigured', Text.OnDatasourceConfigured,
+            'UpdateText', function(self, t) text:SetText(t) end
     )
 
     return text
 end
+
 
 function Text.SetFont(self, ...)
     self:SetFont(...)
@@ -115,5 +118,10 @@ function Text.MaxLines(self,num)
     self:SetMaxLines(num)
     return self
 end
+
+function Text.OnDatasourceConfigured(self)
+    self:UpdateText(self.ds:Get())
+end
+
 
 NativeUI:RegisterWidget('Text', Text)

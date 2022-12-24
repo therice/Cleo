@@ -52,12 +52,25 @@ local cpairs = CDB.static.pairs
 function RA:LayoutConfigSettings(container)
 	local module = self
 
-	container:Tooltip(L["attendance_desc"])
+
+	container.settingsGroup =
+		UI:New('InlineGroup',container):SetHeight(110):Title(L["settings"])
+
+	if container.autoPurgeGroup then
+		container.settingsGroup
+			:Point("TOPLEFT", container.autoPurgeGroup, "BOTTOMLEFT", 0, -10)
+			:Point("TOPRIGHT", container.autoPurgeGroup, "BOTTOMRIGHT")
+	else
+		container.settingsGroup
+			:Point("TOPLEFT", container, "TOPLEFT", 5, -20)
+			:Point("TOPRIGHT", container, "TOPRIGHT", -20, 0)
+	end
+
+	local content = container.settingsGroup.content
+
 	container.enabled =
-		UI:New('Checkbox', container, L["track_attendance"], false)
-			:Point(20, -25)
-	        :TextSize(12)
-	        :Tooltip(L["track_attendance_desc"])
+		UI:New('Checkbox', content, L["track_attendance"], false)
+			:Point(20, -10):TextSize(12):Tooltip(L["track_attendance_desc"])
 	        :Datasource(
 				module,
 				module.db.profile,
@@ -68,10 +81,10 @@ function RA:LayoutConfigSettings(container)
 	container.enabled:SetSize(14, 14)
 
 	container.trackingTypeLabel =
-		UI:New('Text', container, L["tracking_type"])
+		UI:New('Text', content, L["tracking_type"])
 	        :Point("TOPLEFT", container.enabled, "BOTTOMLEFT", 0, -15)
 	container.trackingType =
-		UI:New('Dropdown', container, nil, container:GetWidth() / 3, #TrackingTypeDesc)
+		UI:New('Dropdown', content, nil, content:GetWidth() / 3, #TrackingTypeDesc)
 			:Tooltip(L["tracking_type_desc"])
 			:Point("TOPLEFT", container.trackingTypeLabel, "BOTTOMLEFT", 0, -7)
 			:SetList(Util.Tables.Copy(TrackingTypeDesc), TrackingTypeSort)

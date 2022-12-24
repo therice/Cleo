@@ -2,5 +2,6 @@
     <Script file="RaidAudit.lua"/>
     <Script file="LootAudit.lua"/>
     <Script file="TrafficAudit.lua"/>
+    <Script file="Audit.lua"/>
     <Include file="UI\UI.xml"/>
 </Ui>
