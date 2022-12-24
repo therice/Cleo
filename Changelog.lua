@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.2.0 (2022-12-24)
+* Add support for bulk managing list priorities 3d0cecb
+* Correct issue with logging regression ead2993
+
 2022.1.7 (2022-11-13)
 * revise change log 
 * Correct failing test due to undefined symbol f22debe
