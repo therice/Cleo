@@ -2127,8 +2127,8 @@ function AttendanceMeasure:Evaluate(...)
 			Logging:Debug("Evaluate(%s) : %d days", tostring(criteria), days)
 			local sd, ed = AddOn:RaidAuditModule():GetNormalizedInterval(days)
 			Logging:Debug(
-				"Evaluate(%s) : %d days => '%s' -> '%s' (%d days)",
-				tostring(criteria), days, tostring(sd), tostring(ed), interval
+				"Evaluate(%s) : %d days => '%s' -> '%s'",
+				tostring(criteria), days, tostring(sd), tostring(ed)
 			)
 
 			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed)
