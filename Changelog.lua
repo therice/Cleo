@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.1 (2022-12-27)
+* Address issues with date cutoffs and ordering with bulk list management 9d2ecba
+* Remove assertions from date tests which are not consistent as time marches forward 21ee642
+
 2022.3.0 (2022-12-24)
 * Add support for auto purging of raid, loot, and traffic history 04ab060
 
