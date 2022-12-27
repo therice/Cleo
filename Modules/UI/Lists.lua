@@ -2131,6 +2131,7 @@ function AttendanceMeasure:Evaluate(...)
 				tostring(criteria), days, tostring(sd), tostring(ed)
 			)
 
+			-- todo : union of multi range
 			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed)
 			if stats then
 				for _, player in Util.Tables.Sparse.ipairs(priorities) do
@@ -2268,6 +2269,7 @@ function Lists:LayoutListPriorityBulkManageFrame(_, listSupplier)
 					return UIUtil.ClassColorDecorator(player.class):decorate(player:GetShortName())
 				end
 			)
+			:OrderingByListOperation()
 			:OnSelectedChanged(function() f.action:Update() end)
 
 	f.Evaluate = function(self)

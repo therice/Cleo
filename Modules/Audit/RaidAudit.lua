@@ -179,15 +179,19 @@ local function GetNormalizedInterval(self, intervalInDays)
 		-- US raid lockout start (week) occurs on Tuesdays at 15:00 UTC (adjust for offset)
 		local rws, rwe = Date({hour = 15 + UTCOffset(), min = 0, sec = 0})
 
+		Logging:Debug("GetNormalizedInterval(%d) : %s (searching from)", weeks, tostring(rws))
+
 		-- (1) find previous tuesday
 		while(rws:wday() ~= 3) do
 			rws:add {day = -1}
 		end
 
+		Logging:Debug("GetNormalizedInterval(%d) : %s (starting at)", weeks, tostring(rws))
+
 		-- iterate through the weeks, finding raid week start and end
 		while (weeks > 0) do
 			rwe = Date(rws):add { day = 7 }
-			if rwe < now then
+			if rwe <= now then
 				Util.Tables.Push(raid_weeks, {rws, rwe, false})
 				weeks = weeks -1
 			end
@@ -198,7 +202,6 @@ local function GetNormalizedInterval(self, intervalInDays)
 		Logging:Warn("GetNormalizedInterval(%d) : specified interval was less than a week", intervalInDays)
 	end
 
-	--[[
 	if Logging:IsEnabledFor(Logging.Level.Debug) then
 		Util.Tables.Call(
 			raid_weeks,
@@ -212,7 +215,6 @@ local function GetNormalizedInterval(self, intervalInDays)
 			end
 		)
 	end
-	--]]
 
 	local orderedHistory = {}
 	for _, e in cpairs(self:GetHistory()) do

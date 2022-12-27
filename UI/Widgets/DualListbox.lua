@@ -68,7 +68,7 @@ function DualListbox:Create()
 						local all = dlb.available:RemoveAll()
 						if all and #all >0 then
 							for _, selected in pairs(all) do
-								dlb.selected:Insert(selected, function(item) return selected < item end)
+								dlb.selected:Insert(selected, dlb.listIndexFn(selected))
 								if dlb.selectedChangeFn then
 									dlb.selectedChangeFn(selected, true)
 								end
@@ -91,7 +91,7 @@ function DualListbox:Create()
 						Logging:Trace("DualListbox.Add(OnClick) : %d", dlb.available.selected)
 						local selected = dlb.available:RemoveSelected()
 						if selected then
-							dlb.selected:Insert(selected, function(item) return selected < item end)
+							dlb.selected:Insert(selected, dlb.listIndexFn(selected))
 							if dlb.selectedChangeFn then
 								dlb.selectedChangeFn(selected, true)
 							end
@@ -113,7 +113,7 @@ function DualListbox:Create()
 						Logging:Trace("DualListbox.Remove(OnClick) : %d", dlb.selected.selected)
 						local selected = dlb.selected:RemoveSelected()
 						if selected then
-							dlb.available:Insert(selected, function(item) return selected < item end)
+							dlb.available:Insert(selected, dlb.listIndexFn(selected))
 							if dlb.selectedChangeFn then
 								dlb.selectedChangeFn(selected, false)
 							end
@@ -136,7 +136,7 @@ function DualListbox:Create()
 						local all = dlb.selected:RemoveAll()
 						if all and #all >0 then
 							for _, selected in pairs(all) do
-								dlb.available:Insert(selected, function(item) return selected < item end)
+								dlb.available:Insert(selected, dlb.listIndexFn(selected))
 								if dlb.selectedChangeFn then
 									dlb.selectedChangeFn(selected, false)
 								end
@@ -147,6 +147,7 @@ function DualListbox:Create()
 			)
 
 	dlb.availableOpts, dlb.selectedOpts = {}, {}
+	dlb.listIndexFn = function(selected) return function(item) return selected < item end end
 	dlb.optionsSupplier, dlb.optionsSorter = nil, nil
 	dlb.selectedChangeFn = nil
 
@@ -163,12 +164,20 @@ function DualListbox:Create()
 		'SetEnabled', DualListbox.SetEnabled,
 		'Clear', DualListbox.Clear,
 		'AvailableTooltip', DualListbox.SetAvailableTooltip,
-		'SelectedTooltip', DualListbox.SetSelectedTooltip
+		'SelectedTooltip', DualListbox.SetSelectedTooltip,
+		'OrderingByListOperation', DualListbox.OrderingByListOperation
 	)
 
 	dlb:SetEnabled(true)
 
 	return dlb
+end
+
+-- sets ordering in add, remove, and add/remove (all) to be order in which moved between lists
+-- instead of default which is natural ordering
+function DualListbox.OrderingByListOperation(self)
+	self.listIndexFn = function(_) return nil end
+	return self
 end
 
 function DualListbox.Height(self, height)
