@@ -33,10 +33,10 @@ local lib = LibStub("LibEncounter-1.0", true)
 -- 	Vault of Archavon
 --  Naxxramas (redux)
 -- 	Icecrown Citadel
+-- 	Ulduar (TODO)
 --  The Ruby Sanctum (TODO)
 --  Onyxia's Lair (redux) (TODO)
 --  Trial of the Crusader (TODO)
--- 	Ulduar (TODO)
 --
 -- Mapping from map id to details (name will be used as index for localization)
 -- e.g. https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749
@@ -558,6 +558,54 @@ lib.Creatures = {
     [38433] = {
         name = 'Toravon'
     },
+    [33113] = {
+        name = 'Flame Leviathan',
+    },
+    [33118] = {
+        name = 'Ignis the Furnace Master',
+    },
+    [33186] = {
+        name = 'Razorscale',
+    },
+    [33293] = {
+        name = 'XT-002 Deconstructor',
+    },
+    [32867] = {
+        name = 'Steelbreaker',
+    },
+    [32857] = {
+        name = 'Stormcaller Brundir',
+    },
+    [32927] = {
+        name = 'Runemaster Molgeim',
+    },
+    [32930] = {
+        name = 'Kologarn',
+    },
+    [33515] = {
+        name = 'Auriaya',
+    },
+    [32845] = {
+        name = 'Hodir',
+    },
+    [32865] = {
+        name = 'Thorim',
+    },
+    [32906] = {
+        name = 'Freya',
+    },
+    [33350] = {
+        name = 'Mimiron',
+    },
+    [33271] = {
+        name = 'General Vezax',
+    },
+    [33288] = {
+        name = 'Yogg-Saron',
+    },
+    [32871] = {
+        name = 'Algalon the Observer',
+    },
     [36626] = {
         name = 'Festergut'
     },
@@ -574,16 +622,16 @@ lib.Creatures = {
         name = 'Lady Deathwhisper"'
     },
     [37215] = {
-        name =  'Orgrim\'s Hammer'
+        name = 'Orgrim\'s Hammer'
     },
     [37540] = {
-        name =  'The Skybreaker'
+        name = 'The Skybreaker'
     },
     [36612] = {
-        name =  'Lord Marrowgar'
+        name = 'Lord Marrowgar'
     },
     [36597] = {
-        name = 'The Lich King'
+        name ='The Lich King'
     },
     [37970] = {
         name = 'Prince Valanar'
@@ -1147,22 +1195,96 @@ lib.Encounters = {
         map_id = 624,
         creature_id = {31125},
     },
-    -- todo : encounter ids for stuff beyond this point need verified, they don't reconcile with `DungeonEncounter` in DB
     -- Emalon
-    [1127] = {
+    -- [1127] = {
+    [774] = {
         map_id = 624,
         creature_id = {33993},
     },
     -- Koralon
-    [1128] = {
+    -- [1128] = {
+    [776] = {
         map_id = 624,
         creature_id = {35013},
     },
     -- Toravon
-    [1129] = {
+    --[1129] = {
+    [885] = {
         map_id = 624,
         creature_id = {38433},
     },
+    -- Flame Leviathan
+    [744] = {
+        map_id = 603,
+        creature_id = {33113},
+    },
+    -- Ignis
+    [745] = {
+        map_id = 603,
+        creature_id = {33118},
+    },
+    -- Razorscale
+    [746] = {
+        map_id = 603,
+        creature_id = {33186},
+    },
+    -- XT-002 Deconstructor
+    [747] = {
+        map_id = 603,
+        creature_id = {33293},
+    },
+    -- The Iron Council
+    [748] = {
+        map_id = 603,
+        creature_id = {32867,32857,32927},
+    },
+    -- Kologarn
+    [749] = {
+        map_id = 603,
+        creature_id = {32930},
+    },
+    -- Auriaya
+    [750] = {
+        map_id = 603,
+        creature_id = {33515},
+    },
+    -- Hodir
+    [751] = {
+        map_id = 603,
+        creature_id = {32845},
+    },
+    -- Thorim
+    [752] = {
+        map_id = 603,
+        creature_id = {32865},
+    },
+    -- Freya
+    [753] = {
+        map_id = 603,
+        creature_id = {32906},
+    },
+    -- Mimiron
+    [754] = {
+        map_id = 603,
+        creature_id = {33350},
+    },
+    -- General Vezax
+    [755] = {
+        map_id = 603,
+        creature_id = {33271},
+    },
+    -- Yogg-Saron
+    [756] = {
+        map_id = 603,
+        creature_id = {33288},
+    },
+    -- Algalon the Observer
+    [757] = {
+        map_id = 32871,
+        creature_id = {},
+    },
+    -- todo : encounter ids for stuff beyond this point need verified, they don't reconcile with `DungeonEncounter` in DB
+    -- suggestion is to use wowhead to lookup names of creature, WOW.tools doesn't have the information
     -- Festergut
     [1097] = {
         map_id = 631,

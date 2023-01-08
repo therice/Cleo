@@ -177,6 +177,9 @@ lib.TokenEquipmentLocations = {
     [40638] = { "ShoulderSlot" },               -- Mantle of the Lost Protector
     [40639] = { "ShoulderSlot" },               -- Mantle of the Lost Vanquisher
     [44577] = { "NeckSlot" },                   -- Heroic Key to the Focusing Iris
+    -- WOTLK Classic P2 (T8)
+    -- 10 player
+    -- 25 player
 }
 
 -- mapping from token to items (id) which are rewarded from turning in
@@ -278,4 +281,43 @@ lib.TokenItems = {
     [40638] = { 40530, 40548, 40507, 40513, 40518, 40524 },         -- Mantle of the Lost Protector
     [40639] = { 40465, 40470, 40494, 40502, 40419, 40557, 40568 },  -- Mantle of the Lost Vanquisher
     [44577] = { 44581 },                                            -- Heroic Key to the Focusing Iris
+    -- WOTLK Classic P2 (T8)
+    -- x=45649; grep -Po "\[(\d*)\] =.*${x}" source-wrath.lua | sed "s/\[\([0-9]*\)\].*/\1/g" |  tr -s '\n' ' ' |  paste | sed 's/ /, /g' | sed 's/..$//'
+    -- 10 player
+    [45647] = { 45372, 45377, 45382, 45386, 45391, 45417 },         -- Helm of the Wayward Conqueror
+    [45648] = { 45361, 45402, 45408, 45412, 45425, 45431 },         -- Helm of the Wayward Protector
+    [45649] = { 45336, 45342, 45346, 45356, 45365, 45398, 46313 },  -- Helm of the Wayward Vanquisher
+    [45644] = { 45370, 45376, 45383, 45387, 45392, 45419 },         -- Gloves of the Wayward Conqueror
+    [45645] = { 45360, 45401, 45406, 45414, 45426, 45430 },         -- Gloves of the Wayward Protector
+    [45646] = { 45337, 45341, 45345, 45351, 45355, 45397, 46131 },  -- Gloves of the Wayward Vanquisher
+    [45635] = { 45374, 45375, 45381, 45389, 45395, 45421 },         -- Chestguard of the Wayward Conqueror
+    [45636] = { 45364, 45405, 45411, 45413, 45424, 45429 },         -- Chestguard of the Wayward Protector
+    [45637] = { 45335, 45340, 45348, 45354, 45358, 45368, 45396 },  -- Chestguard of the Wayward Vanquisher
+    [45650] = { 45371, 45379, 45384, 45388, 45394, 45420 },         -- Leggings of the Wayward Conqueror
+    [45651] = { 45362, 45403, 45409, 45416, 45427, 45432 },         -- Leggings of the Wayward Protector
+    [45652] = { 45338, 45343, 45347, 45353, 45357, 45367, 45399 },  -- Leggings of the Wayward Vanquisher
+    [45659] = { 45373, 45380, 45385, 45390, 45393, 45422 },         -- Spaulders of the Wayward Conqueror
+    [45660] = { 45363, 45404, 45410, 45415, 45428, 45433 },         -- Spaulders of the Wayward Protector
+    [45661] = { 45339, 45344, 45349, 45352, 45359, 45369, 45400 },  -- Spaulders of the Wayward Vanquisher
+    -- Archivum Data Disc -> Archivum Data Disc (Quest) -> The Celestial Planetarium (Quest) -> Sigils (4) -> Algalon -> All Is Well That Ends Well
+    [46052] = { 46320, 46321, 46322, 46323},                        -- Reply-Code Alpha
+    -- 25 player
+    [45638] = { 46140, 46156, 46172, 46175, 46180, 46197 },         -- Crown of the Wayward Conqueror
+    [45639] = { 46143, 46151, 46166, 46201, 46209, 46212 },         -- Crown of the Wayward Protector
+    [45640] = { 46115, 46120, 46125, 46129, 46161, 46184, 46191 },  -- Crown of the Wayward Vanquisher
+    [45641] = { 46135, 46155, 46163, 46174, 46179, 46188 },         -- Gauntlets of the Wayward Conqueror
+    [45642] = { 46142, 46148, 46164, 46199, 46200, 46207 },         -- Gauntlets of the Wayward Protector
+    [45643] = { 46113, 46119, 46124, 46132, 46158, 46183, 46189 },  -- Gauntlets of the Wayward Vanquisher
+    [45632] = { 46137, 46154, 46168, 46173, 46178, 46193 },         -- Breastplate of the Wayward Conqueror
+    [45633] = { 46141, 46146, 46162, 46198, 46205, 46206 },         -- Breastplate of the Wayward Protector
+    [45634] = { 46111, 46118, 46123, 46130, 46159, 46186, 46194 },  -- Breastplate of the Wayward Vanquisher
+    [45653] = { 46139, 46153, 46170, 46176, 46181, 46195 },         -- Legplates of the Wayward Conqueror
+    [45654] = { 46144, 46150, 46169, 46202, 46208, 46210 },         -- Legplates of the Wayward Protector
+    [45655] = { 46116, 46121, 46126, 46133, 46160, 46185, 46192 },  -- Legplates of the Wayward Vanquisher
+    [45656] = { 46136, 46152, 46165, 46177, 46182, 46190 },         -- Mantle of the Wayward Conqueror
+    [45657] = { 46145, 46149, 46167, 46203, 46204, 46211 },         -- Mantle of the Wayward Protector
+    [45658] = { 46117, 46122, 46127, 46134, 46157, 46187, 46196 },  -- Mantle of the Wayward Vanquisher
+    -- Archivum Data Disc -> Heroic: Archivum Data Disc (Quest) -> Heroic: The Celestial Planetarium (Quest) -> Heroic Sigils (4) ->  Heroic: Algalon -> Heroic: All Is Well That Ends Well
+    [46053] = { 45588, 45608, 45614, 45618},                        -- Heroic : Reply-Code Alpha
+
 }
