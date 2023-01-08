@@ -24,11 +24,10 @@ function VersionCheck:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.mostRecentVersion = VersionCheck.VersionZero
 	self.versionCheckComplete = false
-	if IsInGuild() then
-		AddOn:ScheduleTimer(function() self:SendGuildVersionPing() end, 2)
-	end
 	self:SubscribeToComms()
 	self.commSubscriptions = {}
+
+	AddOn.Timer.Schedule(function() AddOn:ScheduleTimer(function() if IsInGuild() then self:SendGuildVersionPing() end end, 10) end)
 end
 
 function VersionCheck:OnEnable()
@@ -37,7 +36,6 @@ function VersionCheck:OnEnable()
 	self:Show()
 	self:SubscribeToTransientComms()
 end
-
 
 function VersionCheck:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())

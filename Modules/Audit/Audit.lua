@@ -13,10 +13,7 @@ local Audit = AddOn:NewModule("Audit")
 
 function Audit:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
-	AddOn.Timer.After(
-		0,
-		function() AddOn.Timer.After(5, function() self:AutoPurge() end) end
-	)
+	AddOn.Timer.Schedule(function() AddOn.Timer.After(5, function() self:AutoPurge() end) end)
 end
 
 function Audit:EnableOnStartup()

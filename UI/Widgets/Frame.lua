@@ -40,7 +40,7 @@ function Frame:Create()
     f.GetStorage = function()
         local path = 'ui.'  .. (self.name and (self.module .. '_' .. self.name) or self.module)
         local storage = Util.Tables.Get(AddOn.db.profile, path) or {}
-        Logging:Debug('Create() : storage at %s is %s', path, Util.Objects.ToString(storage))
+        Logging:Trace('Create() : storage at %s is %s', path, Util.Objects.ToString(storage))
         return storage
     end
 

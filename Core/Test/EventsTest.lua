@@ -21,7 +21,7 @@ describe("Events", function()
 			_G.UnitIsGroupLeaderVal = true
 			AddOn.player = Player:Get("Player1")
 			PlayerEnteredWorld()
-			AddOn:MasterLooterModule().db = NewAceDb({ profile = { usage = { leader = true } } })
+			AddOn:MasterLooterModule().db = NewAceDb({ profile = { usage = { state = 1, whenLeader = true } } })
 			GuildRosterUpdate()
 		end)
 		teardown(function()

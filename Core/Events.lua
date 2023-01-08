@@ -20,17 +20,14 @@ function AddOn:SubscribeToEvents()
     for event, method in pairs(self.Events) do
         Logging:Trace("SubscribeToEvents(%s) : %s", self:GetName(), event)
         events[event] = function(evt, ...)
+            local args, callable = {...}, (Util.Objects.IsSet(self.player) and self.player:IsValid())
+            Logging:Trace("HandleEvent(%s) : Event(%s) / PlayerValid(%s)", self:GetName(), evt, tostring(callable))
 
-            local args = {...}
-
-            local function HandleEvent()
+            if callable then
                 self[method](self, evt, unpack(args))
-            end
-
-            if not self.player or not self.player:IsValid() then
-                self:ScheduleTimer(function() HandleEvent() end, 1)
             else
-                HandleEvent()
+                Logging:Warn("HandleEvent(%s) : Rescheduling Event(%s)", self:GetName(), evt)
+                AddOn.Timer.Schedule(function() self:ScheduleTimer(function() events[event](evt, unpack(args)) end, 0.5) end)
             end
         end
     end
@@ -47,7 +44,6 @@ function AddOn:UnsubscribeFromEvents()
     end
 end
 
-
 -- track whether initial load of addon or has it been reloaded (either via login or explicit reload)
 local initialLoad = true
 -- this event is triggered when the player logs in, /reloads the UI, or zones between map instances
@@ -63,12 +59,13 @@ function AddOn:PlayerEnteringWorld(_, isLogin, isReload)
     self:NewMasterLooterCheck()
     -- if we have not yet handled the initial entering world event
     if initialLoad then
+        self:UpdatePlayerData()
+
         if not self:IsMasterLooter() and Util.Objects.IsSet(self.masterLooter) then
             Logging:Debug("Player '%s' entering world (initial load)", tostring(self.player))
-            self:ScheduleTimer("Send", 2, self.masterLooter, C.Commands.Reconnect)
+            AddOn.Timer.Schedule(function() self:ScheduleTimer("Send", 2, self.masterLooter, C.Commands.Reconnect) end)
             self:Send(self.masterLooter, C.Commands.PlayerInfo, self:GetPlayerInfo())
         end
-        self:UpdatePlayerData()
         initialLoad = false
     end
 end
@@ -145,13 +142,19 @@ end
 function AddOn:RaidInstanceEnter(_, ...)
     Logging:Debug("RaidInstanceEnter()")
     local ML = self:MasterLooterModule()
-    if not IsInRaid() and ML:GetDbValue('onlyUseInRaids') then return end
+
+    if not self.enabled or (not IsInRaid() and ML:GetDbValue('onlyUseInRaids')) then
+        return
+    end
+
     if Util.Objects.IsEmpty(self.masterLooter) and UnitIsGroupLeader(C.player) then
-        if ML:GetDbValue('usage.leader') then
-            self.masterLooter = self.player
-            self:StartHandleLoot()
-        elseif ML:GetDbValue('usage.ask_leader') then
-            Dialog:Spawn(C.Popups.ConfirmUsage)
+        if ML:GetDbValue('usage.whenLeader') then
+            if ML:GetDbValue('usage.state') == ML.UsageType.Always then
+                self.masterLooter = self.player
+                self:StartHandleLoot()
+            elseif ML:GetDbValue('usage.state') == ML.UsageType.Ask then
+                Dialog:Spawn(C.Popups.ConfirmUsage)
+            end
         end
     end
 end

@@ -131,7 +131,7 @@ ML.defaults = {
 			-- when the player is the leader
 			--
 			-- if whenLeader is false, the state has no impact when player is the leader
-			whenLeader  = true,
+			whenLeader  = false,
 		},
 		-- what method should be used for selecting the active configuration (lists are attached to a config)
 		lcSelectionMethod = ML.ListConfigSelectionMethod.Ask,

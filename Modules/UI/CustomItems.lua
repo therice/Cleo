@@ -36,7 +36,7 @@ function CustomItems:CreateItemWidgets(parent)
 		        :Tooltip(L["item_lvl"], L["item_lvl_desc"])
 				:EditBox()
 		        :Size(125)
-		        :Range(1,250)
+		        :Range(1,300)
 	end
 
 end

@@ -10,9 +10,9 @@ local Player = AddOn.ImportPackage('Models').Player
 --- @type Core.Comm
 local Comm = AddOn.Require('Core.Comm')
 
-function AddOn:SubscribeToPermanentComms()
-    Logging:Debug("SubscribeToPermanentComms(%s)", self:GetName())
-    Comm:BulkSubscribe(C.CommPrefixes.Main, {
+function AddOn:SubscribeToComms()
+    Logging:Debug("SubscribeToComms(%s)", self:GetName())
+    self.commSubscriptions = Comm:BulkSubscribe(C.CommPrefixes.Main, {
         [C.Commands.PlayerInfoRequest] = function(_, sender)
             Logging:Debug("PlayerInfoRequest from %s", tostring(sender))
             Comm:Send {
@@ -72,6 +72,12 @@ function AddOn:SubscribeToPermanentComms()
             end
         end,
     })
+end
+
+function AddOn:UnsubscribeFromComms()
+    Logging:Debug("UnsubscribeFromComms(%s)", self:GetName())
+    AddOn.Unsubscribe(self.commSubscriptions)
+    self.commSubscriptions = nil
 end
 
 

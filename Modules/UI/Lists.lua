@@ -1647,7 +1647,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			self.priorityEdits[priority]:Reset()
 			local player = reload and self.prioritiesOrig[priority] or self.priorities[priority]
 			self.priorityEdits[priority]:Set(player and player:GetShortName() or nil)
-			Logging:Debug(
+			Logging:Trace(
 				"UpdatePriorities(%s) : %d => %s/%s",
 				list and list.id or 'nil', priority,
 				tostring(player and player:GetShortName() or nil),
@@ -1660,7 +1660,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			self.priorityEdits[priority]:Set(nil)
 		end
 
-		Logging:Debug("UpdatePriorities(%s) : reschedule(%s)", list and list.id or 'nil', tostring(reschedule))
+		Logging:Trace("UpdatePriorities(%s) : reschedule(%s)", list and list.id or 'nil', tostring(reschedule))
 		if reschedule then
 			AddOn:ScheduleTimer(function() tab:UpdatePriorities(true, list) end, 6)
 		end
@@ -1799,6 +1799,9 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local priority = Util.Tables.Find(compacted, player)
 			if priority then
 				local newPriority, other = priority + amount, nil
+
+				Logging:Debug("AdjustPriority(%s, %d) : %d => %d (%d)", tostring(player), amount, priority, newPriority, #compacted)
+
 				if newPriority < 0 then
 					other = compacted[1]
 				elseif newPriority > #compacted then
@@ -1806,6 +1809,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				else
 					other = compacted[newPriority]
 				end
+
+				Logging:Debug("AdjustPriority(%s, %d) : %s", tostring(player), amount, tostring(other))
 
 				self:SetPriorityRelative(player, other, (amount > 0))
 			end

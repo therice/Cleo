@@ -87,7 +87,7 @@ function Player:initialize(guid, name, class, realm)
 end
 
 function Player:IsValid()
-    return Util.Objects.IsSet(self.guid) and Util.Objects.IsSet(self.name)
+    return Util.Objects.IsSet(self.guid) and Util.Objects.IsSet(self.name) and Util.Objects.IsSet(self.class) and Util.Objects.IsSet(self.realm)
 end
 
 function Player:GetName()
@@ -127,6 +127,12 @@ end
 
 function Player:__eq(o)
     return Util.Strings.Equal(self.guid, o.guid)
+end
+
+function Player.Available()
+    local guid = UnitGUID(Ambiguate("player", "short"))
+    local _, _, _, _, _, name = GetPlayerInfoByGUID(guid)
+    return Util.Objects.IsSet(name)
 end
 
 Player.Nobody = Player()

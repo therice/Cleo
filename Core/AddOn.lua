@@ -55,24 +55,41 @@ function AddOn:OnInitialize()
     self.group = {}
 
     self.db = self:GetLibrary("AceDB"):New(self:Qualify('DB'), self.defaults)
-    if not AddOn._IsTestContext() then Logging:SetRootThreshold(self.db.profile.logThreshold) end
+    if not AddOn._IsTestContext() then
+        Logging:SetRootThreshold(self.db.profile.logThreshold)
+    end
 
     -- register slash commands
     SlashCommands:Register()
     self:RegisterChatCommands()
     self:VersionCheckModule():ClearExpiredVersions()
 
-    -- setup comms
+    -- bootstrap comms
     Comm:Register(C.CommPrefixes.Main)
     Comm:Register(C.CommPrefixes.Version)
     Comm:Register(C.CommPrefixes.Lists)
     Comm:Register(C.CommPrefixes.Audit)
     self.Send = Comm:GetSender(C.CommPrefixes.Main)
-    self:SubscribeToPermanentComms()
+
+    -- subscribe to comms
+    self:SubscribeToComms()
+
+    -- register events
+    self:SubscribeToEvents()
+    self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
 end
 
 function AddOn:OnEnable()
-    Logging:Debug("OnEnable(%s) : Mode=%s", self:GetName(), tostring(self.mode))
+    local piAvailable = Player.Available()
+    Logging:Debug("OnEnable(%s) : Mode=%s, Player Info Available=%s", self:GetName(), tostring(self.mode), tostring(piAvailable))
+
+    -- seems to be client regression introduced in 2.5.4 where the needed API calls to get a player's information
+    -- isn't always available on initial login, so reschedule
+    if not Player.Available("player") then
+        Logging:Warn("OnEnable(%s) : Rescheduling enable due to missing player information", self:GetName())
+        AddOn.Timer.Schedule(function() self:ScheduleTimer(function() self:OnEnable() end, 1) end)
+        return
+    end
 
     --@debug@
     -- this enables certain code paths that wouldn't otherwise be available in normal usage
@@ -96,21 +113,10 @@ function AddOn:OnEnable()
     -- it can be disabled as needed through /cleo pm
     self.mode:Enable(AddOn.Constants.Modes.Persistence)
 
-    -- seems to be client regression introduced in 2.5.4 where the needed API calls to get a player's information
-    -- isn't always available on initial login, so reschedule
-    --
-    -- be aware though, if rescheduled the initial set of events won't be fired through this code paths
-    -- and will rely upon future ones to do the needful
     --- @type Models.Player
     self.player = Player:Get("player")
-    if not self.player or not self.player:IsValid() then
-        self.player = nil
-        self:ScheduleTimer(function() self:OnEnable() end, 1)
-        Logging:Warn("OnEnable(%s) : unable to determine player, rescheduling enable in 2 seconds", self:GetName())
-        return
-    end
-
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))
+
     local configSupplements, lpadSupplements = {}, {}
     for name, module in self:IterateModules() do
         Logging:Debug("OnEnable(%s) : Examining module (startup) '%s'", self:GetName(), name)
@@ -131,31 +137,31 @@ function AddOn:OnEnable()
         end
     end
 
-    if IsInGuild() then
-        -- Register with guild storage for state change callback
-        GuildStorage.RegisterCallback(
-            self,
-            GuildStorage.Events.StateChanged,
-            function(event, state)
-                Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
-                if state == GuildStorage.States.Current then
-                    local me = GuildStorage:GetMember(AddOn.player:GetName())
-                    if me then
-                        AddOn.guildRank = me.rank
-                        GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
-                        Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
-                    else
-                        Logging:Debug("GuildStorage.Callback() : Not Found")
-                        AddOn.guildRank = L["not_found"]
+    local function SetGuildRank()
+        if IsInGuild() then
+            -- Register with guild storage for state change callback
+            GuildStorage.RegisterCallback(
+                self,
+                GuildStorage.Events.StateChanged,
+                function(event, state)
+                    Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
+                    if state == GuildStorage.States.Current then
+                        local me = GuildStorage:GetMember(AddOn.player:GetName())
+                        if me then
+                            AddOn.guildRank = me.rank
+                            GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
+                            Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
+                        else
+                            Logging:Debug("GuildStorage.Callback() : Not Found")
+                            AddOn.guildRank = L["not_found"]
+                        end
                     end
                 end
-            end
-        )
+            )
+        end
     end
 
-    -- register events
-    self:SubscribeToEvents()
-    self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
+    AddOn.Timer.Schedule(function() AddOn:ScheduleTimer(function() SetGuildRank() end, 5) end)
 
     -- track launchpad (UI) supplements for application as needed
     -- will only be applied the first time the UI is displayed
@@ -192,6 +198,7 @@ function AddOn:OnDisable()
     Logging:Debug("OnDisable(%s)", self:GetName())
     self:UnregisterAllBuckets()
     self:UnsubscribeFromEvents()
+    self:UnsubscribeFromComms()
     SlashCommands:Unregister()
 end
 

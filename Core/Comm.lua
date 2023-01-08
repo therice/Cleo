@@ -187,9 +187,10 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
             local toSend = self:PrepareForSend(command, ...)
             local isPlayer = Util.Objects.IsInstanceOf(target, Player)
 
-            Logging:Trace("SendComm(%s, %s, %s) : %s (%d)", prefix,
-                          isPlayer and target:GetName() or Util.Objects.ToString(target),
-                          command, '[omitted]' or Util.Objects.ToString(ScrubData(...)), #toSend
+            Logging:Trace(
+                "SendComm(%s, %s, %s) : %s (%d)", prefix,
+                isPlayer and target:GetName() or Util.Objects.ToString(target),
+                command, '[omitted]' or Util.Objects.ToString(ScrubData(...)), #toSend
             )
 
             if target == C.group then
@@ -201,7 +202,7 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
                 self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Guild, nil, prio, callback, callbackarg)
             else
                 target = isPlayer and target:GetName() or target
-                Logging:Debug("SendComm[other](%s, %s)", tostring(prefix), tostring(target))
+                Logging:Trace("SendComm[other](%s, %s)", tostring(prefix), tostring(target))
                 if AddOn.UnitIsUnit(target, C.player) then
                     Logging:Trace("SendComm[player]() : UnitIsUnit(true), %s", AddOn.player.name)
                     self.AceComm:SendCommMessage(

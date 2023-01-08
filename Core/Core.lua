@@ -251,10 +251,17 @@ end
 function AddOn:IsMasterLooter(unit)
     unit = Util.Objects.Default(unit, self.player)
     Logging:Trace("IsMasterLooter() : unit=%s, ml=%s", tostring(unit), tostring(self.masterLooter))
-    return self.masterLooter and AddOn.UnitIsUnit(unit, self.masterLooter)
+    return Util.Objects.IsSet(self.masterLooter) and not Player.IsUnknown(self.masterLooter) and self.masterLooter:IsValid() and AddOn.UnitIsUnit(unit, self.masterLooter)
 end
 
+
+--- @return boolean, Models.Player
 function AddOn:GetMasterLooter()
+    -- lootMethod   : One of 'freeforall', 'roundrobin', 'master', 'group', 'needbeforegreed', 'personalloot'
+    -- mlPartyId    : Returns 0 if player is the master looter, 1-4 if party member is master looter (corresponding to party1-4)
+    --                and nil if the master looter isn't in the player's party or master looting is not used.
+    -- mlRaidId     : Returns index of the master looter in the raid (corresponding to a raidX unit), or nil if the player
+    --                is not in a raid or master looting is not used.
     local lootMethod, mlPartyId, mlRaidId = GetLootMethod()
     self.lootMethod = lootMethod
     Logging:Debug(
@@ -307,10 +314,10 @@ function AddOn:NewMasterLooterCheck()
     _, self.masterLooter = self:GetMasterLooter()
     self.lootMethod = GetLootMethod()
 
-    -- ML is set, but it's an unknown player
-    if Util.Objects.IsSet(self.masterLooter) and Player.IsUnknown(self.masterLooter) then
+    -- ML is set, but it's not valid or an unknown player
+    if Util.Objects.IsSet(self.masterLooter) and (not self.masterLooter:IsValid() or Player.IsUnknown(self.masterLooter)) then
         Logging:Warn("NewMasterLooterCheck() : Unknown Master Looter")
-        self:ScheduleTimer("NewMasterLooterCheck", 1)
+        AddOn.Timer.Schedule(function() self:ScheduleTimer("NewMasterLooterCheck", 1) end)
         return
     end
 
@@ -384,7 +391,7 @@ function AddOn:NewMasterLooterCheck()
         self:StartHandleLoot()
     -- we're the ML and settings say to ask
     elseif isML and ML:GetDbValue('usage.state')  == ML.UsageType.Ask then
-        return Dialog:Spawn(C.Popups.ConfirmUsage)
+        Dialog:Spawn(C.Popups.ConfirmUsage)
     end
 end
 
@@ -462,9 +469,7 @@ function AddOn:UpdateGroupMembers()
     Logging:Trace("UpdateGroupMembers() : current count is %d", Util.Tables.Count(self.group))
 
     local group, groupCount, name = {}, GetNumGroupMembers(), nil
-    -- need to look at all 40 raid slots, as the raid members don't need to be in the raid contiguously
-    -- for example, could have 20 players, but in slots 1-19 and 21
-    for i = 1, _G.MAX_RAID_MEMBERS do
+    for i = 1, groupCount do
         name = GetRaidRosterInfo(i)
         if Util.Objects.IsSet(name) then
             group[self:UnitName(name)] = true

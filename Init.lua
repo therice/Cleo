@@ -18,7 +18,10 @@ end
 --@end-debug@
 
 AddOn.Timer = C_Timer
-
+AddOn.Timer.Schedule = function(scheduler)
+    assert(scheduler and type(scheduler) == 'function')
+    AddOn.Timer.After(0, scheduler)
+end
 do
     AddOn:AddLibrary('CallbackHandler', 'CallbackHandler-1.0')
     AddOn:AddLibrary('Class', 'LibClass-1.0')
