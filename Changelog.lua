@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.2 (2023-01-08)
+* Add Ulduar encounters and loot 35981a8
+* Address race conditions on initial login with player info not being available, which can result in unintended behavior. c61c1bb
+
 2022.3.1 (2022-12-27)
 * Address issues with date cutoffs and ordering with bulk list management 9d2ecba
 * Remove assertions from date tests which are not consistent as time marches forward 21ee642
