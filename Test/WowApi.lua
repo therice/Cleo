@@ -262,6 +262,10 @@ function GuildRoster ()
     end
 end
 
+function GetBuildInfo()
+    return "3.4.1", 47612, "Jan 11 2023", 30401
+end
+
 function IsInGuild() return 1 end
 
 function IsInRaid() return _G.IsInRaidVal end

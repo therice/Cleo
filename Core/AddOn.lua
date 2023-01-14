@@ -20,6 +20,22 @@ local SemanticVersion  = AddOn.Package('Models').SemanticVersion
 
 function AddOn:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
+
+    local version, build, date, tocVersion = GetBuildInfo()
+    AddOn.BuildInfo = {
+        version =  SemanticVersion(version),
+        build = build,
+        date = date,
+        tocVersion = tocVersion,
+
+        -- technically, this is wrath "classic but that's the only flavor which exists right now
+        IsWrath = function(self) return self.version.major == 3 and self.version.minor == 4 end,
+        IsWrathP1 = function(self) return self:IsWrath() and self.version.patch == 0 end,
+        IsWrathP2 = function(self) return self:IsWrath() and self.version.patch == 1 end,
+    }
+
+    Logging:Debug("OnInitialize(%s) : BuildInfo(%s)", self:GetName(), Util.Objects.ToString(AddOn.BuildInfo))
+
     -- convert to a semantic version
     self.version = SemanticVersion(self.version)
     -- bitfield which keeps track of our operating mode

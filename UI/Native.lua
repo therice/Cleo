@@ -5,6 +5,7 @@ local Logging = AddOn:GetLibrary('Logging')
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
 local pkg = AddOn.Package('UI.Native')
+local CreateColor = _G.CreateColor
 
 --- @class UI.Native.Widget
 local Widget = pkg:Class('Widget')
@@ -56,6 +57,7 @@ function Widget.Border(self, cR, cG, cB, cA, size, offsetX, offsetY)
         self.BorderRight:Show()
     end
 end
+
 
 function Widget.LayerBorder(parent, size, cR, cG, cB, cA, outside, layer)
     outside = outside or 0
@@ -214,6 +216,23 @@ function Widget.ShadowInside(self, enableBorder, enableLine)
     end
 end
 
+
+Widget.Textures = {
+    SetGradientAlpha = function(texture, orientation, ...)
+        Logging:Trace("SetGradientAlpha(%s) : %s", orientation, Util.Objects.ToString({...}))
+
+        if texture and Util.Objects.IsTable(texture) and (Util.Objects.IsFunction(texture['SetGradientAlpha']) or Util.Objects.IsFunction(texture['SetGradient'])) then
+            if AddOn.BuildInfo:IsWrathP1() then
+                texture:SetGradientAlpha(orientation, ...)
+            else
+                local args = {...}
+                local c1 = Util.Objects.IsTable(args[1]) and args[1] or CreateColor(args[1], args[2], args[3], args[4])
+                local c2 = Util.Objects.IsTable(args[2]) and args[2] or CreateColor(args[5], args[6], args[7], args[8])
+                texture:SetGradient(orientation, c1, c2)
+            end
+        end
+    end
+}
 
 do
     local function SetPoint(self, arg1, arg2, arg3, arg4, arg5)
@@ -374,22 +393,21 @@ do
     end
 
     function Widget.Mod(self, ...)
-        self.Point              = SetPoint
-        self.Size               = SetSize
-        self.NewPoint           = SetNewPoint
-        self.Scale              = SetScale
-        self.OnClick            = OnClick
-        self.OnShow             = OnShow
-        self.Shown              = Shown
-        self.OnEnter            = OnEnter
-        self.OnLeave            = OnLeave
-        self.Run                = Run
-        self.LayerBorder        = Widget.LayerBorder
-        self.Border             = Widget.Border
-        self.SetMultipleScripts = SetMultipleScripts
-        self.Datasource         = SetDatasource
-        self.ClearDatasource    = ClearDatasource
-
+        self.Point                      = SetPoint
+        self.Size                       = SetSize
+        self.NewPoint                   = SetNewPoint
+        self.Scale                      = SetScale
+        self.OnClick                    = OnClick
+        self.OnShow                     = OnShow
+        self.Shown                      = Shown
+        self.OnEnter                    = OnEnter
+        self.OnLeave                    = OnLeave
+        self.Run                        = Run
+        self.LayerBorder                = Widget.LayerBorder
+        self.Border                     = Widget.Border
+        self.SetMultipleScripts         = SetMultipleScripts
+        self.Datasource                 = SetDatasource
+        self.ClearDatasource            = ClearDatasource
         for i = 1, select("#", ...) do
             if i % 2 == 1 then
                 local funcName, func = select(i, ...)

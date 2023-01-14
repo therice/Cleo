@@ -13,7 +13,8 @@ local UI = AddOn.Require('UI.Native')
 local UIUtil = AddOn.Require('UI.Util')
 --- @type LibDialog
 local Dialog = AddOn:GetLibrary("Dialog")
-
+--- @type UI.Native.Widget
+local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 --- @type CustomItems
 local CustomItems = AddOn:GetModule("CustomItems", true)
 
@@ -85,9 +86,9 @@ function CustomItems:LayoutInterface(container)
 				function(self)
 					local cR, cG, cB =  self.bgColorRGB[1], self.bgColorRGB[2], self.bgColorRGB[3]
 					if self:IsMouseOver() then
-						self.bgColor:SetGradientAlpha("HORIZONTAL", cR, cG, cB, 0.8, cR, cG, cB, 0)
+						BaseWidget.Textures.SetGradientAlpha(self.bgColor, "HORIZONTAL", cR, cG, cB, 0.8, cR, cG, cB, 0)
 					else
-						self.bgColor:SetGradientAlpha("HORIZONTAL", cR, cG, cB, 0.4, cR, cG, cB, 0)
+						BaseWidget.Textures.SetGradientAlpha(self.bgColor, "HORIZONTAL", cR, cG, cB, 0.4, cR, cG, cB, 0)
 					end
 				end
 		)

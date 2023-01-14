@@ -31,6 +31,8 @@ local Lists = AddOn:GetModule("Lists", true)
 local ListsDp = AddOn:GetModule("ListsDataPlane", true)
 --- @type LibGuildStorage
 local GuildStorage = AddOn:GetLibrary("GuildStorage")
+--- @type UI.Native.Widget
+local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 
 local Tabs = {
 	[L["list_configs"]]     = L["list_configs_desc"],
@@ -1556,8 +1558,13 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		priorityEdit:Point("TOPLEFT", PriorityCoord(priorityEdit))
 
 		priorityEdit.SetActive = function(self, active)
+			active = Util.Objects.Default(active, false)
 			self:SetMovable(active)
-			self:RegisterForDrag(active and "LeftButton" or nil)
+			if active then
+				self:RegisterForDrag("LeftButton")
+			else
+				self:RegisterForDrag()
+			end
 			self:SetScript("OnDragStart", active and EditOnDragStart or nil)
 			self:SetScript("OnDragStop", active and function(e) EditOnDragStop(e, EditDragType.Within) end or nil)
 			if active then self.xButton:Show() else self.xButton:Hide() end

@@ -25,7 +25,7 @@ function DecorationLine:Create()
 
 	if self.isGradient then
 		dl:SetColorTexture(1, 1, 1, 1)
-		dl:SetGradientAlpha("VERTICAL", .24, .25, .30, 1, .27, .28, .33, 1)
+		BaseWidget.Textures.SetGradientAlpha(dl, "VERTICAL", .24, .25, .30, 1, .27, .28, .33, 1)
 	else
 		dl:SetColorTexture(.24, .25, .30, 1)
 	end
@@ -44,7 +44,7 @@ function DecorationLine.SetColorTexture(self, r, g, b, a, gradientPct)
 	-- if this line is a gradient and a percentage was specified (as decimal)
 	if self.isGradient and (gradientPct and Util.Objects.IsNumber(gradientPct)) then
 		if Util.Numbers.In(gradientPct, 0, 1) then
-			self:SetGradientAlpha("VERTICAL",(r * gradientPct), (g * gradientPct), (b * gradientPct), a,  r, g, b, a)
+			BaseWidget.Textures.SetGradientAlpha(self, "VERTICAL",(r * gradientPct), (g * gradientPct), (b * gradientPct), a,  r, g, b, a)
 		end
 	end
 	return self

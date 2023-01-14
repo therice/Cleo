@@ -22,6 +22,7 @@ AddOn.Timer.Schedule = function(scheduler)
     assert(scheduler and type(scheduler) == 'function')
     AddOn.Timer.After(0, scheduler)
 end
+
 do
     AddOn:AddLibrary('CallbackHandler', 'CallbackHandler-1.0')
     AddOn:AddLibrary('Class', 'LibClass-1.0')
@@ -64,6 +65,7 @@ AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
 local Logging = AddOn:GetLibrary("Logging")
 ---@type LibUtil
 local Util = AddOn:GetLibrary("Util")
+
 
 --@debug@
 Logging:SetRootThreshold(AddOn._IsTestContext() and Logging.Level.Trace or Logging.Level.Debug)

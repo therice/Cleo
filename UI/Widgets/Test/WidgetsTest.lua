@@ -4,6 +4,10 @@ describe("Native UI Widgets", function()
     setup(function()
         _, AddOn = loadfile("Test/TestSetup.lua")(true, 'UI_Native_Widgets')
         NativeUI = AddOn.Require('UI.Native')
+        AddOn.BuildInfo = {
+            IsWrath = function() return true end,
+            IsWrathP1 = function() return false end,
+        }
     end)
 
     teardown(function()

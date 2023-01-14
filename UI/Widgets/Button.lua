@@ -1,4 +1,6 @@
+--- @type AddOn
 local _, AddOn = ...
+local C = AddOn.Constants
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 ---@type UI.Util
@@ -29,14 +31,12 @@ function Button:Create()
 
     b.HighlightTexture = b:CreateTexture()
     b.HighlightTexture:SetColorTexture(1,1,1,.3)
-    b.HighlightTexture:SetPoint("TOPLEFT")
-    b.HighlightTexture:SetPoint("BOTTOMRIGHT")
+    b.HighlightTexture:SetAllPoints(b)
     b:SetHighlightTexture(b.HighlightTexture)
 
     b.PushedTexture = b:CreateTexture()
     b.PushedTexture:SetColorTexture(.9,.8,.1,.3)
-    b.PushedTexture:SetPoint("TOPLEFT")
-    b.PushedTexture:SetPoint("BOTTOMRIGHT")
+    b.PushedTexture:SetAllPoints(b)
     b:SetPushedTexture(b.PushedTexture)
 
     b:SetNormalFontObject("GameFontNormal")
@@ -47,20 +47,18 @@ function Button:Create()
 
     b.Texture = b:CreateTexture(nil,"BACKGROUND")
     b.Texture:SetColorTexture(1,1,1,1)
-    b.Texture:SetGradientAlpha("VERTICAL",0.05,0.06,0.09,1, 0.20,0.21,0.25,1)
-    b.Texture:SetPoint("TOPLEFT")
-    b.Texture:SetPoint("BOTTOMRIGHT")
+    BaseWidget.Textures.SetGradientAlpha(b.Texture,"VERTICAL",0.05,0.06,0.09,1, 0.20,0.21,0.25,1)
+    b.Texture:SetAllPoints(b)
 
     b.DisabledTexture = b:CreateTexture()
     b.DisabledTexture:SetColorTexture(0.20,0.21,0.25,0.5)
-    b.DisabledTexture:SetPoint("TOPLEFT")
-    b.DisabledTexture:SetPoint("BOTTOMRIGHT")
+    b.DisabledTexture:SetAllPoints(b)
     b:SetDisabledTexture(b.DisabledTexture)
 
     b.HideTextures = function(self)
+        self.Texture:Hide()
         self.HighlightTexture:Hide()
         self.PushedTexture:Hide()
-        self.Texture:Hide()
         self.DisabledTexture:Hide()
         self:HideBorders()
     end
