@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.3 (2023-01-14)
+* Fix compatibility issues with Wrath P2 client f9795bc
+
 2022.3.2 (2023-01-08)
 * Add Ulduar encounters and loot 35981a8
 * Address race conditions on initial login with player info not being available, which can result in unintended behavior. c61c1bb
