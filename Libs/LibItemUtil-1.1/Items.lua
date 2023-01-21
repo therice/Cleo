@@ -179,7 +179,39 @@ lib.TokenEquipmentLocations = {
     [44577] = { "NeckSlot" },                   -- Heroic Key to the Focusing Iris
     -- WOTLK Classic P2 (T8)
     -- 10 player
+    [45647] = { "HeadSlot" },                   -- Helm of the Wayward Conqueror
+    [45648] = { "HeadSlot" },                   -- Helm of the Wayward Protector
+    [45649] = { "HeadSlot" },                   -- Helm of the Wayward Vanquisher
+    [45644] = { "HandsSlot" },                  -- Gloves of the Wayward Conqueror
+    [45645] = { "HandsSlot" },                  -- Gloves of the Wayward Protector
+    [45646] = { "HandsSlot" },                  -- Gloves of the Wayward Vanquisher
+    [45635] = { "ChestSlot" },                  -- Chestguard of the Wayward Conqueror
+    [45636] = { "ChestSlot" },                  -- Chestguard of the Wayward Protector
+    [45637] = { "ChestSlot" },                  -- Chestguard of the Wayward Vanquisher
+    [45650] = { "LegsSlot" },                   -- Leggings of the Wayward Conqueror
+    [45651] = { "LegsSlot" },                   -- Leggings of the Wayward Protector
+    [45652] = { "LegsSlot" },                   -- Leggings of the Wayward Vanquisher
+    [45659] = { "ShoulderSlot" },               -- Spaulders of the Wayward Conqueror
+    [45660] = { "ShoulderSlot" },               -- Spaulders of the Wayward Protector
+    [45661] = { "ShoulderSlot" },               -- Spaulders of the Wayward Vanquisher
+    [46052] = { "Finger0Slot", "BackSlot" },    -- "All Is Well That Ends Well"
     -- 25 player
+    [45638] = { "HeadSlot" },                   -- Crown of the Wayward Conqueror
+    [45639] = { "HeadSlot" },                   -- Crown of the Wayward Protector
+    [45640] = { "HeadSlot" },                   -- Crown of the Wayward Vanquisher
+    [45641] = { "HandsSlot" },                  -- Gauntlets of the Wayward Conqueror
+    [45642] = { "HandsSlot" },                  -- Gauntlets of the Wayward Protector
+    [45643] = { "HandsSlot" },                  -- Gauntlets of the Wayward Vanquisher
+    [45632] = { "ChestSlot" },                  -- Breastplate of the Wayward Conqueror
+    [45633] = { "ChestSlot" },                  -- Breastplate of the Wayward Protector
+    [45634] = { "ChestSlot" },                  -- Breastplate of the Wayward Vanquisher
+    [45653] = { "LegsSlot" },                   -- Legplates of the Wayward Conqueror
+    [45654] = { "LegsSlot" },                   -- Legplates of the Wayward Protector
+    [45655] = { "LegsSlot" },                   -- Legplates of the Wayward Vanquisher
+    [45656] = { "ShoulderSlot" },               -- Mantle of the Wayward Conqueror
+    [45657] = { "ShoulderSlot" },               -- Mantle of the Wayward Protector
+    [45658] = { "ShoulderSlot" },               -- Mantle of the Wayward Vanquisher
+    [46053] = { "Finger0Slot", "BackSlot" },    -- Heroic: All Is Well That Ends Well
 }
 
 -- mapping from token to items (id) which are rewarded from turning in
