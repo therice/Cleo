@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.4 (2023-01-21)
+* fix : Add missing Ulduar mappings for token based items to equipment locations. febe185
+* Update TOC to reflect Ulduar patch version 1657932
+
 2022.3.3 (2023-01-14)
 * Fix compatibility issues with Wrath P2 client f9795bc
 
