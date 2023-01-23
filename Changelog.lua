@@ -2,6 +2,16 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.5 (2023-01-23)
+* Correct issue with redefinition of player in IsUnknown() 6a4ba2c
+* Determine group member count via GetNumGroupMembers() instead of _G.MAX_RAID_MEMBERS 9a51e3d
+* Eliminate ridiculous formatting in 'about' interface f81198e
+* Master Looter - for an item without a loot slot, don't treat as award unless winner is set f938674
+* Notify player, via whisper, if Cleo is not installed when joining group where it is in use 2974627
+* Player - refactor 'Uknown' into class instance 2a957eb
+* Remove redundant check for player information being available 8c1f9c7
+* Turn off list replication, it's not currently being used and needs testing before enabling (for all) 5c6026f
+
 2022.3.4 (2023-01-21)
 * fix : Add missing Ulduar mappings for token based items to equipment locations. febe185
 * Update TOC to reflect Ulduar patch version 1657932
