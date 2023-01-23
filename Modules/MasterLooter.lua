@@ -28,6 +28,7 @@ local UIUtil = AddOn.Require('UI.Util')
 local MasterLooterDb = AddOn.Require('MasterLooterDb')
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary('ItemUtil')
+local SendChatMessage = _G.SendChatMessage
 
 --- @class MasterLooter
 local ML = AddOn:NewModule("MasterLooter", "AceEvent-3.0", "AceBucket-3.0", "AceTimer-3.0", "AceHook-3.0")
@@ -439,24 +440,24 @@ end
 
 function ML:SendWhisperHelp(target)
 	Logging:Trace("SendWhisperHelp(%s)", target)
-	SendChatMessage(L["whisper_guide_1"], "WHISPER", nil, target)
+	SendChatMessage(L["whisper_guide_1"], C.Channels.Whisper, nil, target)
 	local msg, db = nil, self.db.profile
 	for i = 1, db.buttons.numButtons do
 		msg = "[" .. C.name .. "]: ".. db.buttons[i]["text"] .. ":  "
 		msg = msg .. "" .. db.buttons[i]["whisperKey"]
-		SendChatMessage(msg, "WHISPER", nil, target)
+		SendChatMessage(msg, C.Channels.Whisper, nil, target)
 	end
-	SendChatMessage(L["whisper_guide_2"], "WHISPER", nil, target)
+	SendChatMessage(L["whisper_guide_2"], C.Channels.Whisper, nil, target)
 end
 
 function ML:SendWhisperItems(target)
 	Logging:Trace("SendWhisperHelp(%s)", target)
-	SendChatMessage(L["whisper_items"], "WHISPER", nil, target)
+	SendChatMessage(L["whisper_items"], C.Channels.Whisper, nil, target)
 	if #self.lootTable == 0 then
-		SendChatMessage(L["whisper_items_none"], "WHISPER", nil, target)
+		SendChatMessage(L["whisper_items_none"], C.Channels.Whisper, nil, target)
 	else
 		for session, item in pairs(self.lootTable) do
-			SendChatMessage(format("[%d] : %s", session, tostring(item:GetItem().link)), "WHISPER", nil, target)
+			SendChatMessage(format("[%d] : %s", session, tostring(item:GetItem().link)), C.Channels.Whisper, nil, target)
 		end
 	end
 end
@@ -619,7 +620,10 @@ ML.AnnounceItemStrings = {
 }
 
 function ML:AnnounceItems(items)
-	if not self:GetDbValue('announceItems') then return end
+	if not self:GetDbValue('announceItems') then
+		return
+	end
+
 	local channel, template = self:GetDbValue('announceItemText.channel'), self:GetDbValue('announceItemText.text')
 	AddOn:SendAnnouncement(self:GetDbValue('announceItemPrefix'), channel)
 
@@ -1512,9 +1516,13 @@ function ML:Award(award, callback, ...)
 	-- not previously awarded
 	-- the entry could be missing a loot slot if not added from a loot table
 	if not slot then
-		self:RegisterAndAnnounceAward(award)
-		self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
-		return true
+		if winner then
+			self:RegisterAndAnnounceAward(award)
+			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
+			return true
+		else
+			return false
+		end
 	end
 
 	if self.lootOpen and not AddOn.ItemIsItem(link, GetLootSlotLink(slot)) then
