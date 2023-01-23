@@ -101,7 +101,7 @@ function AddOn:OnEnable()
 
     -- seems to be client regression introduced in 2.5.4 where the needed API calls to get a player's information
     -- isn't always available on initial login, so reschedule
-    if not Player.Available("player") then
+    if not piAvailable then
         Logging:Warn("OnEnable(%s) : Rescheduling enable due to missing player information", self:GetName())
         AddOn.Timer.Schedule(function() self:ScheduleTimer(function() self:OnEnable() end, 1) end)
         return
