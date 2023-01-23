@@ -114,7 +114,7 @@ function AddOn:OnEnable()
 
     --@debug@
     -- this enables real time replication of data, only via switch and debug builds for now
-    self.mode:Enable(AddOn.Constants.Modes.Replication)
+    --self.mode:Enable(AddOn.Constants.Modes.Replication)
     --@end-debug@
 
     -- in debug mode, parse the version from the Changelog
