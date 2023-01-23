@@ -232,6 +232,7 @@ function Player:Get(input)
     return Get(guid) or Player.Create(guid, info)
 end
 
+--- @return Models.Player
 function Player.Resolve(p)
     if Util.Objects.IsInstanceOf(p, Player) then
         return p
@@ -259,8 +260,9 @@ function Player.StripGuidPrefix(input)
 end
 
 function Player.IsUnknown(p)
-    local p = Player.Resolve(p)
-    return Util.Objects.IsNil(p) or p:IsUNK()
+    --- @type Models.Player
+    local player = Player.Resolve(p)
+    return Util.Objects.IsNil(player) or player:IsUNK()
 end
 
 function Player.Unknown(guid)
