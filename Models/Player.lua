@@ -90,6 +90,11 @@ function Player:IsValid()
     return Util.Objects.IsSet(self.guid) and Util.Objects.IsSet(self.name) and Util.Objects.IsSet(self.class) and Util.Objects.IsSet(self.realm)
 end
 
+--- @return boolean indicating if player is 'Unknown'
+function Player:IsUNK()
+   return Util.Strings.Equal(self:GetShortName(), 'Unknown') or Util.Strings.Equal(Ambiguate(self:GetName(), "short"):lower(), _G.UNKNOWNOBJECT:lower())
+end
+
 function Player:GetName()
     return self.name
 end
@@ -254,10 +259,8 @@ function Player.StripGuidPrefix(input)
 end
 
 function Player.IsUnknown(p)
-    local player = Player.Resolve(p)
-    return Util.Objects.IsNil(player) or
-            Util.Strings.Equal(player:GetShortName(), 'Unknown') or
-            Util.Strings.Equal(Ambiguate(player:GetName(), "short"):lower(), _G.UNKNOWNOBJECT:lower())
+    local p = Player.Resolve(p)
+    return Util.Objects.IsNil(p) or p:IsUNK()
 end
 
 function Player.Unknown(guid)
