@@ -15,10 +15,10 @@ local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local ParsedChangeLog = Util.Memoize.Memoize(
 	function()
 		--- @type Models.SemanticVersion
-		local SemanticVersion  = AddOn.Package('Models').SemanticVersion
+		local SemanticVersion= AddOn.Package('Models').SemanticVersion
 		local VersionDecorator = UIUtil.ColoredDecorator(C.Colors.ItemHeirloom)
-		local LineDecorator    = UIUtil.ColoredDecorator(C.Colors.ItemArtifact)
-		local ExtraDecorator    = UIUtil.ColoredDecorator(C.Colors.Salmon)
+		local LineDecorator = UIUtil.ColoredDecorator(C.Colors.ItemArtifact)
+		local ExtraDecorator = UIUtil.ColoredDecorator(C.Colors.Salmon)
 
 		local latestVersion
 		local parsed = Util.Tables.Map(
