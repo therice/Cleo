@@ -17,8 +17,7 @@ local LootSlotInfo = AddOn.Package('Models.Item').LootSlotInfo
 local LootTableEntry = AddOn.Package('Models.Item').LootTableEntry
 --- @type Models.Item.LootQueueEntry
 local LootQueueEntry = AddOn.Package('Models.Item').LootQueueEntry
---- @type Models.Audit.LootRecord
-local LootRecord = AddOn.Package('Models.Audit').LootRecord
+--- @type table<string, string>
 local LAR = AddOn.Package('Models.Item').LootAllocateResponse.Attributes
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
@@ -28,6 +27,7 @@ local UIUtil = AddOn.Require('UI.Util')
 local MasterLooterDb = AddOn.Require('MasterLooterDb')
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary('ItemUtil')
+-- handles to globals
 local SendChatMessage = _G.SendChatMessage
 
 --- @class MasterLooter
@@ -387,6 +387,21 @@ function ML:OnPlayerEvent(event, player)
 		ac:OnPlayerEvent(player, Util.Strings.Equal(event, C.Messages.PlayerJoinedGroup))
 		if Util.Strings.Equal(event, C.Messages.PlayerJoinedGroup) then
 			self:SendActiveConfig(player, ac.config)
+
+			-- send a version ping to player when they join group so we can proactively notify them that
+			-- Cleo is not installed and will not be able to use it for loot responses
+			Util.Functions.try(
+				function()
+					local vc = AddOn:VersionCheckModule()
+					vc:SendVersionPing(player)
+					self:ScheduleTimer(function() vc:NotifyIfNotInstalled(player) end, 5)
+				end
+			)
+		    .catch(
+				function(err)
+					Logging:Error("OnPlayerEvent(%s) : %s / %s", tostring(event), tostring(player) ,Util.Objects.ToString(err))
+				end
+			)
 		end
 	end
 end
@@ -1689,14 +1704,6 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 				function(awarded, cause)
 					if awarded then
 						self:AnnounceAward(winner, item, awardReason.text, nil, nil, false, true)
-						-- disabled due to volume of auto-award items causing a glut of loot audit
-						-- records, eventually resulting in frame drops due to processing
-						-- this was due to them typically being awarded to same person and their
-						-- compressed loot history becoming excessively large
-						--[[
-						local audit = LootRecord.FromAutoAward(item, winner, awardReason)
-						AddOn:LootAuditModule():Broadcast(audit)
-						--]]
 						return true
 					else
 						AddOn:Print(L["cannot_auto_award"])

@@ -475,6 +475,7 @@ L["whisper_guide_2"] = "[" .. name .. "]: You'll get a confirmation message if y
 L["whisper_items"] = "[" .. name .. "]: Currently available items ([item_number] : item_link)"
 L["whisper_items_none"] = "[" .. name .. "]: No items currently available"
 L["whisper_item_ack"] = "[" .. name .. "]: Response to %s acknowledged as \"%s\""
+L["whisper_not_installed"] = "[" .. name .. "]: You do not have the required addon installed to roll on loot. You will only be able to specify your response(s) via whisper to the master looter. Whisper the master looter !help for more details."
 L["whispers"] = "Whispers"
 L["whisperkey_ms_need"] = "ms, need, bid, suicide, 1"
 L["whisperkey_minor_upgrade"] = "minor, side, 2"
