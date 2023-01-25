@@ -45,7 +45,7 @@ function Events:RegisterEvent(event)
         self.registered[event] = true
         self.AceEvent:RegisterEvent(
                 event,
-                self.metricsRcv:Timer(event):Timed(function(event, ...) return self:HandleEvent(event, ...) end)
+                self.metricsRcv:Timer(event):Timed(function(e, ...) return self:HandleEvent(e, ...) end)
         )
     end
 end

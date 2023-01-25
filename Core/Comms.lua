@@ -127,6 +127,6 @@ function AddOn:SendAnnouncement(msg, channel)
     elseif (not IsInRaid() and Util.Objects.In(channel, C.Channels.Raid, C.Channels.RaidWarning)) then
         SendChatMessage(msg, C.party)
     else
-        SendChatMessage(msg, AddOn:GetAnnounceChannel(channel))
+        SendChatMessage(msg, self:GetAnnounceChannel(channel))
     end
 end

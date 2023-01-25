@@ -395,9 +395,7 @@ function TrafficAudit:SetCellLootRecord(_, frame, data, _, _, realrow, _, _)
 	local record = data[realrow].entry
 	local playerId, lrId = record:GetLootRecord()
 	if playerId and lrId then
-
 		local player = Player.Resolve(playerId)
-
 		frame:SetNormalTexture(133784)
 		frame:GetNormalTexture():SetTexCoord(0,1,0,1)
 		frame:SetScript(
@@ -418,14 +416,14 @@ function TrafficAudit:SetCellLootRecord(_, frame, data, _, _, realrow, _, _)
 			function()
 				-- select the loot audit tab
 				AddOn:LootAuditModule():SelectRecord(player:GetName(), lrId)
-				self.interfaceFrame:GetLaunchPad()
-					:SetModuleIndex(self.interfaceFrame.moduleIndex - 3)
+				self.interfaceFrame:GetLaunchPad():SetModuleIndex(self.interfaceFrame.moduleIndex - 3)
 			end
 		)
 	else
-		frame:SetNormalTexture(nil)
-		frame:SetScript("OnEnter", nil)
-		frame:SetScript("OnLeave", nil)
+		frame:SetNormalTexture(237020)
+		frame:GetNormalTexture():SetTexCoord(0,1,0,1)
+		frame:SetScript("OnEnter", function(f) UIUtil.ShowTooltip(f, nil, L["changed_by_admin_or_owner"]) end)
+		frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
 		frame:SetScript("OnClick", nil)
 	end
 end
