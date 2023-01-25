@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.6 (2023-01-25)
+* Address error in Traffic History due to WOW API change in SetNormalTexture() e62a15a
+
 2022.3.5 (2023-01-23)
 * Correct issue with redefinition of player in IsUnknown() 6a4ba2c
 * Determine group member count via GetNumGroupMembers() instead of _G.MAX_RAID_MEMBERS 9a51e3d
