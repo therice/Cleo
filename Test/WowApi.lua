@@ -547,22 +547,38 @@ function GetItemFamily(item)
     return "INVTYPE_BAG"
 end
 
-function GetContainerNumFreeSlots(bag)
-    return 4, 0
 
-end
 _G.BACKPACK_CONTAINER = 0
 _G.NUM_BAG_SLOTS = 4
+
+_G.C_Container = {
+    FreeSlotsByContainer = nil,
+
+    _SetFreeSlotsByContainer = function(...)
+        _G.C_Container.FreeSlotsByContainer = {...}
+    end,
+    _ClearFreeSlotsByContainer = function()
+        _G.C_Container.FreeSlotsByContainer = nil
+    end,
+}
+
+_G.C_Container.GetContainerNumFreeSlots = function(_)
+    if _G.C_Container.FreeSlotsByContainer then
+        return unpack(_G.C_Container.FreeSlotsByContainer)
+    else
+        return 4, 0
+    end
+end
 
 function escapePatternSymbols(value)
     return value
 end
 
-FACTION_HORDE = "Horde"
-FACTION_ALLIANCE = "Alliance"
+_G.FACTION_HORDE = "Horde"
+_G.FACTION_ALLIANCE = "Alliance"
 
 function UnitFactionGroup(unit)
-    return FACTION_ALLIANCE, FACTION_ALLIANCE
+    return _G.FACTION_ALLIANCE, _G.FACTION_ALLIANCE
 end
 
 function GetSpellInfo(id)
@@ -631,12 +647,12 @@ _G.C_ChatInfo = {}
 _G.C_ChatInfo.RegisterAddonMessagePrefix = RegisterAddonMessagePrefix
 _G.C_ChatInfo.SendAddonMessage = SendAddonMessage
 
-C_FriendList = {}
+_G.C_FriendList = {}
 
 _G.MAX_CLASSES = 9
 
-C_CreatureInfo = {}
-C_CreatureInfo.ClassInfo = {
+_G.C_CreatureInfo = {}
+_G.C_CreatureInfo.ClassInfo = {
     [1] = {
         "Warrior", "WARRIOR"
     },
@@ -652,7 +668,9 @@ C_CreatureInfo.ClassInfo = {
     [5] = {
         "Priest", "PRIEST"
     },
-    [6] = nil,
+    [6] = {
+        "Death Knight", "DEATHKNIGHT"
+    },
     [7] = {
         "Shaman", "SHAMAN"
     },
@@ -670,8 +688,8 @@ C_CreatureInfo.ClassInfo = {
 }
 
 -- className (localized name, e.g. "Warrior"), classFile (non-localized name, e.g. "WARRIOR"), classID
-function C_CreatureInfo.GetClassInfo(classID)
-    local classInfo = C_CreatureInfo.ClassInfo[classID]
+function _G.C_CreatureInfo.GetClassInfo(classID)
+    local classInfo = _G.C_CreatureInfo.ClassInfo[classID]
     if classInfo then
         return {
             className = classInfo[1],
@@ -691,26 +709,26 @@ local function CreatePlayerLocationMixin()
     }
 end
 
-PlayerLocation = {}
-function PlayerLocation:CreateFromGUID(guid)
+_G.PlayerLocation = {}
+function _G.PlayerLocation:CreateFromGUID(guid)
     local playerLocation = CreatePlayerLocationMixin()
     playerLocation:SetGUID(guid)
     return playerLocation
 end
 
-C_PlayerInfo = {}
-function C_PlayerInfo.IsConnected(playerLocation)
+_G.C_PlayerInfo = {}
+function _G.C_PlayerInfo.IsConnected(playerLocation)
     return true
 end
 
 
-SlashCmdList = {}
-hash_SlashCmdList = {}
+_G.SlashCmdList = {}
+_G.hash_SlashCmdList = {}
 
 function __WOW_Input(text)
     local a, b = string.find(text, "^/%w+")
     local arg, text = string.sub(text, a, b), string.sub(text, b + 2)
-    for k, handler in pairs(SlashCmdList) do
+    for k, handler in pairs(_G.SlashCmdList) do
         local i = 0
         while true do
             i = i + 1
@@ -738,7 +756,8 @@ for i = 1, 7 do
     end
     _G["ChatFrame"..i] = f
 end
-DEFAULT_CHAT_FRAME = ChatFrame1
+
+_G.DEFAULT_CHAT_FRAME = _G.ChatFrame1
 
 local Color = {}
 function Color:New(r, g, b, a)

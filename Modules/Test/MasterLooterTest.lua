@@ -272,11 +272,11 @@ describe("MasterLooter", function()
 			ok, cause = ml:CanGiveLoot(1, nil, AddOn.player:GetName())
 			assert(not ok)
 			assert(cause == ml.AwardStatus.Failure.LootGone)
-			_G.GetContainerNumFreeSlots = function(bag) return 0, 0 end
+			_G.C_Container._SetFreeSlotsByContainer(0, 0)
 			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
 			assert(not ok)
 			assert(cause == ml.AwardStatus.Failure.MLInventoryFull)
-			_G.GetContainerNumFreeSlots = function(bag) return 4, 0 end
+			_G.C_Container._SetFreeSlotsByContainer(4, 0)
 			_G.UnitIsUnit = function(unit1, unit2) return false end
 			_G.UnitIsConnected = function(unit) return false end
 			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
@@ -290,6 +290,8 @@ describe("MasterLooter", function()
 			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
 			assert(ok)
 			assert(cause == nil)
+			_G.C_Container._ClearFreeSlotsByContainer()
+
 		end)
 
 		it("Award", function()

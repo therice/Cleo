@@ -29,6 +29,7 @@ local MasterLooterDb = AddOn.Require('MasterLooterDb')
 local ItemUtil = AddOn:GetLibrary('ItemUtil')
 -- handles to globals
 local SendChatMessage = _G.SendChatMessage
+local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots or (_G.C_Container and _G.C_Container.GetContainerNumFreeSlots)
 
 --- @class MasterLooter
 local ML = AddOn:NewModule("MasterLooter", "AceEvent-3.0", "AceBucket-3.0", "AceTimer-3.0", "AceHook-3.0")
@@ -1343,6 +1344,7 @@ function ML:CanGiveLoot(slot, item, winner)
 
 	return true, nil
 end
+
 
 -- Do we have free space in our bags to hold this item?
 function ML:HaveFreeSpaceForItem(item)
