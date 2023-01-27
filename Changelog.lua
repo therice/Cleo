@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.7 (2023-01-27)
+* Merge branch 'master' of https://github.com/therice/Cleo 7768bb2
+* Address issue with invalid channel name being used when announcing to party b26d940
+* Address issue with viewing ALTs and editing them due to WOW API changes 9e93ae3
+* Fix issue with Master Looter being unable to award loot to themselves due to change in GetContainerNumFreeSlots 69a4f77
+
 2022.3.6 (2023-01-25)
 * Address error in Traffic History due to WOW API change in SetNormalTexture() e62a15a
 
