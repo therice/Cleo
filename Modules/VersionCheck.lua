@@ -140,8 +140,8 @@ local function ResolveCommTarget(dist, player)
 	local resolved
 	if Util.Strings.Equal(Util.Strings.Upper(dist), C.Channels.Guild) then
 		resolved = C.guild
-	elseif Util.Objects.In(Util.Strings.Upper(dist), C.Channels.Raid, C.Channels.Party) then
-		resolved =  C.party
+	elseif Util.Objects.In(Util.Strings.Upper(dist), C.Channels.Raid, C.Channels.Party, C.Channels.Instance) then
+		resolved = C.group
 	else
 		local p = Player.Resolve(player)
 		if Util.Objects.IsSet(p) and (p:IsValid() and not p:IsUNK()) then
