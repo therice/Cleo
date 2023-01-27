@@ -760,7 +760,9 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 				self.playerEdits[index] = playerEdit
 				playerEdit.index = index
 				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (4.5*PlayerWidth), -(PlayerHeight * 1.5)))
-				playerEdit:SetFont(playerEdit:GetFont(), 12)
+
+				local fontName, _, fontFlags = playerEdit:GetFont()
+				playerEdit:SetFont(fontName, 12, fontFlags)
 				playerEdit:SetEnabled(false)
 				playerEdit:SetMovable(true)
 				playerEdit:RegisterForDrag("LeftButton")
@@ -783,7 +785,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	end
 
 	tab.SetFieldsEnabled = function(self, config)
-		local enabled = config and config:IsAdminOrOwner()
+		local enabled = config and config:IsAdminOrOwner() or false
 		self.playersScroll:Hide()
 		self.playersInGuild:SetEnabled(enabled)
 		self.playersInRaid:SetEnabled(enabled)
