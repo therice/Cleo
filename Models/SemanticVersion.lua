@@ -167,6 +167,10 @@ function SemanticVersion:nextPatch()
     return SemanticVersion:new(self.major, self.minor, self.patch + 1)
 end
 
+function SemanticVersion:strict()
+    return SemanticVersion:new(self.major, self.minor, self.patch)
+end
+
 function SemanticVersion:__tostring()
     local buffer = { ("%d.%d.%d"):format(self.major, self.minor, self.patch) }
     if self.prerelease then table.insert(buffer, "-" .. self.prerelease) end

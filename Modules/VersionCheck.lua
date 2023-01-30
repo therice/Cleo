@@ -113,6 +113,7 @@ end
 
 function VersionCheck.Check(base, new)
 	base = base or AddOn.version
+
 	if base < new then
 		return C.VersionStatus.OutOfDate
 	else
@@ -122,7 +123,7 @@ end
 
 function VersionCheck.IsCurrent(version)
 	return Util.Strings.Equal(
-		VersionCheck.Check(AddOn.version, version),
+		VersionCheck.Check(AddOn.version:strict(), version:strict()),
 		C.VersionStatus.Current
 	)
 end
