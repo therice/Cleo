@@ -810,7 +810,7 @@ _G.GetFont = _G.CreateFont()
 _G.GameFontNormal = _G.CreateFont()
 _G.GameFontHighlightSmall = _G.CreateFont()
 _G.GameFontNormalSmall = _G.CreateFont()
-
+_G.PlaySoundFile = function(...)  end
 
 _G.RAID_CLASS_COLORS = {}
 

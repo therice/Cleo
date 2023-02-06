@@ -274,6 +274,14 @@ AddOn.Constants = {
         Wait         = "WAIT",
     },
 
+    SoundChannels = {
+        Master = "Master"
+    },
+
+    Sounds = {
+        CharmStiffy = "sound/spells/screech.ogg"
+    },
+
     VersionStatus = {
         Current   = "c",
         OutOfDate = "o"

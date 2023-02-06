@@ -13,6 +13,7 @@ local Player = AddOn.ImportPackage('Models').Player
 local Bitfield = Util.Bitfield.Bitfield
 --- @type LibEncounter
 local LibEncounter = AddOn:GetLibrary("Encounter")
+local PlaySoundFile = _G.PlaySoundFile
 
 --- @class Core.Mode
 local Mode = AddOn.Package('Core'):Class('Mode', Bitfield)
@@ -406,6 +407,11 @@ function AddOn.GetDateTime()
     return date("%m/%d/%y %H:%M:%S", time())
 end
 
+function AddOn.MaybeCharmStiffy()
+    if Util.Objects.In(math.random(100), 5, 12, 24, 33, 41, 55, 67, 74, 82, 93) then
+        PlaySoundFile(C.Sounds.CharmStiffy, C.SoundChannels.Master)
+    end
+end
 
 local EncounterCreatures = Util.Memoize.Memoize(
     function(encounterId)

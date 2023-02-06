@@ -132,6 +132,7 @@ read_globals = {
 	"LootSlot",
 	"LootSlotHasItem",
 	"MouseIsOver",
+	"PlaySoundFile",
 	"RandomRoll",
 	"SendChatMessage",
 	"SetLootMethod",
