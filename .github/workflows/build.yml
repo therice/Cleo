@@ -24,3 +24,5 @@ jobs:
         uses: nebularg/actions-luacheck@v1
         with:
           args: "--no-color -q"
+          config: ".luacheckrc"
+
