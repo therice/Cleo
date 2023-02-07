@@ -68,3 +68,4 @@ jobs:
         with:
           github-token: ${{ secrets.github_token }}
           base-path: ${{ github.workspace }}
+          path-to-lcov: luacov.stats.out
