@@ -95,6 +95,6 @@ jobs:
       - name: Package and Publish
         run: npx -y semantic-release --debug
         env:
-          github_token: ${{ secrets.github_token }}
           GITHUB_TOKEN: ${{ secrets.github_token }}
-          build_dir: ${{ github.workspace }}
+          GITHUB_OAUTH: ${{ secrets.github_token }}
+          BUILD_DIR: ${{ github.workspace }}

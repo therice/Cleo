@@ -52,7 +52,7 @@
 			"changelogFile": "CHANGELOG.md"
 		}],
 		["@semantic-release/exec",{
-			"prepareCmd": "python3 $build_dir/.tools/relnotes.py -i $build_dir/CHANGELOG.md -o $build_dir/Changelog.lua",
+			"prepareCmd": "python3 $BUILD_DIR/.tools/relnotes.py -i $BUILD_DIR/CHANGELOG.md -o $BUILD_DIR/Changelog.lua",
 			"successCmd": "curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g \"wrath\""
 		}],
 		["@semantic-release/git", {
