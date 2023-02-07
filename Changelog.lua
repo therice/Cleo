@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.10 (2023-02-07)
+* Merge branch 'master' of https://github.com/therice/Cleo 0dfdc39
+* Sanitize change log fe0ab6e
+
 2022.3.9 (2023-02-07)
 * Use forged packaging script to skip check for future release via GHA 0daf05a
 
