@@ -3,12 +3,9 @@ name: Build, Test, and Release
 on:
   push:
     branches:
-      - migrate_to_github_actions
+      - master
     tags:
       - "*"
-  pull_request:
-    branches:
-      - master
 
 jobs:
   linting:
