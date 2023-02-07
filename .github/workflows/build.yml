@@ -64,8 +64,8 @@ jobs:
         run: |
           busted -c -o gtest .
       - name: Code Coverage (Coveralls)
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@1.1.3
         with:
           github-token: ${{ secrets.github_token }}
           base-path: ${{ github.workspace }}
-          path-to-lcov: luacov.stats.out
+          path-to-lcov: luacov.report.out
