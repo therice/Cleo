@@ -96,7 +96,7 @@ jobs:
           npm install --save-dev @semantic-release/git
           npm install --save-dev @semantic-release/exec
       - name: Package and Publish
-        run: npx -y semantic-release --debug --dry-run
+        run: npx -y semantic-release --debug
         env:
           github_token: ${{ secrets.github_token }}
           build_dir: ${{ github.workspace }}
