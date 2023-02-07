@@ -52,8 +52,8 @@
 			"changelogFile": "CHANGELOG.md"
 		}],
 		["@semantic-release/exec",{
-			"prepareCmd": "python3 $TRAVIS_BUILD_DIR/.tools/relnotes.py -i $TRAVIS_BUILD_DIR/CHANGELOG.md -o $TRAVIS_BUILD_DIR/Changelog.lua",
-			"successCmd": "export TRAVIS_TAG=${nextRelease.version}; curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g \"wrath\""
+			"prepareCmd": "python3 $build_dir/.tools/relnotes.py -i $build_dir/CHANGELOG.md -o $build_dir/Changelog.lua",
+			"successCmd": "curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g \"wrath\""
 		}],
 		["@semantic-release/git", {
 			"assets": ["Changelog.lua"],
