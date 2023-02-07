@@ -47,7 +47,8 @@ jobs:
           luarocksVersion: "3.8.0"
       - name: Install Lua Libraries
         run: |
-          luarocks install luafilesystem          
+          luarocks install luafilesystem      
+          luarocks install busted
           luarocks install xml2lua
           luarocks install penlight
           luarocks install bitlib
@@ -60,4 +61,4 @@ jobs:
           luarocks install luacov-coveralls
       - name: Test
         run: |
-          busted -c -o gtest .
+          busted -c -o gtest ${{ github.workspace }}
