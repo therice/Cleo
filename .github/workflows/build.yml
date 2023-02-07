@@ -96,4 +96,5 @@ jobs:
         run: npx -y semantic-release --debug
         env:
           github_token: ${{ secrets.github_token }}
+          GITHUB_TOKEN: ${{ secrets.github_token }}
           build_dir: ${{ github.workspace }}
