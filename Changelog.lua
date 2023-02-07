@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.9 (2023-02-07)
+* Use forged packaging script to skip check for future release via GHA 0daf05a
+
 2022.3.8 (2023-02-07)
 * Migrate to GitHub actions (#2) e5630f3, closes #2
 * Additional token required bc79a00
