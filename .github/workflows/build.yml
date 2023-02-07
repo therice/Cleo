@@ -92,6 +92,7 @@ jobs:
           npm install --save-dev @semantic-release/github
           npm install --save-dev @semantic-release/git
           npm install --save-dev @semantic-release/exec
+          pip3 install mistune==2.0.0rc1
       - name: Package and Publish
         run: npx -y semantic-release --debug
         env:
