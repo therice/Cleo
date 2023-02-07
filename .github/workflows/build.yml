@@ -60,5 +60,6 @@ jobs:
           luarocks install cluacov
           luarocks install luacov-coveralls
       - name: Test
+        working-directory: ${{ github.workspace }}
         run: |
-          busted -c -o gtest ${{ github.workspace }}
+          busted -c -o gtest .
