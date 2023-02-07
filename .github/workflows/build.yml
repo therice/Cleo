@@ -23,6 +23,6 @@ jobs:
       - name: Luacheck
         uses: nebularg/actions-luacheck@v1
         with:
-          args: "--no-color
+          args: "--no-color"
           path: ${{ github.workspace }}
 
