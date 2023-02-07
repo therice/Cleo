@@ -2,6 +2,14 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.3.8 (2023-02-07)
+* Migrate to GitHub actions (#2) e5630f3, closes #2
+* Additional token required bc79a00
+* Case sensitivity for token a774897
+* Missing required python library for packaging 9e3fae4
+* Charm a special someone for the season 9b78f64
+* Remove prerelease and build from versions when comparing for being on most recent version 298742d
+
 2022.3.7 (2023-01-27)
 * Merge branch 'master' of https://github.com/therice/Cleo 7768bb2
 * Address issue with invalid channel name being used when announcing to party b26d940
