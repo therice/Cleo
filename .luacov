@@ -1,6 +1,7 @@
 exclude = {
     ".luarocks/*",
     ".tools/*",
+    ".lua/*",
     "Test/*",
     -- explicitly exclude libs as there are libs we have authored where coverage is useful
     "Libs/Ace.*",
