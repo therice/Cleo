@@ -1,0 +1,26 @@
+name: Build, Test, and Release
+
+on:
+  push:
+    branches:
+      - migrate_to_github_actions
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  linting:
+    name: Code Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Luacheck
+        uses: nebularg/actions-luacheck@v1
+        with:
+          args: "--no-color -q"
