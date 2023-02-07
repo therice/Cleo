@@ -10,6 +10,7 @@ ignore:
   - */Test/*
   - .tools
   - .gitignore
+  - .lua
   - .luacov
   - .luacheckrc
   - .pkgmeta
