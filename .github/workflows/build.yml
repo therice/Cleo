@@ -67,6 +67,6 @@ jobs:
         if: success()
         continue-on-error: false
         working-directory: ${{ github.workspace }}
-        run: luacov-coveralls -v
+        run: luacov-coveralls -v -r ${{ github.workspace }}
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.github_token }}
