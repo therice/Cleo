@@ -409,7 +409,8 @@ end
 
 function AddOn.MaybeCharmStiffy()
     if Util.Objects.In(math.random(100), 5, 12, 24, 33, 41, 55, 67, 74, 82, 93) then
-        PlaySoundFile(C.Sounds.CharmStiffy, C.SoundChannels.Master)
+        local charm = math.random(4)
+        PlaySoundFile(C.Sounds['CharmStiffy'.. tostring(charm)], C.SoundChannels.Master)
     end
 end
 

@@ -279,7 +279,11 @@ AddOn.Constants = {
     },
 
     Sounds = {
-        CharmStiffy = "sound/spells/screech.ogg"
+        CharmStiffy1 = "sound/spells/screech.ogg",
+        CharmStiffy2 = "sound/creature/dryad/dryaddeatha.ogg",
+        CharmStiffy3 = "sound/character/draenei/draeneimaletrain01.ogg",
+        CharmStiffy4 = "sound/character/bloodelf/bloodelffemaletrain01.ogg",
+
     },
 
     VersionStatus = {
