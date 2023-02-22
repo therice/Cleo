@@ -31,14 +31,11 @@ local Lists = AddOn:GetModule("Lists", true)
 local ListsDp = AddOn:GetModule("ListsDataPlane", true)
 --- @type LibGuildStorage
 local GuildStorage = AddOn:GetLibrary("GuildStorage")
---- @type UI.Native.Widget
-local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 
 local Tabs = {
 	[L["list_configs"]]     = L["list_configs_desc"],
 	[L["list_lists"]]       = L["list_lists_desc"],
 }
-
 
 local function AlphabeticalOrder(list)
 	local order, index = {}, 1
@@ -347,6 +344,42 @@ function Lists:DeleteConfigurationOnClickYes(_, config)
 	self:GetService().Configuration:Remove(config)
 	self.configTab.configList:RemoveSelected()
 	self.configTab:Update()
+end
+
+function Lists:ExportFrame()
+	if not self.exportFrame then
+		local f = UI:Popup(UIParent, 'ExportConfigurationOrList', self:GetName(), L['frame_export_config_or_list'], 550, 450)
+		f.name = UI:New('Text', f.content):Size(200,15):Point("LEFT", f.banner, "LEFT", 20, 0):Color(C.Colors.White:GetRGB())
+
+		local detail =
+			UI:NewNamed('MultiLineEditBox', f.content, 'ExportDetail')
+				:Point("CENTER", f.content, "CENTER", 0, 0)
+				:Point("TOPLEFT", f.banner, "BOTTOMLEFT", 15, -15)
+				:Size(f:GetWidth() - 25, f:GetHeight() - 75)
+		f.detail = detail
+
+		self.exportFrame = f
+	end
+
+	return self.exportFrame
+end
+
+--- @param config Models.List.Configuration
+function Lists:ExportConfig(config)
+	Logging:Debug("ExportList(%s)", tostring(config))
+	local exportFrame = self:ExportFrame()
+	if not exportFrame:IsVisible() then
+		exportFrame.name:SetText(config.name)
+		exportFrame.detail:SetText("")
+
+		local csv = self:GetService():ToCsv(config)
+		for _, line in pairs(csv) do
+			exportFrame.detail:Append(Util.Strings.Join(',', unpack(line)) .. '\n')
+		end
+		exportFrame:Show()
+		exportFrame.detail:SetFocus()
+		exportFrame.detail:HighlightText()
+	end
 end
 
 local PlayerWidth, PlayerHeight, MaxAlts, AltWidthReduction = 125, 15, 3, 15
@@ -2516,6 +2549,7 @@ do
 	local ConfigAction = {
 		BroadcastAddUpdate  =   "BAU",
 		BroadcastRemove     =   "BR",
+		Export              =   "EXPORT",
 	}
 
 	local ConfigActionsMenuEntryBuilder =
@@ -2524,9 +2558,11 @@ do
 	            :add():text(function(_, config, _) return config.name end):checkable(false):title(true)
 		        :add():text(L["broadcast"]):checkable(false):arrow(true):value(ConfigAction.BroadcastAddUpdate)
 		        :add():text(L["broadcast_remove"]):checkable(false):arrow(true):value(ConfigAction.BroadcastRemove)
+				:add():text(L["export"]):checkable(false):arrow(true):value(ConfigAction.Export)
 	        :nextlevel()
 	            :add():set('special', ConfigAction.BroadcastAddUpdate)
 	            :add():set('special', ConfigAction.BroadcastRemove)
+				:add():set('special', ConfigAction.Export)
 
 	Lists.ConfigActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -2573,6 +2609,13 @@ do
 					local config = menu.entry
 					ListsDp:BroadcastRemove(config.id, C.group)
 				end
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif value == ConfigAction.Export and entry.special == value then
+				info.text = L["lists"]
+				info.checkable = true
+				info.colorCode = UIUtil.RGBToHexPrefix(C.Colors.White:GetRGBA())
+				-- info.disabled = ConfigActionDisabled(menu.entry)
+				info.func = function() Lists:ExportConfig(menu.entry) end
 				MSA_DropDownMenu_AddButton(info, level)
 			end
 		end

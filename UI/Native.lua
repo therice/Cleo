@@ -507,7 +507,7 @@ end
 function Native:Popup(...)
     local p = self:NewNamed('Frame', ...)
     p.banner =
-        self:New('DecorationLine', p.content, true, "BACKGROUND")
+        self:New('DecorationLine', p.content, true, "ARTWORK")
             :Point("TOPLEFT", p, 0, -16)
             :Point("BOTTOMRIGHT", p, "TOPRIGHT", 0, -36)
 

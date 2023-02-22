@@ -165,31 +165,8 @@ function U.DecoratePopup(frame)
     end
 end
 
-local GameTooltip = GameTooltip
+local GameTooltip = _G.GameTooltip
 
--- creates a tooltip anchored to cursor using the standard GameTooltip
---function U.ShowTooltip(...)
---    U.ShowTooltip(UIParent, "ANCHOR_CURSOR", nil, ...)
---    --[[
---    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
---    for i = 1, select("#", ...) do
---        GameTooltip:AddLine(select(i, ...),1,1,1)
---    end
---    GameTooltip:Show()
---    --]]
---end
-
---[[
--- creates a tooltip anchored to cursor using the standard GameTooltip
-function U.CreateTooltip(...)
-    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
-    for i = 1, select("#", ...) do
-        GameTooltip:AddLine(select(i, ...),1,1,1)
-    end
-    GameTooltip:Show()
-end
-
---]]
 function U.ShowTooltip(owner, anchor, title, ...)
     local x, y = 0, 0
     owner = owner or UIParent

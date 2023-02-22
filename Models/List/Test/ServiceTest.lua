@@ -273,7 +273,7 @@ describe("Service Model", function()
 					-- print(format('EntityUpdated %s / %s', entity:hash(), asRef.hash))
 					IncrementEventCount(eventDetail, event)
 					local entity, ref, attr = eventDetail.entity, eventDetail.ref, eventDetail.attr
-					assert.Not.equal(eventDetail:hash(), ref.hash)
+					assert.Not.equal(entity:hash(), ref.hash)
 					if entity:TriggersNewRevision(attr) then
 						print('Expect new revision -> ' .. tostring(attr))
 						assert.Not.equal(entity.revision, ref.revision)
@@ -329,6 +329,13 @@ describe("Service Model", function()
 				assert.equal(0, list:GetPlayerCount())
 			end
 		end)
+		it("marhsalls as CSV", function()
+			local cs = S:Configurations(true, true)
+			for _, c in pairs(cs) do
+				assert(c ~= nil)
+			end
+		end)
+
 		it("handles refs", function()
 			local cs = S:Configurations(true, true)
 			assert(cs and Util.Tables.Count(cs) == 1)

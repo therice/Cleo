@@ -1,11 +1,9 @@
 -- @type AddOn
-local AddOnName, AddOn = ...
--- @type LibLogging
-local Logging = AddOn:GetLibrary('Logging')
---- @type LibUtil
-local Util =  AddOn:GetLibrary("Util")
+local _, AddOn = ...
 --- @type UI.Native
 local NativeUI = AddOn.Require('UI.Native')
+--- @type LibLogging
+local Logging = AddOn:GetLibrary('Logging')
 --- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 --- @class UI.Widgets.ScrollFrame
@@ -19,7 +17,7 @@ function ScrollFrame:Create()
 	local sf = CreateFrame("ScrollFrame", self.name, self.parent)
 	BaseWidget.LayerBorder(sf, 2, 0.24, 0.25, 0.30, 1)
 
-	sf.content = CreateFrame("Frame", AddOn:Qualify(self.name, 'ScrollFrame_Content'), sf)
+	sf.content = CreateFrame("Frame", self.name .. '_Content', sf)
 	sf:SetScrollChild(sf.content)
 
 	sf.ScrollBar = NativeUI:New('ScrollBar', sf)
@@ -51,7 +49,7 @@ function ScrollFrame.SetMouseWheelRange(self, range)
 end
 
 function ScrollFrame.SetSize(self, width, height)
-	-- Logging:Debug("ScrollFrame.SetSize(%s, %d, %d)", tostring(self:GetName()), tonumber(width), tonumber(height))
+	--Logging:Debug("ScrollFrame.SetSize(%s, %d, %d)", tostring(self:GetName()), tonumber(width), tonumber(height))
 	self:SetSize(width,height)
 	self.content:SetWidth(width - 16 - 4)
 

@@ -134,6 +134,7 @@ function Lists:UnregisterCallbacks()
 	end
 end
 
+--- @return Models.List.Service
 function Lists:GetService()
 	return self.listsService
 end

@@ -109,6 +109,37 @@ function Service:Lists(configId)
 	)
 end
 
+--- @param config Models.List.Configuration
+function Service:ToCsv(config)
+	local function WithQuotes(v)
+		return "\"" .. v .. "\""
+	end
+
+	local csv, lists, priorities = {{WithQuotes(L['priority'])}}, self:Lists(config.id), 0
+	local ordering, orderingIndex = {}, 1
+	for v, _ in Util.Tables.OrderedPairs(Util.Tables.Flip(lists, function(l) return l.name end)) do
+		ordering[orderingIndex] = v.id
+		orderingIndex = orderingIndex + 1
+	end
+
+	for _, listId in pairs(ordering) do
+		local list = lists[listId]
+		Util.Tables.Push(csv[1], WithQuotes(list.name))
+		priorities = math.max(priorities, table.maxn(list.players))
+	end
+
+	for index = 2, (priorities + 1) do
+		csv[index] = {tostring(index - 1)}
+		for _, listId in pairs(ordering) do
+			local list = lists[listId]
+			local player = list:GetPlayer(index - 1)
+			Util.Tables.Push(csv[index], WithQuotes(player and player:GetShortName() or ""))
+		end
+	end
+
+	return csv
+end
+
 --- @return table<number, string>
 function Service:UnassignedEquipmentLocations(configId)
 	local assigned =
