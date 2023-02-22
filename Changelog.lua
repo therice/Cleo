@@ -2,6 +2,13 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.4.0 (2023-02-22)
+* Update READMER to point to GHA build 
+* Add confirmation dialog when broadcasting the deletion of list configuration 20850b0
+* Add support for exporting loot lists to CSV 6efe85f
+* Additional charms c9da927
+* Even more charms 76f1cd1
+
 2022.3.10 (2023-02-07)
 * Merge branch 'master' of https://github.com/therice/Cleo 0dfdc39
 * Sanitize change log fe0ab6e
