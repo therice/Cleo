@@ -2400,6 +2400,13 @@ function Lists:LayoutListPriorityBulkManageFrame(_, listSupplier)
 	self.bulkManageFrame = f
 end
 
+function Lists.ConfirmBroadcastDeleteOnShow(frame, params)
+	local configName, targetName = params['configName'], params['targetName']
+	Logging:Debug("ConfirmBroadcastDeleteOnShow(%s, %s)", tostring(configName), tostring(targetName))
+	UIUtil.DecoratePopup(frame)
+	frame.text:SetText(format(L['confirm_broadcast_delete_configuration'], configName, targetName))
+end
+
 do
 	local PriorityAction = {
 		All     = "ALL",
@@ -2596,7 +2603,12 @@ do
 				info.disabled = ConfigActionDisabled(menu.entry)
 				info.func = function()
 					local config = menu.entry
-					ListsDp:BroadcastRemove(config.id, C.guild)
+					Dialog:Spawn(C.Popups.ConfirmBroadcastDelete,{
+						configId = config.id,
+						configName = config.name,
+						target= C.guild,
+						targetName= L['guild'],
+					})
 				end
 				MSA_DropDownMenu_AddButton(info, level)
 
@@ -2607,7 +2619,12 @@ do
 				info.disabled = ConfigActionDisabled(menu.entry)
 				info.func = function()
 					local config = menu.entry
-					ListsDp:BroadcastRemove(config.id, C.group)
+					Dialog:Spawn(C.Popups.ConfirmBroadcastDelete, {
+						configId = config.id,
+						configName = config.name,
+						target = C.group,
+						targetName= L['group'],
+					})
 				end
 				MSA_DropDownMenu_AddButton(info, level)
 			elseif value == ConfigAction.Export and entry.special == value then

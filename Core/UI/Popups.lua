@@ -67,6 +67,27 @@ Dialog:Register(C.Popups.ConfirmAward, {
     show_while_dead = true,
 })
 
+Dialog:Register(C.Popups.ConfirmBroadcastDelete, {
+    text = MachuPicchu,
+    on_show = AddOn:ListsModule().ConfirmBroadcastDeleteOnShow,
+    width = 400,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = function(_, params, _)
+                local configId, target = params['configId'], params['target']
+                AddOn:ListsDataPlaneModule():BroadcastRemove(configId, target)
+            end,
+        },
+        {
+            text = _G.NO,
+            on_click = Util.Functions.Noop
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})
+
 Dialog:Register(C.Popups.ConfirmDeleteItem, {
     text = MachuPicchu,
     on_show = AddOn:CustomItemsModule().DeleteItemOnShow,
