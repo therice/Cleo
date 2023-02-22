@@ -283,7 +283,8 @@ AddOn.Constants = {
         CharmStiffy2 = "sound/creature/dryad/dryaddeatha.ogg",
         CharmStiffy3 = "sound/character/draenei/draeneimaletrain01.ogg",
         CharmStiffy4 = "sound/character/bloodelf/bloodelffemaletrain01.ogg",
-
+        CharmStiffy5 = "sound/creature/auriaya/ur_auriaya_death01.ogg",
+        CharmStiffy6 = "sound/creature/xt002deconstructor/ur_xt002_special01.ogg",
     },
 
     VersionStatus = {
