@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.4.1 (2023-02-23)
+* Stop charming the stiffmeister b30d326
+
 2022.4.0 (2023-02-22)
 * Update READMER to point to GHA build 
 * Add confirmation dialog when broadcasting the deletion of list configuration 20850b0
