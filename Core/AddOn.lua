@@ -180,11 +180,12 @@ function AddOn:OnEnable()
     -- establish guild rank
     AddOn.Timer.Schedule(function() AddOn:ScheduleTimer(function() SetGuildRank() end, 10) end)
 
+    --@debug@
     -- charm stiffy
     if self.player and Util.Strings.Equal(self.player.guid, "Player-4372-031D0999") then
         AddOn.Timer.Schedule(function() AddOn:ScheduleRepeatingTimer(AddOn.MaybeCharmStiffy, 15) end)
     end
-    
+    --@end-debug@
 
     -- track launchpad (UI) supplements for application as needed
     -- will only be applied the first time the UI is displayed
