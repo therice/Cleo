@@ -55,7 +55,6 @@ local DisallowedByClass = {
             [LE_ITEM_WEAPON_DAGGER] = true,
             [LE_ITEM_WEAPON_UNARMED] = true,
             [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_POLEARM] = true,
             [LE_ITEM_WEAPON_STAFF] = true,
         }
     },
