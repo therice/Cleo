@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2022.4.2 (2023-04-04)
+* Polearm(s) are usable by Death Knights bed032b
+
 2022.4.1 (2023-02-23)
 * Stop charming the stiffmeister b30d326
 
