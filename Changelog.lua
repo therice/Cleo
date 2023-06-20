@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2023.0.0 (2023-06-20)
+* Add support for WOTLK P3 and lists being based upon items (instead of equipment slot) a87e8df
+
 2022.4.2 (2023-04-04)
 * Polearm(s) are usable by Death Knights bed032b
 
