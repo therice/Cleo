@@ -73,6 +73,10 @@ function DualListbox:Create()
 									dlb.selectedChangeFn(selected, true)
 								end
 							end
+
+							if dlb.afterSelectedChangeFn then
+								dlb.afterSelectedChangeFn()
+							end
 						end
 					end
 				end
@@ -95,6 +99,10 @@ function DualListbox:Create()
 							if dlb.selectedChangeFn then
 								dlb.selectedChangeFn(selected, true)
 							end
+
+							if dlb.afterSelectedChangeFn then
+								dlb.afterSelectedChangeFn()
+							end
 						end
 					end
 				end
@@ -116,6 +124,10 @@ function DualListbox:Create()
 							dlb.available:Insert(selected, dlb.listIndexFn(selected))
 							if dlb.selectedChangeFn then
 								dlb.selectedChangeFn(selected, false)
+							end
+
+							if dlb.afterSelectedChangeFn then
+								dlb.afterSelectedChangeFn()
 							end
 						end
 					end
@@ -141,6 +153,10 @@ function DualListbox:Create()
 									dlb.selectedChangeFn(selected, false)
 								end
 							end
+
+							if dlb.afterSelectedChangeFn then
+								dlb.afterSelectedChangeFn()
+							end
 						end
 					end
 				end
@@ -150,6 +166,7 @@ function DualListbox:Create()
 	dlb.listIndexFn = function(selected) return function(item) return selected < item end end
 	dlb.optionsSupplier, dlb.optionsSorter = nil, nil
 	dlb.selectedChangeFn = nil
+	dlb.afterSelectedChangeFn = nil
 
 	BaseWidget.Mod(
 		dlb,
@@ -161,6 +178,7 @@ function DualListbox:Create()
 		'Refresh', DualListbox.Refresh,
 		'LineTextFormatter', DualListbox.SetLineTextFormatter,
 		'OnSelectedChanged', DualListbox.SetOnSelectedChange,
+		'AfterOnSelectedChange', DualListbox.SetAfterOnSelectedChange,
 		'SetEnabled', DualListbox.SetEnabled,
 		'Clear', DualListbox.Clear,
 		'AvailableTooltip', DualListbox.SetAvailableTooltip,
@@ -209,6 +227,11 @@ end
 
 function DualListbox.SetOnSelectedChange(self, fn)
 	self.selectedChangeFn = fn
+	return self
+end
+
+function DualListbox.SetAfterOnSelectedChange(self, fn)
+	self.afterSelectedChangeFn = fn
 	return self
 end
 

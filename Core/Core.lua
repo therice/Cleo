@@ -483,6 +483,8 @@ function AddOn:UpdateGroupMembers()
     -- e.g. {'Jackburtón-Atiesh' = true}
     group[self:UnitName(self.player:GetName())] = true
 
+    --Logging:Debug("%s", Util.Objects.ToString(group))
+
     -- if the number of collected group members is less than the count of members, reschedule it
     -- this shouldn't happen, but GetRaidRosterInfo has been shown to intermittently not return results
     if  (Util.Tables.Count(group) < groupCount) then

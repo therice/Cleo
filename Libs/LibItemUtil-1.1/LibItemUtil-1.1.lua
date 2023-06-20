@@ -331,6 +331,8 @@ For example:
 }
 --]]
 local CustomItems = {}
+-- for any custom items which may not have an inventory type or should be treated as the item itself
+lib.CustomItemInvTypeSelf = "INVTYPE_SELF"
 
 function lib:GetCustomItems()
     return CustomItems
@@ -340,6 +342,9 @@ function lib:SetCustomItems(data)
     CustomItems = {}
     for k, v in pairs(data) do
         CustomItems[tonumber(k)] = v
+        -- we're going to need the information eventually, so fire it off now
+        self.QueryItem(tonumber(k), function(i) end)
+
     end
 end
 
@@ -357,6 +362,20 @@ end
 
 function lib:GetCustomItem(itemId)
     return CustomItems[itemId]
+end
+
+--- filters custom items to any where the inventory type is 'self', meaning item itself is used
+--- @return table<number> list of item ids which reference 'self' instead of item slot
+function lib:GetCustomItemsSlotIsSelf()
+    local selfRef = {}
+
+    for item, itemData in pairs(CustomItems) do
+        if itemData["equip_location"] == self.CustomItemInvTypeSelf then
+            tinsert(selfRef, item)
+        end
+    end
+
+    return selfRef
 end
 
 --- Convert an itemlink to itemID

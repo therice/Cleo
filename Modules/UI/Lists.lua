@@ -844,6 +844,7 @@ end
 function Lists:LayoutConfigGeneralTab(tab, configSupplier)
 	local module, configList = self, tab:GetParent():GetParent().configList
 
+	-- todo : fix text to front
 	tab.name =
 		UI:New('EditBox', tab)
 		  :Size(425,20)
@@ -1134,7 +1135,7 @@ function Lists:LayoutListTab(tab)
 				end
 			)
 
-
+	-- todo : fix text to front
 	tab.name =
 		UI:New('EditBox', tab)
 		    :Size(425,20)
@@ -1282,6 +1283,16 @@ end
 function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 	local module = self
 
+	---- fuck-fuckery to deal with item equipment locations which may actually be the item itself
+	local function UnassignedEquipmentLocations(config, list)
+		Logging:Trace("UnassignedEquipmentLocations : %s ", tostring(list and list.id or nil))
+		local all, unassigned = {}, {}
+		if config then
+			all, unassigned = module:GetService():UnassignedEquipmentLocations(config.id)
+		end
+		return all, unassigned
+	end
+
 	tab.equipment =
 		UI:New('DualListbox', tab)
 			:Point("TOPLEFT", tab, "TOPLEFT", 20, -35)
@@ -1289,40 +1300,45 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 			:Height(210)
 			:AvailableTooltip(L["available"], L["equipment_type_avail_desc"])
 			:SelectedTooltip(L["equipment_types"], L["equipment_type_desc"])
+			:LineTextFormatter(
+				function(equipment)
+					if Util.Tables.ContainsKey(C.EquipmentNameToLocation, equipment) then
+						return UIUtil.ColoredDecorator(C.Colors.ItemHeirloom):decorate(equipment)
+					else
+						return UIUtil.ColoredDecorator(C.Colors.LuminousYellow):decorate(equipment)
+					end
+				end
+			)
 			:OptionsSorter(
 				function(opts)
-					local sorted =
-						Util(C.EquipmentLocationsSort)
-							:CopyFilter(
-								function(v)
-									return Util.Tables.ContainsKey(opts, v)
-								end
-							)()
+					local sorted = {}
+					for i, v in pairs(Util.Tables.ASort(opts, function(a, b) return a[2] < b[2] end)) do
+						sorted[i] = v[1]
+					end
+
+					Logging:Trace("%s", Util.Objects.ToString(sorted))
 					return sorted
 				end
 			)
 			:OptionsSupplier(
 				function()
 					local config, list = configSupplier(), listSupplier()
-					Logging:Trace("List.Equipment(OptionsSupplier) : %s ", tostring(list and list.id or nil))
-					local unassigned = config and module:GetService():UnassignedEquipmentLocations(config.id) or {}
-					--[[
-					Logging:Trace("%s - %s",
+					local all, unassigned = UnassignedEquipmentLocations(config, list)
+					Logging:Trace("%s // %s // %s",
+					              Util.Objects.ToString(all),
 					              Util.Objects.ToString(unassigned),
-					              Util.Objects.ToString(Util.Tables.CopySelect(C.EquipmentLocations, unpack(unassigned))))
-					--]]
-					return
-						Util.Tables.CopySelect(C.EquipmentLocations, unpack(unassigned)),
-						list and list:GetEquipment(true) or {}
+					              Util.Objects.ToString(Util.Tables.CopySelect(all, unpack(unassigned))))
+
+					return Util.Tables.CopySelect(all, unpack(unassigned)), list and list:GetEquipment(true) or {}
 				end
 			)
 			:OnSelectedChanged(
 				function(equipment, added)
 					-- translate name into actual type/slot
-					local slot = AddOn.GetEquipmentLocation(equipment)
-					Logging:Trace("List.Equipment(OnSelectedChanged) : %s/%s, %s", tostring(equipment), tostring(slot), tostring(added))
+					local config, list = configSupplier(), listSupplier()
+					local slot = AddOn.GetEquipmentLocation(equipment, select(1, UnassignedEquipmentLocations(config, list)))
+					Logging:Trace("List.Equipment(OnSelectedChanged) : %s => %s, %s", tostring(equipment), tostring(slot), tostring(added))
 
-					local list = listSupplier()
 					if list then
 						if added then
 							list:AddEquipment(slot)
@@ -1428,8 +1444,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		self:ClearFocus()
 	end
 
-
 	local function EditOnChange(self, isPriority)
+		Logging:Trace("EditOnChange() : player=%s, index=%d, isPriority=%s", tostring(self:GetText()), self.index, tostring(isPriority))
 		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
 		if Util.Strings.IsSet(playerName) then
 			local color = UIUtil.GetPlayerClassColor(playerName)
@@ -1895,11 +1911,13 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local playerEdit = self.playerEdits[index]
 			-- create individual player slot (which can be dragged and dropped)
 			if not playerEdit then
+				Logging:Trace("UpdateAvailablePlayers() : creating player edit at index(%d)", index)
 				playerEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):OnChange(function(self, userInput) EditOnChange(self, false, userInput) end)
 				self.playerEdits[index] = playerEdit
 				playerEdit.index = index
 				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (3.5*PriorityWidth), -(PriorityHeight * 1.5)))
-				playerEdit:SetFont(playerEdit:GetFont(), 12)
+				local fontName, _, fontFlags = playerEdit:GetFont()
+				playerEdit:SetFont(fontName, 12, fontFlags)
 				playerEdit:SetEnabled(false)
 				playerEdit:SetMovable(true)
 				playerEdit:RegisterForDrag("LeftButton")

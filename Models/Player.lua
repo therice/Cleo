@@ -84,6 +84,7 @@ function Player:initialize(guid, name, class, realm)
     self.class = class
     self.realm = realm
     self.timestamp = -1
+    --Logging:Debug("Player(%s, %s, %s)", tostring(name), tostring(self.name), tostring(self.realm))
 end
 
 function Player:IsValid()
@@ -159,7 +160,7 @@ function Player.Create(guid, info)
     -- if the name is not set, means the query did not complete. likely because the player was not
     -- encountered. therefore, just return nil
     if Util.Objects.IsEmpty(name) then
-        Logging:Debug("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
+        --Logging:Debug("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
         if info and Util.Strings.IsSet(info.name) then
             --Logging:Debug("Create(%s) : Using provided player information", guid)
             name = info.name
@@ -169,7 +170,9 @@ function Player.Create(guid, info)
         end
     end
 
-    if Util.Objects.IsEmpty(realm) then realm = select(2, UnitFullName("player")) end
+    if Util.Objects.IsEmpty(realm) then
+        realm = AddOn:RealmName()
+    end
 
     local player = Player(guid, name, class, realm)
     Logging:Trace("Create(%s) : created %s", guid, Util.Objects.ToString(player:toTable()))

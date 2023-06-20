@@ -100,9 +100,12 @@ function Slider:Create()
 	slider._SetEnabled = slider.SetEnabled
 	slider.SetEnabled = Slider.SetEnabled
 
-	slider.Text:SetFont(slider.text:GetFont(), 10)
-	slider.Low:SetFont(slider.Low:GetFont(), 10)
-	slider.High:SetFont(slider.High:GetFont(), 10)
+	local fontName, _, fontFlags = slider.text:GetFont()
+	slider.Text:SetFont(fontName, 10, fontFlags)
+	fontName, _, fontFlags = slider.Low:GetFont()
+	slider.Low:SetFont(fontName, 10, fontFlags)
+	fontName, _, fontFlags = slider.High:GetFont()
+	slider.High:SetFont(fontName, 10, fontFlags)
 
 	if self.width and self.height then
 		slider:Size(self.width, self.height)

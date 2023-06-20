@@ -141,7 +141,8 @@ end
 function ScrollList.FontSize(self, size)
 	self.fontSize = size
 	for i=1,#self.List do
-		self.List[i].text:SetFont(self.List[i].text:GetFont(),size)
+		local fontName, _, fontFlags = self.List[i].text:GetFont()
+		self.List[i].text:SetFont(fontName, size, fontFlags)
 	end
 
 	--[[
@@ -164,7 +165,7 @@ function ScrollList.Font(self, name , size)
 	self.fontName = name
 	self.fontSize = size
 	for i=1,#self.List do
-		self.List[i].text:SetFont(name,size)
+		self.List[i].text:SetFont(name,size, "")
 	end
 
 	--[[

@@ -171,13 +171,17 @@ end
 
 ---@param player Models.Player
 function LootAllocateEntry:AddCandidate(player)
+	Logging:Debug("AddCandidate(%s)", tostring(player))
 	self.candidates[player:GetName()] = LootAllocateResponse(player)
 end
 
 ---@param name string
 ---@return Models.Item.LootAllocateResponse
 function LootAllocateEntry:GetCandidateResponse(name)
-	return self.candidates[name]
+	Logging:Debug("GetCandidateResponse(%s) : %s", tostring(name), Util.Objects.ToString(self.candidates))
+	local lar = self.candidates[name]
+	assert(lar, format("No response available for candidate %s", tostring(name)))
+	return lar
 end
 
 --- @return Models.Item.ItemAward

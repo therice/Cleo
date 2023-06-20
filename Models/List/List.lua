@@ -5,6 +5,8 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Util = AddOn:GetLibrary("Util")
 --- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
 --- @type Models.Dao
@@ -125,14 +127,28 @@ end
 --- @param equipment string the equipment slot (e.g. INVTYPE_HEAD)
 --- @return Models.List.List
 function List:AppliesToEquipment(equipment)
-	-- Logging:Trace("AppliesToEquipment(%s)", tostring(equipment))
+	Logging:Trace("AppliesToEquipment(%s) : %s", tostring(equipment), Util.Objects.ToString(self.equipment))
 	return Util.Tables.ContainsValue(self.equipment, equipment)
 end
 
 function List:GetEquipment(withNames)
 	withNames = withNames or false
 	if withNames then
-		return Util.Tables.Flip(self.equipment, function(slot) return C.EquipmentLocations[slot] end)
+		return Util.Tables.Flip(
+			self.equipment,
+			function(slot)
+				local name
+
+				-- if the equipment location is a #, then it refers to a specific item
+				if tonumber(slot) ~= nil then
+					ItemUtil.QueryItem(slot, function(item) name = item:GetItemName() end)
+				else
+					name = C.EquipmentLocations[slot]
+				end
+
+				return name
+			end
+		)
 	else
 		return self.equipment
 	end

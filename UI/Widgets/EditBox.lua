@@ -102,7 +102,7 @@ end
 
 function EditBox.SetText(self, text)
     self:SetText(text or "")
-    self:SetCursorPosition(0)
+    self:SetCursorPosition(text and #text or 0)
     return self
 end
 

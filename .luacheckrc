@@ -99,6 +99,7 @@ read_globals = {
 	"GetLootSourceInfo",
 	"GetLootThreshold",
 	"GetMasterLootCandidate",
+	"GetNormalizedRealmName",
 	"GetNumGuildMembers",
 	"GetNumGroupMembers",
 	"GetNumLootItems",

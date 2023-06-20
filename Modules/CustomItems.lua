@@ -30,9 +30,19 @@ CustomItems.defaults = {
 function CustomItems:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.Libs.AceDB:New(AddOn:Qualify("CustomItems"), CustomItems.defaults)
-	AddOn:SyncModule():AddHandler(self:GetName(), L['custom_items_sync_text'],
-	                              function() return self.db.factionrealm end,
-	                              function(data) self:ImportData(data, self.db.factionrealm) end
+	-- equipment locations need some massaging
+	self.equipmentLocs = Util.Tables.Copy(C.EquipmentLocations)
+	self.equipmentLocs[ItemUtil.CustomItemInvTypeSelf] = L["self_custom_item"]
+	self.equipmentLocsSort = {}
+	for i, v in pairs(Util.Tables.ASort(self.equipmentLocs, function(a, b) return a[2] < b[2] end)) do
+		self.equipmentLocsSort[i] = v[1]
+	end
+
+
+	AddOn:SyncModule():AddHandler(
+		self:GetName(), L['custom_items_sync_text'],
+		function() return self.db.factionrealm end,
+		function(data) self:ImportData(data, self.db.factionrealm) end
 	)
 end
 

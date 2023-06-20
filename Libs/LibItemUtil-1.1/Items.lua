@@ -212,6 +212,55 @@ lib.TokenEquipmentLocations = {
     [45657] = { "ShoulderSlot" },               -- Mantle of the Wayward Protector
     [45658] = { "ShoulderSlot" },               -- Mantle of the Wayward Vanquisher
     [46053] = { "Finger0Slot", "BackSlot" },    -- Heroic: All Is Well That Ends Well
+    -- WOTLK Classic P3 (T9)
+    --[[
+    How does tier work in TOC?
+
+    Each set consists of five pieces, with 3 types of item levels
+
+    ___ of Conquest iLVL 232, purchased with Emblems of Triumph OR drop in VOA (10)
+    ___ of Triumph iLVL 245, purchased with Emblems of Triumph and Trophy of the Crusade OR drop VOA (25)
+    ___ of Heroic Triumph iLVL 258, purchased with Regalia from 25 Heroic
+
+    NEITHER Trophies or Regalia are bound to an item slot. They are used to purchase Chest, Hands, Head, Legs, and Shoulders.
+
+    Regalia are bound to classes
+        - Grand Conqueror (Paladin, Priest, Warlock)
+        - Grand Protector (Warrior, Hunter, Shaman)
+        - Grand Vanquisher (Rogue, Death Knight, Mage, Druid)
+
+
+    ** Where do I get Trophy of the Crusade?
+
+        10 Normal : 0 Trophies
+        10 Heroic : 0-4 Trophies Total (loot chest)
+            - 1-24 attempts remaining, 2 trophies
+            - >45 attempts remaining, 2 trophies
+        25 Normal : 2 Trophies Per Boss (5 Bosses, 10 Total)
+        25 Heroic : 2 Trophies Per Boss (5 Bosses, 10 Total)
+
+
+    ** Where do I get Regalia?
+
+        25 Heroic, based upon remaining attempts (wipes reduce attempts count).
+        These are cumulative buckets. E.G. 24-44 attempts would get 2 Regalia and 1 Weapon
+
+
+        1-24 : 2 Regalia
+        24-44 : 1 Weapon
+        45-49 : 2 Regalia
+        50 : Cape
+
+        Total : 0 - 4 Regalia
+
+    --]]
+    -- Trophies and Regalia are used for Chest, Hands, Head, Legs, and Shoulders
+    -- 10 player
+    [47242]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Trophy of the Crusade, same item for 25 player
+    -- 25 player
+    [47557]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Regalia of the Grand Conqueror (Paladin, Priest, Warlock)
+    [47558]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Regalia of the Grand Protector (Warrior, Hunter, Shaman)
+    [47559]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Regalia of the Grand Vanquisher (Rogue, Death Knight, Mage, Druid)
 }
 
 -- mapping from token to items (id) which are rewarded from turning in
@@ -351,5 +400,11 @@ lib.TokenItems = {
     [45658] = { 46117, 46122, 46127, 46134, 46157, 46187, 46196 },  -- Mantle of the Wayward Vanquisher
     -- Archivum Data Disc -> Heroic: Archivum Data Disc (Quest) -> Heroic: The Celestial Planetarium (Quest) -> Heroic Sigils (4) ->  Heroic: Algalon -> Heroic: All Is Well That Ends Well
     [46053] = { 45588, 45608, 45614, 45618},                        -- Heroic : Reply-Code Alpha
-
+    -- WOTLK Classic P3 (T9)
+    -- 10 player (matches to a minimum of 5 items per class, typically more. not enumerating)
+    [47242] = {},
+    -- 25 player (matches to a minimum of 5 items per associated classes, typically more. not enumerating)
+    [47557] = {},
+    [47558] = {},
+    [47559] = {},
 }

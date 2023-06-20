@@ -29,7 +29,7 @@ function CustomItems:CreateItemWidgets(parent)
 
 		parent.type =
 			UI:New('Dropdown', parent.content or parent)
-		        :SetList(Util.Tables.Copy(C.EquipmentLocations), C.EquipmentLocationsSort)
+		        :SetList(self.equipmentLocs, self.equipmentLocsSort)
 		        :Tooltip(L["equipment_loc"], L["equipment_loc_desc"])
 
 		parent.level =

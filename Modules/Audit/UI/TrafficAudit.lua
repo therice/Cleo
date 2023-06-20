@@ -372,19 +372,21 @@ end
 
 function TrafficAudit.SetCellResourceAttributeValue(_, frame, data, _, _, realrow, column, _)
 	local record = data[realrow].entry
+	local fontName, _, fontFlags = frame.text:GetFont()
+
 	if Util.Objects.In(record.action, TrafficRecord.ActionType.Create, TrafficRecord.ActionType.Delete) then
 		frame.text:SetText(L["na"])
-		frame.text:SetFont(frame.text:GetFont(), 11)
+		frame.text:SetFont(fontName, 11, fontFlags)
 		frame.text:SetTextColor(C.Colors.White:GetRGB())
 	else
 		local value = record:GetModifiedAttributeValue()
 		if Util.Objects.IsTable(value) then
 			frame.text:SetText("...")
-			frame.text:SetFont(frame.text:GetFont(), 16)
+			frame.text:SetFont(fontName, 16, fontFlags)
 			frame.text:SetTextColor(C.Colors.ItemArtifact:GetRGB())
 		else
 			frame.text:SetText(Util.Objects.ToString(value))
-			frame.text:SetFont(frame.text:GetFont(), 11)
+			frame.text:SetFont(fontName, 11, fontFlags)
 			frame.text:SetTextColor(C.Colors.White:GetRGB())
 		end
 

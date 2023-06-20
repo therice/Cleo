@@ -433,7 +433,8 @@ function GetGuildRosterInfo(index)
         -1, 64, false, false, 3, guid
 end
 
-function GetRealmName() return 'Realm1' end
+function GetRealmName() return 'Realm 1' end
+function GetNormalizedRealmName() return gsub(GetRealmName(), " ", "")  end
 
 function UnitName(unit)
     if unit == "player" then
@@ -446,7 +447,7 @@ function UnitName(unit)
 end
 
 function UnitFullName(unit)
-    return UnitName(unit), GetRealmName()
+    return UnitName(unit), GetNormalizedRealmName()
 end
 
 function UnitClass(unit)

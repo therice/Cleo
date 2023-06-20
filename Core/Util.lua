@@ -70,23 +70,38 @@ function AddOn:UnitName(u)
         name = Util.Strings.UcFirstUtf8(name)
         return qualify(name, realm)
     end
+
     -- Apparently functions like GetRaidRosterInfo() will return "real" name, while UnitName() won't
     -- always work with that (see ticket #145). We need this to be consistent, so just lowercase the unit:
     unit = unit:lower()
     -- Proceed with UnitName()
-    local name, realm = UnitName(unit)
-    -- Extract our own realm
-    if Util.Strings.IsEmpty(realm) then realm = GetRealmName() or "" end
+    local name, _ = UnitName(unit)
+    -- realm will be the normalized realm the unit is from
+    local realm = self:RealmName(unit)
     -- if the name isn't set then UnitName couldn't parse unit, most likely because we're not grouped.
     if not name then name = unit end
     -- Below won't work without name
     -- We also want to make sure the returned name is always title cased (it might not always be! ty Blizzard)
     local qualified = qualify(name, realm)
     --Logging:Debug("UnitName(%s) => %s", tostring(u), tostring(qualified))
-
     return qualified
 end
 
+
+--- @return string the normalized realm name
+function AddOn:RealmName(u)
+    local realm
+
+    if Util.Strings.IsSet(u) then
+        _, realm = UnitFullName(u:lower())
+    end
+
+    if Util.Strings.IsEmpty(realm) then
+        realm = GetNormalizedRealmName() or GetRealmName() or ""
+    end
+
+    return gsub(realm, " ", "")
+end
 
 -- Custom, better UnitIsUnit() function.
 -- Blizz UnitIsUnit() doesn't know how to compare unit-realm with unit.
@@ -156,10 +171,21 @@ function AddOn.SanitizeItemString(link)
     return gsub(ItemUtil:ItemLinkToItemString(link), "item:", "")
 end
 
-function AddOn.GetEquipmentLocation(name)
-    return C.EquipmentNameToLocation[name]
+function AddOn.GetEquipmentLocation(name, alternateMapping)
+    local location = C.EquipmentNameToLocation[name]
+    Logging:Debug("GetEquipmentLocation(%s) : %s", tostring(name), Util.Objects.ToString(alternateMapping))
+    if Util.Strings.IsEmpty(location) and Util.Objects.IsTable(alternateMapping) then
+        location, _ = Util.Tables.FindFn(
+            alternateMapping,
+            function(mapping) return Util.Strings.Equal(mapping, name) end,
+            true
+        )
+    end
+
+    return location
 end
 
+--[[
 function AddOn.EquipmentLocationToName(...)
     local names = {}
     for _, loc in Util.Objects.Each(...) do
@@ -167,6 +193,7 @@ function AddOn.EquipmentLocationToName(...)
     end
     return names
 end
+--]]
 
 function AddOn:ExtractCreatureId(guid)
     if not guid then return nil end
@@ -312,9 +339,7 @@ function AddOn:GetPlayersGear(link, equipLoc, current)
             end
             return unpack(items)
         elseif equipLocs[1] == "Weapon" then
-            return
-            GetInventoryItemLink(C.player, GetInventorySlotInfo("MainHandSlot")),
-            GetInventoryItemLink(C.player, GetInventorySlotInfo("SecondaryHandSlot"))
+            return GetInventoryItemLink(C.player, GetInventorySlotInfo("MainHandSlot")), GetInventoryItemLink(C.player, GetInventorySlotInfo("SecondaryHandSlot"))
         else
             return GetInventoryItemLink(C.player, GetInventorySlotInfo(equipLocs[1]))
         end

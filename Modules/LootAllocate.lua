@@ -196,6 +196,7 @@ end
 
 ---@return Models.Item.LootAllocateResponse
 function LA:GetCandidateResponse(session, candidate)
+	Logging:Debug("GetCandidateResponse(%d, %s)", tonumber(session), tostring(candidate))
 	local response = self:GetEntry(session):GetCandidateResponse(candidate)
 	if not response then
 		error(format("no loot allocation entry available for session %d, candidate %s", session, candidate))
