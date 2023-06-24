@@ -206,7 +206,7 @@ function AddOn:OnEnable()
         if msg:match(string.format(ERR_CHAT_PLAYER_NOT_FOUND_S, "(.+)")) then
             local regex = gsub(ERR_CHAT_PLAYER_NOT_FOUND_S, "%%s", "(.+)")
             local _, _, character = strfind(msg, regex)
-            Logging:Trace("%s - %s", msg, character)
+            --Logging:Trace("%s - %s", msg, character)
             -- if a player is not found, dispatch the message and let subscribers handle as they see fit
             self:SendMessage(C.Messages.PlayerNotFound, character)
         end

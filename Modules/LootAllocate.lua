@@ -196,7 +196,7 @@ end
 
 ---@return Models.Item.LootAllocateResponse
 function LA:GetCandidateResponse(session, candidate)
-	Logging:Debug("GetCandidateResponse(%d, %s)", tonumber(session), tostring(candidate))
+	--Logging:Debug("GetCandidateResponse(%d, %s)", tonumber(session), tostring(candidate))
 	local response = self:GetEntry(session):GetCandidateResponse(candidate)
 	if not response then
 		error(format("no loot allocation entry available for session %d, candidate %s", session, candidate))
@@ -209,7 +209,7 @@ end
 --- @param key any
 --- @param value any
 function LA:SetCandidateData(session, candidate, key, value)
-	Logging:Trace("SetCandidateData(%s, %s) : %s => %s", tostring(session), tostring(candidate), tostring(key), Util.Objects.ToString(value))
+	--Logging:Trace("SetCandidateData(%s, %s) : %s => %s", tostring(session), tostring(candidate), tostring(key), Util.Objects.ToString(value))
 	---@param self LootAllocate
 	local function Set(self, session, candidate, key, value)
 		self:GetCandidateResponse(session, candidate):Set(key, value)

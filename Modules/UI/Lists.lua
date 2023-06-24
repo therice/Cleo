@@ -286,7 +286,7 @@ function Lists:LayoutConfigurationTab(tab)
 
 	-- handles updates to configuration, both via UI and external sources
 	tab.ConfigurationUpdated = function(self, _, detail)
-		Logging:Debug("ConfigurationUpdated() : %s", Util.Objects.ToString(detail))
+		--Logging:Debug("ConfigurationUpdated() : %s", Util.Objects.ToString(detail))
 
 		local config = detail.entity
 		if config then
@@ -895,7 +895,7 @@ function Lists:LayoutConfigGeneralTab(tab, configSupplier)
 		  :SetClickHandler(
 				function(_, _, item)
 					local config = configSupplier()
-					Logging:Trace("Config.Status.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
+					--Logging:Trace("Config.Status.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
 					config.status = item.key
 					module:GetService().Configuration:Update(config, "status")
 					return true
@@ -916,7 +916,7 @@ function Lists:LayoutConfigGeneralTab(tab, configSupplier)
 		  :SetClickHandler(
 			function(_, _, item)
 				local config = configSupplier()
-				Logging:Trace("Config.Owner.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
+				--Logging:Trace("Config.Owner.OnClick(%s) : %s", tostring(config.id), Util.Objects.ToString(item))
 				config:SetOwner(item.value)
 				module:GetService().Configuration:Update(config, "permissions")
 				return true
@@ -1224,7 +1224,7 @@ function Lists:LayoutListTab(tab)
 
 	-- handles updates to a list, both via UI and external sources
 	tab.ListUpdated = function(self, _, detail)
-		Logging:Debug("ListUpdated() : %s", Util.Objects.ToString(detail))
+		--Logging:Debug("ListUpdated() : %s", Util.Objects.ToString(detail))
 		local list = detail.entity
 		if list then
 			self.lists:Set(list, function(item) return Util.Strings.Equal(list.id, item.id) end)
@@ -1285,7 +1285,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 
 	---- fuck-fuckery to deal with item equipment locations which may actually be the item itself
 	local function UnassignedEquipmentLocations(config, list)
-		Logging:Trace("UnassignedEquipmentLocations : %s ", tostring(list and list.id or nil))
+		--Logging:Trace("UnassignedEquipmentLocations : %s ", tostring(list and list.id or nil))
 		local all, unassigned = {}, {}
 		if config then
 			all, unassigned = module:GetService():UnassignedEquipmentLocations(config.id)
@@ -1316,7 +1316,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 						sorted[i] = v[1]
 					end
 
-					Logging:Trace("%s", Util.Objects.ToString(sorted))
+					--Logging:Trace("%s", Util.Objects.ToString(sorted))
 					return sorted
 				end
 			)
@@ -1324,11 +1324,12 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 				function()
 					local config, list = configSupplier(), listSupplier()
 					local all, unassigned = UnassignedEquipmentLocations(config, list)
+					--[[
 					Logging:Trace("%s // %s // %s",
 					              Util.Objects.ToString(all),
 					              Util.Objects.ToString(unassigned),
 					              Util.Objects.ToString(Util.Tables.CopySelect(all, unpack(unassigned))))
-
+					--]]
 					return Util.Tables.CopySelect(all, unpack(unassigned)), list and list:GetEquipment(true) or {}
 				end
 			)
@@ -1337,7 +1338,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 					-- translate name into actual type/slot
 					local config, list = configSupplier(), listSupplier()
 					local slot = AddOn.GetEquipmentLocation(equipment, select(1, UnassignedEquipmentLocations(config, list)))
-					Logging:Trace("List.Equipment(OnSelectedChanged) : %s => %s, %s", tostring(equipment), tostring(slot), tostring(added))
+					--Logging:Trace("List.Equipment(OnSelectedChanged) : %s => %s, %s", tostring(equipment), tostring(slot), tostring(added))
 
 					if list then
 						if added then
@@ -1445,7 +1446,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	end
 
 	local function EditOnChange(self, isPriority)
-		Logging:Trace("EditOnChange() : player=%s, index=%d, isPriority=%s", tostring(self:GetText()), self.index, tostring(isPriority))
+		--Logging:Trace("EditOnChange() : player=%s, index=%d, isPriority=%s", tostring(self:GetText()), self.index, tostring(isPriority))
 		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
 		if Util.Strings.IsSet(playerName) then
 			local color = UIUtil.GetPlayerClassColor(playerName)
@@ -2062,7 +2063,7 @@ function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
 			--- @type Models.List.List
 			local al = ac:GetActiveList(list.id)
 			local players = al:GetPlayers(true, true)
-			Logging:Trace("UpdatePriorities() : %s", Util.Objects.ToString(players))
+			--Logging:Trace("UpdatePriorities() : %s", Util.Objects.ToString(players))
 			priorityCount = #players
 
 			local player
@@ -2342,11 +2343,13 @@ function Lists:LayoutListPriorityBulkManageFrame(_, listSupplier)
 		local measure = self.measure:Selected()[1].value
 		--- @type BulkManageCriteria
 		local criteria = measure:HasCriteria() and self.criteria:Selected()[1].value or nil
+		--[[
 		Logging:Trace(
 			"BulkManageFrame:Evaluate() : %s, %s",
 			Util.Objects.ToString(measure:toTable()),
 			Util.Objects.ToString( Util.Tables.IsEmpty({}) and {} or criteria:toTable())
 		)
+		--]]
 		local priorities = measure:Evaluate(criteria)
 		f.players:Options(priorities, {}):SetEnabled(true)
 	end
@@ -2394,7 +2397,7 @@ function Lists:LayoutListPriorityBulkManageFrame(_, listSupplier)
 
 	f.Execute = function(self)
 		local action, selected = f.action:Selected()[1].value, f.players.selected:GetList()
-		Logging:Debug("Execute() : action=%s, players=%d", Util.Objects.ToString(action), Util.Tables.Count(selected))
+		--Logging:Debug("Execute() : action=%s, players=%d", Util.Objects.ToString(action), Util.Tables.Count(selected))
 		-- index 2 will be the function to execute for action
 		action[2](module, selected)
 	end

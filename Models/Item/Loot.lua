@@ -178,7 +178,7 @@ end
 ---@param name string
 ---@return Models.Item.LootAllocateResponse
 function LootAllocateEntry:GetCandidateResponse(name)
-	Logging:Debug("GetCandidateResponse(%s) : %s", tostring(name), Util.Objects.ToString(self.candidates))
+	--Logging:Debug("GetCandidateResponse(%s) : %s", tostring(name), Util.Objects.ToString(self.candidates))
 	local lar = self.candidates[name]
 	assert(lar, format("No response available for candidate %s", tostring(name)))
 	return lar

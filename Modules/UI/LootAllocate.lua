@@ -514,12 +514,12 @@ end
 -- SetCellX END
 --
 
-local UPDATE_THRESHOLD_IN_MS = 1000.0 -- 1 second
+local UPDATE_THRESHOLD_IN_MS = 1500.0 -- 1 second
 
 function LA:Update(forceUpdate)
 	local elapsed = self.sw:Elapsed()
 	forceUpdate = Util.Objects.Default(forceUpdate, false)
-	Logging:Trace('Update(%s, %.2f)', tostring(forceUpdate), elapsed)
+	--Logging:Trace('Update(%s, %.2f)', tostring(forceUpdate), elapsed)
 
 	if not self.frame then return end
 
@@ -533,13 +533,13 @@ function LA:Update(forceUpdate)
 		return
 	end
 
-	Logging:Trace('Update(%s, %.2f) : Proceeding with update. Unawarded Items ? %s', tostring(forceUpdate), elapsed, tostring(self:HaveUnawardedItems()))
+	--Logging:Trace('Update(%s, %.2f) : Proceeding with update. Unawarded Items ? %s', tostring(forceUpdate), elapsed, tostring(self:HaveUnawardedItems()))
 
 	-- doing an actual update, restart timer
 	self.sw:Restart()
 	self.frame.st:SortData()
-	self.frame.st:SortData()
-	
+	--self.frame.st:SortData()
+
 	local entry = self:CurrentEntry()
 	if entry and entry.awarded then
 		local cr = entry:GetCandidateResponse(entry.awarded)

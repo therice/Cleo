@@ -143,17 +143,17 @@ function Item:IsValid()
 end
 
 function Item:GetEquipmentLocation()
-	Logging:Debug("GetEquipmentLocation(%s, %d)", tostring(self.equipLoc), tonumber(self.id))
+	--Logging:Debug("GetEquipmentLocation(%s, %d)", tostring(self.equipLoc), tonumber(self.id))
 
 	if Util.Strings.IsSet(self.equipLoc) and not Util.Strings.Equal(self.equipLoc, ItemUtil.CustomItemInvTypeSelf) then
-		Logging:Debug("GetEquipmentLocation(%s) : using normalized equipment location", tostring(self.equipLoc))
+		--Logging:Debug("GetEquipmentLocation(%s) : using normalized equipment location", tostring(self.equipLoc))
 		return AddOn.NormalizeEquipmentLocation(self.equipLoc, self.subType)
 	else
 		local customItem = ItemUtil:GetCustomItem(self.id)
 		if customItem then
 			local equipLoc = customItem[3]
 			if not Util.Strings.StartsWith(equipLoc, "CUSTOM_") and not Util.Strings.Equal(self.equipLoc, ItemUtil.CustomItemInvTypeSelf) then
-				Logging:Debug("GetEquipmentLocation(%s) : using custom equipment location", tostring(self.equipLoc))
+				--Logging:Debug("GetEquipmentLocation(%s) : using custom equipment location", tostring(self.equipLoc))
 				return equipLoc
 			end
 		end
@@ -164,7 +164,7 @@ function Item:GetEquipmentLocation()
 		if ItemUtil:IsTokenBasedItem(self.id) then
 			local items = ItemUtil:GetTokenItems(self.id)
 			if items and Util.Tables.Count(items) > 0 then
-				Logging:Debug("GetEquipmentLocation(%s) : using token based equipment location", tostring(self.equipLoc))
+				--Logging:Debug("GetEquipmentLocation(%s) : using token based equipment location", tostring(self.equipLoc))
 				-- they will all have the same equipment location, just grab the 1st one
 				local _, _, _, equipLoc  = GetItemInfoInstant(items[1])
 				return equipLoc
@@ -172,7 +172,7 @@ function Item:GetEquipmentLocation()
 		end
 
 		if Util.Strings.Equal(self.equipLoc, ItemUtil.CustomItemInvTypeSelf) then
-			Logging:Debug("GetEquipmentLocation(%s) => %d", tostring(self.equipLoc), tonumber(self.id))
+			--Logging:Debug("GetEquipmentLocation(%s) => %d", tostring(self.equipLoc), tonumber(self.id))
 			-- always return a string due to way stored in addon configuration and referenced
 			return tostring(self.id)
 		end

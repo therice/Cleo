@@ -173,7 +173,7 @@ end
 
 function AddOn.GetEquipmentLocation(name, alternateMapping)
     local location = C.EquipmentNameToLocation[name]
-    Logging:Debug("GetEquipmentLocation(%s) : %s", tostring(name), Util.Objects.ToString(alternateMapping))
+    --Logging:Debug("GetEquipmentLocation(%s) : %s", tostring(name), Util.Objects.ToString(alternateMapping))
     if Util.Strings.IsEmpty(location) and Util.Objects.IsTable(alternateMapping) then
         location, _ = Util.Tables.FindFn(
             alternateMapping,
@@ -487,7 +487,7 @@ function Alarm:initialize(interval, fn)
 end
 
 function Alarm:_Fire()
-    Logging:Trace("Alarm:_Fire()")
+    --Logging:Trace("Alarm:_Fire()")
     self.fn()
 end
 

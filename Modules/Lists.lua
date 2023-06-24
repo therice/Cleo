@@ -327,7 +327,7 @@ local function GetListAndPriority(self, equipment, player, active, relative)
 	active = Util.Objects.Default(active, true)
 	relative = Util.Objects.Default(relative, false)
 
-	Logging:Trace("GetListAndPriority(%s, %s, %s, %s)", tostring(player), tostring(equipment), tostring(active), tostring(relative))
+	--Logging:Trace("GetListAndPriority(%s, %s, %s, %s)", tostring(player), tostring(equipment), tostring(active), tostring(relative))
 
 	--- @type Models.List.List
 	local list, prio = nil, nil
@@ -345,11 +345,13 @@ local function GetListAndPriority(self, equipment, player, active, relative)
 		end
 	end
 
+	--[[
 	Logging:Trace(
 		"GetListAndPriority(%s, %s, %s, %s) : list=%s, prio=%s",
 		tostring(player), tostring(equipment),  tostring(active), tostring(relative),
 		list and list.id or '?', tostring(prio)
 	)
+	--]]
 
 	return list, prio
 end

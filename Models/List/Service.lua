@@ -153,21 +153,20 @@ function Service:UnassignedEquipmentLocations(configId)
 				end
 			)
 			:Values():Flatten()()
-	Logging:Trace("UnassignedEquipmentLocations(assigned) : %s", Util.Objects.ToString(assigned))
+	--Logging:Trace("UnassignedEquipmentLocations(assigned) : %s", Util.Objects.ToString(assigned))
 
 	local equipmentLocations = Util(C.EquipmentLocations):Copy()()
 	local selfReferencing = ItemUtil:GetCustomItemsSlotIsSelf()
-	Logging:Trace("UnassignedEquipmentLocations(selfReferencing) : %s", Util.Objects.ToString(selfReferencing))
+	--Logging:Trace("UnassignedEquipmentLocations(selfReferencing) : %s", Util.Objects.ToString(selfReferencing))
 	if selfReferencing and #selfReferencing > 0 then
 		for _, item in ipairs(selfReferencing) do
 			ItemUtil.QueryItem(item, function(i) equipmentLocations[tostring(item)] = i:GetItemName() end)
 		end
 	end
-	Logging:Trace("UnassignedEquipmentLocations(equipmentLocations) : %s", Util.Objects.ToString(equipmentLocations))
+	--Logging:Trace("UnassignedEquipmentLocations(equipmentLocations) : %s", Util.Objects.ToString(equipmentLocations))
 
 	local unassigned = Util(equipmentLocations):Keys():CopyExceptWhere(false, unpack(assigned)):Sort()()
-	Logging:Trace("UnassignedEquipmentLocations(unassigned) : %s", Util.Objects.ToString(unassigned))
-
+	--Logging:Trace("UnassignedEquipmentLocations(unassigned) : %s", Util.Objects.ToString(unassigned))
 	return equipmentLocations, unassigned
 end
 

@@ -66,7 +66,7 @@ function Loot:SubscribeToEvents()
 	Logging:Debug("SubscribeToEvents(%s)", self:GetName())
 	self.eventSubscriptions = Event():BulkSubscribe({
 	    [C.Events.ChatMessageSystem] = function(_, msg)
-	        Logging:Debug("%s - %s",C.Events.ChatMessageSystem, Util.Objects.ToString(msg))
+	        --Logging:Debug("%s - %s",C.Events.ChatMessageSystem, Util.Objects.ToString(msg))
 	        self:OnChatMessage(msg)
 	    end
     })
@@ -99,12 +99,14 @@ function Loot:OnResponseReceived(session, candidate, data)
 end
 
 function Loot:OnChatMessage(msg)
-	Logging:Debug("OnChatMessage() : %s", msg)
+	--Logging:Debug("OnChatMessage() : %s", msg)
 	local name, roll, low, high = msg:match(RANDOM_ROLL_PATTERN)
 	roll, low, high = tonumber(roll), tonumber(low), tonumber(high)
+	--[[
 	Logging:Trace("OnChatMessage(%s) : %s, %d (%d - %d)",
 	              tostring(#self.awaitingRolls), tostring(name), tonumber(roll), tonumber(low), tonumber(high)
 	)
+	--]]
 
 	if name and low == 1 and high == 100 and
 		AddOn.UnitIsUnit(Ambiguate(name, "short"), "player") and

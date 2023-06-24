@@ -127,12 +127,13 @@ end
 --- @param equipment string the equipment slot (e.g. INVTYPE_HEAD)
 --- @return Models.List.List
 function List:AppliesToEquipment(equipment)
-	Logging:Trace("AppliesToEquipment(%s) : %s", tostring(equipment), Util.Objects.ToString(self.equipment))
+	--Logging:Trace("AppliesToEquipment(%s) : %s", tostring(equipment), Util.Objects.ToString(self.equipment))
 	return Util.Tables.ContainsValue(self.equipment, equipment)
 end
 
 function List:GetEquipment(withNames)
 	withNames = withNames or false
+	--Logging:Trace("GetEquipment(%s)", tostring(withNames))
 	if withNames then
 		return Util.Tables.Flip(
 			self.equipment,
@@ -141,6 +142,7 @@ function List:GetEquipment(withNames)
 
 				-- if the equipment location is a #, then it refers to a specific item
 				if tonumber(slot) ~= nil then
+					--Logging:Trace("GetEquipment(%s) : Querying Item", tostring(withNames))
 					ItemUtil.QueryItem(slot, function(item) name = item:GetItemName() end)
 				else
 					name = C.EquipmentLocations[slot]
@@ -194,11 +196,13 @@ function List:GetPlayerPriority(player, relative)
 	player = Player.Resolve(player)
 	relative = Util.Objects.Default(relative, false)
 
+	--[[
 	Logging:Trace(
 		"GetPlayerPriority(%s, %s) : %s",
 		tostring(player), tostring(relative),
 		Util.Objects.ToString(Util.Tables.Copy(self.players, function(p) return p:GetName() end))
 	)
+	--]]
 
 	local priority
 
