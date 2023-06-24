@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2023.0.1 (2023-06-24)
+* Reduce complex logging in Loot Allocation, as executed twice per second and typically converting multiple tables into strings. This should address/alleviate game pauses for master looter. adbf4cf
+
 2023.0.0 (2023-06-20)
 * Add support for WOTLK P3 and lists being based upon items (instead of equipment slot) a87e8df
 
