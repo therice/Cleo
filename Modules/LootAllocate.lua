@@ -489,6 +489,7 @@ function LA:OnAwardedReceived(session, winner)
 end
 
 function LA:OnCheckIfOfflineReceived()
+	Logging:Trace("OnCheckIfOfflineReceived()")
 	local response
 	for session = 1, #self.lootTable do
 		for candidate in pairs(self:GetEntry(session).candidates) do
@@ -552,7 +553,7 @@ function LA:SubscribeToComms()
 			end
 		end,
 		[C.Commands.CheckIfOffline] = function(_, sender)
-			Logging:Debug("OfflineTimer from %s", tostring(sender))
+			Logging:Debug("CheckIfOffline from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
 				self:OnCheckIfOfflineReceived()
 			end

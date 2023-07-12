@@ -92,17 +92,18 @@ describe("LootAllocate", function()
 			assert(cr2.response == C.Responses.Wait)
 		end)
 
-		it("handles OfflineTimer", function()
+		it("handles CheckIfOffline", function()
 			local cr1 = la:GetCandidateResponse(1, AddOn.player:GetName())
 			local cr2 = la:GetCandidateResponse(2, AddOn.player:GetName())
-			cr1.response = C.Responses.Announced
-			cr2.response = C.Responses.Announced
 
-			AddOn:Send(C.group, C.Commands.OfflineTimer, AddOn.player:GetName())
+			WoWAPI_FireUpdate(GetTime() + 5)
+			la:SetCandidateData(1, AddOn.player:GetName(), "response", C.Responses.Announced)
+			la:SetCandidateData(2, AddOn.player:GetName(), "response", C.Responses.Announced)
+			AddOn:Send(C.group, C.Commands.CheckIfOffline, AddOn.player:GetName())
 			WoWAPI_FireUpdate(GetTime() + 10)
 
-			print(Util.Objects.ToString(cr1))
-			print(Util.Objects.ToString(cr2))
+			--print(Util.Objects.ToString(cr1))
+			--print(Util.Objects.ToString(cr2))
 
 			assert(cr1.response == C.Responses.Nothing)
 			assert(cr2.response == C.Responses.Nothing)
