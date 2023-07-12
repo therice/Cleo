@@ -336,11 +336,20 @@ function ML:SubscribeToComms()
 		end,
 		[C.Commands.LootTable] = function(_, sender)
 			Logging:Debug("LootTable from %s", tostring(sender))
+			-- if the sender was ourself, which implies we are ML (otherwise this module wouldn't be active)
 			if AddOn.UnitIsUnit(sender, AddOn.player) then
-				-- schedule an offline timer to be sent in ~15 seconds
-				-- this signals a reasonable amount of time has passed for a response to be received
-				-- and to transition response from announced after session has started
-				self:ScheduleTimer("OnLootTableReceived", 15 + 0.5 * #self.lootTable)
+				-- this is only used in the loot allocation interface
+				-- which is implicitly limited to ML, so only send to ourselves
+				--
+				-- schedule the callback to be shortly after any response timeout, which is a reasonable amount of time
+				-- having passed for a response to be received and to transition response from announced after
+				-- starting the loot session
+
+
+				self:ScheduleTimer(
+					function() self:Send(AddOn.player, C.Commands.CheckIfOffline)  end,
+					15 + (0.5 * #self.lootTable)
+				)
 			end
 		end,
 		[C.Commands.HandleLootStart] = function(_, sender)
@@ -1011,12 +1020,6 @@ function ML:OnReconnectReceived(sender)
 	if self.running then
 		self:ScheduleTimer("Send", 4, player, C.Commands.LootTable, self:_GetLootTableForTransmit(true))
 	end
-end
-
-function ML:OnLootTableReceived()
-	-- this is only used in the loot allocation interface,
-	-- which is implicitly limited to ML, so only send there
-	self:Send(AddOn.masterLooter, C.Commands.OfflineTimer)
 end
 
 --- @return Models.Item.LootSlotInfo

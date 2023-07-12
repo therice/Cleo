@@ -177,7 +177,8 @@ local _build = function(self, ml)
     Logging:Trace("MasterLooterDb:_build(BEFORE) : %d", Util.Tables.Count(self.db))
 
     local mlSettings, mlDefaults =
-        ml.db and ml.db.profile or {}, ml.defaults and ml.defaults.profile or {}
+        ml.db and ml.db.profile or {},
+        ml.defaults and ml.defaults.profile or {}
 
     -- do not support custom buttons and responses currently, only the default
     -- so don't send them unnecessarily
@@ -186,16 +187,11 @@ local _build = function(self, ml)
             Util.Tables.Get(mlDefaults, 'buttons.numButtons') or
             0
 
-    -- todo : send order?
-    local buttons = {
-        numButtons = numButtons
-    }
-
     self.db = {
         outOfRaid         = mlSettings.outOfRaid,
         timeout           = mlSettings.timeout and Util.Tables.Copy(mlSettings.timeout) or nil,
         showLootResponses = mlSettings.showLootResponses,
-        buttons           = buttons,
+        buttons           = { numButtons = numButtons }
     }
 
     Logging:Trace("MasterLooterDb:_build(AFTER) : %d", Util.Tables.Count(self.db))

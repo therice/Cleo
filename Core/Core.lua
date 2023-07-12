@@ -489,7 +489,7 @@ function AddOn:UpdateGroupMembers()
     -- this shouldn't happen, but GetRaidRosterInfo has been shown to intermittently not return results
     if  (Util.Tables.Count(group) < groupCount) then
         -- reschedule another attempt, don't mutate current state
-        Logging:Warn("UpdateGroupMembers( : raid roster incomplete, rescheduling")
+        Logging:Warn("UpdateGroupMembers() : raid roster incomplete, rescheduling")
         self:ScheduleTimer("UpdateGroupMembers", 1)
     else
         local testGroupMembers = ExtraGroupMembers(self)

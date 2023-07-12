@@ -89,7 +89,7 @@ AddOn.Constants = {
         Salmon         = CreateColor(0.99216, 0.48627, 0.43137, 1),
         White          = CreateColor(1, 1, 1, 1)
     },
-    
+
     Commands = {
         ActivateConfig          =   "alc",      -- sent when a configuration should be activated (for loot priorities)
         Awarded                 =   "awd",
@@ -110,7 +110,7 @@ AddOn.Constants = {
         LootTableAdd            =   "lta",
         MasterLooterDb          =   "mldb",
         MasterLooterDbRequest   =   "mldbr",
-        OfflineTimer            =   "ot",
+        CheckIfOffline          =   "ot",
         Ok                      =   "rok",      -- replication based message (ok)
         PeerLeft                =   "rpl",      -- replication based message (peer left due to replication being stopped)
         PeerQuery               =   "rpq",      -- replication based message (query for peers)

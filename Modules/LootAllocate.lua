@@ -488,12 +488,14 @@ function LA:OnAwardedReceived(session, winner)
 	end
 end
 
-function LA:OnOfflineTimerReceived()
+function LA:OnCheckIfOfflineReceived()
 	local response
 	for session = 1, #self.lootTable do
 		for candidate in pairs(self:GetEntry(session).candidates) do
 			response = self:GetCandidateData(session, candidate, LAA.Response)
-			if Util.Objects.In(response, C.Responses.Announced, C.Responses.Wait) then
+			--Logging:Debug("OnCheckIfOfflineReceived(%d, %s) :  %s", tostring(session), tostring(candidate), tostring(response))
+			-- don't including WAIT, as that is the response used when loot has been acknowledged
+			if Util.Objects.In(response, C.Responses.Announced) then
 				self:SetCandidateData(session, candidate, LAA.Response, C.Responses.Nothing)
 			end
 		end
@@ -549,10 +551,10 @@ function LA:SubscribeToComms()
 				self:OnAwardedReceived(unpack(data))
 			end
 		end,
-		[C.Commands.OfflineTimer] = function(_, sender)
+		[C.Commands.CheckIfOffline] = function(_, sender)
 			Logging:Debug("OfflineTimer from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
-				self:OnOfflineTimerReceived()
+				self:OnCheckIfOfflineReceived()
 			end
 		end,
 		[C.Commands.Rolls] = function(data, sender)

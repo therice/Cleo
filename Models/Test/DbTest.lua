@@ -265,13 +265,14 @@ describe("DB", function()
                     db = {
                         profile = {
                             outOfRaid = true,
-                            timeout   = {enabled = true, timeout = 120}
+                            timeout   = {enabled = true, timeout = 120},
+                            buttons   = {numButtons = 3}
                         }
                     }
                 }
             )
             assert.are.same(
-                    {db = {outOfRaid = true, timeout = {enabled = true, timeout = 120}, buttons = {numButtons = 0}}},
+                    {db = {outOfRaid = true, timeout = {enabled = true, timeout = 120}, buttons = {numButtons = 3}}},
                     mldb:ForTransmit()
             )
         end)
