@@ -2,6 +2,14 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2023.0.2 (2023-07-12)
+* Address issues with only 'suicide' showing up on loot window for trophies and regalia 7b7d327b528add999589636dfc024cee712ba2b4
+* Do not transition response to offline/not installed if an ACK has been received within timeout. 162fa5f503f0c9c7f929b699bbb0eabe590be0bd
+* Fix test regression due to not considering WAIT as being eligibile for transition to NOTHING. 0479f84efe53c66050a0a8504b0e378a84c961ec
+* Only send ML DB (Settings) to the requestor on an explicit request. No need to flood the entire group. 8de65b3c43cfd5d5e29932014709993e9a2339ec
+* Remove 'transform' from writerOpts in an attempt to avoid date parsing issues in building distributable c9e884c1fce54b30f1150e8936eb7b0500690bdc
+* Try previous version of @semantic-release/release-notes-generator to avoid error with date parsing 79ab6442b835f07cb148fb443d2c04a4ce6bf1a5
+
 2023.0.1 (2023-06-24)
 * Reduce complex logging in Loot Allocation, as executed twice per second and typically converting multiple tables into strings. This should address/alleviate game pauses for master looter. adbf4cf
 
