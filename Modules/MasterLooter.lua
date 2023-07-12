@@ -325,7 +325,9 @@ function ML:SubscribeToComms()
 	self.commSubscriptions = Comm():BulkSubscribe(C.CommPrefixes.Main, {
 		[C.Commands.MasterLooterDbRequest] = function(_, sender)
 			Logging:Debug("MasterLooterDbRequest from %s", tostring(sender))
-			MasterLooterDb:Send(C.group)
+			-- previously this was sending to group, but why? a specific person asked for it
+			-- so changed the send to be targeted to that player only
+			MasterLooterDb:Send(Player:Get(sender))
 		end,
 		[C.Commands.Reconnect] = function(_, sender)
 			Logging:Debug("Reconnect from %s", tostring(sender))
@@ -344,8 +346,6 @@ function ML:SubscribeToComms()
 				-- schedule the callback to be shortly after any response timeout, which is a reasonable amount of time
 				-- having passed for a response to be received and to transition response from announced after
 				-- starting the loot session
-
-
 				self:ScheduleTimer(
 					function() self:Send(AddOn.player, C.Commands.CheckIfOffline)  end,
 					15 + (0.5 * #self.lootTable)
@@ -545,7 +545,7 @@ function ML:GetItemsFromMessage(msg, sender)
 end
 
 function ML:UpdateDb()
-	Logging:Debug("UpdateDb")
+	--Logging:Debug("UpdateDb")
 	AddOn:OnMasterLooterDbReceived(MasterLooterDb:Get(true))
 	MasterLooterDb:Send(C.group)
 end

@@ -455,9 +455,7 @@ end
 
 --- this only returns a value when in test mode and a number of players has been specified, never relevant outside
 --- of test mode
----
---- @param self AddOn
-local function ExtraGroupMembers(self)
+local function ExtraGroupMembers()
     if AddOn:TestModeEnabled() and AddOn:IsMasterLooter() then
         return AddOn:MasterLooterModule().testGroupMembers
     end
@@ -492,7 +490,7 @@ function AddOn:UpdateGroupMembers()
         Logging:Warn("UpdateGroupMembers() : raid roster incomplete, rescheduling")
         self:ScheduleTimer("UpdateGroupMembers", 1)
     else
-        local testGroupMembers = ExtraGroupMembers(self)
+        local testGroupMembers = ExtraGroupMembers()
         if Util.Objects.IsTable(testGroupMembers) and Util.Tables.Count(testGroupMembers) > 0 then
             for _, p in pairs(testGroupMembers) do
                 -- e.g. group[self:UnitName("Avalona-Atiesh")] = true
@@ -799,11 +797,12 @@ function AddOn:OnLootTableReceived(lt)
     -- but nothing else, by default, except the item reference
     self.lootTable = processed
 
-    -- received LootTable without having received MasterLooterDb, well...
+    -- received LootTable without having received MasterLooterDb, well we should ask them for it...
     if not self:HaveMasterLooterDb() then
         Logging:Warn("OnLootTableReceived() : received LootTable without having received MasterLooterDb from %s", tostring(self.masterLooter))
         self:Send(self.masterLooter, C.Commands.MasterLooterDbRequest)
-        self:ScheduleTimer('OnLootTableReceived', 5, lt)
+        -- something weird is going on, we asked for ML DB, let's reprocess the loot table after a short delay
+        self:ScheduleTimer('OnLootTableReceived', 2, lt)
         return
     end
 
