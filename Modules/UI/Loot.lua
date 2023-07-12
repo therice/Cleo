@@ -163,12 +163,13 @@ function Entry:UpdateButtons()
 	local b = self.buttons
 	local numButtons, buttons, ordering = AddOn:GetButtonCount(), AddOn:GetButtons(), AddOn:GetButtonOrder()
 	-- (IconWidth (63) + indent(9)) + pass button (5) +  + numButton * space(5)
+	--Logging:Warn("UpdateButtons() : %d, %s, %s", numButtons, Util.Objects.ToString(buttons), Util.Objects.ToString(ordering))
 	local width = 95 + numButtons * 5
 	-- +1 to numButtons is for mapping to the pass button
 	Util.Tables.Push(ordering, numButtons + 1)
 	for i, index in pairs(ordering) do
 		if i > numButtons then
-			b[i] = b[i] or UI:New('Button', self.frame)
+			b[i] = b[i] or UI:NewNamed('Button', self.frame, format('%s_Button_Pass', self.frame:GetName()))
 			b[i]:SetText(UIUtil.ColoredDecorator(C.Colors.Salmon):decorate(_G.PASS))
 			b[i]:SetMultipleScripts({
                 OnEnter = function() Loot.UpdateItemResponders(self, C.Responses.Pass, b[i]) end,
@@ -176,9 +177,10 @@ function Entry:UpdateButtons()
                 OnClick = function() Loot:OnRoll(self, C.Responses.Pass) end,
             })
 		else
-			b[i] = b[i] or UI:New('Button', self.frame)
+			local text = buttons[index].text
+			b[i] = b[i] or UI:NewNamed('Button', self.frame, format('%s_Button_%s', self.frame:GetName(), gsub(text, " ", "")))
 			-- this is kind of ugly, but ...
-			b[i]:SetText(UIUtil.ColoredDecorator(buttons[index].color):decorate(buttons[index].text))
+			b[i]:SetText(UIUtil.ColoredDecorator(buttons[index].color):decorate(text))
 			b[i]:SetMultipleScripts({
                 OnEnter = function()
                     Loot.UpdateItemResponders(self, index, b[i])

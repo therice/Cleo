@@ -615,6 +615,8 @@ function AddOn:GetButtonOrder()
         ordering = self:MasterLooterDbValue('buttons.ordering')
     end
 
+    --Logging:Warn("GetButtonOrder(1) : %s", Util.Objects.ToString(ordering))
+
     if Util.Objects.IsNil(ordering) or Util.Tables.Count(ordering) == 0 then
         ordering = {}
 
@@ -623,7 +625,9 @@ function AddOn:GetButtonOrder()
         end
     end
 
-    return Util.Tables.Copy(ordering)
+    --Logging:Warn("GetButtonOrder(2) : %s", Util.Objects.ToString(ordering))
+
+    return Util.Tables.Sort2(Util.Tables.Copy(ordering))
 end
 
 function AddOn:GetButtons()

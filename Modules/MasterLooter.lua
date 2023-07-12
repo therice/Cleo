@@ -250,8 +250,7 @@ do
 		index = index + 1
 	end
 
-	Util.Tables.Compact(DefaultButtons.ordering)
-	--Logging:Warn("%s", Util.Objects.ToString(DefaultButtons.ordering))
+	DefaultButtons.ordering = Util.Tables.Compact(DefaultButtons.ordering)
 
 	for response, value in pairs(UserNonVisibleResponses) do
 		ML.NonVisibleAwardReasons[response] = UIUtil.ColoredDecorator(value.color):decorate(L[response])
