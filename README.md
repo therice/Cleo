@@ -4,3 +4,4 @@
 
 # Cleo
 #### Suicide Kings AddOn for **World of Warcraft** *(WOTLK Classic)*
+###### _11 million pesos and counting..._
