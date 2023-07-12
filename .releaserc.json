@@ -42,8 +42,7 @@
 				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
 			},
 			"writerOpts" : {
-				"groupBy" : false,
-				"transform" : {}
+				"groupBy" : false
 			},
 			"linkReferences": false,
 			"linkCompare": false
