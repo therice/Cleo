@@ -1,5 +1,5 @@
-## Interface: 30402
-## X-Min-Interface: 30400
+## Interface: 30403
+## X-Min-Interface: 30402
 ## Title: |cfffe7b2cCleo|r
 ## Notes: Cleo : Suicide Kings Loot System for World of Warcraft Classic (WOTLK)
 ## Author: Jackburtón-Atiesh

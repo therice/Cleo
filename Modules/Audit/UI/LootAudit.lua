@@ -289,14 +289,17 @@ function LootAudit:BuildData(container)
 	for _, names in pairs(data) do
 		for _, entries in pairs(names) do
 			for index, entry in pairs(entries) do
-				local instanceName = LibEncounter:GetMapName(entry.instanceId) or "N/A"
-				local droppedBy = AddOn.GetEncounterCreatures(entry.encounterId) or L['unknown']
-				local player = AddOn.Ambiguate(entry.owner)
-				container.rows[row] = {
-					rownum = row,   -- this is the index in the rows table
-					num = index,    -- this is the index within the player's table
-					entry = entry,
-					cols =
+				-- some strange corruption, where the entry's encounter id is a table instead of string/number
+				-- just ignore them in results
+				if not Util.Objects.IsTable(entry.encounterId) then
+					local instanceName = LibEncounter:GetMapName(entry.instanceId) or "N/A"
+					local droppedBy = AddOn.GetEncounterCreatures(entry.encounterId) or L['unknown']
+					local player = AddOn.Ambiguate(entry.owner)
+					container.rows[row] = {
+						rownum = row,   -- this is the index in the rows table
+						num = index,    -- this is the index within the player's table
+						entry = entry,
+						cols =
 						STCellBuilder()
 							:classIconCell(entry.class)
 							:classColoredCell(player, entry.class)
@@ -307,56 +310,57 @@ function LootAudit:BuildData(container)
 							:cell(entry.item)
 							:cell(""):DoCellUpdate(ST.DoCellUpdateFn(function (...) LootAudit.SetCellResponse(...) end))
 							:deleteCell(
-								function(_, d, r)
-									local name, num = d[r].entry.owner, d[r].num
+							function(_, d, r)
+								local name, num = d[r].entry.owner, d[r].num
 
-									Logging:Trace("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
+								--Logging:Trace("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
 
-									local history = self:GetHistory()
-									history:del(name, num)
-									tremove(d, r)
+								local history = self:GetHistory()
+								history:del(name, num)
+								tremove(d, r)
 
-									for _, v in pairs(d) do
-										if v.name == name and v.num >= num then
-											v.num = v.num - 1
-										end
-									end
-
-									self.interfaceFrame.st:SortData()
-
-									local charHistory = history:get(name)
-									if #charHistory == 0 then
-										Logging:Trace("Last LootAudit entry deleted, removing %s", tostring(name))
-										history:del(name)
+								for _, v in pairs(d) do
+									if v.name == name and v.num >= num then
+										v.num = v.num - 1
 									end
 								end
-							)
-						:build()
-				}
 
-				-- keep a copy of all the timestamps that map to date (could probably calculate later)
-				local fmtDate = entry:FormattedDate()
-				if not Util.Tables.ContainsKey(tsData, fmtDate) then
-					tsData[fmtDate] = {fmtDate, timestamps = {}}
-				end
-				Util.Tables.Push(tsData[fmtDate].timestamps, entry.timestamp)
+								self.interfaceFrame.st:SortData()
 
-				if not Util.Tables.ContainsKey(instanceData, instanceName) then
-					instanceData[instanceName] = {instanceName, instanceId = entry.instanceId}
-				end
-
-				if not Util.Tables.ContainsKey(droppedByData, droppedBy) then
-					droppedByData[droppedBy] = {droppedBy, encounterId = entry.encounterId}
-				end
-
-				if not Util.Tables.ContainsKey(nameData, player) then
-					nameData[player] = {
-						{ DoCellUpdate = ST.DoCellUpdateFn(function(_, frame, ...) UIUtil.ClassIconFn()(frame, entry.class) end)},
-						{ value = player, color = UIUtil.GetClassColor(entry.class), name = player}
+								local charHistory = history:get(name)
+								if #charHistory == 0 then
+									--Logging:Trace("Last LootAudit entry deleted, removing %s", tostring(name))
+									history:del(name)
+								end
+							end
+						)
+							:build()
 					}
-				end
 
-				row = row + 1
+					-- keep a copy of all the timestamps that map to date (could probably calculate later)
+					local fmtDate = entry:FormattedDate()
+					if not Util.Tables.ContainsKey(tsData, fmtDate) then
+						tsData[fmtDate] = {fmtDate, timestamps = {}}
+					end
+					Util.Tables.Push(tsData[fmtDate].timestamps, entry.timestamp)
+
+					if not Util.Tables.ContainsKey(instanceData, instanceName) then
+						instanceData[instanceName] = {instanceName, instanceId = entry.instanceId}
+					end
+
+					if not Util.Tables.ContainsKey(droppedByData, droppedBy) then
+						droppedByData[droppedBy] = {droppedBy, encounterId = entry.encounterId}
+					end
+
+					if not Util.Tables.ContainsKey(nameData, player) then
+						nameData[player] = {
+							{ DoCellUpdate = ST.DoCellUpdateFn(function(_, frame, ...) UIUtil.ClassIconFn()(frame, entry.class) end)},
+							{ value = player, color = UIUtil.GetClassColor(entry.class), name = player}
+						}
+					end
+					row = row + 1
+
+				end
 			end
 		end
 	end

@@ -160,7 +160,12 @@ function Service:UnassignedEquipmentLocations(configId)
 	--Logging:Trace("UnassignedEquipmentLocations(selfReferencing) : %s", Util.Objects.ToString(selfReferencing))
 	if selfReferencing and #selfReferencing > 0 then
 		for _, item in ipairs(selfReferencing) do
-			ItemUtil.QueryItem(item, function(i) equipmentLocations[tostring(item)] = i:GetItemName() end)
+			ItemUtil.QueryItem(
+				item,
+				function(i)
+					equipmentLocations[tostring(item)] = ItemUtil.DisambiguateIfHeroicItem(i)
+				end
+			)
 		end
 	end
 	--Logging:Trace("UnassignedEquipmentLocations(equipmentLocations) : %s", Util.Objects.ToString(equipmentLocations))

@@ -143,7 +143,12 @@ function List:GetEquipment(withNames)
 				-- if the equipment location is a #, then it refers to a specific item
 				if tonumber(slot) ~= nil then
 					--Logging:Trace("GetEquipment(%s) : Querying Item", tostring(withNames))
-					ItemUtil.QueryItem(slot, function(item) name = item:GetItemName() end)
+					ItemUtil.QueryItem(
+						slot,
+						function(item)
+							name = ItemUtil.DisambiguateIfHeroicItem(item)
+						end
+					)
 				else
 					name = C.EquipmentLocations[slot]
 				end

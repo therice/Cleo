@@ -841,7 +841,7 @@ function PlayerStatsTab:BuildData(intervalInDays)
 	local container = self.tab
 	container.rows = {}
 
-	local row, playerStats = 0, RA:GetAttendanceStatistics(intervalInDays)
+	local row, playerStats = 1, RA:GetAttendanceStatistics(intervalInDays)
 	for p, stats in pairs(playerStats.players) do
 		container.rows[row] = {
 			entry = stats,

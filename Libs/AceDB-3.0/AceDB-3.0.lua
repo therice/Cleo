@@ -264,7 +264,8 @@ local factionrealmKey = factionKey .. " - " .. realmKey
 local localeKey = GetLocale():lower()
 
 local regionTable = { "US", "KR", "EU", "TW", "CN" }
-local regionKey = regionTable[GetCurrentRegion()]
+ -- 09.30.2023 : PTR region key is 72, so use GetCurrentRegionName if not found
+local regionKey = regionTable[GetCurrentRegion()] or GetCurrentRegionName()
 local factionrealmregionKey = factionrealmKey .. " - " .. regionKey
 
 -- Actual database initialization function

@@ -65,6 +65,8 @@ _G.string.trim = function(s)
     return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
+_G.strtrim = _G.string.trim
+
 _G.strfind = string.find
 _G.gsub = string.gsub
 _G.date = os.date
@@ -251,6 +253,10 @@ end
 
 function GetCurrentRegion()
     return 1 -- "US"
+end
+
+function GetCurrentRegionName()
+    return "US"
 end
 
 function GuildRoster ()
@@ -944,6 +950,7 @@ _G.CLASS_ICON_TCOORDS = {}
 _G.ENABLE = "Enable"
 _G.CLOSES_IN = "Time remaining"
 _G.FRIENDS_FRIENDS_CHOICE_EVERYONE = "Everyone"
+_G.PLAYER_DIFFICULTY2 = "Heroic"
 
 -- https://wow.gamepedia.com/API_GetItemSubClassInfo
 function GetItemSubClassInfo(classId, subClassId)

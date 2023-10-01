@@ -42,7 +42,7 @@ function Logging:OnInitialize()
 
     self:BuildFrame()
     --@debug@
-    self:Toggle()
+    -- self:Toggle()
     --@end-debug@
 end
 

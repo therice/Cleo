@@ -32,11 +32,12 @@ local lib = LibStub("LibEncounter-1.0", true)
 --  The Obsidian Sanctum
 -- 	Vault of Archavon
 --  Naxxramas (redux)
+-- 	Ulduar
+--  Trial of the Crusader
+--  Onyxia's Lair (redux)
 -- 	Icecrown Citadel
--- 	Ulduar (TODO)
 --  The Ruby Sanctum (TODO)
---  Onyxia's Lair (redux) (TODO)
---  Trial of the Crusader (TODO)
+
 --
 -- Mapping from map id to details (name will be used as index for localization)
 -- e.g. https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749
@@ -113,6 +114,14 @@ lib.Maps = {
     [624] = {
         name = 'Vault of Archavon'
     },
+    -- JournalInstance.ID = 759
+    [603] = {
+        name = 'Ulduar'
+    },
+    -- JournalInstance.ID = 757
+    [649] = {
+        name = 'Trial of the Crusader'
+    },
     -- JournalInstance.ID = 758
     [631] = {
         name = 'Icecrown Citadel'
@@ -121,24 +130,13 @@ lib.Maps = {
     [724] = {
         name = 'The Ruby Sanctum'
     },
-    -- JournalInstance.ID = 757
-    [649] = {
-        name = 'Trial of the Crusader'
-    },
-    -- JournalInstance.ID = 759
-    [603] = {
-        name = 'Ulduar'
-    },
 }
-
 
 -- DungeonEncounter.ID <=> JournalEncounter.DungeonEncounterID
 -- JournalEncounter.ID <=> JournalEncounterCreature.JournalEncounterID
 --
---
---
 -- Mapping from creature id to details (name will be used as index for localization),
--- key is Creature.ID, but mappings can get confusing and impossible to track confusing
+-- key is Creature.ID, but mappings can get confusing and impossible to track via
 -- the table mappings above. easier just to look at DBM for the encounter and creature ids
 lib.Creatures = {
     [15348] = {
@@ -606,6 +604,144 @@ lib.Creatures = {
     [32871] = {
         name = 'Algalon the Observer',
     },
+    [34796] = {
+        name = 'Gormok the Impaler',
+    },
+    [35144] = {
+        name = 'Acidmaw',
+    },
+    [34799] = {
+        name = 'Dreadscale',
+    },
+    [34797] = {
+        name = 'Icehowl',
+    },
+    [34780] = {
+        name = 'Lord Jaraxxus',
+    },
+    -- Faction Champs
+    -- Horde DK
+    [34458] = {
+        name = 'Gorgrim Shadowcleave',
+    },
+    -- Horde Boomkin
+    [34451] = {
+        name = 'Birana Stormhoof',
+    },
+    -- Horde Resto Druid
+    [34459] = {
+        name = 'Erin Misthoof',
+    },
+    -- Horde Hunter
+    [34448] = {
+        name = 'Ruj\'kah',
+    },
+    -- Horde Mage
+    [34449] = {
+        name = 'Ginselle Blightslinger',
+    },
+    -- Horde Holy Paladin
+    [34445] = {
+        name = 'Liandra Suncaller',
+    },
+    -- Horde Ret Paladin
+    [34456] = {
+        name = 'Malithas Brightblade',
+    },
+    -- Horde H. Priest
+    [34447] = {
+        name = 'Caiphus the Stern',
+    },
+    -- Horde SPriest
+    [34441] = {
+        name = 'Vivienne Blackwhisper',
+    },
+    -- Horde Rogue
+    [34454] = {
+        name = 'Maz\'dinah',
+    },
+    -- Horde Resto Shaman
+    [34444] = {
+        name = 'Thrakgar',
+    },
+    -- Horde Enh Shaman
+    [34455] = {
+        name = 'Broln Stouthorn',
+    },
+    -- Horde Warlock
+    [34450] = {
+        name = 'Harkzog',
+    },
+    -- Horde Warrior
+    [34453] = {
+        name = 'Narrhok Steelbreaker',
+    },
+    -- Alliance DK
+    [34461] = {
+        name = 'Tyrius Duskblade'
+    },
+    -- Alliance Boomkin
+    [34460] = {
+        name = 'Kavina Grovesong'
+    },
+    -- Alliance Resto Druid
+    [34469] = {
+        name = 'Melador Valestrider'
+    },
+    -- Alliance Hunter
+    [34467] = {
+        name = 'Alyssia Moonstalker'
+    },
+    -- Alliance Mage
+    [34468] = {
+        name = 'Noozle Whizzlestick'
+    },
+    -- Alliance Ret Paladin
+    [34471] = {
+        name = 'Baelnor Lightbearer'
+    },
+    -- Alliance Holy Paladin
+    [34465] = {
+        name = 'Velanaa '
+    },
+    -- Alliance H. Priest
+    [34466] = {
+        name = 'Anthar Forgemender'
+    },
+    -- Alliance S. Priest
+    [34473] = {
+        name = 'Brienna Nightfell'
+    },
+    -- Alliance Rogue
+    [34472] = {
+        name = 'Irieth Shadowstep'
+    },
+    -- Alliance Resto Shaman
+    [34470] = {
+        name = 'Saamul'
+    },
+    -- Alliance Enh Shaman
+    [34463] = {
+        name = 'Shaabad'
+    },
+    -- Alliance Warlock
+    [34474] = {
+        name = 'Serissa Grimdabbler'
+    },
+    -- Alliance Warrior
+    [34475] = {
+        name = 'Shocuul'
+    },
+    [34497] = {
+        name = 'Fjola Lightbane',
+    },
+    [34497] = {
+        name = 'Eydis Darkbane',
+    },
+    [34564] = {
+        name = 'Anub\'arak',
+    },
+
     [36626] = {
         name = 'Festergut'
     },
@@ -1237,6 +1373,7 @@ lib.Encounters = {
     [748] = {
         map_id = 603,
         creature_id = {32867,32857,32927},
+        name = 'The Iron Council'
     },
     -- Kologarn
     [749] = {
@@ -1280,71 +1417,103 @@ lib.Encounters = {
     },
     -- Algalon the Observer
     [757] = {
-        map_id = 32871,
-        creature_id = {},
+        map_id = 603,
+        creature_id = {32871},
     },
-    -- todo : encounter ids for stuff beyond this point need verified, they don't reconcile with `DungeonEncounter` in DB
-    -- suggestion is to use wowhead to lookup names of creature, WOW.tools doesn't have the information
-    -- Festergut
-    [1097] = {
-        map_id = 631,
-        creature_id = {36626},
+    -- Northrend Beasts
+    [629] = {
+        map_id = 649,
+        creature_id = {34796, 35144, 34799, 34797},
+        name = 'The Beasts of Northrend'
     },
-    -- Putricide
-    [1102] = {
-        map_id = 631,
-        creature_id = {36678},
+    -- Lord Jaraxxus
+    [633] = {
+        map_id = 649,
+        creature_id = {34780},
     },
-    -- Rotface
-    [1104] = {
-        map_id = 631,
-        creature_id = {36627},
+    -- Faction Champions
+    [637] = {
+        map_id = 649,
+        creature_id = {
+            34458, 34451, 34459, 34448, 34449, 34445, 34456, 34447, 34441, 34454, 34444, 34455, 34450, 34453, -- horde
+            34461, 34460, 34469, 34467, 34468, 34471, 34465, 34466, 34473, 34472, 34470, 34463, 34474, 34475  -- alliance
+        },
+        name = 'Faction Champions'
     },
-    -- Deathbringer Saurfang
-    [1096] = {
-        map_id = 631,
-        creature_id = {37813},
+    -- Twin Val'kyr
+    [641] = {
+        map_id = 649,
+        creature_id = {34497, 34497},
+        name = 'The Twin Val\'kyr'
     },
-    -- Lady Deathwhisper"
-    [1100] = {
-        map_id = 631,
-        creature_id = {36855},
+    -- Anub
+    [645] = {
+        map_id = 649,
+        creature_id = {34564},
     },
-    -- Icecrown Gunship Battle
-    [1099] = {
-        map_id = 631,
-        creature_id = {37215, 37540},
-    },
-    -- Lord Marrowgar
-    [1101] = {
+    -- Lord Marrowgar (1101)
+    [845] = {
         map_id = 631,
         creature_id = {36612},
     },
-    -- Lich King
-    [1106] = {
+    -- Lady Deathwhisper (1100)
+    [846] = {
         map_id = 631,
-        creature_id = {36597},
+        creature_id = {36855},
     },
-    -- The Blood Council
-    [1095] = {
+    -- Icecrown Gunship Battle (1099)
+    [847] = {
+        map_id = 631,
+        creature_id = {37215, 37540},
+        name = 'Icecrown Gunship Battle'
+    },
+    -- Deathbringer Saurfang (1096)
+    [848] = {
+        map_id = 631,
+        creature_id = {37813},
+    },
+    -- Rotface (1104)
+    [850] = {
+        map_id = 631,
+        creature_id = {36627},
+    },
+    -- Festergut (1097)
+    [849] = {
+        map_id = 631,
+        creature_id = {36626},
+    },
+    -- Putricide (1102)
+    [851] = {
+        map_id = 631,
+        creature_id = {36678},
+    },
+    -- The Blood Council (1095)
+    [852] = {
         map_id = 631,
         creature_id = {37970, 37972, 37973},
+        name = 'Blood Council'
     },
-    -- Blood-Queen Lana'thel
-    [1103] = {
+    -- Blood-Queen Lana'thel (1103)
+    [853] = {
         map_id = 631,
         creature_id = {37955},
     },
-    -- Sindragosa
-    [1105] = {
-        map_id = 631,
-        creature_id = {36853},
-    },
-    -- Valithria
-    [1098] = {
+    -- Valithria (1098)
+    [854] = {
         map_id = 631,
         creature_id = {36789},
     },
+    -- Sindragosa (1105)
+    [855] = {
+        map_id = 631,
+        creature_id = {36853},
+    },
+    -- Lich King (1106)
+    [856] = {
+        map_id = 631,
+        creature_id = {36597},
+    },
+
     --[] = {
     --    map_id = ,
     --    creature_id = {},

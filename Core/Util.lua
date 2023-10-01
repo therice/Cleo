@@ -442,11 +442,14 @@ end
 local EncounterCreatures = Util.Memoize.Memoize(
     function(encounterId)
         if encounterId then
-            local creatureIds = LibEncounter:GetEncounterCreatureId(encounterId)
-            if creatureIds then
-                local creatureNames =
-                    Util(creatureIds):Copy()
-                     :Map(
+            local encounterName = LibEncounter:GetEncounterName(encounterId)
+            if Util.Strings.IsSet(encounterName) then
+                return encounterName
+            else
+                local creatureIds = LibEncounter:GetEncounterCreatureId(encounterId)
+                if creatureIds then
+                    local creatureNames = Util(creatureIds):Copy()
+                                                           :Map(
                         function(id)
                             local eh, name = geterrorhandler()
                             Util.Functions.try(
@@ -454,22 +457,24 @@ local EncounterCreatures = Util.Memoize.Memoize(
                                     seterrorhandler(function(msg) Logging:Warn("%s", msg) end)
                                     name = LibEncounter:GetCreatureName(id)
                                 end
-                            ).finally(
+                            )   .finally(
                                 function()
                                     seterrorhandler(eh)
                                 end
                             )
-
                             return name
                         end
                     )()
-                return Util.Strings.Join(", ", Util.Tables.Values(creatureNames))
+
+                    return Util.Strings.Join(", ", Util.Tables.Values(creatureNames))
+                end
             end
         end
 
         return nil
     end
 )
+
 
 function AddOn.GetEncounterCreatures(...)
     return EncounterCreatures(...)

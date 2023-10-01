@@ -256,11 +256,29 @@ lib.TokenEquipmentLocations = {
     --]]
     -- Trophies and Regalia are used for Chest, Hands, Head, Legs, and Shoulders
     -- 10 player
-    [47242]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Trophy of the Crusade, same item for 25 player
+    [47242]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },  -- Trophy of the Crusade, same item for 25 player
     -- 25 player
-    [47557]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Regalia of the Grand Conqueror (Paladin, Priest, Warlock)
-    [47558]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Regalia of the Grand Protector (Warrior, Hunter, Shaman)
-    [47559]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot"},  -- Regalia of the Grand Vanquisher (Rogue, Death Knight, Mage, Druid)
+    [47557]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },  -- Regalia of the Grand Conqueror (Paladin, Priest, Warlock)
+    [47558]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },  -- Regalia of the Grand Protector (Warrior, Hunter, Shaman)
+    [47559]  = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },  -- Regalia of the Grand Vanquisher (Rogue, Death Knight, Mage, Druid)
+
+    -- WOTLK Classic P4 (T10)
+    --[[
+
+    How does tier work in ICC?
+
+    Item Level 251 (Tier 10) : Emblem of Frost
+    Item Level 264 (Tier 10.25) : Item Level 251 (Tier 10) item and Mark of Sanctification (Normal)
+    Item Level 277 (Tier 10.5) :  Item Level 264 (Tier 10.25) item and Mark of Sanctification (Heroic)
+
+    --]]
+    -- 10/25 player
+    [52025] = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },   -- Vanquisher's Mark of Sanctification (Rogue, Death Knight, Mage, Druid)
+    [52026] = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },   -- Protector's Mark of Sanctification (Warrior, Hunter, Shaman)
+    [52027] = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },   -- Conqueror's Mark of Sanctification (Paladin, Priest, Warlock)
+    [52028] = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },   -- Vanquisher's Mark of Sanctification - Heroic (Rogue, Death Knight, Mage, Druid)
+    [52029] = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },   -- Protector's Mark of Sanctification - Heroic (Warrior, Hunter, Shaman)
+    [52030] = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },   -- Conqueror's Mark of Sanctification - Heroic (Paladin, Priest, Warlock)
 }
 
 -- mapping from token to items (id) which are rewarded from turning in
@@ -407,4 +425,12 @@ lib.TokenItems = {
     [47557] = {},
     [47558] = {},
     [47559] = {},
+    -- WOTLK Classic P4 (T10)
+    -- 10/25 player (matches to a minimum of 5 items per associated classes, typically more. not enumerating)
+    [52025] = { },   -- Vanquisher's Mark of Sanctification (Rogue, Death Knight, Mage, Druid)
+    [52026] = { },   -- Protector's Mark of Sanctification (Warrior, Hunter, Shaman)
+    [52027] = { },   -- Conqueror's Mark of Sanctification (Paladin, Priest, Warlock)
+    [52028] = { },   -- Vanquisher's Mark of Sanctification - Heroic (Rogue, Death Knight, Mage, Druid)
+    [52029] = { },   -- Protector's Mark of Sanctification - Heroic (Warrior, Hunter, Shaman)
+    [52030] = { },   -- Conqueror's Mark of Sanctification - Heroic (Paladin, Priest, Warlock)
 }

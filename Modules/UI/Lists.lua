@@ -568,7 +568,11 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 		end
 		altEdit.SetActive = function(self, active)
 			self:SetMovable(active)
-			self:RegisterForDrag(active and "LeftButton" or nil)
+			if active then
+				self:RegisterForDrag("LeftButton")
+			else
+				self:RegisterForDrag()
+			end
 			self:SetScript("OnDragStart", active and EditOnDragStart or nil)
 			self:SetScript("OnDragStop", active and function(e) EditOnDragStop(e, EditDragType.Within) end or nil)
 			if active then self.xButton:Show() else self.xButton:Hide() end
@@ -1329,7 +1333,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 					              Util.Objects.ToString(all),
 					              Util.Objects.ToString(unassigned),
 					              Util.Objects.ToString(Util.Tables.CopySelect(all, unpack(unassigned))))
-					--]]
+	                --]]
 					return Util.Tables.CopySelect(all, unpack(unassigned)), list and list:GetEquipment(true) or {}
 				end
 			)

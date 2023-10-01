@@ -13,6 +13,8 @@ AceEvent:Embed(lib)
 --local BabbleInv = LibStub("LibBabble-Inventory-3.0"):GetReverseLookupTable()
 local Deformat = LibStub("LibDeformat-3.0")
 local Logging  = LibStub("LibLogging-1.0")
+--- @type LibUtil
+local Util  = LibStub("LibUtil-1.1")
 
 -- Use the GameTooltip or create a new one and initialize it
 -- Used to extract Class limitations for an item, upgraded ilvl, and binding type.
@@ -428,7 +430,45 @@ function lib:NeutralizeItem(item)
     return item:gsub(NEUTRALIZE_ITEM_PATTERN, NEUTRALIZE_ITEM_REPLACEMENT)
 end
 
-local restrictedClassFrameNameFormat = tooltip:GetName().."TextLeft%d"
+local TooltipFrameNameFormat = tooltip:GetName().."TextLeft%d"
+local HEROIC = strtrim(_G.PLAYER_DIFFICULTY2)
+
+lib.HEROIC = HEROIC
+
+lib.IsItemHeroic = Util.Memoize.Memoize(
+    function(itemLink)
+        if type(itemLink) == "string" and itemLink:trim() == "" then return false end
+
+        tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+        tooltip:SetHyperlink(itemLink)
+
+        Logging:Trace("IsItemHeroic(%s) : NumLines=%s", itemLink, tooltip:NumLines())
+
+        for i = 1, math.min(tooltip:NumLines(), 3) or 0 do
+            local line = getglobal(TooltipFrameNameFormat:format(i))
+            if line and line.GetText then
+                local text = strtrim(line:GetText() or "")
+                Logging:Trace("IsItemHeroic(%s) : Text=%s", itemLink, text)
+                if text == HEROIC then
+                    Logging:Trace("IsItemHeroic(%s) : IsHeroic=true", itemLink)
+                    tooltip:Hide()
+                    return true
+                end
+            end
+        end
+
+        Logging:Trace("IsItemHeroic(%s) : IsHeroic=false", itemLink)
+        tooltip:Hide()
+        return false
+    end
+)
+
+lib.DisambiguateIfHeroicItem = Util.Memoize.Memoize(
+    function(item)
+        local isHeroic = lib.IsItemHeroic(item:GetItemLink())
+        return isHeroic and format("%s (%s)", item:GetItemName(), lib.HEROIC) or item:GetItemName()
+    end
+)
 
 -- @return The bitwise flag indicates the classes allowed for the item, as specified on the tooltip by "Classes: xxx"
 -- If the tooltip does not specify "Classes: xxx" or if the item is not cached, return 0xffffffff
@@ -446,7 +486,7 @@ function lib:GetItemClassesAllowedFlag(itemLink)
 
     local delimiter = ", "
     for i = 1, tooltip:NumLines() or 0 do
-        local line = getglobal(restrictedClassFrameNameFormat:format(i))
+        local line = getglobal(TooltipFrameNameFormat:format(i))
         if line and line.GetText then
             local text = line:GetText() or ""
             Logging:Trace("GetItemClassesAllowedFlag(%s) : Text=%s", itemLink, text)

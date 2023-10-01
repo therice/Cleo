@@ -341,6 +341,11 @@ function ScrollList.LineEnter(self)
 		parent.hoveredLine = self
 	end
 
+	if self:GetText():len() > 32 then
+		UIUtil.ShowTooltip(self, nil, self:GetText())
+	end
+
+
 	if parent.enableHoverAnimation then
 		if not self.anim then
 			self.anim = self:CreateAnimationGroup()
@@ -394,11 +399,14 @@ function ScrollList.LineEnter(self)
 end
 
 function ScrollList.LineLeave(self)
+
 	local parent = self.mainFrame
 	if parent.HoverListValue then
 		parent:HoverListValue(false, self.index, self)
 	end
 	parent.hoveredLine = nil
+
+	UIUtil:HideTooltip()
 
 	if parent.enableHoverAnimation then
 		if self.anim:IsPlaying() then self.anim:Stop() end

@@ -250,6 +250,14 @@ AddOn.DefaultCustomItems = {
     [47557] = { 4, 258, ItemUtil.CustomItemInvTypeSelf },   -- Regalia of the Grand Conqueror (Paladin, Priest, Warlock)
     [47558] = { 4, 258, ItemUtil.CustomItemInvTypeSelf },   -- Regalia of the Grand Protector (Warrior, Hunter, Shaman)
     [47559] = { 4, 258, ItemUtil.CustomItemInvTypeSelf },   -- Regalia of the Grand Vanquisher (Rogue, Death Knight, Mage, Druid)
+
+    -- WOTLK P4
+    [52025] = { 4, 264, ItemUtil.CustomItemInvTypeSelf },   -- Vanquisher's Mark of Sanctification (Rogue, Death Knight, Mage, Druid)
+    [52026] = { 4, 264, ItemUtil.CustomItemInvTypeSelf },   -- Protector's Mark of Sanctification (Warrior, Hunter, Shaman)
+    [52027] = { 4, 264, ItemUtil.CustomItemInvTypeSelf },   -- Conqueror's Mark of Sanctification (Paladin, Priest, Warlock)
+    [52028] = { 4, 277, ItemUtil.CustomItemInvTypeSelf },   -- Vanquisher's Mark of Sanctification - Heroic (Rogue, Death Knight, Mage, Druid)
+    [52029] = { 4, 277, ItemUtil.CustomItemInvTypeSelf },   -- Protector's Mark of Sanctification - Heroic (Warrior, Hunter, Shaman)
+    [52030] = { 4, 277, ItemUtil.CustomItemInvTypeSelf },   -- Conqueror's Mark of Sanctification - Heroic (Paladin, Priest, Warlock)
 }
 
 AddOn.TestItems = {
@@ -344,6 +352,11 @@ AddOn.TestItems = {
     49636,49463,49310,49644,49295,49294,49491,49494,49465,49499,49495,49501,49498,49500,49496,49497,49493,49490,49492,
     49489,49636,49464,49488,49644,49295,49294,
     -- WOTLK P3 END
+
+    -- WOTLK P4 START
+    -- marks
+    52025, 52026, 52027, 52028, 52029, 52030,
+    -- the rest (TODO : add item ids once data is available)
 }
 
 --[[

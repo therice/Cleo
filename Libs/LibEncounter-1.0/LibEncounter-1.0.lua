@@ -122,6 +122,19 @@ function lib:GetEncounterCreatureId(encounterId)
     return encounter and encounter.creature_id or nil
 end
 
+-- only returns a value if encounter has an explicit name
+function lib:GetEncounterName(encounterId)
+    local encounter = lib.Encounters[encounterId]
+    local encounter_name = encounter and encounter.name or nil
+    if encounter_name then
+        if LB[encounter_name] then
+            return LB[encounter_name]
+        end
+    end
+
+    return nil
+end
+
 function lib:GetEncounterMapId(encounterId)
     local encounter = lib.Encounters[encounterId]
     return encounter and encounter.map_id or nil
