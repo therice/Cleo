@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2024.0.0 (2023-10-01)
+* Add support for WOTLK P4 (Icecrown Citadel) c96b49da88601a64f4dde3ecaf7ca9cfdc8d2424
+
 2023.0.2 (2023-07-12)
 * Address issues with only 'suicide' showing up on loot window for trophies and regalia 7b7d327b528add999589636dfc024cee712ba2b4
 * Do not transition response to offline/not installed if an ACK has been received within timeout. 162fa5f503f0c9c7f929b699bbb0eabe590be0bd
