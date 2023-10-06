@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2024.0.1 (2023-10-06)
+* Add Phase 4 items to test data a87095faceac301a6e1fe334b2acd04d49162729
+
 2024.0.0 (2023-10-01)
 * Add support for WOTLK P4 (Icecrown Citadel) c96b49da88601a64f4dde3ecaf7ca9cfdc8d2424
 
