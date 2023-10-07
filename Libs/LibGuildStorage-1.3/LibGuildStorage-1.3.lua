@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibGuildStorage-1.3"
-local MINOR_VERSION = 20502
+local MINOR_VERSION = 30402
 local LIB_MESSAGE_PREFIX = "GuildStorage13"
 
 --- @class LibGuildStorage
@@ -8,11 +8,16 @@ if not lib then return end
 
 C_ChatInfo.RegisterAddonMessagePrefix(LIB_MESSAGE_PREFIX)
 
-local Logging       = LibStub("LibLogging-1.0")
-local Class         = LibStub("LibClass-1.0")
-local Util          = LibStub("LibUtil-1.1")
-local Cbh           = LibStub("CallbackHandler-1.0")
-local AceHook       = LibStub("AceHook-3.0")
+--- @type LibLogging
+local Logging = LibStub("LibLogging-1.0")
+--- @type LibClass
+local Class = LibStub("LibClass-1.0")
+--- @type LibUtil
+local Util = LibStub("LibUtil-1.1")
+--- @type CallbackHandler
+local Cbh = LibStub("CallbackHandler-1.0")
+--- @type AceHook
+local AceHook = LibStub("AceHook-3.0")
 
 if not lib.callbacks then
     lib.callbacks = Cbh:New(lib)
