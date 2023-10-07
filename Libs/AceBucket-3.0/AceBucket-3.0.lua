@@ -37,6 +37,7 @@
 -- @release $Id$
 
 local MAJOR, MINOR = "AceBucket-3.0", 4
+--- @class AceBucket
 local AceBucket, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not AceBucket then return end -- No Upgrade needed
