@@ -479,7 +479,9 @@ function AddOn:UpdateGroupMembers()
     -- make sure we are present in the group, no reason we should be omitted
     -- this is just a "safety net"
     -- e.g. {'Jackburtón-Atiesh' = true}
-    group[self:UnitName(self.player:GetName())] = true
+    if self.player then
+        group[self:UnitName(self.player:GetName())] = true
+    end
 
     --Logging:Debug("%s", Util.Objects.ToString(group))
 
@@ -490,34 +492,39 @@ function AddOn:UpdateGroupMembers()
         Logging:Warn("UpdateGroupMembers() : raid roster incomplete, rescheduling")
         self:ScheduleTimer("UpdateGroupMembers", 1)
     else
+        -- this section is only applicable in test mode, will return nil if that's not the case
         local testGroupMembers = ExtraGroupMembers()
-        if Util.Objects.IsTable(testGroupMembers) and Util.Tables.Count(testGroupMembers) > 0 then
+        if Util.Objects.IsSet(testGroupMembers) and Util.Objects.IsTable(testGroupMembers) and Util.Tables.Count(testGroupMembers) > 0 then
             for _, p in pairs(testGroupMembers) do
                 -- e.g. group[self:UnitName("Avalona-Atiesh")] = true
                 group[self:UnitName(p)] = true
             end
         end
 
-        -- go through previous state and dispatch player messages (as necessary)
-        -- self.group is the previous state (reflects previous roster)
-        -- group is the current state (reflects current roster)
-        --
-        -- the SendMessage() calls are by default synchronous (inline), unless any subscriber
-        -- has registered interest in a manner that dictates different semantics (e.g. bucket messages on a timer)
-        for player, _ in pairs(self.group) do
-            if not group[player] then
-                Logging:Debug("UpdateGroupMembers() : dispatching PlayerLeftGroup for %s", tostring(player))
-                self:SendMessage(C.Messages.PlayerLeftGroup, player)
+        -- this section is all about Player joining and leaving the group and dispatching associated messages
+        -- currently, this is only consumed by the Master Looter, so don't bother with it unless
+        -- the current player is the master looter and the associated module is active and handling loot
+        if self:MasterLooterModule():IsHandled() then
+            -- go through previous state and dispatch player messages (as necessary)
+            -- self.group is the previous state (reflects previous roster)
+            -- group is the current state (reflects current roster)
+            --
+            -- the SendMessage() calls are by default synchronous (inline), unless any subscriber
+            -- has registered interest in a manner that dictates different semantics (e.g. bucket messages on a timer)
+            for player, _ in pairs(self.group) do
+                if not group[player] then
+                    Logging:Debug("UpdateGroupMembers() : dispatching PlayerLeftGroup for %s", tostring(player))
+                    self:SendMessage(C.Messages.PlayerLeftGroup, player)
+                end
+            end
+
+            for player, _ in pairs(group) do
+                if not self.group[player] then
+                    Logging:Debug("UpdateGroupMembers() : dispatching PlayerJoinedGroup for %s", tostring(player))
+                    self:SendMessage(C.Messages.PlayerJoinedGroup, player)
+                end
             end
         end
-
-        for player, _ in pairs(group) do
-            if not self.group[player] then
-                Logging:Debug("UpdateGroupMembers() : dispatching PlayerJoinedGroup for %s", tostring(player))
-                self:SendMessage(C.Messages.PlayerJoinedGroup, player)
-            end
-        end
-
 
         -- track current state
         -- currently, nothing in the code path which consumes player joined/left messages relies
@@ -527,7 +534,7 @@ function AddOn:UpdateGroupMembers()
         self.group = group
     end
 
-    Logging:Trace("UpdateGroupMembers() : %s", Util.Objects.ToString(self.group))
+    --Logging:Trace("UpdateGroupMembers() : %s", Util.Objects.ToString(self.group))
 
     return self.group
 end

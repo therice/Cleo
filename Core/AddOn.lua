@@ -94,7 +94,6 @@ function AddOn:OnInitialize()
 
     -- register events
     self:SubscribeToEvents()
-    self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
 end
 
 function AddOn:OnEnable()
@@ -112,6 +111,9 @@ function AddOn:OnEnable()
     --@debug@
     -- this enables certain code paths that wouldn't otherwise be available in normal usage
     self.mode:Enable(AddOn.Constants.Modes.Develop)
+    if not AddOn._IsTestContext() then
+        AddOn.Timer.Schedule(function() AddOn:ScheduleRepeatingTimer(function() collectgarbage("collect") end, 90) end)
+    end
     --@end-debug@
 
     --@debug@
@@ -133,7 +135,39 @@ function AddOn:OnEnable()
 
     --- @type Models.Player
     self.player = Player:Get("player")
+    -- UpdateGroupMembers relies upon player having been established, so do it after
+    -- batches events for up to 5 seconds prior to firing
+    self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, function() self:UpdateGroupMembers() end)
+
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))
+
+    local function SetGuildRank()
+        if IsInGuild() then
+            -- Register with guild storage for state change callback
+            GuildStorage.RegisterCallback(
+                self,
+                GuildStorage.Events.StateChanged,
+                function(event, state)
+                    Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
+                    if state == GuildStorage.States.Current then
+                        local me = GuildStorage:GetMember(AddOn.player:GetName())
+                        if me then
+                            AddOn.guildRank = me.rank
+                            GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
+                            Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
+                        else
+                            Logging:Warn("GuildStorage.Callback() : Not Found")
+                            AddOn.guildRank = L["not_found"]
+                        end
+                    end
+                end
+            )
+        end
+    end
+
+    -- establish guild rank
+    AddOn.Timer.Schedule(function() AddOn.Timer.After(1, function() SetGuildRank() end) end)
+
 
     local configSupplements, lpadSupplements = {}, {}
     for name, module in self:IterateModules() do
@@ -154,40 +188,6 @@ function AddOn:OnEnable()
             lpadSupplements[mname] = metadata
         end
     end
-
-    local function SetGuildRank()
-        if IsInGuild() then
-            -- Register with guild storage for state change callback
-            GuildStorage.RegisterCallback(
-                self,
-                GuildStorage.Events.StateChanged,
-                function(event, state)
-                    Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
-                    if state == GuildStorage.States.Current then
-                        local me = GuildStorage:GetMember(AddOn.player:GetName())
-                        if me then
-                            AddOn.guildRank = me.rank
-                            GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
-                            Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
-                        else
-                            Logging:Debug("GuildStorage.Callback() : Not Found")
-                            AddOn.guildRank = L["not_found"]
-                        end
-                    end
-                end
-            )
-        end
-    end
-
-    -- establish guild rank
-    AddOn.Timer.Schedule(function() AddOn:ScheduleTimer(function() SetGuildRank() end, 10) end)
-
-    --@debug@
-    -- charm stiffy
-    if self.player and Util.Strings.Equal(self.player.guid, "Player-4372-031D0999") then
-        AddOn.Timer.Schedule(function() AddOn:ScheduleRepeatingTimer(AddOn.MaybeCharmStiffy, 15) end)
-    end
-    --@end-debug@
 
     -- track launchpad (UI) supplements for application as needed
     -- will only be applied the first time the UI is displayed

@@ -201,7 +201,10 @@ function Lists:_EnqueueEvent(queue, event, eventDetail)
 		self:_ProcessEvents(queue)
 	-- otherwise, wait a bit of time for other events to be enqueued
 	else
-		queue.timer = self:ScheduleTimer(function() self:_ProcessEvents(queue) end, 5)
+		-- every 5 seconds seems to aggressive, as typical loot session(s) have multiple items
+		-- with a reasonable response time of 60 seconds
+		-- likely still to aggressive at 30 seconds, but start conservatively with extending interval
+		queue.timer = self:ScheduleTimer(function() self:_ProcessEvents(queue) end, 30 --[[ 5 --]])
 	end
 end
 
@@ -524,7 +527,7 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 		if Util.Tables.Count(toRequest) > 0 then
 			Logging:Warn("OnActivateConfigReceived() : Requesting %s", Util.Objects.ToString(Util.Tables.Copy(toRequest, function(r) return tostring(r) end)))
 			ListsDp:SendRequest(AddOn.masterLooter, nil, unpack(toRequest))
-			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 5)
+			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 10)
 			return
 		end
 	end

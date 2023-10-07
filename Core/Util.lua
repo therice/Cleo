@@ -432,13 +432,6 @@ function AddOn.GetDateTime()
     return date("%m/%d/%y %H:%M:%S", time())
 end
 
-function AddOn.MaybeCharmStiffy()
-    if Util.Objects.In(math.random(100), 5, 12, 24, 33, 41, 55, 67, 74, 82, 93) then
-        local charm = math.random(6)
-        PlaySoundFile(C.Sounds['CharmStiffy'.. tostring(charm)], C.SoundChannels.Master)
-    end
-end
-
 local EncounterCreatures = Util.Memoize.Memoize(
     function(encounterId)
         if encounterId then

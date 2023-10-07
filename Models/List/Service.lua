@@ -550,11 +550,11 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 			list:RemovePlayer(player, false)
 		end
 
-		Logging:Trace(
-			"OnPlayerEvent[after](%s, %s, %s) : %s",
-			tostring(player), tostring(joined), tostring(listId),
-			Util.Objects.ToString(Util.Tables.Copy(list.players, function(p) return p:toTable() end))
-		)
+		--Logging:Trace(
+		--	"OnPlayerEvent[after](%s, %s, %s) : %s",
+		--	tostring(player), tostring(joined), tostring(listId),
+		--	Util.Objects.ToString(Util.Tables.Copy(list.players, function(p) return p:toTable() end))
+		--)
 	end
 end
 
