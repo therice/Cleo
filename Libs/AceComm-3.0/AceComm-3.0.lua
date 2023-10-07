@@ -9,7 +9,7 @@
 -- make into AceComm.
 -- @class file
 -- @name AceComm-3.0
--- @release $Id: AceComm-3.0.lua 1202 2019-05-15 23:11:22Z nevcairiel $
+-- @release $Id$
 
 --[[ AceComm-3.0
 
@@ -34,10 +34,6 @@ local error, assert = error, assert
 
 -- WoW APIs
 local Ambiguate = Ambiguate
-
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: LibStub, DEFAULT_CHAT_FRAME, geterrorhandler, RegisterAddonMessagePrefix
 
 AceComm.embeds = AceComm.embeds or {}
 
@@ -87,11 +83,11 @@ local warnedPrefix=false
 function AceComm:SendCommMessage(prefix, text, distribution, target, prio, callbackFn, callbackArg)
 	prio = prio or "NORMAL"	-- pasta's reference implementation had different prio for singlepart and multipart, but that's a very bad idea since that can easily lead to out-of-sequence delivery!
 	if not( type(prefix)=="string" and
-			type(text)=="string" and
-			type(distribution)=="string" and
-			(target==nil or type(target)=="string" or type(target)=="number") and
-			(prio=="BULK" or prio=="NORMAL" or prio=="ALERT")
-		) then
+		type(text)=="string" and
+		type(distribution)=="string" and
+		(target==nil or type(target)=="string" or type(target)=="number") and
+		(prio=="BULK" or prio=="NORMAL" or prio=="ALERT")
+	) then
 		error('Usage: SendCommMessage(addon, "prefix", "text", "distribution"[, "target"[, "prio"[, callbackFn, callbackarg]]])', 2)
 	end
 
@@ -235,9 +231,9 @@ end
 
 if not AceComm.callbacks then
 	AceComm.callbacks = CallbackHandler:New(AceComm,
-						"_RegisterComm",
-						"UnregisterComm",
-						"UnregisterAllComm")
+	                                        "_RegisterComm",
+	                                        "UnregisterComm",
+	                                        "UnregisterAllComm")
 end
 
 AceComm.callbacks.OnUsed = nil

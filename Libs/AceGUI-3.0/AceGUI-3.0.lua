@@ -24,7 +24,7 @@
 -- f:AddChild(btn)
 -- @class file
 -- @name AceGUI-3.0
--- @release $Id: AceGUI-3.0.lua 1247 2021-01-23 23:16:39Z funkehdude $
+-- @release $Id$
 local ACEGUI_MAJOR, ACEGUI_MINOR = "AceGUI-3.0", 41
 local AceGUI, oldminor = LibStub:NewLibrary(ACEGUI_MAJOR, ACEGUI_MINOR)
 
@@ -35,16 +35,10 @@ local tinsert, wipe = table.insert, table.wipe
 local select, pairs, next, type = select, pairs, next, type
 local error, assert = error, assert
 local setmetatable, rawget = setmetatable, rawget
-local math_max = math.max
+local math_max, math_min, math_ceil = math.max, math.min, math.ceil
 
 -- WoW APIs
 local UIParent = UIParent
-
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: geterrorhandler, LibStub
-
---local con = LibStub("AceConsole-3.0",true)
 
 AceGUI.WidgetRegistry = AceGUI.WidgetRegistry or {}
 AceGUI.LayoutRegistry = AceGUI.LayoutRegistry or {}
@@ -94,38 +88,38 @@ do
 	AceGUI.objPools = AceGUI.objPools or {}
 	local objPools = AceGUI.objPools
 	--Returns a new instance, if none are available either returns a new table or calls the given contructor
-	function newWidget(type)
-		if not WidgetRegistry[type] then
+	function newWidget(widgetType)
+		if not WidgetRegistry[widgetType] then
 			error("Attempt to instantiate unknown widget type", 2)
 		end
 
-		if not objPools[type] then
-			objPools[type] = {}
+		if not objPools[widgetType] then
+			objPools[widgetType] = {}
 		end
 
-		local newObj = next(objPools[type])
+		local newObj = next(objPools[widgetType])
 		if not newObj then
-			newObj = WidgetRegistry[type]()
-			newObj.AceGUIWidgetVersion = WidgetVersions[type]
+			newObj = WidgetRegistry[widgetType]()
+			newObj.AceGUIWidgetVersion = WidgetVersions[widgetType]
 		else
-			objPools[type][newObj] = nil
+			objPools[widgetType][newObj] = nil
 			-- if the widget is older then the latest, don't even try to reuse it
 			-- just forget about it, and grab a new one.
-			if not newObj.AceGUIWidgetVersion or newObj.AceGUIWidgetVersion < WidgetVersions[type] then
-				return newWidget(type)
+			if not newObj.AceGUIWidgetVersion or newObj.AceGUIWidgetVersion < WidgetVersions[widgetType] then
+				return newWidget(widgetType)
 			end
 		end
 		return newObj
 	end
 	-- Releases an instance to the Pool
-	function delWidget(obj,type)
-		if not objPools[type] then
-			objPools[type] = {}
+	function delWidget(obj,widgetType)
+		if not objPools[widgetType] then
+			objPools[widgetType] = {}
 		end
-		if objPools[type][obj] then
+		if objPools[widgetType][obj] then
 			error("Attempt to Release Widget that is already released", 2)
 		end
-		objPools[type][obj] = true
+		objPools[widgetType][obj] = true
 	end
 end
 
@@ -141,9 +135,9 @@ end
 -- OnAcquire function on it, before returning.
 -- @param type The type of the widget.
 -- @return The newly created widget.
-function AceGUI:Create(type)
-	if WidgetRegistry[type] then
-		local widget = newWidget(type)
+function AceGUI:Create(widgetType)
+	if WidgetRegistry[widgetType] then
+		local widget = newWidget(widgetType)
 
 		if rawget(widget, "Acquire") then
 			widget.OnAcquire = widget.Acquire
@@ -161,7 +155,7 @@ function AceGUI:Create(type)
 		if widget.OnAcquire then
 			widget:OnAcquire()
 		else
-			error(("Widget type %s doesn't supply an OnAcquire Function"):format(type))
+			error(("Widget type %s doesn't supply an OnAcquire Function"):format(widgetType))
 		end
 		-- Set the default Layout ("List")
 		safecall(widget.SetLayout, widget, "List")
@@ -185,8 +179,8 @@ function AceGUI:Release(widget)
 
 	if widget.OnRelease then
 		widget:OnRelease()
---	else
---		error(("Widget type %s doesn't supply an OnRelease Function"):format(widget.type))
+		--	else
+		--		error(("Widget type %s doesn't supply an OnRelease Function"):format(widget.type))
 	end
 	for k in pairs(widget.userdata) do
 		widget.userdata[k] = nil
@@ -410,10 +404,10 @@ do
 		end
 	end
 
---	local function LayoutOnUpdate(this)
---		this:SetScript("OnUpdate",nil)
---		this.obj:PerformLayout()
---	end
+	--	local function LayoutOnUpdate(this)
+	--		this:SetScript("OnUpdate",nil)
+	--		this.obj:PerformLayout()
+	--	end
 
 	local WidgetContainerBase = AceGUI.WidgetContainerBase
 
@@ -435,9 +429,9 @@ do
 	--call this function to layout, makes sure layed out objects get a frame to get sizes etc
 	WidgetContainerBase.DoLayout = function(self)
 		self:PerformLayout()
---		if not self.parent then
---			self.frame:SetScript("OnUpdate", LayoutOnUpdate)
---		end
+		--		if not self.parent then
+		--			self.frame:SetScript("OnUpdate", LayoutOnUpdate)
+		--		end
 	end
 
 	WidgetContainerBase.AddChild = function(self, child, beforeWidget)
@@ -589,25 +583,25 @@ AceGUI.counts = AceGUI.counts or {}
 -- This is used by widgets that require a named frame, e.g. when a Blizzard
 -- Template requires it.
 -- @param type The widget type
-function AceGUI:GetNextWidgetNum(type)
-	if not self.counts[type] then
-		self.counts[type] = 0
+function AceGUI:GetNextWidgetNum(widgetType)
+	if not self.counts[widgetType] then
+		self.counts[widgetType] = 0
 	end
-	self.counts[type] = self.counts[type] + 1
-	return self.counts[type]
+	self.counts[widgetType] = self.counts[widgetType] + 1
+	return self.counts[widgetType]
 end
 
 --- Return the number of created widgets for this type.
 -- In contrast to GetNextWidgetNum, the number is not incremented.
--- @param type The widget type
-function AceGUI:GetWidgetCount(type)
-	return self.counts[type] or 0
+-- @param widgetType The widget type
+function AceGUI:GetWidgetCount(widgetType)
+	return self.counts[widgetType] or 0
 end
 
 --- Return the version of the currently registered widget type.
--- @param type The widget type
-function AceGUI:GetWidgetVersion(type)
-	return WidgetVersions[type]
+-- @param widgetType The widget type
+function AceGUI:GetWidgetVersion(widgetType)
+	return WidgetVersions[widgetType]
 end
 
 -------------
@@ -622,53 +616,53 @@ end
 
 -- Very simple Layout, Children are stacked on top of each other down the left side
 AceGUI:RegisterLayout("List",
-	function(content, children)
-		local height = 0
-		local width = content.width or content:GetWidth() or 0
-		for i = 1, #children do
-			local child = children[i]
+                      function(content, children)
+	                      local height = 0
+	                      local width = content.width or content:GetWidth() or 0
+	                      for i = 1, #children do
+		                      local child = children[i]
 
-			local frame = child.frame
-			frame:ClearAllPoints()
-			frame:Show()
-			if i == 1 then
-				frame:SetPoint("TOPLEFT", content)
-			else
-				frame:SetPoint("TOPLEFT", children[i-1].frame, "BOTTOMLEFT")
-			end
+		                      local frame = child.frame
+		                      frame:ClearAllPoints()
+		                      frame:Show()
+		                      if i == 1 then
+			                      frame:SetPoint("TOPLEFT", content)
+		                      else
+			                      frame:SetPoint("TOPLEFT", children[i-1].frame, "BOTTOMLEFT")
+		                      end
 
-			if child.width == "fill" then
-				child:SetWidth(width)
-				frame:SetPoint("RIGHT", content)
+		                      if child.width == "fill" then
+			                      child:SetWidth(width)
+			                      frame:SetPoint("RIGHT", content)
 
-				if child.DoLayout then
-					child:DoLayout()
-				end
-			elseif child.width == "relative" then
-				child:SetWidth(width * child.relWidth)
+			                      if child.DoLayout then
+				                      child:DoLayout()
+			                      end
+		                      elseif child.width == "relative" then
+			                      child:SetWidth(width * child.relWidth)
 
-				if child.DoLayout then
-					child:DoLayout()
-				end
-			end
+			                      if child.DoLayout then
+				                      child:DoLayout()
+			                      end
+		                      end
 
-			height = height + (frame.height or frame:GetHeight() or 0)
-		end
-		safecall(content.obj.LayoutFinished, content.obj, nil, height)
-	end)
+		                      height = height + (frame.height or frame:GetHeight() or 0)
+	                      end
+	                      safecall(content.obj.LayoutFinished, content.obj, nil, height)
+                      end)
 
 -- A single control fills the whole content area
 AceGUI:RegisterLayout("Fill",
-	function(content, children)
-		if children[1] then
-			children[1]:SetWidth(content:GetWidth() or 0)
-			children[1]:SetHeight(content:GetHeight() or 0)
-			children[1].frame:ClearAllPoints()
-			children[1].frame:SetAllPoints(content)
-			children[1].frame:Show()
-			safecall(content.obj.LayoutFinished, content.obj, nil, children[1].frame:GetHeight())
-		end
-	end)
+                      function(content, children)
+	                      if children[1] then
+		                      children[1]:SetWidth(content:GetWidth() or 0)
+		                      children[1]:SetHeight(content:GetHeight() or 0)
+		                      children[1].frame:ClearAllPoints()
+		                      children[1].frame:SetAllPoints(content)
+		                      children[1].frame:Show()
+		                      safecall(content.obj.LayoutFinished, content.obj, nil, children[1].frame:GetHeight())
+	                      end
+                      end)
 
 local layoutrecursionblock = nil
 local function safelayoutcall(object, func, ...)
@@ -678,148 +672,148 @@ local function safelayoutcall(object, func, ...)
 end
 
 AceGUI:RegisterLayout("Flow",
-	function(content, children)
-		if layoutrecursionblock then return end
-		--used height so far
-		local height = 0
-		--width used in the current row
-		local usedwidth = 0
-		--height of the current row
-		local rowheight = 0
-		local rowoffset = 0
+                      function(content, children)
+	                      if layoutrecursionblock then return end
+	                      --used height so far
+	                      local height = 0
+	                      --width used in the current row
+	                      local usedwidth = 0
+	                      --height of the current row
+	                      local rowheight = 0
+	                      local rowoffset = 0
 
-		local width = content.width or content:GetWidth() or 0
+	                      local width = content.width or content:GetWidth() or 0
 
-		--control at the start of the row
-		local rowstart
-		local rowstartoffset
-		local isfullheight
+	                      --control at the start of the row
+	                      local rowstart
+	                      local rowstartoffset
+	                      local isfullheight
 
-		local frameoffset
-		local lastframeoffset
-		local oversize
-		for i = 1, #children do
-			local child = children[i]
-			oversize = nil
-			local frame = child.frame
-			local frameheight = frame.height or frame:GetHeight() or 0
-			local framewidth = frame.width or frame:GetWidth() or 0
-			lastframeoffset = frameoffset
-			-- HACK: Why did we set a frameoffset of (frameheight / 2) ?
-			-- That was moving all widgets half the widgets size down, is that intended?
-			-- Actually, it seems to be neccessary for many cases, we'll leave it in for now.
-			-- If widgets seem to anchor weirdly with this, provide a valid alignoffset for them.
-			-- TODO: Investigate moar!
-			frameoffset = child.alignoffset or (frameheight / 2)
+	                      local frameoffset
+	                      local lastframeoffset
+	                      local oversize
+	                      for i = 1, #children do
+		                      local child = children[i]
+		                      oversize = nil
+		                      local frame = child.frame
+		                      local frameheight = frame.height or frame:GetHeight() or 0
+		                      local framewidth = frame.width or frame:GetWidth() or 0
+		                      lastframeoffset = frameoffset
+		                      -- HACK: Why did we set a frameoffset of (frameheight / 2) ?
+		                      -- That was moving all widgets half the widgets size down, is that intended?
+		                      -- Actually, it seems to be neccessary for many cases, we'll leave it in for now.
+		                      -- If widgets seem to anchor weirdly with this, provide a valid alignoffset for them.
+		                      -- TODO: Investigate moar!
+		                      frameoffset = child.alignoffset or (frameheight / 2)
 
-			if child.width == "relative" then
-				framewidth = width * child.relWidth
-			end
+		                      if child.width == "relative" then
+			                      framewidth = width * child.relWidth
+		                      end
 
-			frame:Show()
-			frame:ClearAllPoints()
-			if i == 1 then
-				-- anchor the first control to the top left
-				frame:SetPoint("TOPLEFT", content)
-				rowheight = frameheight
-				rowoffset = frameoffset
-				rowstart = frame
-				rowstartoffset = frameoffset
-				usedwidth = framewidth
-				if usedwidth > width then
-					oversize = true
-				end
-			else
-				-- if there isn't available width for the control start a new row
-				-- if a control is "fill" it will be on a row of its own full width
-				if usedwidth == 0 or ((framewidth) + usedwidth > width) or child.width == "fill" then
-					if isfullheight then
-						-- a previous row has already filled the entire height, there's nothing we can usefully do anymore
-						-- (maybe error/warn about this?)
-						break
-					end
-					--anchor the previous row, we will now know its height and offset
-					rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(height + (rowoffset - rowstartoffset) + 3))
-					height = height + rowheight + 3
-					--save this as the rowstart so we can anchor it after the row is complete and we have the max height and offset of controls in it
-					rowstart = frame
-					rowstartoffset = frameoffset
-					rowheight = frameheight
-					rowoffset = frameoffset
-					usedwidth = framewidth
-					if usedwidth > width then
-						oversize = true
-					end
-				-- put the control on the current row, adding it to the width and checking if the height needs to be increased
-				else
-					--handles cases where the new height is higher than either control because of the offsets
-					--math.max(rowheight-rowoffset+frameoffset, frameheight-frameoffset+rowoffset)
+		                      frame:Show()
+		                      frame:ClearAllPoints()
+		                      if i == 1 then
+			                      -- anchor the first control to the top left
+			                      frame:SetPoint("TOPLEFT", content)
+			                      rowheight = frameheight
+			                      rowoffset = frameoffset
+			                      rowstart = frame
+			                      rowstartoffset = frameoffset
+			                      usedwidth = framewidth
+			                      if usedwidth > width then
+				                      oversize = true
+			                      end
+		                      else
+			                      -- if there isn't available width for the control start a new row
+			                      -- if a control is "fill" it will be on a row of its own full width
+			                      if usedwidth == 0 or ((framewidth) + usedwidth > width) or child.width == "fill" then
+				                      if isfullheight then
+					                      -- a previous row has already filled the entire height, there's nothing we can usefully do anymore
+					                      -- (maybe error/warn about this?)
+					                      break
+				                      end
+				                      --anchor the previous row, we will now know its height and offset
+				                      rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(height + (rowoffset - rowstartoffset) + 3))
+				                      height = height + rowheight + 3
+				                      --save this as the rowstart so we can anchor it after the row is complete and we have the max height and offset of controls in it
+				                      rowstart = frame
+				                      rowstartoffset = frameoffset
+				                      rowheight = frameheight
+				                      rowoffset = frameoffset
+				                      usedwidth = framewidth
+				                      if usedwidth > width then
+					                      oversize = true
+				                      end
+				                      -- put the control on the current row, adding it to the width and checking if the height needs to be increased
+			                      else
+				                      --handles cases where the new height is higher than either control because of the offsets
+				                      --math.max(rowheight-rowoffset+frameoffset, frameheight-frameoffset+rowoffset)
 
-					--offset is always the larger of the two offsets
-					rowoffset = math_max(rowoffset, frameoffset)
-					rowheight = math_max(rowheight, rowoffset + (frameheight / 2))
+				                      --offset is always the larger of the two offsets
+				                      rowoffset = math_max(rowoffset, frameoffset)
+				                      rowheight = math_max(rowheight, rowoffset + (frameheight / 2))
 
-					frame:SetPoint("TOPLEFT", children[i-1].frame, "TOPRIGHT", 0, frameoffset - lastframeoffset)
-					usedwidth = framewidth + usedwidth
-				end
-			end
+				                      frame:SetPoint("TOPLEFT", children[i-1].frame, "TOPRIGHT", 0, frameoffset - lastframeoffset)
+				                      usedwidth = framewidth + usedwidth
+			                      end
+		                      end
 
-			if child.width == "fill" then
-				safelayoutcall(child, "SetWidth", width)
-				frame:SetPoint("RIGHT", content)
+		                      if child.width == "fill" then
+			                      safelayoutcall(child, "SetWidth", width)
+			                      frame:SetPoint("RIGHT", content)
 
-				usedwidth = 0
-				rowstart = frame
-				rowstartoffset = frameoffset
+			                      usedwidth = 0
+			                      rowstart = frame
 
-				if child.DoLayout then
-					child:DoLayout()
-				end
-				rowheight = frame.height or frame:GetHeight() or 0
-				rowoffset = child.alignoffset or (rowheight / 2)
-				rowstartoffset = rowoffset
-			elseif child.width == "relative" then
-				safelayoutcall(child, "SetWidth", width * child.relWidth)
+			                      if child.DoLayout then
+				                      child:DoLayout()
+			                      end
+			                      rowheight = frame.height or frame:GetHeight() or 0
+			                      rowoffset = child.alignoffset or (rowheight / 2)
+			                      rowstartoffset = rowoffset
+		                      elseif child.width == "relative" then
+			                      safelayoutcall(child, "SetWidth", width * child.relWidth)
 
-				if child.DoLayout then
-					child:DoLayout()
-				end
-			elseif oversize then
-				if width > 1 then
-					frame:SetPoint("RIGHT", content)
-				end
-			end
+			                      if child.DoLayout then
+				                      child:DoLayout()
+			                      end
+		                      elseif oversize then
+			                      if width > 1 then
+				                      frame:SetPoint("RIGHT", content)
+			                      end
+		                      end
 
-			if child.height == "fill" then
-				frame:SetPoint("BOTTOM", content)
-				isfullheight = true
-			end
-		end
+		                      if child.height == "fill" then
+			                      frame:SetPoint("BOTTOM", content)
+			                      isfullheight = true
+		                      end
+	                      end
 
-		--anchor the last row, if its full height needs a special case since  its height has just been changed by the anchor
-		if isfullheight then
-			rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -height)
-		elseif rowstart then
-			rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(height + (rowoffset - rowstartoffset) + 3))
-		end
+	                      --anchor the last row, if its full height needs a special case since  its height has just been changed by the anchor
+	                      if isfullheight then
+		                      rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -height)
+	                      elseif rowstart then
+		                      rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(height + (rowoffset - rowstartoffset) + 3))
+	                      end
 
-		height = height + rowheight + 3
-		safecall(content.obj.LayoutFinished, content.obj, nil, height)
-	end)
+	                      height = height + rowheight + 3
+	                      safecall(content.obj.LayoutFinished, content.obj, nil, height)
+                      end)
 
 -- Get alignment method and value. Possible alignment methods are a callback, a number, "start", "middle", "end", "fill" or "TOPLEFT", "BOTTOMRIGHT" etc.
 local GetCellAlign = function (dir, tableObj, colObj, cellObj, cell, child)
 	local fn = cellObj and (cellObj["align" .. dir] or cellObj.align)
-			or colObj and (colObj["align" .. dir] or colObj.align)
-			or tableObj["align" .. dir] or tableObj.align
-			or "CENTERLEFT"
-	local child, cell, val = child or 0, cell or 0, nil
+		or colObj and (colObj["align" .. dir] or colObj.align)
+		or tableObj["align" .. dir] or tableObj.align
+		or "CENTERLEFT"
+	local val
+	child, cell = child or 0, cell or 0
 
 	if type(fn) == "string" then
 		fn = fn:lower()
 		fn = dir == "V" and (fn:sub(1, 3) == "top" and "start" or fn:sub(1, 6) == "bottom" and "end" or fn:sub(1, 6) == "center" and "middle")
-		  or dir == "H" and (fn:sub(-4) == "left" and "start" or fn:sub(-5) == "right" and "end" or fn:sub(-6) == "center" and "middle")
-		  or fn
+			or dir == "H" and (fn:sub(-4) == "left" and "start" or fn:sub(-5) == "right" and "end" or fn:sub(-6) == "center" and "middle")
+			or fn
 		val = (fn == "start" or fn == "fill") and 0 or fn == "end" and cell - child or (cell - child) / 2
 	elseif type(fn) == "function" then
 		val = fn(child or 0, cell, dir)
@@ -827,7 +821,7 @@ local GetCellAlign = function (dir, tableObj, colObj, cellObj, cell, child)
 		val = fn
 	end
 
-	return fn, max(0, min(val, cell))
+	return fn, math_max(0, math_min(val, cell))
 end
 
 -- Get width or height for multiple cells combined
@@ -836,7 +830,7 @@ local GetCellDimension = function (dir, laneDim, from, to, space)
 	for cell=from,to do
 		dim = dim + (laneDim[cell] or 0)
 	end
-	return dim + max(0, to - from) * (space or 0)
+	return dim + math_max(0, to - from) * (space or 0)
 end
 
 --[[ Options
@@ -857,170 +851,170 @@ Cell:
  - align, alignH, alignV: Overwrites the container and column setting for alignment.
 ]]
 AceGUI:RegisterLayout("Table",
-	function (content, children)
-		local obj = content.obj
-		obj:PauseLayout()
+                      function (content, children)
+	                      local obj = content.obj
+	                      obj:PauseLayout()
 
-		local tableObj = obj:GetUserData("table")
-		local cols = tableObj.columns
-		local spaceH = tableObj.spaceH or tableObj.space or 0
-		local spaceV = tableObj.spaceV or tableObj.space or 0
-		local totalH = (content:GetWidth() or content.width or 0) - spaceH * (#cols - 1)
+	                      local tableObj = obj:GetUserData("table")
+	                      local cols = tableObj.columns
+	                      local spaceH = tableObj.spaceH or tableObj.space or 0
+	                      local spaceV = tableObj.spaceV or tableObj.space or 0
+	                      local totalH = (content:GetWidth() or content.width or 0) - spaceH * (#cols - 1)
 
-		-- We need to reuse these because layout events can come in very frequently
-		local layoutCache = obj:GetUserData("layoutCache")
-		if not layoutCache then
-			layoutCache = {{}, {}, {}, {}, {}, {}}
-			obj:SetUserData("layoutCache", layoutCache)
-		end
-		local t, laneH, laneV, rowspans, rowStart, colStart = unpack(layoutCache)
+	                      -- We need to reuse these because layout events can come in very frequently
+	                      local layoutCache = obj:GetUserData("layoutCache")
+	                      if not layoutCache then
+		                      layoutCache = {{}, {}, {}, {}, {}, {}}
+		                      obj:SetUserData("layoutCache", layoutCache)
+	                      end
+	                      local t, laneH, laneV, rowspans, rowStart, colStart = unpack(layoutCache)
 
-		-- Create the grid
-		local n, slotFound = 0
-		for i,child in ipairs(children) do
-			if child:IsShown() then
-				repeat
-					n = n + 1
-					local col = (n - 1) % #cols + 1
-					local row = ceil(n / #cols)
-					local rowspan = rowspans[col]
-					local cell = rowspan and rowspan.child or child
-					local cellObj = cell:GetUserData("cell")
-					slotFound = not rowspan
+	                      -- Create the grid
+	                      local n, slotFound = 0
+	                      for i,child in ipairs(children) do
+		                      if child:IsShown() then
+			                      repeat
+				                      n = n + 1
+				                      local col = (n - 1) % #cols + 1
+				                      local row = math_ceil(n / #cols)
+				                      local rowspan = rowspans[col]
+				                      local cell = rowspan and rowspan.child or child
+				                      local cellObj = cell:GetUserData("cell")
+				                      slotFound = not rowspan
 
-					-- Rowspan
-					if not rowspan and cellObj and cellObj.rowspan then
-						rowspan = {child = child, from = row, to = row + cellObj.rowspan - 1}
-						rowspans[col] = rowspan
-					end
-					if rowspan and i == #children then
-						rowspan.to = row
-					end
+				                      -- Rowspan
+				                      if not rowspan and cellObj and cellObj.rowspan then
+					                      rowspan = {child = child, from = row, to = row + cellObj.rowspan - 1}
+					                      rowspans[col] = rowspan
+				                      end
+				                      if rowspan and i == #children then
+					                      rowspan.to = row
+				                      end
 
-					-- Colspan
-					local colspan = max(0, min((cellObj and cellObj.colspan or 1) - 1, #cols - col))
-					n = n + colspan
+				                      -- Colspan
+				                      local colspan = math_max(0, math_min((cellObj and cellObj.colspan or 1) - 1, #cols - col))
+				                      n = n + colspan
 
-					-- Place the cell
-					if not rowspan or rowspan.to == row then
-						t[n] = cell
-						rowStart[cell] = rowspan and rowspan.from or row
-						colStart[cell] = col
+				                      -- Place the cell
+				                      if not rowspan or rowspan.to == row then
+					                      t[n] = cell
+					                      rowStart[cell] = rowspan and rowspan.from or row
+					                      colStart[cell] = col
 
-						if rowspan then
-							rowspans[col] = nil
-						end
-					end
-				until slotFound
-			end
-		end
+					                      if rowspan then
+						                      rowspans[col] = nil
+					                      end
+				                      end
+			                      until slotFound
+		                      end
+	                      end
 
-		local rows = ceil(n / #cols)
+	                      local rows = math_ceil(n / #cols)
 
-		-- Determine fixed size cols and collect weights
-		local extantH, totalWeight = totalH, 0
-		for col,colObj in ipairs(cols) do
-			laneH[col] = 0
+	                      -- Determine fixed size cols and collect weights
+	                      local extantH, totalWeight = totalH, 0
+	                      for col,colObj in ipairs(cols) do
+		                      laneH[col] = 0
 
-			if type(colObj) == "number" then
-				colObj = {[colObj >= 1 and colObj < 10 and "weight" or "width"] = colObj}
-				cols[col] = colObj
-			end
+		                      if type(colObj) == "number" then
+			                      colObj = {[colObj >= 1 and colObj < 10 and "weight" or "width"] = colObj}
+			                      cols[col] = colObj
+		                      end
 
-			if colObj.weight then
-				-- Weight
-				totalWeight = totalWeight + (colObj.weight or 1)
-			else
-				if not colObj.width or colObj.width <= 0 then
-					-- Content width
-					for row=1,rows do
-						local child = t[(row - 1) * #cols + col]
-						if child then
-							local f = child.frame
-							f:ClearAllPoints()
-							local childH = f:GetWidth() or 0
+		                      if colObj.weight then
+			                      -- Weight
+			                      totalWeight = totalWeight + (colObj.weight or 1)
+		                      else
+			                      if not colObj.width or colObj.width <= 0 then
+				                      -- Content width
+				                      for row=1,rows do
+					                      local child = t[(row - 1) * #cols + col]
+					                      if child then
+						                      local f = child.frame
+						                      f:ClearAllPoints()
+						                      local childH = f:GetWidth() or 0
 
-							laneH[col] = max(laneH[col], childH - GetCellDimension("H", laneH, colStart[child], col - 1, spaceH))
-						end
-					end
+						                      laneH[col] = math_max(laneH[col], childH - GetCellDimension("H", laneH, colStart[child], col - 1, spaceH))
+					                      end
+				                      end
 
-					laneH[col] = max(colObj.min or colObj[1] or 0, min(laneH[col], colObj.max or colObj[2] or laneH[col]))
-				else
-					-- Rel./Abs. width
-					laneH[col] = colObj.width < 1 and colObj.width * totalH or colObj.width
-				end
-				extantH = max(0, extantH - laneH[col])
-			end
-		end
+				                      laneH[col] = math_max(colObj.min or colObj[1] or 0, math_min(laneH[col], colObj.max or colObj[2] or laneH[col]))
+			                      else
+				                      -- Rel./Abs. width
+				                      laneH[col] = colObj.width < 1 and colObj.width * totalH or colObj.width
+			                      end
+			                      extantH = math_max(0, extantH - laneH[col])
+		                      end
+	                      end
 
-		-- Determine sizes based on weight
-		local scale = totalWeight > 0 and extantH / totalWeight or 0
-		for col,colObj in pairs(cols) do
-			if colObj.weight then
-				laneH[col] = scale * colObj.weight
-			end
-		end
+	                      -- Determine sizes based on weight
+	                      local scale = totalWeight > 0 and extantH / totalWeight or 0
+	                      for col,colObj in pairs(cols) do
+		                      if colObj.weight then
+			                      laneH[col] = scale * colObj.weight
+		                      end
+	                      end
 
-		-- Arrange children
-		for row=1,rows do
-			local rowV = 0
+	                      -- Arrange children
+	                      for row=1,rows do
+		                      local rowV = 0
 
-			-- Horizontal placement and sizing
-			for col=1,#cols do
-				local child = t[(row - 1) * #cols + col]
-				if child then
-					local colObj = cols[colStart[child]]
-					local cellObj = child:GetUserData("cell")
-					local offsetH = GetCellDimension("H", laneH, 1, colStart[child] - 1, spaceH) + (colStart[child] == 1 and 0 or spaceH)
-					local cellH = GetCellDimension("H", laneH, colStart[child], col, spaceH)
+		                      -- Horizontal placement and sizing
+		                      for col=1,#cols do
+			                      local child = t[(row - 1) * #cols + col]
+			                      if child then
+				                      local colObj = cols[colStart[child]]
+				                      local cellObj = child:GetUserData("cell")
+				                      local offsetH = GetCellDimension("H", laneH, 1, colStart[child] - 1, spaceH) + (colStart[child] == 1 and 0 or spaceH)
+				                      local cellH = GetCellDimension("H", laneH, colStart[child], col, spaceH)
 
-					local f = child.frame
-					f:ClearAllPoints()
-					local childH = f:GetWidth() or 0
+				                      local f = child.frame
+				                      f:ClearAllPoints()
+				                      local childH = f:GetWidth() or 0
 
-					local alignFn, align = GetCellAlign("H", tableObj, colObj, cellObj, cellH, childH)
-					f:SetPoint("LEFT", content, offsetH + align, 0)
-					if child:IsFullWidth() or alignFn == "fill" or childH > cellH then
-						f:SetPoint("RIGHT", content, "LEFT", offsetH + align + cellH, 0)
-					end
+				                      local alignFn, align = GetCellAlign("H", tableObj, colObj, cellObj, cellH, childH)
+				                      f:SetPoint("LEFT", content, offsetH + align, 0)
+				                      if child:IsFullWidth() or alignFn == "fill" or childH > cellH then
+					                      f:SetPoint("RIGHT", content, "LEFT", offsetH + align + cellH, 0)
+				                      end
 
-					if child.DoLayout then
-						child:DoLayout()
-					end
+				                      if child.DoLayout then
+					                      child:DoLayout()
+				                      end
 
-					rowV = max(rowV, (f:GetHeight() or 0) - GetCellDimension("V", laneV, rowStart[child], row - 1, spaceV))
-				end
-			end
+				                      rowV = math_max(rowV, (f:GetHeight() or 0) - GetCellDimension("V", laneV, rowStart[child], row - 1, spaceV))
+			                      end
+		                      end
 
-			laneV[row] = rowV
+		                      laneV[row] = rowV
 
-			-- Vertical placement and sizing
-			for col=1,#cols do
-				local child = t[(row - 1) * #cols + col]
-				if child then
-					local colObj = cols[colStart[child]]
-					local cellObj = child:GetUserData("cell")
-					local offsetV = GetCellDimension("V", laneV, 1, rowStart[child] - 1, spaceV) + (rowStart[child] == 1 and 0 or spaceV)
-					local cellV = GetCellDimension("V", laneV, rowStart[child], row, spaceV)
+		                      -- Vertical placement and sizing
+		                      for col=1,#cols do
+			                      local child = t[(row - 1) * #cols + col]
+			                      if child then
+				                      local colObj = cols[colStart[child]]
+				                      local cellObj = child:GetUserData("cell")
+				                      local offsetV = GetCellDimension("V", laneV, 1, rowStart[child] - 1, spaceV) + (rowStart[child] == 1 and 0 or spaceV)
+				                      local cellV = GetCellDimension("V", laneV, rowStart[child], row, spaceV)
 
-					local f = child.frame
-					local childV = f:GetHeight() or 0
+				                      local f = child.frame
+				                      local childV = f:GetHeight() or 0
 
-					local alignFn, align = GetCellAlign("V", tableObj, colObj, cellObj, cellV, childV)
-					if child:IsFullHeight() or alignFn == "fill" then
-						f:SetHeight(cellV)
-					end
-					f:SetPoint("TOP", content, 0, -(offsetV + align))
-				end
-			end
-		end
+				                      local alignFn, align = GetCellAlign("V", tableObj, colObj, cellObj, cellV, childV)
+				                      if child:IsFullHeight() or alignFn == "fill" then
+					                      f:SetHeight(cellV)
+				                      end
+				                      f:SetPoint("TOP", content, 0, -(offsetV + align))
+			                      end
+		                      end
+	                      end
 
-		-- Calculate total height
-		local totalV = GetCellDimension("V", laneV, 1, #laneV, spaceV)
+	                      -- Calculate total height
+	                      local totalV = GetCellDimension("V", laneV, 1, #laneV, spaceV)
 
-		-- Cleanup
-		for _,v in pairs(layoutCache) do wipe(v) end
+	                      -- Cleanup
+	                      for _,v in pairs(layoutCache) do wipe(v) end
 
-		safecall(obj.LayoutFinished, obj, nil, totalV)
-		obj:ResumeLayout()
-	end)
+	                      safecall(obj.LayoutFinished, obj, nil, totalV)
+	                      obj:ResumeLayout()
+                      end)

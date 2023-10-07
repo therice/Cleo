@@ -9,7 +9,7 @@
 -- make into AceEvent.
 -- @class file
 -- @name AceEvent-3.0
--- @release $Id: AceEvent-3.0.lua 1202 2019-05-15 23:11:22Z nevcairiel $
+-- @release $Id$
 local CallbackHandler = LibStub("CallbackHandler-1.0")
 
 local MAJOR, MINOR = "AceEvent-3.0", 4
@@ -26,7 +26,7 @@ AceEvent.embeds = AceEvent.embeds or {} -- what objects embed this lib
 -- APIs and registry for blizzard events, using CallbackHandler lib
 if not AceEvent.events then
 	AceEvent.events = CallbackHandler:New(AceEvent,
-		"RegisterEvent", "UnregisterEvent", "UnregisterAllEvents")
+	                                      "RegisterEvent", "UnregisterEvent", "UnregisterAllEvents")
 end
 
 function AceEvent.events:OnUsed(target, eventname)
@@ -41,7 +41,7 @@ end
 -- APIs and registry for IPC messages, using CallbackHandler lib
 if not AceEvent.messages then
 	AceEvent.messages = CallbackHandler:New(AceEvent,
-		"RegisterMessage", "UnregisterMessage", "UnregisterAllMessages"
+	                                        "RegisterMessage", "UnregisterMessage", "UnregisterAllMessages"
 	)
 	AceEvent.SendMessage = AceEvent.messages.Fire
 end

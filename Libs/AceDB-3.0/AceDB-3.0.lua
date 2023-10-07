@@ -40,8 +40,8 @@
 -- end
 -- @class file
 -- @name AceDB-3.0.lua
--- @release $Id: AceDB-3.0.lua 1217 2019-07-11 03:06:18Z funkydude $
-local ACEDB_MAJOR, ACEDB_MINOR = "AceDB-3.0", 27
+-- @release $Id$
+local ACEDB_MAJOR, ACEDB_MINOR = "AceDB-3.0", 28
 local AceDB = LibStub:NewLibrary(ACEDB_MAJOR, ACEDB_MINOR)
 
 if not AceDB then return end -- No upgrade needed
@@ -52,10 +52,6 @@ local setmetatable, rawset, rawget = setmetatable, rawset, rawget
 
 -- WoW APIs
 local _G = _G
-
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: LibStub
 
 AceDB.db_registry = AceDB.db_registry or {}
 AceDB.frame = AceDB.frame or CreateFrame("Frame")
@@ -98,13 +94,13 @@ local function copyDefaults(dest, src)
 				-- This is a metatable used for table defaults
 				local mt = {
 					-- This handles the lookup and creation of new subtables
-					__index = function(t,k)
-							if k == nil then return nil end
-							local tbl = {}
-							copyDefaults(tbl, v)
-							rawset(t, k, tbl)
-							return tbl
-						end,
+					__index = function(t,k2)
+						if k2 == nil then return nil end
+						local tbl = {}
+						copyDefaults(tbl, v)
+						rawset(t, k2, tbl)
+						return tbl
+					end,
 				}
 				setmetatable(dest, mt)
 				-- handle already existing tables in the SV
@@ -115,7 +111,7 @@ local function copyDefaults(dest, src)
 				end
 			else
 				-- Values are not tables, so this is just a simple return
-				local mt = {__index = function(t,k) return k~=nil and v or nil end}
+				local mt = {__index = function(t,k2) return k2~=nil and v or nil end}
 				setmetatable(dest, mt)
 			end
 		elseif type(v) == "table" then
@@ -152,7 +148,7 @@ local function removeDefaults(db, defaults, blocker)
 							if next(value) == nil then
 								db[key] = nil
 							end
-						-- if it was specified, only strip ** content, but block values which were set in the key table
+							-- if it was specified, only strip ** content, but block values which were set in the key table
 						elseif k == "**" then
 							removeDefaults(value, v, defaults[key])
 						end
@@ -205,36 +201,36 @@ end
 -- Metatable to handle the dynamic creation of sections and copying of sections.
 local dbmt = {
 	__index = function(t, section)
-			local keys = rawget(t, "keys")
-			local key = keys[section]
-			if key then
-				local defaultTbl = rawget(t, "defaults")
-				local defaults = defaultTbl and defaultTbl[section]
+		local keys = rawget(t, "keys")
+		local key = keys[section]
+		if key then
+			local defaultTbl = rawget(t, "defaults")
+			local defaults = defaultTbl and defaultTbl[section]
 
-				if section == "profile" then
-					local new = initSection(t, section, "profiles", key, defaults)
-					if new then
-						-- Callback: OnNewProfile, database, newProfileKey
-						t.callbacks:Fire("OnNewProfile", t, key)
-					end
-				elseif section == "profiles" then
-					local sv = rawget(t, "sv")
-					if not sv.profiles then sv.profiles = {} end
-					rawset(t, "profiles", sv.profiles)
-				elseif section == "global" then
-					local sv = rawget(t, "sv")
-					if not sv.global then sv.global = {} end
-					if defaults then
-						copyDefaults(sv.global, defaults)
-					end
-					rawset(t, section, sv.global)
-				else
-					initSection(t, section, section, key, defaults)
+			if section == "profile" then
+				local new = initSection(t, section, "profiles", key, defaults)
+				if new then
+					-- Callback: OnNewProfile, database, newProfileKey
+					t.callbacks:Fire("OnNewProfile", t, key)
 				end
+			elseif section == "profiles" then
+				local sv = rawget(t, "sv")
+				if not sv.profiles then sv.profiles = {} end
+				rawset(t, "profiles", sv.profiles)
+			elseif section == "global" then
+				local sv = rawget(t, "sv")
+				if not sv.global then sv.global = {} end
+				if defaults then
+					copyDefaults(sv.global, defaults)
+				end
+				rawset(t, section, sv.global)
+			else
+				initSection(t, section, section, key, defaults)
 			end
-
-			return rawget(t, section)
 		end
+
+		return rawget(t, section)
+	end
 }
 
 local function validateDefaults(defaults, keyTbl, offset)
@@ -264,8 +260,7 @@ local factionrealmKey = factionKey .. " - " .. realmKey
 local localeKey = GetLocale():lower()
 
 local regionTable = { "US", "KR", "EU", "TW", "CN" }
- -- 09.30.2023 : PTR region key is 72, so use GetCurrentRegionName if not found
-local regionKey = regionTable[GetCurrentRegion()] or GetCurrentRegionName()
+local regionKey = regionTable[GetCurrentRegion()] or GetCurrentRegionName() or "TR"
 local factionrealmregionKey = factionrealmKey .. " - " .. regionKey
 
 -- Actual database initialization function
