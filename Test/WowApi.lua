@@ -155,6 +155,8 @@ function setglobal(k, v)
 end
 
 
+_G.securecallfunction = function(func, ...)  func(...) end
+
 local wow_api_locale = 'enUS'
 function GetLocale()
     return wow_api_locale
@@ -196,6 +198,9 @@ function C_Timer.Cancel(t)
         print(format('C_Timer.Cancel[EXEC]()'))
         t:cancel()
     end
+end
+function C_Timer.IsMock()
+    return true
 end
 
 if not wipe then
@@ -259,11 +264,10 @@ function GetCurrentRegionName()
     return "US"
 end
 
-function GuildRoster ()
+function GuildRoster()
     -- dubious to work around issues with library using this function
     -- being called before addon is loaded
     if _G.IsAddOnLoaded('Cleo') then
-        -- print('GuildRoster')
         GuildRosterUpdate()
     end
 end

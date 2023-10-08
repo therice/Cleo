@@ -147,6 +147,7 @@ end
 local LoadedAddOns = {}
 
 _G.IsAddOnLoaded = function(name)
+    --print('IsAddOnLoaded -> ' .. name)
     return LoadedAddOns[name] or false
 end
 
@@ -167,7 +168,7 @@ function PlayerEnteredWorld()
 end
 
 function GuildRosterUpdate()
-    -- print('GuildRosterUpdate')
+    --print('GuildRosterUpdate')
     WoWAPI_FireEvent("GUILD_ROSTER_UPDATE", false)
     WoWAPI_FireUpdate()
 end

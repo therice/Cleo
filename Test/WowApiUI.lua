@@ -385,6 +385,10 @@ function FrameClass:SetShown(...) end
 
 function FrameClass:SetDontSavePosition(...) end
 
+function FrameClass:SetFixedFrameStrata(isFixed) end
+
+function FrameClass:SetFixedFrameLevel(isFixed) end
+
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind

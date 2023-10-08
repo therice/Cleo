@@ -427,17 +427,34 @@ local function Refresh(...)
 
             Logging:Trace("Refresh(%d) : %d guild members, %d ms elapsed, current index %d", state, Util.Tables.Count(cache), debugprofilestop() - start, index and index or -1)
         end
-    ).
-    finally(
-        function() refreshing = false end
-    )
+    ).finally(function() refreshing = false end)
 end
 
 
-lib:ScheduleTimer(
-    function()
-        GuildRoster()
-        lib:ScheduleRepeatingTimer(function() Refresh() end, 1)
-    end,
-    1
-)
+-- this is to work around issues with testing and a stub/mock scheduler
+-- which is used, resulting in stack overflows
+--
+-- in this case, we have a "proper" C_Timer and can rely upon it
+if not C_Timer.IsMock or not C_Timer.IsMock() then
+    lib:ScheduleTimer(
+        function()
+            lib:ScheduleRepeatingTimer(function() Refresh() end, 1)
+            GuildRoster()
+        end,
+        1
+    )
+-- in this case, we are in a test context, use a frame for periodic updates of the data
+else
+    if lib.frame then
+        lib.frame:UnregisterAllEvents()
+        lib.frame:SetScript("OnEvent", nil)
+        lib.frame:SetScript("OnUpdate", nil)
+    else
+        lib.frame = CreateFrame("Frame", MAJOR_VERSION .. "_Frame")
+    end
+
+    lib.frame:Show()
+    lib.frame:SetScript("OnUpdate", Refresh)
+
+    GuildRoster()
+end
