@@ -2,6 +2,13 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2024.0.2 (2023-10-08)
+* Address issues uncovered through test suite related to Ace and LibGuildStorage changes ce273258bffe2ead9c194b5586c521874d83821a
+* Address race condition in LibGuildStorage that could lead to frame drops and game lock-ups 40e9406d54f7e9ebedfd9cefd0fb9ce219ae855e
+* Annoate Libraries to reflect classes 11f9c74805f56e6d4d789ab5db6b43c2c8d0c1a5
+* Minor tweaks to event processing and configuration activation, which should reduce overhead for both ML and other players 2526dcbd18aae83dda274f53ca6a601656b7addc
+* Update Ace3 Libraries to latest version(s) 2da406ac315f4eb29841439752ce640cac927021
+
 2024.0.1 (2023-10-06)
 * Add Phase 4 items to test data a87095faceac301a6e1fe334b2acd04d49162729
 
