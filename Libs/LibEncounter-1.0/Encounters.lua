@@ -551,7 +551,7 @@ lib.Creatures = {
         name = 'Emalon'
     },
     [35013] = {
-        name = 'Koralon'
+        name = 'Koralon the Flame Watcher'
     },
     [38433] = {
         name = 'Toravon'

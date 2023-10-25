@@ -36,7 +36,7 @@ local LevelColorsRgb = {
 }
 
 
-function Colored(c, text)
+local function Colored(c, text)
     return "|cFF" ..
             string.format("%02X%02X%02X", math.floor(255*c[1]), math.floor(255*c[2]), math.floor(255*c[3])) ..
            text .. ":|r"
@@ -160,7 +160,15 @@ local function Log(writer, level, fmt, ...)
     -- wrap in pcall to prevent logging errors from bombing caller
     -- instead capture and report error as needed
     local success, result = pcall(
-            function(f, ...) writer(format(f, ...)) end,
+            function(f, ...)
+                local args = {}
+                for i,v in pairs({ ... }) do
+                    args[i] = type(v) == 'function' and v() or v
+                end
+
+                writer(format(f, unpack(args)))
+            end,
+
             "%s [%s] (%s): " .. fmt,
             LevelColors[levelThreshold],
             "|cFFFFFACD" .. GetDateTime() .. "|r",

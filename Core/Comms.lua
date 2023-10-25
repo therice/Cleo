@@ -113,7 +113,7 @@ function AddOn:GetAnnounceChannel(channel)
 end
 
 function AddOn:SendAnnouncement(msg, channel)
-    Logging:Trace("SendAnnouncement(%s) : %s", channel, msg)
+    --Logging:Trace("SendAnnouncement(%s) : %s", channel, msg)
     if channel == C.Channels.None then return end
 
     if self:TestModeEnabled() then

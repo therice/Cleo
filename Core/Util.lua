@@ -264,7 +264,7 @@ local function GetAverageItemLevel()
     end
 
     local avgItemLevel = Util.Numbers.Round(sum / count, 2)
-    Logging:Debug("GetAverageItemLevel() : %d", avgItemLevel)
+    --Logging:Debug("GetAverageItemLevel() : %d", avgItemLevel)
     return avgItemLevel
 end
 
@@ -293,7 +293,7 @@ end
 function AddOn:UpdatePlayerGear(startSlot, endSlot)
     startSlot = startSlot or INVSLOT_FIRST_EQUIPPED
     endSlot = endSlot or INVSLOT_LAST_EQUIPPED
-    Logging:Trace("UpdatePlayerGear(%d, %d)", startSlot, endSlot)
+    --Logging:Trace("UpdatePlayerGear(%d, %d)", startSlot, endSlot)
     for i = startSlot, endSlot do
         if not IsIgnoredItemSlot(i) then
             local link = GetInventoryItemLink("player", i)
@@ -319,7 +319,7 @@ end
 
 function AddOn:GetPlayersGear(link, equipLoc, current)
     current = current or self.playerData.gear
-    Logging:Trace("GetPlayersGear(%s, %s)", tostring(link), tostring(equipLoc))
+    --Logging:Trace("GetPlayersGear(%s, %s)", tostring(link), tostring(equipLoc))
 
     local GetInventoryItemLink = GetInventoryItemLink
     if Util.Tables.Count(current) > 0 then
@@ -490,7 +490,7 @@ function Alarm:_Fire()
 end
 
 function Alarm:Enable()
-    Logging:Trace('Enable(%d)', tonumber(self.interval))
+    --Logging:Trace('Enable(%d)', tonumber(self.interval))
     -- the backing API for the scheduling stuff isn't available in test mode unless run in async mode
     if not self.timer and (not AddOn._IsTestContext() or (AddOn._IsTestContext() and _G.IsAsync())) then
         self.timer = AddOn:ScheduleRepeatingTimer(function() self:_Fire() end, self.interval)

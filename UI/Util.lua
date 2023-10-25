@@ -262,7 +262,7 @@ function U.SetScale(widget, scale, topRight)
 
     s = scale / s
 
-    Logging:Trace("SetScale() : l=%.2f, t=%.2f, s =%.2f, scale=%.2f", l, t, s, scale)
+    --Logging:Trace("SetScale() : l=%.2f, t=%.2f, s =%.2f, scale=%.2f", l, t, s, scale)
 
     widget:SetScale(scale)
 

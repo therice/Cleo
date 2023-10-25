@@ -219,7 +219,7 @@ end
 
 Widget.Textures = {
     SetGradientAlpha = function(texture, orientation, ...)
-        Logging:Trace("SetGradientAlpha(%s) : %s", orientation, Util.Objects.ToString({...}))
+        --Logging:Trace("SetGradientAlpha(%s) : %s", orientation, Util.Objects.ToString({...}))
 
         if texture and Util.Objects.IsTable(texture) and (Util.Objects.IsFunction(texture['SetGradientAlpha']) or Util.Objects.IsFunction(texture['SetGradient'])) then
             if AddOn.BuildInfo:IsWrathP1() then

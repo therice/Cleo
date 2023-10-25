@@ -448,7 +448,7 @@ function AddOn:OnMasterLooterDbReceived(mlDb)
     if not self.mlDb.buttons then self.mlDb.buttons = {} end
     setmetatable(self.mlDb.buttons, {__index = ML:GetDefaultDbValue('profile.buttons')})
 
-    Logging:Trace("OnMasterLooterDbReceived() : %s", Util.Objects.ToString(self.mlDb, 4))
+    --Logging:Trace("OnMasterLooterDbReceived() : %s", Util.Objects.ToString(self.mlDb, 4))
 end
 
 
@@ -680,22 +680,22 @@ end
 
 function AddOn:DoAutoPass(lt, skip)
     skip = Util.Objects.Default(skip, 0)
-    Logging:Debug("DoAutoPass(%d, %d)", Util.Tables.Count(lt), skip)
+    --Logging:Debug("DoAutoPass(%d, %d)", Util.Tables.Count(lt), skip)
     for session, entry in pairs(lt) do
         session = entry.session or session
-        Logging:Debug("DoAutoPass(%d) : noAutoPass=%s", tonumber(session), tostring(entry.noAutoPass))
+        --Logging:Debug("DoAutoPass(%d) : noAutoPass=%s", tonumber(session), tostring(entry.noAutoPass))
         if session > (skip or 0) then
             if not Util.Objects.Default(entry.noAutoPass, false) then
                 --- @type Models.Item.Item
                 local item = entry:GetItem()
                 if not item:IsBoe() then
                     if self:AutoPassCheck(self.player.class, item.equipLoc, item.typeId, item.subTypeId, item.classes) then
-                        Logging:Trace("DoAutoPass() : Auto-passing on %s", item.link)
+                        --Logging:Trace("DoAutoPass() : Auto-passing on %s", item.link)
                         self:Print(format(L["auto_passed_on_item"], item.link))
                         entry.autoPass = true
                     end
-                else
-                    Logging:Trace("DoAutoPass() : skipped auto-pass on %s as it's BOE", item.link)
+                --else
+                --    Logging:Trace("DoAutoPass() : skipped auto-pass on %s as it's BOE", item.link)
                 end
             end
         end
@@ -749,14 +749,14 @@ end
 
 --- @return boolean, table<number, Models.Item.ItemRef>
 function AddOn:_PreProcessLootTable(lt, uncachedCallback)
-    Logging:Debug("_PreProcessLootTable(%d)", Util.Tables.Count(lt))
+    --Logging:Debug("_PreProcessLootTable(%d)", Util.Tables.Count(lt))
 
     --- return continue, lt
     if not self.enabled then
         for i = 1, #lt do
             self:SendResponse(self.masterLooter, i, C.Responses.Disabled)
         end
-        Logging:Trace("Sent 'disabled' response for all loot table entries")
+        --Logging:Trace("Sent 'disabled' response for all loot table entries")
         return false, nil
     end
 
@@ -784,7 +784,7 @@ function AddOn:_PreProcessLootTable(lt, uncachedCallback)
             end
     )
 
-    Logging:Debug("_PreProcessLootTable(%d) : %d, %d", Util.Tables.Count(lt), Util.Tables.Count(interim), uncached)
+    --Logging:Debug("_PreProcessLootTable(%d) : %d, %d", Util.Tables.Count(lt), Util.Tables.Count(interim), uncached)
 
     -- uh, oh.. try again
     if uncached > 0 then
@@ -796,7 +796,7 @@ function AddOn:_PreProcessLootTable(lt, uncachedCallback)
 end
 
 function AddOn:OnLootTableReceived(lt)
-    Logging:Debug("OnLootTableReceived() : %d", Util.Tables.Count(lt))
+    --Logging:Debug("OnLootTableReceived() : %d", Util.Tables.Count(lt))
     local continue, processed = self:_PreProcessLootTable(lt, "OnLootTableReceived")
     -- could not be pre-processed, will have been rescheduled
     if not continue then return end
@@ -826,7 +826,7 @@ function AddOn:OnLootTableReceived(lt)
     -- for anyone that is currently part of group, but outside of instances
     -- automatically respond to each item (if support is enabled)
     if self:MasterLooterDbValue('outOfRaid') and GetNumGroupMembers() >= 8 and not IsInInstance() then
-        Logging:Debug("OnLootTableReceived() : raid member, but not in the instance. responding to each item to that affect.")
+        --Logging:Debug("OnLootTableReceived() : raid member, but not in the instance. responding to each item to that affect.")
         Util.Tables.Call(
                 self.lootTable,
                 function(_ , session)
@@ -854,20 +854,20 @@ function AddOn:OnLootTableAddReceived(lt)
     -- could not be pre-processed, will have been rescheduled
     if not continue then return end
 
-    Logging:Debug("OnLootTableAddReceived() : %s", Util.Objects.ToString(processed, 4))
+    --Logging:Debug("OnLootTableAddReceived() : %s", Util.Objects.ToString(processed, 4))
 
     self:DoAutoPass(processed)
     self:SendLootAck(processed)
 
     local oldLen = #self.lootTable
     for session, entry in pairs(processed) do
-        Logging:Debug("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
+        --Logging:Debug("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
         self.lootTable[session] = entry
     end
 
     local Loot = AddOn:LootModule()
     for i = oldLen + 1, #self.lootTable do
-        Logging:Debug("OnLootTableAddReceived() : AddSingleItem(%d)", i)
+        --Logging:Debug("OnLootTableAddReceived() : AddSingleItem(%d)", i)
         Loot:AddSingleItem(self.lootTable[i])
     end
 
@@ -885,7 +885,7 @@ end
 
 
 function AddOn:OnReRollReceived(sender, lt)
-    Logging:Debug("OnReRollReceived(%s) : %s", tostring(sender), Util.Objects.ToString(lt))
+    --Logging:Debug("OnReRollReceived(%s) : %s", tostring(sender), Util.Objects.ToString(lt))
 
     -- if we get a callback from 1st pass at pre-processing not succeeding
     -- we won't pass back in sender, it only needs announced one time
@@ -898,9 +898,9 @@ function AddOn:OnReRollReceived(sender, lt)
     -- could not be pre-processed, will have been rescheduled
     if not continue then return end
 
-    for _, entry in pairs(processed) do
-        Logging:Debug("OnReRollReceived() : %s", Util.Objects.ToString(entry:toTable()))
-    end
+    --for _, entry in pairs(processed) do
+    --    Logging:Debug("OnReRollReceived() : %s", Util.Objects.ToString(entry:toTable()))
+    --end
 
     self:DoAutoPass(processed)
     self:SendLootAck(processed)

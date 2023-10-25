@@ -40,7 +40,7 @@ function Frame:Create()
     f.GetStorage = function()
         local path = 'ui.'  .. (self.name and (self.module .. '_' .. self.name) or self.module)
         local storage = Util.Tables.Get(AddOn.db.profile, path) or {}
-        Logging:Trace('Create() : storage at %s is %s', path, Util.Objects.ToString(storage))
+        --Logging:Trace('Create() : storage at %s is %s', path, Util.Objects.ToString(storage))
         return storage
     end
 
@@ -77,7 +77,7 @@ function Frame:Create()
                         end
 
                         if button and button:IsShown() then
-                            Logging:Trace("OnKeyDown(): Closing via %s", button:GetName())
+                            --Logging:Trace("OnKeyDown(): Closing via %s", button:GetName())
                             button:Click()
                             return true
                         else
@@ -86,7 +86,7 @@ function Frame:Create()
                     end
 
                     if not closeOrCancel() then
-                        Logging:Trace("OnKeyDown(): Closing via Hide()")
+                        --Logging:Trace("OnKeyDown(): Closing via Hide()")
                         self:Hide()
                     end
                 else

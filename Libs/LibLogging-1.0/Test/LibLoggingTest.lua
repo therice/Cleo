@@ -82,4 +82,22 @@ describe("LibLogging", function()
             Logging:ResetWriter()
         end)
     end)
+    describe("accepts functions as output arguments", function()
+        it("and writes correctly", function()
+            local logging_output = ""
+            local CaptureOutput = function(msg)
+                logging_output = msg
+            end
+
+
+            Logging:SetRootThreshold(Logging.Level.Trace)
+            Logging:SetWriter(CaptureOutput)
+            Logging:Log(Logging.Level.Trace, "%s", function() return "FunctionTest" end)
+            assert.matches("TRACE.*(LibLoggingTest.lua.*): FunctionTest",logging_output)
+
+            logging_output = ""
+            Logging:Debug("'%s' %d '%s'", "a", function() return 1 end, "b")
+            assert.matches("DEBUG.*(LibLoggingTest.lua.*): 'a' 1 'b'",logging_output)
+        end)
+    end)
 end)

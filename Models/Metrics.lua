@@ -121,6 +121,8 @@ function Snapshot:initialize(metric)
 	self.values = Util.Tables.Copy(metric.values)
 	-- we can cache these values as this is copy and
 	-- values will not mutate
+	self.min = -1
+	self.max = -1
 	self.count = #self.values
 	self.sum = -1
 	self.median = -1
@@ -131,8 +133,24 @@ function Snapshot:Count()
 	return self.count
 end
 
+function Snapshot:Min()
+	if self.min == -1 and self.count > 0 then
+		self.min = Util.Tables.Min(Util.Tables.Copy(self.values, function(v) return v.v end))
+	end
+
+	return math.max(self.min, 0)
+end
+
+function Snapshot:Max()
+	if self.max == -1 and self.count > 0 then
+		self.max = Util.Tables.Max(Util.Tables.Copy(self.values, function(v) return v.v end))
+	end
+
+	return math.max(self.max, 0)
+end
+
 function Snapshot:Sum()
-	if self.sum == -1 then
+	if self.sum == -1  then
 		local sum = 0
 		for _, v in pairs(self.values) do
 			sum = sum + v.v
@@ -219,6 +237,8 @@ function Snapshot:Summarize()
 		[self.name] = {
 			count  = self:Count(),
 			sum    = self:Sum(),
+			min    = ValueOrZero(self:Min()),
+			max    = ValueOrZero(self:Max()),
 			mean   = ValueOrZero(self:Mean()),
 			median = ValueOrZero(self:Median()),
 			stddev = ValueOrZero(self:StdDev()),

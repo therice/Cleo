@@ -111,9 +111,9 @@ function AddOn:OnEnable()
     --@debug@
     -- this enables certain code paths that wouldn't otherwise be available in normal usage
     self.mode:Enable(AddOn.Constants.Modes.Develop)
-    if not AddOn._IsTestContext() then
-        AddOn.Timer.Schedule(function() AddOn:ScheduleRepeatingTimer(function() collectgarbage("collect") end, 90) end)
-    end
+    --if not AddOn._IsTestContext() then
+    --    AddOn.Timer.Schedule(function() AddOn:ScheduleRepeatingTimer(function() collectgarbage("collect") end, 90) end)
+    --end
     --@end-debug@
 
     --@debug@
