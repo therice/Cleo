@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2024.0.3 (2023-10-25)
+* Fix test regression b5490d717468bdcb60fab6442a56e97b2ddeac71
+* Miscellaneous changes which do not impact functionality, but rather qualtify of life improvements 460e8b48ba08775b11e17c4c5c4fc1f95e4f37bc
+
 2024.0.2 (2023-10-08)
 * Address issues uncovered through test suite related to Ace and LibGuildStorage changes ce273258bffe2ead9c194b5586c521874d83821a
 * Address race condition in LibGuildStorage that could lead to frame drops and game lock-ups 40e9406d54f7e9ebedfd9cefd0fb9ce219ae855e
