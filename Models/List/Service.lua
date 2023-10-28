@@ -267,6 +267,13 @@ function Service:LoadAuditRefs(auditRef)
 	return config, list
 end
 
+local PlayerResolver = Util.Memoize.Memoize(
+	function(config, p)
+		local resolved = config:ResolvePlayer(p)
+		return resolved and resolved:GetShortName() or p
+	end
+)
+
 function Service:PlayerMappingFunction(configId)
 	--- @type Models.List.Configuration
 	local config
@@ -282,9 +289,7 @@ function Service:PlayerMappingFunction(configId)
 
 	if config then
 		return function(p)
-			local resolved = config:ResolvePlayer(p)
-			--Logging:Debug("Resolved %s to %s via %s", tostring(p), resolved and resolved:GetName() or 'nil', tostring(config))
-			return resolved and resolved:GetShortName() or p
+			return PlayerResolver(config, p)
 		end
 	else
 		-- couldn't construct a reasonable function, return identity one

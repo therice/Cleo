@@ -1480,7 +1480,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 					self:ColorBorder(C.Colors.LightBlue:GetRGBA())
 				end
 
-				local PlayerMappingFn = Lists:GetService():PlayerMappingFunction(config.id)
+				local PlayerMappingFn = tab:GetPlayerMappingFn()
 
 				-- handle tooltips inline as extra stuff to add
 				self:SetScript(
@@ -1737,6 +1737,11 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	tab.GetPriorities = function(self)
 		return self.priorities
+	end
+
+	tab.GetPlayerMappingFn = function(self)
+		local config = configSupplier()
+		return Lists:GetService():PlayerMappingFunction(config and config.id or nil)
 	end
 
 	--- @param rank number numeric rank of guild
