@@ -329,6 +329,11 @@ function FrameClass:SetMaxLines(l) end
 
 function FrameClass:SetTextInsets(a, b, c, d) end
 
+function FrameClass:GetTextInsets()
+    return 0, 0, 0, 0
+end
+
+
 function FrameClass:Enable() end
 
 function FrameClass:Disable() end
