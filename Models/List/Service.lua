@@ -267,6 +267,32 @@ function Service:LoadAuditRefs(auditRef)
 	return config, list
 end
 
+function Service:PlayerMappingFunction(configId)
+	--- @type Models.List.Configuration
+	local config
+
+	if Util.Objects.IsSet(configId) then
+		config = self.Configuration:Get(configId)
+	else
+		local configs = self:Configurations(true, true)
+		if Util.Objects.IsTable(configs) then
+			config = Util.Tables.Values(configs)[1]
+		end
+	end
+
+	if config then
+		return function(p)
+			local resolved = config:ResolvePlayer(p)
+			--Logging:Debug("Resolved %s to %s via %s", tostring(p), resolved and resolved:GetName() or 'nil', tostring(config))
+			return resolved and resolved:GetShortName() or p
+		end
+	else
+		-- couldn't construct a reasonable function, return identity one
+		return Util.Functions.Id
+	end
+end
+
+
 -- idOrConfig can be an instance of Configuration or Configuration Id (string)
 --- @return Models.List.ActiveConfiguration
 function Service:Activate(idOrConfig)

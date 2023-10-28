@@ -191,8 +191,12 @@ function RaidAttendanceStatistics:GetTotals(intervalInDays)
 end
 
 --- @param record Models.Audit.RaidRosterRecord
-function RaidAttendanceStatistics:_AddRaidIfNotPresent(record)
+--- @param playerMappingFn  function<string> yields the name of passed player (string) to 'main' as/if needed
+function RaidAttendanceStatistics:_AddRaidIfNotPresent(record, playerMappingFn)
 	if record then
+
+		playerMappingFn = playerMappingFn or Util.Functions.Id
+
 		local instanceId = record.instanceId
 		-- each raid has an instance id, which is key for occurrences
 		if Util.Objects.IsNil(self.raids[instanceId])then
@@ -205,7 +209,7 @@ function RaidAttendanceStatistics:_AddRaidIfNotPresent(record)
 		end
 
 		for _, player in pairs(record.players) do
-			local playerName = player[2]
+			local playerName = playerMappingFn(player[2])
 
 			if Util.Objects.IsNil(self.players[playerName]) then
 				self.players[playerName] = {}
@@ -222,12 +226,14 @@ function RaidAttendanceStatistics:_AddRaidIfNotPresent(record)
 	end
 end
 
-function RaidAttendanceStatistics.For(dataFn)
+--- @param dataFn function yields RaidRosterRecord data to be processed via RaidAttendanceStatistics
+--- @param playerMappingFn  function<string> yields the name of passed player (string) to 'main' as/if needed
+function RaidAttendanceStatistics.For(dataFn, playerMappingFn)
 	local stats = RaidAttendanceStatistics()
 
 	for _, data in dataFn() do
 		local record = RaidRosterRecord:reconstitute(data)
-		stats:_AddRaidIfNotPresent(record)
+		stats:_AddRaidIfNotPresent(record, playerMappingFn)
 	end
 
 	return stats

@@ -841,7 +841,8 @@ function PlayerStatsTab:BuildData(intervalInDays)
 	local container = self.tab
 	container.rows = {}
 
-	local row, playerStats = 1, RA:GetAttendanceStatistics(intervalInDays)
+	local PlayerMappingFn = AddOn:ListsModule():GetService():PlayerMappingFunction()
+	local row, playerStats = 1, RA:GetAttendanceStatistics(intervalInDays, nil, PlayerMappingFn)
 	for p, stats in pairs(playerStats.players) do
 		container.rows[row] = {
 			entry = stats,

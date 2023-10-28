@@ -230,19 +230,19 @@ function lib:OnLibraryMessage(prefix, msg, type, sender)
 end
 
 function lib:OnPlayerGuildUpdate(...)
-    Logging:Debug("[LibGuildStorage-1.3] OnPlayerGuildUpdate(%d)", state)
+    Logging:Trace("[LibGuildStorage-1.3] OnPlayerGuildUpdate(%d)", state)
     SetState(States.StaleAwaitingUpdate)
     --Messages.SendMessage(Messages.Refresh)
 end
 
 function lib:OnPlayerEnteringWorld(...)
-    Logging:Debug("[LibGuildStorage-1.3] OnPlayerEnteringWorld()")
+    Logging:Trace("[LibGuildStorage-1.3] OnPlayerEnteringWorld()")
     lib:OnPlayerGuildUpdate(...)
     --GuildRoster()
 end
 
 function lib:OnGuildRosterUpdate(_, canRequestRosterUpdate)
-    Logging:Debug("[LibGuildStorage-1.3] OnGuildRosterUpdate(%s)", tostring(canRequestRosterUpdate))
+    Logging:Trace("[LibGuildStorage-1.3] OnGuildRosterUpdate(%s)", tostring(canRequestRosterUpdate))
     if canRequestRosterUpdate then
         SetState(States.PendingChanges)
     else

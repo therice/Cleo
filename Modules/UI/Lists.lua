@@ -1480,6 +1480,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 					self:ColorBorder(C.Colors.LightBlue:GetRGBA())
 				end
 
+				local PlayerMappingFn = Lists:GetService():PlayerMappingFunction(config.id)
+
 				-- handle tooltips inline as extra stuff to add
 				self:SetScript(
 					'OnEnter',
@@ -1488,7 +1490,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 						PlayerTooltip:AddLine(L['raid_attendance'])
 						PlayerTooltip:AddLine(" ")
 
-						local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(AttendanceInterval)
+						local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(AttendanceInterval, nil, PlayerMappingFn)
 						local playerStats = stats.players[AddOn.Ambiguate(playerName)]
 						local pct = playerStats and playerStats.pct
 						pct = pct and (pct * 100.0) or (0.0)
@@ -1508,7 +1510,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 						)
 
 						local sd, ed = AddOn:RaidAuditModule():GetNormalizedInterval(AttendanceIntervalWeeks)
-						stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed)
+						stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed, PlayerMappingFn)
 						playerStats = stats.players[AddOn.Ambiguate(playerName)]
 						pct = playerStats and playerStats.pct
 						pct = pct and (pct * 100.0) or (0.0)

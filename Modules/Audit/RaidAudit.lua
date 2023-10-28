@@ -289,22 +289,30 @@ RA.GetNormalizedInterval = Util.Memoize.Memoize(
 
 --- @param sd Models.Date|number the start date for history, or a number specifying days will be calculated
 --- @param ed Models.Date the end date for history, can be nil if first parameter is a number
-function RA:GetAttendanceStatistics(sd, ed)
+--- @param playerMappingFn  function<string> yields the name of passed player (string) to 'main' as/if needed
+function RA:GetAttendanceStatistics(sd, ed, playerMappingFn)
 	-- if a number, calculate the date range
 	if Util.Objects.IsNumber(sd) then
-		local now = Date()
+		local now = Date():clear_time()
 		local start = Date(now):add {day = -sd}
 		sd, ed = start, now
 	end
 	assert(sd and ed, "start and end dates were not provided")
-	local cacheKey = Util.Strings.Join('_', tostring(sd), tostring(ed))
 
+	local cacheKey = Util.Strings.Join('_', tostring(sd), tostring(ed))
 	local check, ret = pcall(
 		function()
-			if  self.stats.attendance.stale or
+			local reload = self.stats.attendance.stale or
 				Util.Tables.IsEmpty(self.stats.attendance.value) or
-				Util.Tables.IsEmpty(self.stats.attendance.value[cacheKey]) then
-				local stats = RaidAttendanceStatistics.For(function() return self:GetHistoryFiltered(sd, ed)() end)
+				Util.Tables.IsEmpty(self.stats.attendance.value[cacheKey])
+
+			Logging:Debug("GetAttendanceStatistics(%s, %s, %s)[%s, %s]", tostring(sd), tostring(ed), tostring(playerMappingFn), cacheKey, tostring(reload))
+
+			if reload then
+				local stats = RaidAttendanceStatistics.For(
+					function() return self:GetHistoryFiltered(sd, ed)() end,
+					playerMappingFn
+				)
 				if stats then
 					self.stats.attendance.value[cacheKey] = stats:GetTotals()
 					self.stats.attendance.stale = false
