@@ -2,6 +2,13 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2024.0.4 (2023-10-28)
+* add missing API stub to correct test failure 18e5137fdf760c896c2d56494e5a42440336ae4a
+* Cache player resolution by Configuration when performing lookup for raid statistics 130faad33b1166e183dbeedf30428d365c8ad761
+* Resolve all players to their 'mains' when calculating attendance stats for list priority popup and overall player stats bb4fb9242d5669682fa9d553d30259f260fe8124
+* Resolve to main for calculating raid attendance when bulk managing loot priority lists 25f5e946933aa9cafc88cb625f53bd3d5ea924f3
+* retain numeric labeling for priority if a player is present in the list slot 7da37a13ea492c3f03933d0564d92ee028bab77e
+
 2024.0.3 (2023-10-25)
 * Fix test regression b5490d717468bdcb60fab6442a56e97b2ddeac71
 * Miscellaneous changes which do not impact functionality, but rather qualtify of life improvements 460e8b48ba08775b11e17c4c5c4fc1f95e4f37bc
