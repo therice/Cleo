@@ -1570,10 +1570,11 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		local priorityEdit = UI:New('EditBox', tab)
 								:Size(PriorityWidth, PriorityHeight)
 								:AddXButton()
+								:TextInsets(25)
+								:BackgroundText(tostring(index), true)
 								:OnChange(function(self, userInput) EditOnChange(self, true, userInput) end)
 		tab.priorityEdits[index] = priorityEdit
 		priorityEdit.index = index
-		priorityEdit:BackgroundText(tostring(index))
 		priorityEdit.xButton:Hide()
 		priorityEdit.xButton:SetScript(
 			"OnClick",
@@ -1590,10 +1591,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		priorityEdit.Set = function(self, text)
 			self:SetText(text or "")
 			if Util.Objects.IsEmpty(text) then
-				self:BackgroundText(tostring(self.index))
 				self.xButton:Hide()
 			else
-				self:BackgroundText(nil)
 				-- bind this to whether edit is movable
 				-- if not movable, then set to inactive due to permissions
 				if self:IsMovable() then self.xButton:Show() end
@@ -2034,10 +2033,11 @@ function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
 		local priorityEdit =
 			UI:New('EditBox', tab)
 				:Size(PriorityWidth, PriorityHeight)
+				:TextInsets(25)
+				:BackgroundText(tostring(index), true)
 				:OnChange(function(self) EditOnChange(self) end)
 		tab.priorities[index] = priorityEdit
 		priorityEdit.index = index
-		priorityEdit:BackgroundText(tostring(index))
 		priorityEdit.Reset = function(self)
 			local otcFn = self:GetScript("OnTextChanged")
 			self:OnChange(nil)
@@ -2046,11 +2046,6 @@ function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
 		end
 		priorityEdit.Set = function(self, text)
 			self:SetText(text or "")
-			if Util.Objects.IsEmpty(text) then
-				self:BackgroundText(tostring(self.index))
-			else
-				self:BackgroundText(nil)
-			end
 			self:SetCursorPosition(1)
 		end
 		priorityEdit:SetEnabled(false)

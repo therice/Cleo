@@ -44,6 +44,7 @@ function EditBox:Create()
     BaseWidget.Mod(
         eb,
         'Text', EditBox.SetText,
+        'TextInsets', EditBox.SetTextInsets,
         'Tooltip', EditBox.SetTooltip,
         'ClearTooltip', EditBox.ClearTooltip,
         'OnChange', EditBox.OnChange,
@@ -105,6 +106,19 @@ function EditBox.SetText(self, text)
     self:SetCursorPosition(text and #text or 0)
     return self
 end
+
+function EditBox.SetTextInsets(self, left, right, top, bottom)
+    local l, r, t, b = self:GetTextInsets()
+
+    left = Util.Objects.Default(left, l)
+    right = Util.Objects.Default(right, r)
+    top = Util.Objects.Default(top, t)
+    bottom = Util.Objects.Default(bottom, b)
+
+    self:SetTextInsets(left, right, top, bottom)
+    return self
+end
+
 
 function EditBox.ClearTooltip(self)
     self.tipTitle = nil
@@ -187,14 +201,20 @@ function EditBox.AddTopText(self,text,size)
     return self
 end
 
-function EditBox.AddBackgroundText(self,text)
+function EditBox.AddBackgroundText(self,text, preserve)
+    preserve = Util.Objects.Default(preserve, false)
+
     if not self.backgroundText then
         self.backgroundText =
-            NativeUI:New('Text', self, nil, 12, "GameFontNormalSmall"):Point("LEFT",2,0):Point("RIGHT",-2,0):Color(.5,.5,.5)
+            NativeUI:New('Text', self, nil, 12, "GameFontNormalSmall")
+                :Point("LEFT",2,0):Point("RIGHT",-2,0)
+                :Color(.5,.5,.5)
     end
 
     local function FocusGained(self)
-        self.backgroundText:SetText("")
+        if not preserve then
+            self.backgroundText:SetText("")
+        end
     end
 
     local function FocusLost(self)
@@ -209,7 +229,9 @@ function EditBox.AddBackgroundText(self,text)
         if (not text or Util.Strings.IsEmpty(text))and not self:HasFocus() then
             self.backgroundText:SetText(self.backText)
         else
-            self.backgroundText:SetText("")
+            if not preserve then
+                self.backgroundText:SetText("")
+            end
         end
     end
 
