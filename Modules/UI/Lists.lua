@@ -2203,8 +2203,10 @@ function AttendanceMeasure:Evaluate(...)
 				tostring(criteria), days, tostring(sd), tostring(ed)
 			)
 
+
+			local PlayerMappingFn = Lists.listPriorityTab:GetPlayerMappingFn()
+			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed, PlayerMappingFn)
 			-- todo : union of multi range
-			local stats = AddOn:RaidAuditModule():GetAttendanceStatistics(sd, ed)
 			if stats then
 				for _, player in Util.Tables.Sparse.ipairs(priorities) do
 					local pstats = stats.players[AddOn.Ambiguate(player:GetShortName())]
