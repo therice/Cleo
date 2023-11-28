@@ -746,7 +746,7 @@ lib.Creatures = {
         name = 'Festergut'
     },
     [36678] = {
-        name = 'Putricide'
+        name = 'Professor Putricide'
     },
     [36627] = {
         name = 'Rotface'
@@ -755,7 +755,7 @@ lib.Creatures = {
         name = 'Deathbringer Saurfang'
     },
     [36855] = {
-        name = 'Lady Deathwhisper"'
+        name = 'Lady Deathwhisper'
     },
     [37215] = {
         name = 'Orgrim\'s Hammer'
