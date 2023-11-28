@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2024.0.5 (2023-11-28)
+* Correct a few mispelled boss names for encounter tracking bd7e313df1db6ebcce60f95c32472742eec89507
+
 2024.0.4 (2023-10-28)
 * add missing API stub to correct test failure 18e5137fdf760c896c2d56494e5a42440336ae4a
 * Cache player resolution by Configuration when performing lookup for raid statistics 130faad33b1166e183dbeedf30428d365c8ad761
