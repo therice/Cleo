@@ -1,12 +1,12 @@
-## Interface: 30403
-## X-Min-Interface: 30402
+## Interface: 40400
+## X-Min-Interface-Cata: 40400
 ## Title: |cfffe7b2cCleo|r
-## Notes: Cleo : Suicide Kings Loot System for World of Warcraft Classic (WOTLK)
+## Notes: Cleo : Suicide Kings Loot System for World of Warcraft (Cataclysm Classic)
 ## Author: Jackburtón-Atiesh
 ## Version: @project-version@
 ## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit, Cleo_RaidAudit
 ## X-AddonName: Cleo
-## X-InterfaceName: Cleo (WOTLK Classic)
+## X-InterfaceName: Cleo (Cataclysm Classic)
 
 ## Required Libraries
 Libs\Libs.xml
