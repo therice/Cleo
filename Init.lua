@@ -51,7 +51,7 @@ do
     AddOn:AddLibrary('ItemUtil', 'LibItemUtil-1.1')
     AddOn:AddLibrary('Window', 'LibWindow-1.1')
     AddOn:AddLibrary('ScrollingTable', 'ScrollingTable')
-    AddOn:AddLibrary('Dialog', 'LibDialog-1.0')
+    AddOn:AddLibrary('Dialog', 'LibDialog-1.1')
     AddOn:AddLibrary('DataBroker', 'LibDataBroker-1.1')
     AddOn:AddLibrary('DbIcon', 'LibDBIcon-1.0')
     AddOn:AddLibrary('GuildStorage', 'LibGuildStorage-1.3')
