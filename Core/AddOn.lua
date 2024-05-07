@@ -28,12 +28,14 @@ function AddOn:OnInitialize()
         date = date,
         tocVersion = tocVersion,
 
-        -- technically, this is wrath "classic but that's the only flavor which exists right now
+        -- technically, this is wrath "classic" but that's the only flavor which exists right now
         IsWrath = function(self) return self.version.major == 3 and self.version.minor == 4 end,
         IsWrathP1 = function(self) return self:IsWrath() and self.version.patch == 0 end, -- Naxx
         IsWrathP2 = function(self) return self:IsWrath() and self.version.patch == 1 end, -- Ulduar
         IsWrathP3 = function(self) return self:IsWrath() and self.version.patch == 2 end, -- TOGC
         IsWrathP4 = function(self) return self:IsWrath() and self.version.patch == 3 end, -- ICC
+
+        IsCataclysm = function(self) return self.version.major == 4 and self.version.minor == 4 end,
     }
 
     Logging:Debug("OnInitialize(%s) : BuildInfo(%s)", self:GetName(), Util.Objects.ToString(AddOn.BuildInfo))

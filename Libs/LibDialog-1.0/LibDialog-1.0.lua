@@ -8,8 +8,6 @@
 -----------------------------------------------------------------------
 -- Upvalued Lua API.
 -----------------------------------------------------------------------
-local _G = getfenv(0)
-
 -- Functions
 local error = _G.error
 local pairs = _G.pairs
@@ -22,19 +20,18 @@ local table = _G.table
 -- Library namespace.
 -----------------------------------------------------------------------
 local LibStub = _G.LibStub
-local MAJOR = "LibDialog-1.0"
+local MAJOR = "LibDialog-1.1" -- EDIT: Bump major until https://github.com/Torhal/LibDialog-1.0/issues/5 is implemented
 
 _G.assert(LibStub, MAJOR .. " requires LibStub")
--- RCLC: Note bumped minor +1 to avoid incompabilities with old addons.
-local MINOR = 9 -- Should be manually increased
----@class LibDialog
+
+local MINOR = 8 -- Should be manually increased
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not lib then
     return
 end -- No upgrade needed
 
-local dialog_prototype = _G.CreateFrame("Frame", nil, _G.UIParent, "BackdropTemplate")
+local dialog_prototype = _G.CreateFrame("Frame", nil, _G.UIParent, _G.BackdropTemplateMixin and "BackdropTemplate")
 local dialog_meta = {
     __index = dialog_prototype
 }
@@ -118,17 +115,36 @@ local active_dialogs = lib.active_dialogs
 local active_buttons = lib.active_buttons
 local active_checkboxes = lib.active_checkboxes
 local active_editboxes = lib.active_editboxes
-local active_icons = lib.active_icons
 
 local dialog_heap = lib.dialog_heap
 local button_heap = lib.button_heap
 local checkbox_heap = lib.checkbox_heap
 local editbox_heap = lib.editbox_heap
-local icon_heap = lib.icon_heap
 
 -----------------------------------------------------------------------
 -- Helper functions.
 -----------------------------------------------------------------------
+local function _SetupAnchor(dialog)
+    local default_dialog
+    if _G.StaticPopup_DisplayedFrames then
+        default_dialog = _G.StaticPopup_DisplayedFrames[#_G.StaticPopup_DisplayedFrames]
+    elseif (_G.StaticPopup_HasDisplayedFrames and _G.StaticPopup_IsLastDisplayedFrame) then
+        if _G.StaticPopup_HasDisplayedFrames() then
+            for idx = _G.STATICPOPUP_NUMDIALOGS, 1, -1 do
+                local test_dialog = _G["StaticPopup" .. idx]
+                if _G.StaticPopup_IsLastDisplayedFrame(test_dialog) then
+                    default_dialog = test_dialog
+                end
+            end
+        end
+    end
+    if default_dialog then
+        dialog:SetPoint("TOP", default_dialog, "BOTTOM", 0, 0)
+    else
+        dialog:SetPoint("TOP", _G.UIParent, "TOP", 0, -135)
+    end
+end
+
 local function _ProcessQueue()
     if #active_dialogs == MAX_DIALOGS then
         return
@@ -153,13 +169,7 @@ local function _RefreshDialogAnchors()
         current_dialog:ClearAllPoints()
 
         if index == 1 then
-            local default_dialog = _G.StaticPopup_DisplayedFrames[#_G.StaticPopup_DisplayedFrames]
-
-            if default_dialog then
-                current_dialog:SetPoint("TOP", default_dialog, "BOTTOM", 0, 0)
-            else
-                current_dialog:SetPoint("TOP", _G.UIParent, "TOP", 0, -135)
-            end
+            _SetupAnchor(current_dialog)
         else
             current_dialog:SetPoint("TOP", active_dialogs[index - 1], "BOTTOM", 0, 0)
         end
@@ -238,7 +248,7 @@ local function _Dialog_OnShow(dialog)
         return
     end
 
-    _G.PlaySound(850) -- "igMainMenuOpen"
+    _G.PlaySound(_G.SOUNDKIT.IG_MAINMENU_OPEN, "Master")
 
     if delegate.on_show then
         delegate.on_show(dialog, dialog.data)
@@ -246,16 +256,16 @@ local function _Dialog_OnShow(dialog)
 end
 
 local function _Dialog_OnHide(dialog)
-    local delegate = dialog.delegate
-
-    _G.PlaySound(851) -- "igMainMenuClose"
+    _G.PlaySound(_G.SOUNDKIT.IG_MAINMENU_CLOSE, "Master")
 
     -- Required so lib:ActiveDialog() will return false if called from code which is called from the delegate's on_hide
     _RecycleWidget(dialog, active_dialogs, dialog_heap)
 
+    local delegate = dialog.delegate
     if delegate.on_hide then
         delegate.on_hide(dialog, dialog.data)
     end
+
     _ReleaseDialog(dialog)
 
     if #delegate_queue > 0 then
@@ -835,13 +845,7 @@ function lib:Spawn(reference, data)
     if #active_dialogs > 0 then
         dialog:SetPoint("TOP", active_dialogs[#active_dialogs], "BOTTOM", 0, 0)
     else
-        local default_dialog = _G.StaticPopup_DisplayedFrames[#_G.StaticPopup_DisplayedFrames]
-
-        if default_dialog then
-            dialog:SetPoint("TOP", default_dialog, "BOTTOM", 0, 0)
-        else
-            dialog:SetPoint("TOP", _G.UIParent, "TOP", 0, -135)
-        end
+        _SetupAnchor(dialog)
     end
     active_dialogs[#active_dialogs + 1] = dialog
     dialog:Show()

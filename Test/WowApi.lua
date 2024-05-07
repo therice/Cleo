@@ -946,8 +946,13 @@ _G.GENERAL = "General"
 _G.UNKNOWNOBJECT = "Unknown"
 _G.StaticPopup_DisplayedFrames = {}
 
+_G.SOUNDKIT = {
+    IG_MAINMENU_OPEN = 850,
+    IG_MAINMENU_CLOSE = 851,
+}
 _G.PlaySound = function(...) end
 
+_G.STATICPOPUP_NUMDIALOGS = 4
 _G.FauxScrollFrame_Update = function() end
 _G.FauxScrollFrame_GetOffset = function() return 0 end
 _G.CLASS_ICON_TCOORDS = {}

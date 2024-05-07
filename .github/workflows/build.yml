@@ -6,6 +6,11 @@ on:
       - master
     tags:
       - "*"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "The branch to run against"
+        required: false
 
 jobs:
   linting:
@@ -14,8 +19,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.branch }}
           fetch-depth: 0
       - name: Luacheck
         uses: nebularg/actions-luacheck@v1
@@ -29,8 +35,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.branch }}
           fetch-depth: 0
       - name: Install OS Libraries
         run: |
@@ -75,11 +82,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.branch }}
           fetch-depth: 0
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Install Node Packages
