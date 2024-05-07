@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.0 (2024-05-07)
+* Actually publish first build of Cataclysm 3d326c6330fbcc164f6f5b59104f6765b67fb16d
+* attempt to fix issues with semantic-release configuration 71127350ecf9ef3b60664f6fd715ec2fdef018f1
+
 2024.0.5 (2023-11-28)
 * Correct a few mispelled boss names for encounter tracking bd7e313df1db6ebcce60f95c32472742eec89507
 
