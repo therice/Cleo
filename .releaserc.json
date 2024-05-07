@@ -44,7 +44,7 @@
 			"writerOpts" : {
 				"groupBy" : false
 			},
-			"linkReferences": false,
+			"linkReferences": true,
 			"linkCompare": false
 		}],
 		["@semantic-release/changelog", {
