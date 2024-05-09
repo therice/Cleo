@@ -21,6 +21,7 @@ CustomItems.defaults = {
 		custom_items = {
 
 		},
+		-- default items which were subsequently removed by user
 		ignored_default_items = {
 
 		}
@@ -129,6 +130,15 @@ function CustomItems:AddDefaultCustomItems()
 			end
 		end
 	end
+
+	if Util.Tables.Count(custom_items) > 0 then
+		for id, value in pairs(custom_items) do
+			if value and value.default and not defaultCustomItems[tonumber(id)] then
+				custom_items[id] = nil
+			end
+		end
+	end
+
 end
 
 function CustomItems:LaunchpadSupplement()

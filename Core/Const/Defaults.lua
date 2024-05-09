@@ -112,6 +112,7 @@ AddOn.DefaultCustomItems = {
     --]]
 
     -- TBC Classic P1
+    --[[
     [29761] = { 4, 120, "INVTYPE_HEAD" },               -- Helm of the Fallen Defender
     [29759] = { 4, 120, "INVTYPE_HEAD" },               -- Helm of the Fallen Hero
     [29760] = { 4, 120, "INVTYPE_HEAD" },               -- Helm of the Fallen Champion
@@ -129,8 +130,10 @@ AddOn.DefaultCustomItems = {
     [29766] = { 4, 120, "INVTYPE_LEGS" },               -- Leggings of the Fallen Champion
     [32385] = { 4, 125, "INVTYPE_FINGER", "Alliance" }, -- Magtheridon's Head
     [32386] = { 4, 125, "INVTYPE_FINGER", "Horde" },    -- Magtheridon's Head
+    --]]
 
     -- TBC Classic P2
+    --[[
     [30243] = { 4, 133, "INVTYPE_HEAD" },               -- Helm of the Vanquished Defender
     [30244] = { 4, 133, "INVTYPE_HEAD" },               -- Helm of the Vanquished Hero
     [30242] = { 4, 133, "INVTYPE_HEAD" },               -- Helm of the Vanquished Champion
@@ -146,8 +149,10 @@ AddOn.DefaultCustomItems = {
     [30246] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Defender
     [30247] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Hero
     [30245] = { 4, 133, "INVTYPE_LEGS" },               -- Leggings of the Vanquished Champion
+    --]]
 
     -- TBC Classic P3
+    --[[
     [31097] = { 4, 146, "INVTYPE_HEAD"},                -- Helm of the Forgotten Conqueror
     [31095] = { 4, 146, "INVTYPE_HEAD"},                -- Helm of the Forgotten Protector
     [31096] = { 4, 146, "INVTYPE_HEAD"},                -- Helm of the Forgotten Vanquisher
@@ -163,8 +168,10 @@ AddOn.DefaultCustomItems = {
     [31098] = { 4, 146, "INVTYPE_LEGS"},                -- Leggings of the Forgotten Conqueror
     [31100] = { 4, 146, "INVTYPE_LEGS"},                -- Leggings of the Forgotten Protector
     [31099] = { 4, 146, "INVTYPE_LEGS"},                -- Leggings of the Forgotten Vanquisher
+    --]]
 
     -- TBC Classic P4
+    --[[
     [34848] = { 4, 154, "INVTYPE_WRIST" },              -- Bracers of the Forgotten Conqueror
     [34851] = { 4, 154, "INVTYPE_WRIST" },              -- Bracers of the Forgotten Protector
     [34852] = { 4, 154, "INVTYPE_WRIST" },              -- Bracers of the Forgotten Vanquisher
@@ -174,9 +181,11 @@ AddOn.DefaultCustomItems = {
     [34853] = { 4, 154, "INVTYPE_WAIST" },              -- Belt of the Forgotten Conqueror
     [34854] = { 4, 154, "INVTYPE_WAIST" },              -- Belt of the Forgotten Protector
     [34855] = { 4, 154, "INVTYPE_WAIST" },              -- Belt of the Forgotten Vanquisher
+    --]]
 
     -- WOTLK P1
     -- 10 player
+    --[[
     [40616] = { 4, 200, "INVTYPE_HEAD" },               -- Helm of the Lost Conqueror
     [40617] = { 4, 200, "INVTYPE_HEAD" },               -- Helm of the Lost Protector
     [40618] = { 4, 200, "INVTYPE_HEAD" },               -- Helm of the Lost Vanquisher
@@ -258,6 +267,33 @@ AddOn.DefaultCustomItems = {
     [52028] = { 4, 277, ItemUtil.CustomItemInvTypeSelf },   -- Vanquisher's Mark of Sanctification - Heroic (Rogue, Death Knight, Mage, Druid)
     [52029] = { 4, 277, ItemUtil.CustomItemInvTypeSelf },   -- Protector's Mark of Sanctification - Heroic (Warrior, Hunter, Shaman)
     [52030] = { 4, 277, ItemUtil.CustomItemInvTypeSelf },   -- Conqueror's Mark of Sanctification - Heroic (Paladin, Priest, Warlock)
+    --]]
+
+
+    -- CATA P1
+    -- T11 https://www.wowhead.com/cata/guide=cataclysm&tier-11
+    [63683] = { 4, 359, "INVTYPE_HEAD" },       -- Helm of the Forlorn Conqueror
+    [63684] = { 4, 359, "INVTYPE_HEAD" },       -- Helm of the Forlorn Protector
+    [63682] = { 4, 359, "INVTYPE_HEAD" },       -- Helm of the Forlorn Vanquisher
+    [65001] = { 4, 372, "INVTYPE_HEAD" },       -- Crown of the Forlorn Conqueror
+    [65000] = { 4, 372, "INVTYPE_HEAD" },       -- Crown of the Forlorn Protector
+    [65002] = { 4, 372, "INVTYPE_HEAD" },       -- Crown of the Forlorn Vanquisher
+    [67429] = { 4, 372, "INVTYPE_HAND" },       -- Gauntlets of the Forlorn Conqueror
+    [67430] = { 4, 372, "INVTYPE_HAND" },       -- Gauntlets of the Forlorn Protector
+    [67431] = { 4, 372, "INVTYPE_HAND" },       -- Gauntlets of the Forlorn Vanquisher
+    [67423] = { 4, 372, "INVTYPE_CHEST" },      -- Chest of the Forlorn Conqueror
+    [67424] = { 4, 372, "INVTYPE_CHEST" },      -- Chest of the Forlorn Protector
+    [67425] = { 4, 372, "INVTYPE_CHEST" },      -- Chest of the Forlorn Vanquisher
+    [67428] = { 4, 372, "INVTYPE_LEGS" },       -- Leggings of the Forlorn Conqueror
+    [67427] = { 4, 372, "INVTYPE_LEGS" },       -- Leggings of the Forlorn Protector
+    [67426] = { 4, 372, "INVTYPE_LEGS" },       -- Leggings of the Forlorn Vanquisher
+    [65088] = { 4, 359, "INVTYPE_SHOULDER" },   -- Shoulders of the Forlorn Conqueror
+    [65087] = { 4, 359, "INVTYPE_SHOULDER" },   -- Shoulders of the Forlorn Protector
+    [65089] = { 4, 359, "INVTYPE_SHOULDER" },   -- Shoulders of the Forlorn Vanquisher
+    [64315] = { 4, 372, "INVTYPE_SHOULDER" },   -- Mantle of the Forlorn Conqueror
+    [64316] = { 4, 372, "INVTYPE_SHOULDER" },   -- Mantle of the Forlorn Protector
+    [64314] = { 4, 372, "INVTYPE_SHOULDER" },   -- Mantle of the Forlorn Vanquisher
+    [66998] = { 4, 372, ItemUtil.CustomItemInvTypeSelf },  -- Essence of the Forlorn (can be used to purchase any Heroic armor token)
 }
 
 AddOn.TestItems = {
@@ -356,6 +392,7 @@ AddOn.TestItems = {
     -- WOTLK P3 END
 
     -- WOTLK P4 START
+    --[[
     -- marks
     52025, 52026, 52027, 52028, 52029, 52030,
     -- the rest
@@ -395,12 +432,30 @@ AddOn.TestItems = {
     51912, 51913, 51914, 51915, 51916, 51917, 51918, 51919, 51920, 51921, 51922, 51923, 51924, 51925, 51926, 51927,
     51928, 51929, 51930, 51931, 51932, 51933, 51934, 51935, 51936, 51937, 51938, 51939, 51940, 51941, 51942, 51943,
     51944, 51945, 51946, 51947, 52025, 52026, 52027, 52028, 52029, 52030
-}
+    --]]
 
---[[
-do
-    for itemId, _ in pairs(AddOn.DefaultCustomItems) do
-        tinsert(AddOn.TestItems, itemId)
-    end
-end
---]]
+    -- CATA P1 START
+    59469, 59470, 59471, 59472, 59473, 59474, 59475, 59476, 59481, 59482, 59483, 59484, 65133, 65134, 65135, 65136,
+    65137, 65138, 65139, 65140, 65141, 65142, 65143, 65144, 67423, 67424, 67425, 59512, 59515, 59516, 59517, 59518,
+    59519, 63531, 63532, 63533, 63534, 63535, 63536, 65091, 65092, 65093, 65094, 65095, 65096, 65105, 65106, 65107,
+    65108, 65109, 65112, 59502, 59503, 59504, 59505, 59506, 59507, 59508, 59509, 59510, 59511, 59513, 59514, 65110,
+    65111, 65113, 65114, 65115, 65116, 65117, 65118, 65119, 65120, 65121, 65122, 59330, 59485, 59486, 59487, 59490,
+    59494, 59495, 59497, 59498, 59499, 59500, 59501, 63680, 64314, 64315, 64316, 65087, 65088, 65089, 65090, 65123,
+    65124, 65125, 65126, 65127, 65128, 65129, 65130, 65131, 65132, 65145, 68600, 60226, 60227, 60228, 60229, 60230,
+    60231, 60232, 60233, 60234, 60235, 60236, 60237, 60238, 59117, 59118, 59119, 59120, 59121, 59122, 59216, 59217,
+    59218, 59219, 59220, 63540, 65004, 65076, 65077, 65078, 65079, 65080, 65081, 65082, 65083, 65084, 65085, 65086,
+    59328, 59329, 59331, 59332, 59333, 59334, 59335, 59336, 59340, 59341, 59452, 59492, 65007, 65020, 65041, 65042,
+    65044, 65045, 65046, 65047, 65048, 65049, 65050, 65051, 59312, 59315, 59316, 59317, 59318, 59319, 59320, 59322,
+    59324, 59325, 59326, 59327, 65052, 65053, 65054, 65055, 65056, 65058, 65059, 65060, 65061, 65062, 65063, 65066,
+    67429, 67430, 67431, 59221, 59223, 59224, 59225, 59233, 59234, 59310, 59311, 59313, 59314, 59355, 59451, 65021,
+    65028, 65064, 65065, 65067, 65068, 65069, 65070, 65071, 65072, 65073, 65075, 59342, 59343, 59344, 59346, 59347,
+    59348, 59349, 59350, 59351, 59352, 59353, 59354, 65029, 65030, 65031, 65032, 65033, 65034, 65035, 65036, 65037,
+    65038, 65039, 65040, 67426, 67427, 67428, 59222, 59321, 59337, 59356, 59441, 59442, 59443, 59444, 59450, 59454,
+    59457, 59459, 63679, 63682, 63683, 63684, 65000, 65001, 65002, 65003, 65017, 65018, 65019, 65022, 65023, 65024,
+    65025, 65026, 65027, 65043, 65057, 65074, 63488, 63489, 63490, 63491, 63492, 63493, 63494, 63495, 63496, 63497,
+    63498, 65367, 65368, 65369, 65370, 65371, 65372, 65373, 65374, 65375, 65376, 65377, 63041, 63499, 63500, 63501,
+    63502, 63503, 63504, 63505, 63506, 63507, 63682, 63683, 63684, 64314, 64315, 64316, 68127, 68128, 68129, 69827,
+    69828, 69829, 69830, 69831, 69833, 69834, 69835, 65000, 65001, 65002, 65087, 65088, 65089, 65378, 65379, 65380,
+    65381, 65382, 65383, 65384, 65385, 65386, 66998, 68130, 68131, 68132, 69878, 69879, 69880, 69881, 69882, 69883,
+    69884, 69885,
+}
