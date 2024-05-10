@@ -6,6 +6,7 @@
 local params = {...}
 local pl = require('pl.path')
 local assert = require("luassert")
+local busted = require("busted")
 local say = require("say")
 local addOnTestNs, testNs, loadAddon, logFileName, logFile, caller =
     'Cleo_Testing', nil, nil, nil, nil, pl.abspath(pl.abspath('.') .. '/' .. debug.getinfo(2, "S").source:match("@(.*)$"))
@@ -73,7 +74,7 @@ end
 function ConfigureLogging()
     local success, result = pcall(
             function()
-                local Logging = LibStub('LibLogging-1.0')
+                local Logging = LibStub('LibLogging-1.1')
                 Logging:SetRootThreshold(Logging.Level.Trace)
                 Logging:SetWriter(
                         function(msg)
@@ -93,7 +94,7 @@ end
 function ResetLogging()
     pcall(
             function()
-                local Logging, _ = LibStub('LibLogging-1.0')
+                local Logging, _ = LibStub('LibLogging-1.1')
                 Logging:ResetWriter()
             end
     )
@@ -128,7 +129,7 @@ function xpcall_patch()
             --
             --stack traceback:
             --        ...sers/tedri/opt/r2d2/R2D2X/Models/History/Traffic.lua:30: in function 'initialize'
-            --        ...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:159: in function <...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:156>
+            --        ...ri/opt/r2d2/R2D2X/Libs/LibClass-1.1/LibClass-1.1.lua:159: in function <...ri/opt/r2d2/R2D2X/Libs/LibClass-1.1/LibClass-1.1.lua:156>
             --        (tail call): ?
             --        ./Models/History/Test/TrafficTest.lua:28: in function <./Models/History/Test/TrafficTest.lua:27>
             --
@@ -179,15 +180,31 @@ _G.IsAsync = function()
 end
 
 local copas = require("copas")
-function Async(thunk)
+function async(thunk)
     _async = true
+
     return function()
+        local e
+
         copas.loop(
             function()
+                copas.seterrorhandler(function(err, _, _)
+                    e = copas.gettraceback(err)
+                    print(format("copas[errorhandler] : %s", tostring(err)))
+                end)
+
+                print('copas[loop] : calling thunk')
                 thunk(copas)
-                _async = false
+                print('copas[loop] : thunk completed')
             end
         )
+
+        _async = false
+        print('copas[loop] : loop completed')
+
+        if e ~= nil then
+            busted.fail(e)
+        end
     end
 end
 

@@ -166,6 +166,12 @@ function SetLocale(locale)
     wow_api_locale = locale
 end
 
+
+local function GetDateTime()
+    return date("%m/%d/%y %H:%M:%S", time())
+end
+
+
 C_Timer = {}
 local timer = require("copas.timer")
 local timerCount = 1
@@ -173,13 +179,13 @@ function C_Timer.After(duration, callback)
     local ref = timerCount
     timerCount = timerCount + 1
 
-    print(format('C_Timer.After[START](%d, %d, %d) Async(%s)', ref, duration, os.time(), tostring(_G.IsAsync())))
+    print(format('%s C_Timer.After[START](%d, %d, %d) Async(%s)', GetDateTime(), ref, duration, os.time(), tostring(_G.IsAsync())))
     if _G.IsAsync() then
         return timer.new({
              delay = duration,
              recurring = false,
              callback = function()
-                 print(format('C_Timer.After[END](%d, %d, %d)', ref, duration, os.time()))
+                 print(format('%s C_Timer.After[END](%d, %d, %d)', GetDateTime(), ref, duration, os.time()))
                  SetTime()
                  callback()
              end
@@ -272,6 +278,7 @@ function GuildRoster()
     end
 end
 
+-- todo : update this
 function GetBuildInfo()
     return "3.4.1", 47612, "Jan 11 2023", 30401
 end
@@ -423,6 +430,7 @@ function AddPlayerGuid(name, guid, realm, class)
     end
 end
 
+-- todo : update this
 function GetGuildInfo(unit) return "The Black Watch", "Quarter Master", 1, nil end
 
 function GetGuildInfoText() return "This is my guild info" end
@@ -499,6 +507,7 @@ function GetRaidRosterInfo(i)
     return name, nil, nil, nil, nil, classInfo.classFile, 'ZONE', 1
 end
 
+-- todo : update this
 -- _, _, _, _, _, _, _, mapId
 function GetInstanceInfo()
     local ii = _G.InstanceInfo
@@ -515,6 +524,7 @@ function UnitHealthMax() return 100  end
 
 function UnitHealth() return 50 end
 
+-- todo : is this still correct?
 _G.MAX_RAID_MEMBERS = 40
 
 function GetNumRaidMembers() return _G.MAX_RAID_MEMBERS  end

@@ -235,7 +235,8 @@ function Replica:LocalMemberUpdated(localOrigin)
 	Logging:Trace("LocalMemberUpdated(%s, %s)", tostring(self), tostring(localMember))
 	if localMember then
 		local message = {
-			version = AddOn.version,
+			-- intentionally convert to table here in order to not send class metadata
+			version = AddOn.version:toTable(),
 			replicas = {
 				[self.id] = { localMember:Term() }
 			}
@@ -629,10 +630,13 @@ function Engine:CreateReplicaDefinitions()
 		}
 	end
 
-	-- if dev mode, pickup inactive ones as well for testing
+	-- if non-dev mode, only pickup active ones for replication
+	-- if dev mode, only pickup inactive ones for replication (reduces risk of corrupting active configurations)
 	local activeFlag
 	if not AddOn:DevModeEnabled() then
 		activeFlag = true
+	else
+		activeFlag = false
 	end
 
 	local configs, lists = entityProvider:Configurations(activeFlag), nil
@@ -666,8 +670,9 @@ function Engine:OnPeerQuery(sender, message)
 		self:AddPeer(sender, replicas)
 
 		local response = {
-			version = AddOn.version,
-			replicas = {}
+			-- intentionally convert to table here in order to not send class metadata
+			version = AddOn.version:toTable(),
+			replicas = {},
 		}
 
 		for _, replica in pairs(self.replicas) do
@@ -676,7 +681,7 @@ function Engine:OnPeerQuery(sender, message)
 			response.replicas[replica.id] = { lmember:Term() }
 		end
 
-		Logging:Trace("OnPeerQuery(%s) : sending %s to %s", tostring(self.member), Util.Objects.ToString(response, 3),  tostring(sender))
+		Logging:Trace("OnPeerQuery(%s) : sending %s to %s", tostring(self.member), Util.Objects.ToString(response, 4), tostring(sender))
 		self:Send(sender, C.Commands.PeerReply, response)
 	end
 end
@@ -781,7 +786,8 @@ end
 function Engine:QueryPeers(processor)
 	Logging:Debug("QueryPeers()")
 	local message = {
-		version = AddOn.version,
+		-- intentionally convert to table here in order to not send class metadata
+		version = AddOn.version:toTable(),
 		replicas  = {}
 	}
 

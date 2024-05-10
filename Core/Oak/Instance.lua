@@ -1,6 +1,6 @@
 --- @type AddOn
 local _, AddOn = ...
-local Util = LibStub("LibUtil-1.1")
+local Util = LibStub("LibUtil-1.2")
 
 local instances = {}
 

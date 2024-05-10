@@ -1,0 +1,52 @@
+local Rx, Util
+
+describe("LibRx", function()
+    setup(function()
+        loadfile("Test/TestSetup.lua")(false, 'LibRx')
+        loadfile("Libs/LibRx-1.1/Test/BaseTest.lua")()
+        LoadDependencies()
+        ConfigureLogging()
+        Rx = LibStub('LibRx-1.1')
+        Util= LibStub('LibUtil-1.2')
+    end)
+    teardown(function()
+        After()
+    end)
+
+    describe("Class resolution", function()
+        it("fails upon missing", function()
+            assert.has.errors(function () return Rx.rx.Foo end, "LibRx - package or class 'rx.Foo' does not exist")
+            assert.has.errors(function () return Rx.foo end, "LibRx - package or class 'foo' does not exist")
+        end)
+        it("succeeds when defined", function()
+            assert(Rx.rx.Observer)
+            assert(Rx.rx.Subscription)
+        end)
+    end)
+
+    describe("Functional", function()
+        it("basics", function()
+            local accum = {}
+            local function accumulate(v)
+                Util.Tables.Push(accum, v)
+                --print(v)
+            end
+
+            local test = Rx.rx.Subject.create()
+            test:take(1):subscribe(accumulate)
+            test(1)
+            test(2)
+            test(3)
+            assert.are.same(accum, {1})
+
+            accum = {}
+            local sub = test:subscribe(accumulate)
+            test(99)
+            test(11)
+            sub:unsubscribe()
+            assert.are.same(accum, {99, 11})
+            test(3)
+            assert.are.same(accum, {99, 11})
+        end)
+    end)
+end)

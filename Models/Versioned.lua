@@ -1,7 +1,7 @@
 local _, AddOn = ...
 local Util = AddOn:GetLibrary("Util")
 --- @type LibClass
-local Class = LibStub("LibClass-1.0")
+local Class = LibStub("LibClass-1.1")
 --- @type Models.SemanticVersion
 local SemanticVersion = AddOn.Package('Models').SemanticVersion
 --- @type Models.Date

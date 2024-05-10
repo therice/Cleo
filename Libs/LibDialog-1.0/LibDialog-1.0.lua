@@ -25,6 +25,7 @@ local MAJOR = "LibDialog-1.1" -- EDIT: Bump major until https://github.com/Torha
 _G.assert(LibStub, MAJOR .. " requires LibStub")
 
 local MINOR = 8 -- Should be manually increased
+--- @class LibDialog
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not lib then

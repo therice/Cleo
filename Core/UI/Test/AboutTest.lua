@@ -3,7 +3,7 @@ local AddOnName, AddOn, Util
 describe("About", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'About')
-		Util = LibStub:GetLibrary('LibUtil-1.1')
+		Util = LibStub:GetLibrary('LibUtil-1.2')
 	end)
 	teardown(function()
 		After()

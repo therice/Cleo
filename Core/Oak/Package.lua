@@ -3,7 +3,7 @@
 -- Both package and class support based upon LibClass library
 --- @type AddOn
 local _, AddOn = ...
-local Class = LibStub("LibClass-1.0")
+local Class = LibStub("LibClass-1.1")
 
 local pkgs = {}
 

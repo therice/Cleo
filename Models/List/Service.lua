@@ -210,7 +210,7 @@ end
 -- resolved references will be their value
 --
 -- if a reference cannot be found, a nil object will be inserted instead. if there are keys, this will result
--- in a sparse table (e.g. reference at index 3 cannot be found => {ref_1, ref_2, [4]=ref_3})
+-- in a sparse table (e.g. 4 entries and reference at index 3 cannot be found => {ref_1, ref_2, [4]=ref_3})
 function Service:LoadRefs(refs)
 	Logging:Trace("LoadRefs() : %s", Util.Objects.ToString(refs))
 

@@ -66,7 +66,7 @@ describe("Util", function()
 
         local function AlarmFn(viaAlarm)
             local elapsed = Elapsed()
-            --print(format('AlarmFn(%s, %.2f)',tostring(viaAlarm), elapsed))
+
             assert(Util.Objects.Default(viaAlarm, false))
 
             invoked = invoked + 1
@@ -75,7 +75,7 @@ describe("Util", function()
             end
         end
 
-        it("functions", Async(function(as)
+        it("functions", async(function(as)
             alarm = AddOn.Alarm(interval, function() AlarmFn(true) end)
             tick = os.time()
             alarm:Enable()

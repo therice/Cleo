@@ -1,0 +1,10 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <Script file="LibRx-1.1.lua"/>
+    <Script file="Observer.lua"/>
+    <Script file="Observable.lua"/>
+    <Script file="Subscription.lua"/>
+    <Script file="Subjects\Subject.lua"/>
+    <Script file="Subjects\BehaviorSubject.lua"/>
+    <Script file="Operators\First.lua"/>
+    <Script file="Operators\Take.lua"/>
+</Ui>

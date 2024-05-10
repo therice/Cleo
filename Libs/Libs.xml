@@ -4,17 +4,17 @@
     <Include file="LibDeflate\LibDeflate.xml"/>
     <Include file="LibBase64-1.0\LibBase64-1.0.xml"/>
     <Include file="LibSHA-1.0\LibSHA-1.0.xml"/>
-    <Include file="LibClass-1.0\LibClass-1.0.xml"/>
-    <Include file="LibLogging-1.0\LibLogging-1.0.xml"/>
-    <Include file="LibUtil-1.1\LibUtil-1.1.xml"/>
-    <Include file="LibRx-1.0\LibRx-1.0.xml"/>
+    <Include file="LibClass-1.1\LibClass-1.1.xml"/>
+    <Include file="LibLogging-1.1\LibLogging-1.1.xml"/>
+    <Include file="LibUtil-1.2\LibUtil-1.2.xml"/>
+    <Include file="LibRx-1.1\LibRx-1.1.xml"/>
     <Include file="LibMessagePack-1.0\LibMessagePack-1.0.xml"/>
     <Include file="LibBabble-3.0\LibBabble-3.0.xml"/>
     <Include file="LibBabble-SubZone-3.0\LibBabble-SubZone-3.0.xml"/>
     <Include file="LibBabble-Boss-3.0\LibBabble-Boss-3.0.xml"/>
     <Include file="LibBabble-Inventory-3.0\LibBabble-Inventory-3.0.xml"/>
     <Include file="LibDeformat-3.0\LibDeformat-3.0.xml"/>
-    <Include file="LibEncounter-1.0\LibEncounter-1.0.xml"/>
+    <Include file="LibEncounter-1.1\LibEncounter-1.1.xml"/>
     <Include file="AceAddon-3.0\AceAddon-3.0.xml"/>
     <Include file="AceEvent-3.0\AceEvent-3.0.xml"/>
     <Include file="AceTimer-3.0\AceTimer-3.0.xml"/>
@@ -30,11 +30,11 @@
     <Include file="AceSerializer-3.0\AceSerializer-3.0.xml"/>
     <Include file="LibDataBroker-1.1\LibDataBroker-1.1.xml"/>
     <Include file="LibDBIcon-1.0\LibDBIcon-1.0.xml"/>
-    <Include file="LibItemUtil-1.1\LibItemUtil-1.1.xml"/>
+    <Include file="LibItemUtil-1.2\LibItemUtil-1.2.xml"/>
     <Include file="LibDialog-1.0\LibDialog-1.0.xml" />
     <Script file="LibWindow-1.1\LibWindow-1.1.lua" />
     <Include file="lib-st\lib-st.xml" />
     <Include file="MSA-DropDownMenu-1.0\MSA-DropDownMenu-1.0.xml" />
-    <Include file="LibGuildStorage-1.3\LibGuildStorage-1.3.xml"/>
+    <Include file="LibGuildStorage-1.4\LibGuildStorage-1.4.xml"/>
     <Include file="LibJSON-1.0\LibJSON-1.0.xml" />
 </Ui>

@@ -267,7 +267,11 @@ describe("Comm", function()
                     -- Now to construct data that will produce two messages with LibDeflate :/
                     local data = {}
                     for i=1,150 do
-                        data[i] = {string.char(i)}
+                        if i >= 33 and i <= 122 then
+                            data[i] = {string.char(i)}
+                        else
+                            data[i] = {i^2}
+                        end
                     end
                     Comm:Send({
                         prefix = C.CommPrefixes.Main,

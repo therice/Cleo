@@ -339,8 +339,16 @@ function ListsDP:GetReplicaLeader(entity)
 end
 
 function ListsDP:OnModeChange(_, _, flag, enabled)
-	-- ignore it unless the flag was replication
-	if flag == C.Modes.Replication then
+	-- if develop was toggled, we need to check if replication is running
+	-- as its functionality is dependent upon development mode
+	--
+	-- e.g. with development mode enabled, only considers inactive configurations
+	--  see Models/Replication/Engine.CreateReplicaDefinitions()
+	if flag == C.Modes.Develop then
+		if Replicate:IsRunning() then
+			self:RestartReplication()
+		end
+	elseif flag == C.Modes.Replication then
 		local running = Replicate():IsRunning()
 		if enabled and not running then
 			self:InitiateReplication()

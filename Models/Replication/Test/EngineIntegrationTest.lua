@@ -43,8 +43,13 @@ describe("Replication", function()
 		local function CreateStub(player)
 			print(format("CreateEngine(%s)", tostring(player)))
 			local StubModule = AddOn:NewModule('Stub_' .. player)
-			function StubModule:OnEnable() self.db = newdb(player) end
-			function StubModule:OnDisable() self.db = nil end
+			function StubModule:OnEnable()
+				AddOn.mode.Disable(C.Modes.Develop)
+				self.db = newdb(player)
+			end
+			function StubModule:OnDisable()
+				self.db = nil
+			end
 			return StubModule
 		end
 
@@ -103,6 +108,12 @@ describe("Replication", function()
 				end
 			end
 
+			-- override call to Configurations to only return active ones (as it could be modified by various addon modes, e.g. develop)
+			local _configurations = service.Configurations
+			service.Configurations = function(self, _, default)
+				return _configurations(self, true, default)
+			end
+
 			engine.EntityProvider = function(self)
 				return service
 			end
@@ -138,6 +149,7 @@ describe("Replication", function()
 				player = Player:Get(p)
 				players[player:GetName()] = player
 			end
+
 		end)
 
 		before_each(function()
@@ -153,8 +165,9 @@ describe("Replication", function()
 		end)
 
 
-		it("does the needful", Async(
+		it("does the needful", async(
 			function(as)
+
 				local leadershipChanges = {}
 				local function cbtracker(replica)
 					local id, leader = replica.id, replica.leader
@@ -225,16 +238,20 @@ describe("Replication", function()
 				print(Util.Objects.ToString(leadershipChanges))
 
 				local lc = leadershipChanges['Configuration:614A4F87-AF52-34B4-E983-B9E8929D44AF']
+				assert.Is.Not.Nil(lc)
 				assert(Util.Tables.Count(lc), 1)
 				assert(Util.Tables.ContainsKey(lc, 'Gnomechómsky-Atiesh'))
 
+
 				lc = leadershipChanges['List:6154C617-5A91-7304-3DAD-EBE283795429']
+				assert.Is.Not.Nil(lc)
 				assert(Util.Tables.Count(lc), 3)
 				assert(Util.Tables.ContainsKey(lc, 'LOST'))
 				assert(Util.Tables.ContainsKey(lc, 'Player3-Realm2'))
 				assert(Util.Tables.ContainsKey(lc, 'Gnomechómsky-Atiesh'))
 
 				lc = leadershipChanges['List:61534E26-36A0-4F24-51D7-BE511B88B834']
+				assert.Is.Not.Nil(lc)
 				assert(Util.Tables.Count(lc), 1)
 				assert(Util.Tables.ContainsKey(lc, 'Eliovak-Atiesh'))
 
