@@ -37,6 +37,12 @@ local lib = LibStub("LibEncounter-1.0", true)
 --  Onyxia's Lair (redux)
 -- 	Icecrown Citadel
 --  The Ruby Sanctum (TODO)
+--
+-- CATA
+--  Bastion of Twilight
+--  Blackwing Descent
+--  Throne of the Four Winds
+
 
 --
 -- Mapping from map id to details (name will be used as index for localization)
@@ -129,6 +135,18 @@ lib.Maps = {
     -- JournalInstance.ID = 761
     [724] = {
         name = 'The Ruby Sanctum'
+    },
+    -- JournalInstance.ID = 72
+    [671] = {
+        name = 'The Bastion of Twilight'
+    },
+    -- JournalInstance.ID = 73
+    [669] = {
+        name = 'Blackwing Descent'
+    },
+    -- JournalInstance.ID = 74
+    [754] = {
+        name = 'Throne of the Four Winds'
     },
 }
 
@@ -787,10 +805,80 @@ lib.Creatures = {
     [36789] = {
         name = 'Valithria Dreamwalker'
     },
-    --[] = {
-    --    name = ''
-    --},
+    [44600] = {
+        name = 'Halfus Wyrmbreaker'
+    },
+    [45992] = {
+        name = 'Valiona'
+    },
+    [45993] = {
+        name = 'Theralion'
+    },
+    [43686] = {
+        name = 'Ignacious '
+    },
+    [43687] = {
+        name = 'Feludius'
+    },
+    [43688] = {
+        name = 'Arion'
+    },
+    [43689] = {
+        name = 'Terrastra'
+    },
+    [43735] = {
+        name = 'Elementium Monstrosity'
+    },
+    [43324] = {
+        name = 'Cho\'gall'
+    },
+    [45213] = {
+        name = 'Sinestra'
+    },
+    [42180] = {
+        name = 'Toxitron'
+    },
+    [42178] = {
+        name = 'Magmatron'
+    },
+    [42179] = {
+        name = 'Electron'
+    },
+    [42166] = {
+        name = 'Arcanotron'
+    },
+    [41570] = {
+        name = 'Magmaw'
+    },
+    [41442] = {
+        name = 'Atramedes'
+    },
+    [43296] = {
+        name = 'Chimaeron'
+    },
+    [41378] = {
+        name = 'Maloriak'
+    },
+    [41376] = {
+        name = 'Nefarian'
+    },
+    [41270] = {
+        name = 'Onyxia'
+    },
+    [45870] = {
+        name = 'Anshal'
+    },
+    [45871] = {
+        name = 'Nezir'
+    },
+    [45872] = {
+        name = 'Rohash'
+    },
+    [46753] = {
+        name = 'Al\'Akir'
+    },
 }
+
 
 -- Mapping from encounter id to details
 -- key is DungeonEncounter.ID
@@ -1513,9 +1601,75 @@ lib.Encounters = {
         map_id = 631,
         creature_id = {36597},
     },
+    -- Halfus Wyrmbreaker
+    [1030] = {
+        map_id = 671,
+        creature_id = {44600},
+    },
+    -- Valiona and Theralion
+    [1032] = {
+        map_id = 671,
+        creature_id = {45992, 45993},
+        name = 'Valiona and Theralion'
+    },
+    -- Ascendant Council
+    [1028] = {
+        map_id = 671,
+        creature_id = {43686, 43687, 43688, 43689, 43735},
+        name = 'Ascendant Council'
+    },
+    -- Cho'gall
+    [1029] = {
+        map_id = 671,
+        creature_id = {43324},
+    },
+    -- Sinestra (could be 1083)
+    [1082] = {
+        map_id = 671,
+        creature_id = {45213},
+    },
+    -- Omnitron Defense System
+    [1027] = {
+        map_id = 669,
+        creature_id = {42180, 42178, 42179, 42166},
+        name = 'Omnitron Defense System"'
+    },
+    -- Magmaw
+    [1024] = {
+        map_id = 669,
+        creature_id = {41570},
+    },
+    -- Atramedes
+    [1022] = {
+        map_id = 669,
+        creature_id = {41442},
+    },
+    -- Chimaeron
+    [1023] = {
+        map_id = 669,
+        creature_id = {43296},
+    },
+    -- Maloriak
+    [1025] = {
+        map_id = 669,
+        creature_id = {41378},
+    },
+    -- Nefarian's End
+    [1026] = {
+        map_id = 669,
+        creature_id = {41376, 41270},
+        name = 'Nefarian\'s End'
+    },
+    -- Conclave of Wind
+    [1035] = {
+        map_id = 754,
+        creature_id = {45870, 45871, 45872},
+        name = 'Conclave of Wind'
+    },
+    -- Al'Akir
+    [1034] = {
+        map_id = 754,
+        creature_id = {46753},
+    },
 
-    --[] = {
-    --    map_id = ,
-    --    creature_id = {},
-    --},
 }
