@@ -42,7 +42,8 @@
 				"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
 			},
 			"writerOpts" : {
-				"groupBy" : false
+				"groupBy" : false,
+				"commitPartial" : "* {{#if message}}{{message}}{{else}}{{header}}{{/if}} {{shortHash}}"
 			},
 			"linkReferences": true,
 			"linkCompare": false
