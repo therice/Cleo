@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.1 (2024-05-10)
+* Add Cata P1 raid items (
+* Add Cata P1 raid maps, creatures, and encounters (
+
 2025.0.0 (2024-05-07)
 * Actually publish first build of Cataclysm 3d326c6330fbcc164f6f5b59104f6765b67fb16d
 * attempt to fix issues with semantic-release configuration 71127350ecf9ef3b60664f6fd715ec2fdef018f1
