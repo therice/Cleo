@@ -43,7 +43,7 @@
 			},
 			"writerOpts" : {
 				"groupBy" : false,
-				"commitPartial" : "* {{#if message}}{{message}}{{else}}{{header}}{{/if}} {{shortHash}}"
+				"commitPartial" : "* {{#if message}}{{message}}{{else}}{{header}}{{/if}} {{shortHash}}\n"
 			},
 			"linkReferences": true,
 			"linkCompare": false
