@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.2 (2024-05-11)
+* Modify output of change log to use short commit hashes 5a8087b* Update Library versiona, cleanup tests, and add Cata P1 Raid Items 3580d3e
+
 2025.0.1 (2024-05-10)
 * Add Cata P1 raid items (
 * Add Cata P1 raid maps, creatures, and encounters (
