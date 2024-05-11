@@ -11,43 +11,43 @@ AddOn.Changelog = [=[
 * Add Cata P1 raid maps, creatures, and encounters
 
 2025.0.0 (2024-05-07)
-* Actually publish first build of Cataclysm 3d326c6330fbcc164f6f5b59104f6765b67fb16d
-* attempt to fix issues with semantic-release configuration 71127350ecf9ef3b60664f6fd715ec2fdef018f1
+* Actually publish first build of Cataclysm 3d326c6
+* attempt to fix issues with semantic-release configuration 7112735
 
 2024.0.5 (2023-11-28)
-* Correct a few mispelled boss names for encounter tracking bd7e313df1db6ebcce60f95c32472742eec89507
+* Correct a few mispelled boss names for encounter tracking bd7e313
 
 2024.0.4 (2023-10-28)
-* add missing API stub to correct test failure 18e5137fdf760c896c2d56494e5a42440336ae4a
-* Cache player resolution by Configuration when performing lookup for raid statistics 130faad33b1166e183dbeedf30428d365c8ad761
-* Resolve all players to their 'mains' when calculating attendance stats for list priority popup and overall player stats bb4fb9242d5669682fa9d553d30259f260fe8124
-* Resolve to main for calculating raid attendance when bulk managing loot priority lists 25f5e946933aa9cafc88cb625f53bd3d5ea924f3
-* retain numeric labeling for priority if a player is present in the list slot 7da37a13ea492c3f03933d0564d92ee028bab77e
+* add missing API stub to correct test failure 18e5137
+* Cache player resolution by Configuration when performing lookup for raid statistics 130faad
+* Resolve all players to their 'mains' when calculating attendance stats for list priority popup and overall player stats bb4fb92
+* Resolve to main for calculating raid attendance when bulk managing loot priority lists 25f5e94
+* retain numeric labeling for priority if a player is present in the list slot 7da37a1
 
 2024.0.3 (2023-10-25)
-* Fix test regression b5490d717468bdcb60fab6442a56e97b2ddeac71
-* Miscellaneous changes which do not impact functionality, but rather qualtify of life improvements 460e8b48ba08775b11e17c4c5c4fc1f95e4f37bc
+* Fix test regression b5490d7
+* Miscellaneous changes which do not impact functionality, but rather qualtify of life improvements 460e8b4
 
 2024.0.2 (2023-10-08)
-* Address issues uncovered through test suite related to Ace and LibGuildStorage changes ce273258bffe2ead9c194b5586c521874d83821a
-* Address race condition in LibGuildStorage that could lead to frame drops and game lock-ups 40e9406d54f7e9ebedfd9cefd0fb9ce219ae855e
-* Annoate Libraries to reflect classes 11f9c74805f56e6d4d789ab5db6b43c2c8d0c1a5
-* Minor tweaks to event processing and configuration activation, which should reduce overhead for both ML and other players 2526dcbd18aae83dda274f53ca6a601656b7addc
-* Update Ace3 Libraries to latest version(s) 2da406ac315f4eb29841439752ce640cac927021
+* Address issues uncovered through test suite related to Ace and LibGuildStorage changes ce27325
+* Address race condition in LibGuildStorage that could lead to frame drops and game lock-ups 40e9406
+* Annoate Libraries to reflect classes 11f9c74
+* Minor tweaks to event processing and configuration activation, which should reduce overhead for both ML and other players 2526dcb
+* Update Ace3 Libraries to latest version(s) 2da406a
 
 2024.0.1 (2023-10-06)
-* Add Phase 4 items to test data a87095faceac301a6e1fe334b2acd04d49162729
+* Add Phase 4 items to test data a87095f
 
 2024.0.0 (2023-10-01)
-* Add support for WOTLK P4 (Icecrown Citadel) c96b49da88601a64f4dde3ecaf7ca9cfdc8d2424
+* Add support for WOTLK P4 (Icecrown Citadel) c96b49d
 
 2023.0.2 (2023-07-12)
-* Address issues with only 'suicide' showing up on loot window for trophies and regalia 7b7d327b528add999589636dfc024cee712ba2b4
-* Do not transition response to offline/not installed if an ACK has been received within timeout. 162fa5f503f0c9c7f929b699bbb0eabe590be0bd
-* Fix test regression due to not considering WAIT as being eligibile for transition to NOTHING. 0479f84efe53c66050a0a8504b0e378a84c961ec
-* Only send ML DB (Settings) to the requestor on an explicit request. No need to flood the entire group. 8de65b3c43cfd5d5e29932014709993e9a2339ec
-* Remove 'transform' from writerOpts in an attempt to avoid date parsing issues in building distributable c9e884c1fce54b30f1150e8936eb7b0500690bdc
-* Try previous version of @semantic-release/release-notes-generator to avoid error with date parsing 79ab6442b835f07cb148fb443d2c04a4ce6bf1a5
+* Address issues with only 'suicide' showing up on loot window for trophies and regalia 7b7d327
+* Do not transition response to offline/not installed if an ACK has been received within timeout. 162fa5f
+* Fix test regression due to not considering WAIT as being eligibile for transition to NOTHING. 0479f84
+* Only send ML DB (Settings) to the requestor on an explicit request. No need to flood the entire group. 8de65b3
+* Remove 'transform' from writerOpts in an attempt to avoid date parsing issues in building distributable c9e884c
+* Try previous version of @semantic-release/release-notes-generator to avoid error with date parsing 79ab644
 
 2023.0.1 (2023-06-24)
 * Reduce complex logging in Loot Allocation, as executed twice per second and typically converting multiple tables into strings. This should address/alleviate game pauses for master looter. adbf4cf
