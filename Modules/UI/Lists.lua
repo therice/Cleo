@@ -400,7 +400,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	tab:SetPoint("TOPLEFT", 15, -10)
 
 	local rowsPerColumn, columns =
-		ceil(tab:GetHeight()/(PlayerHeight + 6)), min(4, floor(tab:GetWidth()/(PlayerWidth + 25)))
+		ceil(tab:GetHeight()/(PlayerHeight + 6)), min(5, floor(tab:GetWidth()/(PlayerWidth + 25)))
 
 	-- need main + max alts grouped together, don't overflow into next column
 	rowsPerColumn = rowsPerColumn - (rowsPerColumn % (MaxAlts + 1))
@@ -596,8 +596,8 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	tab.playersScroll =
 		UI:New('ScrollBar', tab)
 			:Point("TOP", PriorityCoord(tab.altEdits[1], 0, -(PlayerHeight * 1.5)))
-			:Point("BOTTOM", 0, (columns - 1.8) * PlayerHeight)
-			:Point("RIGHT", tab, -110, 0)
+			:Point("BOTTOM", 0, ((columns - 1.8) * PlayerHeight) - PlayerHeight)
+			:Point("RIGHT", tab, 20, 0)
 			:Size(12,558)
 			:SetMinMaxValues(0,1)
 			:SetValue(0)
@@ -796,7 +796,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 						:OnChange(function(self, userInput) EditOnChange(self, false, userInput) end)
 				self.playerEdits[index] = playerEdit
 				playerEdit.index = index
-				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (4.5*PlayerWidth), -(PlayerHeight * 1.5)))
+				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (5.5*PlayerWidth), -(PlayerHeight * 1.5)))
 
 				local fontName, _, fontFlags = playerEdit:GetFont()
 				playerEdit:SetFont(fontName, 12, fontFlags)
@@ -2096,7 +2096,7 @@ function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
 			self.button:Hide()
 		end
 
-		
+
 		if self:IsVisible() then
 			self:UpdatePriorities()
 		end
