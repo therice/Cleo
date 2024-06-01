@@ -1300,7 +1300,7 @@ function Lists:LayoutListEquipmentTab(tab, configSupplier, listSupplier)
 	tab.equipment =
 		UI:New('DualListbox', tab)
 			:Point("TOPLEFT", tab, "TOPLEFT", 20, -35)
-			:Point("TOPRIGHT", tab, "TOPRIGHT", -350, 0)
+			:Point("TOPRIGHT", tab, "TOPRIGHT", -650, 0)
 			:Height(210)
 			:AvailableTooltip(L["available"], L["equipment_type_avail_desc"])
 			:SelectedTooltip(L["equipment_types"], L["equipment_type_desc"])
@@ -2096,6 +2096,7 @@ function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
 			self.button:Hide()
 		end
 
+		
 		if self:IsVisible() then
 			self:UpdatePriorities()
 		end
