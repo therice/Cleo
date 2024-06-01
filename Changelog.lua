@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.4 (2024-06-01)
+* Add an additional row of alts to Configuration c90c9b1
+* Add an additional row of priorities to Loot Lists 312cb70
+* Reposition the available equipment dual listbox based upon size increase of containing tab f2c372d
+
 2025.0.3 (2024-05-11)
 * Cleanup change log and modify template for CHANGES.MD 3dcacf2
 * Modify commit hashes to short in changelog a7ca1f9
