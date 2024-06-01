@@ -47,7 +47,7 @@ local function AlphabeticalOrder(list)
 end
 
 function Lists:LayoutInterface(container)
-	container:SetWide(1000)
+	container:SetWide(1150)
 
 	container.warning =
 		UI:New('Text', container, L["warning_persistence_disabled"])
@@ -66,7 +66,7 @@ function Lists:LayoutInterface(container)
 
 	container.tabs =
 		UI:New('Tabs', container, unpack(Util.Tables.Sort(Util.Tables.Keys(Tabs))))
-			:Point(0, -36):Size(1000, 580):SetTo(1)
+			:Point(0, -36):Size(1150, 580):SetTo(1)
 	container.tabs:SetBackdropBorderColor(0, 0, 0, 0)
 	container.tabs:SetBackdropColor(0, 0, 0, 0)
 	container.tabs:First():SetPoint("TOPLEFT", 0, 20)
@@ -1206,7 +1206,7 @@ function Lists:LayoutListTab(tab)
 	end
 
 	-- various tabs related to a configuration list
-	tab.listSettings = UI:New('Tabs', tab, unpack(Util.Tables.Keys(ListTabs))):Point(230, -65):Size(840, 530):SetTo(1)
+	tab.listSettings = UI:New('Tabs', tab, unpack(Util.Tables.Keys(ListTabs))):Point(230, -65):Size(1150, 530):SetTo(1)
 	tab.listSettings:SetBackdropBorderColor(0, 0, 0, 0)
 	tab.listSettings:SetBackdropColor(0, 0, 0, 0)
 	tab.listSettings:First():SetPoint("TOPLEFT", 0, 20)
@@ -1391,8 +1391,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	PlayerTooltip = UIUtil.CreateGameTooltip(module, tab)
 
-	local rowsPerColumn, columns = ceil(tab:GetHeight()/(PriorityHeight+6)), min(3, floor(tab:GetWidth()/(PriorityWidth + 25)))
-	Logging:Trace("rowsPerColumn=%d, columns=%d", rowsPerColumn, columns)
+	local rowsPerColumn, columns = ceil(tab:GetHeight()/(PriorityHeight+6)), min(4, floor(tab:GetWidth()/(PriorityWidth + 25)))
+	Logging:Trace("rowsPerColumn=%d, columns=%d, total=%d", rowsPerColumn, columns, (columns * rowsPerColumn))
 
 	local function PriorityCoord(self, xAdjust, yAdjust)
 		xAdjust = Util.Objects.IsNumber(xAdjust) and xAdjust or 0
@@ -1634,13 +1634,14 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	tab.playersScroll =
 		UI:New('ScrollBar', tab)
 			:Point("TOP", PriorityCoord(tab.priorityEdits[1], 0, -(PriorityHeight * 1.5)))
-			:Point("BOTTOM", 0, (columns * PriorityHeight) - 8)
-			:Point("RIGHT", tab, -135, 0)
+			:Point("BOTTOM", 0, (columns * PriorityHeight) - PriorityHeight)
+			:Point("RIGHT", tab, -285, 0)
 			:Size(12,558)
 			:SetMinMaxValues(0,1)
 			:SetValue(0)
 			:SetObey(true)
 			:OnChange(function() tab:UpdateAvailablePlayers() end)
+
 	tab.playersScroll:SetShown(false)
 	tab.playersScroll:SetScript(
 			"OnMouseWheel",
@@ -1926,7 +1927,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 				playerEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):OnChange(function(self, userInput) EditOnChange(self, false, userInput) end)
 				self.playerEdits[index] = playerEdit
 				playerEdit.index = index
-				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (3.5*PriorityWidth), -(PriorityHeight * 1.5)))
+				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (4.5*PriorityWidth), -(PriorityHeight * 1.5)))
 				local fontName, _, fontFlags = playerEdit:GetFont()
 				playerEdit:SetFont(fontName, 12, fontFlags)
 				playerEdit:SetEnabled(false)

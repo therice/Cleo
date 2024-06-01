@@ -263,6 +263,7 @@ do
         return self
     end
 
+    -- width, height
     local function SetSize(self, ...)
         --Logging:Debug("Native.SetSize(%s) : %s", tostring(self:GetName()), Util.Objects.ToString(Util.Tables.New(...)))
         self:SetSize(...)
