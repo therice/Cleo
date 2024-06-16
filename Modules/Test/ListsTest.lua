@@ -1,5 +1,5 @@
 
-local AddOnName, AddOn, Util, C
+local AddOnName, AddOn, Util, C, Player
 --- @type Models.List.Configuration
 local Configuration
 --- @type Models.List.List
@@ -10,6 +10,7 @@ describe("Lists", function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_Lists')
 		Util, C = AddOn:GetLibrary('Util'), AddOn.Constants
 		Configuration, List = AddOn.Package('Models.List').Configuration, AddOn.Package('Models.List').List
+		Player = AddOn.Package('Models').Player
 		AddOnLoaded(AddOnName, true)
 		SetTime()
 		-- PlayerEnteredWorld()
@@ -45,58 +46,61 @@ describe("Lists", function()
 		--- @type ListsDataPlane
 		local listsDp
 		local Send
+		local DbDefaults
 
 		setup(function()
-			local db = NewAceDb(
-					{
-						factionrealm = {
-							configurations = {
-								["614A4F87-AF52-34B4-E983-B9E8929D44AF"] = {
-									["permissions"] = {
-										["Player-4372-01D08047"] = {
-											["bitfield"] = 5,
-										},
-										["Player-4372-011C6125"] = {
-											["bitfield"] = 5,
-										},
-										["Player-4372-01FC8D1A"] = {
-											["bitfield"] = 3,
-										},
-										["Player-4372-0000835A"] = {
-											["bitfield"] = 1,
-										},
-										["Player-4372-000054BB"] = {
-											["bitfield"] = 1,
-										},
-									},
-									["name"] = "Tempest Keep",
+			DbDefaults = {
+				factionrealm = {
+					configurations = {
+						["614A4F87-AF52-34B4-E983-B9E8929D44AF"] = {
+							["permissions"] = {
+								["Player-4372-01D08047"] = {
+									["bitfield"] = 5,
+								},
+								["Player-4372-011C6125"] = {
+									["bitfield"] = 5,
+								},
+								["Player-1-00000001"] = {
+									["bitfield"] = 5,
+								},
+								["Player-4372-01FC8D1A"] = {
+									["bitfield"] = 3,
+								},
+								["Player-4372-0000835A"] = {
+									["bitfield"] = 1,
+								},
+								["Player-4372-000054BB"] = {
+									["bitfield"] = 1,
 								},
 							},
-							lists = {
-								["615247A9-311F-57E4-0503-CC3F53E61597"] = {
-									["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
-									["players"] = {
-									},
-									["name"] = "Chest, Shoulders, and Legs",
-									["equipment"] = {
-										"INVTYPE_CHEST", -- [1]
-										"INVTYPE_SHOULDER", -- [2]
-										"INVTYPE_LEGS", -- [3]
-									},
-								},
-								["61534E26-36A0-4F24-51D7-BE511B88B834"] = {
-									["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
-									["equipment"] = {
-										"INVTYPE_HEAD", -- [1]
-									},
-									["name"] = "Head, Feet, Wrist",
-									["players"] = {
-									},
-								},
+							["name"] = "Tempest Keep",
+						},
+					},
+					lists = {
+						["615247A9-311F-57E4-0503-CC3F53E61597"] = {
+							["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
+							["players"] = {
 							},
-						}
-					}
-			)
+							["name"] = "Chest, Shoulders, and Legs",
+							["equipment"] = {
+								"INVTYPE_CHEST", -- [1]
+								"INVTYPE_SHOULDER", -- [2]
+								"INVTYPE_LEGS", -- [3]
+							},
+						},
+						["61534E26-36A0-4F24-51D7-BE511B88B834"] = {
+							["configId"] = "614A4F87-AF52-34B4-E983-B9E8929D44AF",
+							["equipment"] = {
+								"INVTYPE_HEAD", -- [1]
+							},
+							["name"] = "Head, Feet, Wrist",
+							["players"] = {
+							},
+						},
+					},
+				}
+			}
+			local db = NewAceDb(DbDefaults)
 			lists = AddOn:ListsModule()
 			lists.db = db
 			lists:InitializeService()
@@ -123,9 +127,10 @@ describe("Lists", function()
 			assert.equal("Tempest Keep", config.name)
 			assert.equal("Player-4372-01FC8D1A", config:GetOwner().guid)
 			local admins = config:GetAdministrators()
-			assert.equal(2, #admins)
+			assert.equal(3, #admins)
 			assert.equal("Player-4372-01D08047", admins[1].guid)
 			assert.equal("Player-4372-011C6125", admins[2].guid)
+			assert.equal("Player-1-00000001", admins[3].guid)
 		end)
 
 		it("provides lists", function()
@@ -278,7 +283,36 @@ describe("Lists", function()
 			assert(list)
 			assert.equal("615247A9-311F-57E4-0503-CC3F53E61597", list.id)
 
-			finally(function() listsDp.OnResourceResponse =  OnResourceResponse end)
+			finally(function()
+				listsDp.OnResourceResponse =  OnResourceResponse
+			end)
+		end)
+		it("handles broadcast with removed list", function()
+			local service = lists:GetService()
+			local configs = service:Configurations()
+			local config = Util.Tables.Values(configs)[1]
+			local listToRemove = service.List:Get("61534E26-36A0-4F24-51D7-BE511B88B834")
+			listsDp:Broadcast(config.id, AddOn.Constants.guild)
+
+
+			service.List:Remove(listToRemove, false)
+
+			local _OnBroadcastReceived = listsDp.OnBroadcastReceived
+
+			listsDp.OnBroadcastReceived = function(self, payload)
+				service.List:Add(listToRemove)
+				_OnBroadcastReceived(self, payload)
+			end
+
+
+			listsDp:Broadcast(config.id, AddOn.Constants.guild)
+
+			local lists = service:Lists(config.id)
+			assert.equal(Util.Tables.Count(lists), 1)
+
+			finally(function()
+				listsDp.OnBroadcastReceived =  _OnBroadcastReceived
+			end)
 		end)
 	end)
 end)

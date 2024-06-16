@@ -270,12 +270,13 @@ end
 function ListsDP:OnBroadcastReceived(payload)
 	Logging:Debug("OnBroadcastReceived()")
 
+	--- @type Models.List.Configuration
 	local config = Configuration:reconstitute(payload.config)
 	if config then
 		local lists = Util.Tables.Map(payload.lists, function(v) return List:reconstitute(v) end)
 		Logging:Debug("OnBroadcastReceived() : config id = %s, list count = %d", tostring(config.id), Util.Tables.Count(lists))
 		local service = Lists:GetService()
-		-- todo : fire callbacks?
+
 		-- add will overwrite any current data (no need to delete in advance)
 		service.Configuration:Add(config, false)
 		Logging:Debug("OnBroadcastReceived() : updated/added config id = %s", tostring(config.id))
@@ -283,6 +284,20 @@ function ListsDP:OnBroadcastReceived(payload)
 		for _, list in pairs(lists) do
 			service.List:Add(list, false)
 			Logging:Debug("OnBroadcastReceived() : updated/added config id = %s, list id = %s", tostring(config.id), tostring(list.id))
+		end
+
+		-- check if there were any lists that are no longer present
+		-- could happen if config was originally received with a list that was deleted after
+		local current = service:Lists(config.id)
+		if current then
+			Logging:Debug("OnBroadcastReceived() : current list count (%d)", Util.Tables.Count(current))
+			for _, list in pairs(current) do
+				Logging:Debug("OnBroadcastReceived() : verifying presence of list %s", list.id)
+				if not lists[list.id] then
+					Logging:Debug("OnBroadcastReceived() : removing list %s (absent)", list.id)
+					service.List:Remove(list, false)
+				end
+			end
 		end
 
 		Lists:Refresh()
