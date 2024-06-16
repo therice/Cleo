@@ -168,9 +168,13 @@ function ListsDP:OnResourceRequest(sender, payload)
 				return
 			end
 
-			local response = Response(request.type, request.id, request.cid)
-			response.payload = resource:toTable()
-			self:SendResponse(sender, response)
+			if resource then
+				local response = Response(request.type, request.id, request.cid)
+				response.payload = resource:toTable()
+				self:SendResponse(sender, response)
+			else
+				Logging:Warn("OnResourceRequest() : could not find resource of type %s id %s", request.type, request.id)
+			end
 		end
 	end
 end
