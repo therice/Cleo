@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.6 (2024-06-21)
+* Like a blind man at an orgy, I was going to have to feel my way through (fuck you Glyph) 6a8075c
+
 2025.0.5 (2024-06-16)
 * On broadcast of Configuration, verify that lists are removed if present and not included in the broadcast 2d40f4f
 * On request for Configuration/List, verify it could be found when sending a response 3df5bba
