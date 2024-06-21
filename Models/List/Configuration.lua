@@ -19,6 +19,7 @@ local UUID = Util.UUID.UUID
 --- @type Models.Date
 local Date = AddOn.Package('Models').Date
 --- @type Models.DateFormat
+--- @type Models.DateFormat
 local DateFormat = AddOn.Package('Models').DateFormat
 --- @type Models.Hashable
 local Hashable = AddOn.Require('Models.Hashable')

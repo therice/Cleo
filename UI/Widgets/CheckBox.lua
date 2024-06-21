@@ -54,7 +54,7 @@ function Checkbox:Create()
 	cb:SetPushedTexture(cb.PushedTexture)
 
 	cb.DisabledTexture = cb:CreateTexture()
-	cb.DisabledTexture:SetColorTexture(DisabledColor.r, DisabledColor.g, DisabledColor.b, .25)
+	cb.DisabledTexture:SetColorTexture(DisabledColor.r, DisabledColor.g, DisabledColor.b, .05)
 	cb.DisabledTexture:SetPoint("TOPLEFT", 2, -2)
 	cb.DisabledTexture:SetPoint("BOTTOMRIGHT", -2, 2)
 	cb:SetDisabledTexture(cb.DisabledTexture)

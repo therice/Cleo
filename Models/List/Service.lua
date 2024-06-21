@@ -188,18 +188,35 @@ function Service:ToggleDefaultConfiguration(configId, default)
 
 			-- only need to continue if default was set to true
 			if default then
-				-- flip the current default configuration to not
-				for id, c in pairs(configs) do
-					if not Util.Strings.Equal(id, configId) and c.default then
-						c.default = false
-						self.Configuration:Update(c, 'default')
-					end
-				end
+				self:EnsureSingleDefaultConfiguration(config)
 			end
 		end
 	end
 
 	return configs
+end
+
+--- @param defaultConfig Models.List.Configuration
+function Service:EnsureSingleDefaultConfiguration(defaultConfig)
+	Logging:Debug("EnsureSingleDefaultConfiguration(%s)", (defaultConfig and defaultConfig.id or "<nil>"))
+	-- verify the passesd config is not nil and is default
+	if Util.Objects.IsSet(defaultConfig) and defaultConfig.default then
+		-- validate the passed configuration is actually present and reconciles with the passed config
+		local configs = self:Configurations()
+		local config = configs and configs[defaultConfig.id] or nil
+		if config and config.default then
+			-- flip the current default configuration to not
+			for id, c in pairs(configs) do
+				if not Util.Strings.Equal(id, defaultConfig.id) and c.default then
+					c.default = false
+					self.Configuration:Update(c, 'default')
+					Logging:Debug("EnsureSingleDefaultConfiguration() : set default to 'false' for %s", c.id)
+				end
+			end
+		else
+			Logging:Debug("EnsureSingleDefaultConfiguration(%s) : NOT present or NOT default", defaultConfig.id)
+		end
+	end
 end
 
 -- there are a bunch of assumptions in this function. if violated, you're going to have a bad time

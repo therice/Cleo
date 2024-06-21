@@ -216,6 +216,8 @@ function ListsDP:OnResourceResponse(sender, payload)
 			-- traffic audit events being generated, configuration re-activation (when unnecessary), etc.
 			-- these adds are a direct result of a resource being out of date or missing with another authoritative player
 			if Util.Objects.IsInstanceOf(resource, Configuration) then
+				-- todo : there could be settings on configuration which influence other configs
+				-- todo : such as 'default', relying upon Broadcast functionality and cleanup to handle
 				Lists:GetService().Configuration:Add(resource, false)
 			elseif Util.Objects.IsInstanceOf(resource, List) then
 				Lists:GetService().List:Add(resource, false)
@@ -284,6 +286,11 @@ function ListsDP:OnBroadcastReceived(payload)
 		for _, list in pairs(lists) do
 			service.List:Add(list, false)
 			Logging:Debug("OnBroadcastReceived() : updated/added config id = %s, list id = %s", tostring(config.id), tostring(list.id))
+		end
+
+		-- if the current received config is default, make certain others are toggled to off
+		if config.default then
+			service:EnsureSingleDefaultConfiguration(config)
 		end
 
 		-- check if there were any lists that are no longer present

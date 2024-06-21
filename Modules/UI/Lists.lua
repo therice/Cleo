@@ -848,7 +848,6 @@ end
 function Lists:LayoutConfigGeneralTab(tab, configSupplier)
 	local module, configList = self, tab:GetParent():GetParent().configList
 
-	-- todo : fix text to front
 	tab.name =
 		UI:New('EditBox', tab)
 		  :Size(425,20)
@@ -2134,9 +2133,8 @@ function Lists:SelectListModuleFn()
 		lpad:SetModuleIndex(self.interfaceFrame.moduleIndex)
 		-- select the 'list' tab
 		self.interfaceFrame.tabs:SetTo(2)
-		-- select the default configuration
-
-		local configs = self:GetService():Configurations(nil, true)
+		-- select the default active configuration
+		local configs = self:GetService():Configurations(true, true)
 		if Util.Tables.Count(configs) == 0 then
 			configs = self:GetService():Configurations()
 		end

@@ -71,6 +71,8 @@ function Lists:OnEnable()
 	self:SubscribeToComms()
 	self:RegisterMessage(C.Messages.ModeChanged, "OnModeChange")
 	self:RegisterMessage(C.Messages.ResourceRequestCompleted, "OnResourceRequestCompleted")
+	AddOn.Timer.Schedule(function() AddOn.Timer.After(3, function() self:ValidateConfigurations() end) end)
+
 end
 
 function Lists:OnDisable()
@@ -146,6 +148,72 @@ end
 --- @return  Models.List.ActiveConfiguration
 function Lists:GetActiveConfiguration()
 	return self.activeConfig
+end
+
+function Lists:ValidateConfigurations()
+	Logging:Debug("ValidateConfigurations()")
+	local configs = self:GetService():Configurations(nil, true)
+	if configs then
+		local count = Util.Tables.Count(configs)
+		Logging:Debug("ValidateConfigurations() : active and default configuration count = %d", count)
+		if count > 1 then
+			local sorted =
+				Util(configs):Copy():Values()
+					-- only consider active configurations
+					:Filter(
+						function(c)
+							--Logging:Debug("Filter : %s", c.name)
+							return c.status == Configuration.Status.Active
+						end
+					)
+					:Sort(
+						-- returns true when the first element must come before the second in the final order
+						function (c1, c2)
+							--Logging:Debug("Comparing : %s (c1) to %s (c2)", c1.name, c2.name)
+							-- cannot base which should be default purely based upon last time configuration was updated
+							-- instead should look at lists associated with configuration to see which was mostly
+							-- recently updated
+							local l1 = self:GetService():Lists(c1.id)
+							local l2 = self:GetService():Lists(c2.id)
+
+							-- if no lists for c1, then c2 comes 1st
+							if Util.Objects.IsNil(l1) or Util.Tables.Count(l1) == 0 then
+								return false
+							end
+
+							-- if no lists for c2, then c1 comes first
+							if Util.Objects.IsNil(l2) or Util.Tables.Count(l2) == 0 then
+								return true
+							end
+
+							-- sort the lists to find the most recent revision (date) for each
+							local l1MostRecent = Util(l1):Values():Sort(function(l1, l2) return l1.revision > l2.revision end)()[1]
+							local l2MostRecent = Util(l2):Values():Sort(function(l1, l2) return l1.revision > l2.revision end)()[1]
+
+							-- if no most recent list for c1, then c2 comes 1st
+							if Util.Objects.IsNil(l1MostRecent) then
+								return false
+							end
+
+							-- if no most recent list for c2, then c1 comes 1st
+							if Util.Objects.IsNil(l2MostRecent) then
+								return true
+							end
+
+							--Logging:Debug("%s/%s (l1) %s/%s (l2)", l1MostRecent.name, tostring(Date(l1MostRecent.revision)), l2MostRecent.name, tostring(Date(l2MostRecent.revision)))
+
+							-- compare most recent list revision for each configuration to determine which
+							-- configuration should beecome default
+							return l1MostRecent.revision > l2MostRecent.revision
+						end)()
+
+			local defaultConfig = sorted[1]
+			if defaultConfig then
+				Logging:Debug("ValidateConfigurations() : determined 'true' default configuration is %s (%s)", defaultConfig.name, defaultConfig.id)
+				self:GetService():EnsureSingleDefaultConfiguration(defaultConfig)
+			end
+		end
+	end
 end
 
 local function EventsQueue()
