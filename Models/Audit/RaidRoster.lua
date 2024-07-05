@@ -52,6 +52,11 @@ function RaidRosterRecord:GetEncounterName()
 	return encounter
 end
 
+function RaidRosterRecord:GetDifficultyName()
+	local name = GetDifficultyInfo(self.encounterDifficultyId)
+	return name
+end
+
 --- @param encounter Models.Encounter
 function RaidRosterRecord.For(encounter)
 	local roster = RaidRosterRecord()

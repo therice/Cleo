@@ -67,7 +67,7 @@ function AddOn:AddAbout()
 					self:Height(self.text:GetStringHeight() + 50)
 
 					self:OnShow(function()
-						local height = 6 + self.text:GetStringHeight()
+						local height = 50 + self.text:GetStringHeight()
 						self:Height(height)
 						self:OnShow()
 					end)

@@ -1632,7 +1632,7 @@ lib.Encounters = {
     [1027] = {
         map_id = 669,
         creature_id = {42180, 42178, 42179, 42166},
-        name = 'Omnitron Defense System"'
+        name = 'Omnitron Defense System'
     },
     -- Magmaw
     [1024] = {

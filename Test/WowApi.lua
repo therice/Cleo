@@ -278,9 +278,19 @@ function GuildRoster()
     end
 end
 
--- todo : update this
+-- https://wowpedia.fandom.com/wiki/API_GetBuildInfo
+-- version, build, date, tocversion, localizedVersion, buildType = GetBuildInfo()
+--[[
+version : string - Current patch version
+build : string - Build number
+date : string - Build date
+tocversion : number - Interface (.toc) version number
+localizedVersion : string - Localized translation for the string "Version"
+buildType : string - Localized build type and machine architecture
+--]]
 function GetBuildInfo()
-    return "3.4.1", 47612, "Jan 11 2023", 30401
+    -- return "3.4.1", 47612, "Jan 11 2023", 30401
+    return "4.4.0", "55262", "Jun 20 2024", 40400, "40400", nil
 end
 
 function IsInGuild() return 1 end
@@ -310,6 +320,27 @@ function LootSlotHasItem(slot) return (slot % 2 ~= 0)  end
 
 function GetLootSlotInfo(slot)
     return random(2500), "Item"..slot, 1, nil, 4
+end
+
+-- https://wowpedia.fandom.com/wiki/API_GetDifficultyInfo
+-- name, groupType, isHeroic, isChallengeMode, displayHeroic, displayMythic, toggleDifficultyID = GetDifficultyInfo(id)
+function GetDifficultyInfo(id)
+    id = tonumber(id)
+    if id == 1 then
+        return "Normal", "party", false
+    elseif id == 2 then
+        return "Heroic", "party", true
+    elseif id == 3 then
+        return "10 Player", "raid", false
+    elseif id == 4 then
+        return "25 Player", "raid", false
+    elseif id == 5 then
+        return "10 Player (Heroic)", "raid", true
+    elseif id == 6 then
+        return "25 Player (Heroic)", "raid", true
+    else
+        error(string.format("%d not supported", id))
+    end
 end
 
 local CreatureGuid = 'Creature-0-970-0-11-31146-000136DF91'
