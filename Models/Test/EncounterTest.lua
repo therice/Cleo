@@ -38,8 +38,12 @@ describe("Encounter", function()
 			assert(not e:IsSuccess():get())
 		end)
 		it("is created from start instance", function()
+			_G.TempInstanceInfo =
+				{"Blackwing Descent", "raid", 6, "25 Player (Heroic)", 25, 0, true, 669, 25, nil}
+
 			local es = Encounter.Start(1, "encounterName1", 1, 40)
 			local ee = Encounter.End(es, 2, "encounterName1", 4, 40, 0)
+
 			assert(ee.id == 1)
 			assert(ee.name == "encounterName1")
 			assert(ee.difficultyId == 4)
@@ -47,6 +51,10 @@ describe("Encounter", function()
 			assert(ee.instanceId == es.instanceId)
 			assert(ee:IsSuccess():isPresent())
 			assert(not ee:IsSuccess():get())
+
+			finally(function()
+				_G.TempInstanceInfo = nil
+			end)
 		end)
 		it("comparable to none", function()
 			local e1 = Encounter.None

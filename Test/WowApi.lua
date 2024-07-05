@@ -66,7 +66,6 @@ _G.string.trim = function(s)
 end
 
 _G.strtrim = _G.string.trim
-
 _G.strfind = string.find
 _G.gsub = string.gsub
 _G.date = os.date
@@ -343,14 +342,24 @@ function GetDifficultyInfo(id)
     end
 end
 
+
+
 local CreatureGuid = 'Creature-0-970-0-11-31146-000136DF91'
 function GetLootSourceInfo(slot)
     return CreatureGuid
 end
 
+local CreatureNames = {
+    "Halfus Wyrmbreaker",
+    "Cho\'gall",
+    "Magmaw",
+    "Maloriak",
+    "Al\'Akir",
+}
+
 function GetUnitName(unit)
     if unit == "target" then
-        return "C'Thun"
+        return CreatureNames[math.random(#CreatureNames)]
     end
 
     return "Unknown"
@@ -461,12 +470,15 @@ function AddPlayerGuid(name, guid, realm, class)
     end
 end
 
--- todo : update this
-function GetGuildInfo(unit) return "The Black Watch", "Quarter Master", 1, nil end
+function GetGuildInfo(unit)
+    return "Semi Hard and Casual", "Officer", 1, nil
+end
 
-function GetGuildInfoText() return "This is my guild info" end
+function GetGuildInfoText()
+    return "This is my guild info"
+end
 
-function GetNumGuildMembers() return 10  end
+function GetNumGuildMembers() return 10 end
 
 function GetGuildRosterInfo(index)
     local workingIdx = 100 + index
@@ -476,10 +488,8 @@ function GetGuildRosterInfo(index)
     AddPlayerGuid(name, guid, realm, classInfo.classFile)
 
     --  name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote, isOnline, status, class, achievementPoints, achievementRank, isMobile, canSoR, repStanding, GUID
-
     return
-        name .. '-' .. realm, 'Member', 2,760, classInfo.className, 'IronForge', "", "1240,34", 1, 0, classInfo.classFileName,
-        -1, 64, false, false, 3, guid
+        name .. '-' .. realm, 'Member', 2,760, classInfo.className, 'IronForge', "", "1240,34", 1, 0, classInfo.classFileName, -1, 64, false, false, 3, guid
 end
 
 function GetRealmName() return 'Realm 1' end
@@ -538,11 +548,21 @@ function GetRaidRosterInfo(i)
     return name, nil, nil, nil, nil, classInfo.classFile, 'ZONE', 1
 end
 
--- todo : update this
--- _, _, _, _, _, _, _, mapId
+-- https://wowpedia.fandom.com/wiki/API_GetInstanceInfo
+-- name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo()
+local InstanceInfo = {
+    {"The Bastion of Twilight", "raid", 4, "25 Player", 25, 0, true, 671, 25, nil},
+    {"Blackwing Descent", "raid", 6, "25 Player (Heroic)", 25, 0, true, 669, 25, nil},
+    {"Throne of the Four Winds", "raid", 4, "25 Player", 25, 0, true, 754, 25, nil},
+}
+
 function GetInstanceInfo()
-    local ii = _G.InstanceInfo
-    return ii and ii.name or "Temple of Ahn\'Qiraj", "raid", 1, "40 Player", 40, 0, false, ii and ii.mapid or 531, nil
+
+    if _G.TempInstanceInfo then
+        return unpack(_G.TempInstanceInfo)
+    end
+
+    return unpack(InstanceInfo[math.random(#InstanceInfo)])
 end
 
 function IsLoggedIn() return false end
@@ -555,8 +575,7 @@ function UnitHealthMax() return 100  end
 
 function UnitHealth() return 50 end
 
--- todo : is this still correct?
-_G.MAX_RAID_MEMBERS = 40
+_G.MAX_RAID_MEMBERS = 25
 
 function GetNumRaidMembers() return _G.MAX_RAID_MEMBERS  end
 

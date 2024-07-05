@@ -32,8 +32,8 @@ function Encounter:initialize(...)
 
     --
     -- https://wow.gamepedia.com/API_GetInstanceInfo
-    -- name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic,
-    --  instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo()
+    --      name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic,
+    --      instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo()
     --
     -- only set the instance id if there is an encounter id
     if self.id then
