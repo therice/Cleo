@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.7 (2024-07-05)
+* You spind me right 'round, baby, right 'round b38cbf1
+
 2025.0.6 (2024-06-21)
 * Like a blind man at an orgy, I was going to have to feel my way through (fuck you Glyph) 6a8075c
 
