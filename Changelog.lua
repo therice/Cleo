@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.8 (2024-07-11)
+* Address a few minor UI issues, including changelog not being completely displayed, fixing typo in Omnitron encounter, and displaying difficulty for raid encounters f988e6c
+* Address issue with trailing space causing linting to fail bed6145
+* Minor modifications to WOW API stubs used by encounter(s) 3a66707
+* Track loot source in addition to slots, which resolves issue with ALT clicking on loot window not allowing for multi-boss loot sessions 146cce9
+
 2025.0.7 (2024-07-05)
 * You spind me right 'round, baby, right 'round b38cbf1
 
