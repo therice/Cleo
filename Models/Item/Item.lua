@@ -266,7 +266,7 @@ function Item.ClearCache(item)
 	end
 end
 
---- a reference to an item, the the actual item but can be obtained as needed
+--- a reference to an item, such that the actual item but can be obtained as needed
 --- @class Models.Item.ItemRef
 local ItemRef = AddOn.Package('Models.Item'):Class('ItemRef')
 --- @param item any supports item strings, item links and item ids (not item names)
