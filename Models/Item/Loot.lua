@@ -218,7 +218,7 @@ function LootAllocateResponse:initialize(player)
 	self.guildRank = player.guildRank or L['unknown']
 	self.response  = C.Responses.Announced
 	-- could be cached (see PlayerInfo communications handling)
-	self.ilvl      = player.ilvl or 0 
+	self.ilvl      = player.ilvl or 0
 	self.diff      = 0
 	self.gear1     = nil
 	self.gear2     = nil
