@@ -156,7 +156,7 @@ function Configuration:afterReconstitute(instance)
 
 	instance.alts =
 		Util(instance.alts)
-			-- this creates a copy, but values point to original
+			-- this creates a copy, but values pointer to original
 			:MapKeys(
 				function(_, main)
 					-- attempt to resolve the player

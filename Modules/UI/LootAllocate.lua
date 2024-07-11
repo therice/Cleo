@@ -514,7 +514,7 @@ end
 -- SetCellX END
 --
 
-local UPDATE_THRESHOLD_IN_MS = 1500.0 -- 1 second
+local UPDATE_THRESHOLD_IN_MS = 1500.0 -- 1.5 seconds
 
 function LA:Update(forceUpdate)
 	local elapsed = self.sw:Elapsed()

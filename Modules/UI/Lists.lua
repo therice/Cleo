@@ -987,7 +987,6 @@ function Lists:LayoutConfigGeneralTab(tab, configSupplier)
 	--- @param self any
 	--- @param config Models.List.Configuration
 	tab.SetFieldsEnabled = function(self, config)
-		-- todo : disable check for development mode
 		-- admins can only modify the list associated with the configuration, not the configuration itself
 		local enabled = config and config:IsOwner()
 		self.name:SetEnabled(enabled)

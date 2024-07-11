@@ -1,11 +1,11 @@
-local AddOnName, AddOn, Util, Player, C
+local AddOnName, AddOn, Util, Player, C, LootSlotSource
 
 describe("MasterLooter", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_MasterLooter')
 		loadfile('Modules/Test/MasterLooterTestData.lua')()
 		C = AddOn.Constants
-		Util, Player = AddOn:GetLibrary('Util'), AddOn.Package('Models').Player
+		Util, Player, LootSlotSource = AddOn:GetLibrary('Util'), AddOn.Package('Models').Player, AddOn.Package('Models.Item').LootSlotSource
 		AddOnLoaded(AddOnName, true)
 		SetTime()
 	end)
@@ -240,7 +240,6 @@ describe("MasterLooter", function()
 		it("sends LootTable", function()
 			-- override testing behavior for test suite
 			_G.LootSlotHasItem = function() return true end
-
 			WoWAPI_FireEvent("LOOT_READY")
 			WoWAPI_FireEvent("LOOT_OPENED")
 			WoWAPI_FireUpdate(GetTime()+10)
@@ -265,33 +264,43 @@ describe("MasterLooter", function()
 
 		it("CanGiveLoot", function()
 			ml.lootOpen = false
-			local ok, cause = ml:CanGiveLoot(1, nil, AddOn.player:GetName())
+			local ok, cause = ml:CanGiveLoot(1, nil, nil, AddOn.player:GetName())
 			assert(not ok)
 			assert(cause == ml.AwardStatus.Failure.LootNotOpen)
 			ml.lootOpen = true
-			ok, cause = ml:CanGiveLoot(1, nil, AddOn.player:GetName())
+			ok, cause = ml:CanGiveLoot(5, nil, nil, AddOn.player:GetName())
 			assert(not ok)
-			assert(cause == ml.AwardStatus.Failure.LootGone)
+			assert.equal(cause, ml.AwardStatus.Failure.LootGone)
+			ok, cause = ml:CanGiveLoot(1, nil, LootSlotSource(-1, nil), AddOn.player:GetName())
+			assert(not ok)
+			assert.equal(cause, ml.AwardStatus.Failure.LootSourceMismatch)
+			local lootSlotInfo = ml:_GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot(1, "item:999999:0:0:0:0:0:0:0:233", lootSlotInfo.source, AddOn.player:GetName())
+			assert(not ok)
+			assert.equal(cause, ml.AwardStatus.Failure.LootGone)
 			_G.C_Container._SetFreeSlotsByContainer(0, 0)
-			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			ootSlotInfo = ml:_GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
 			assert(not ok)
-			assert(cause == ml.AwardStatus.Failure.MLInventoryFull)
+			assert.equal(cause, ml.AwardStatus.Failure.MLInventoryFull)
 			_G.C_Container._SetFreeSlotsByContainer(4, 0)
 			_G.UnitIsUnit = function(unit1, unit2) return false end
 			_G.UnitIsConnected = function(unit) return false end
-			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			lootSlotInfo = ml:_GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
 			assert(not ok)
-			assert(cause == ml.AwardStatus.Failure.Offline)
+			assert.equal(cause, ml.AwardStatus.Failure.Offline)
 			_G.UnitIsConnected = function(unit) return true end
-			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			lootSlotInfo = ml:_GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
 			assert(not ok)
-			assert(cause == ml.AwardStatus.Failure.NotBop)
+			assert.equal(cause, ml.AwardStatus.Failure.NotBop)
 			_G.UnitIsUnit = function(unit1, unit2) return true end
-			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			lootSlotInfo = ml:_GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
 			assert(ok)
 			assert(cause == nil)
 			_G.C_Container._ClearFreeSlotsByContainer()
-
 		end)
 
 		it("Award", function()
@@ -339,14 +348,13 @@ describe("MasterLooter", function()
 			ml.db.profile.autoAwardTo = AddOn.player:GetShortName()
 			ml:_AddLootSlot(2)
 
-			local loot = ml.lootSlots[2]
+			local loot = ml:_GetLootSlot(2)
 			loot.quality = 3
 
 			local shouldAutoAward, _, awardTo = ml:ShouldAutoAward(loot.item, loot.quality)
 			assert(shouldAutoAward)
 			assert.equal(ml.db.profile.autoAwardTo, awardTo)
-
-			local awarded = ml:AutoAward(2, ml.lootSlots[2].item, ml.lootSlots[2].quality, ml.db.profile.autoAwardTo, "normal")
+			local awarded = ml:AutoAward(2, loot.item, loot.quality, ml.db.profile.autoAwardTo, "normal")
 			assert(awarded)
 		end)
 		it("handles whispers", function()

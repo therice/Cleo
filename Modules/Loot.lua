@@ -135,9 +135,9 @@ end
 --- @param session number
 --- @param itemRef Models.Item.ItemRef
 function Loot:AddItem(offset, session, itemRef)
-	Logging:Debug("AddItem(%d, %d) : %s", offset, session, itemRef.item)
+	--Logging:Debug("AddItem(offset=%d, session=%d) : %s", offset, session, itemRef.item)
 	local lootEntry = LootEntry.FromItemRef(itemRef, session, AddOn:MasterLooterDbValue('timeout.duration'))
-	Logging:Debug("AddItem(%d, %d) : %s", offset, session, Util.Objects.ToString(lootEntry:toTable()))
+	Logging:Debug("AddItem(offset=%d, session=%d) : %s", offset, session, Util.Objects.ToString(lootEntry:toTable()))
 	self.items[offset + session] = lootEntry
 end
 
@@ -183,8 +183,7 @@ function Loot:Start(lt, reRoll)
 	if reRoll then
 		offset = #self.items
 	elseif #self.items > 0 then
-		-- must start over if not a re-roll and already
-		-- showing loot interface
+		-- must start over if not a re-roll and already showing loot interface
 		self:Stop()
 	end
 
@@ -210,8 +209,7 @@ function Loot:OnRoll(entry, button)
 	local item = entry.item
 	if not item.isRoll then
 		for _, session in ipairs(item.sessions) do
-			-- send to group and not master looter to support
-			-- showing responses during loot window
+			-- send to group and not master looter to support  showing responses during loot window
 			AddOn:SendResponse(C.group, session, button)
 		end
 

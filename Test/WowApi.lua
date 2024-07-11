@@ -343,23 +343,28 @@ function GetDifficultyInfo(id)
 end
 
 
-
-local CreatureGuid = 'Creature-0-970-0-11-31146-000136DF91'
-function GetLootSourceInfo(slot)
-    return CreatureGuid
-end
-
-local CreatureNames = {
-    "Halfus Wyrmbreaker",
-    "Cho\'gall",
-    "Magmaw",
-    "Maloriak",
-    "Al\'Akir",
+local Creatures = {
+    {44600, "Halfus Wyrmbreaker"},
+    {43324, "Cho\'gall"},
+    {41570, "Magmaw"},
+    {41378, "Maloriak"},
+    {46753, "Al\'Akir"},
 }
+
+-- https://wowpedia.fandom.com/wiki/GUID#Creature
+-- [unitType]-0-[serverID]-[instanceID]-[zoneUID]-[ID]-[spawnUID]
+local CreatureGuidTemplate = 'Creature-0-970-0-11-%d-000136DF91'
+
+-- https://wowpedia.fandom.com/wiki/API_GetLootSourceInfo
+-- Returns information about the source of the objects in a loot slot.
+--  guid, quantity, ... = GetLootSourceInfo(lootSlot)
+function GetLootSourceInfo(slot)
+    return format(CreatureGuidTemplate, Creatures[math.random(#Creatures)][1])
+end
 
 function GetUnitName(unit)
     if unit == "target" then
-        return CreatureNames[math.random(#CreatureNames)]
+        return Creatures[math.random(#Creatures)][2]
     end
 
     return "Unknown"
@@ -668,7 +673,7 @@ function GetSkillLineInfo(index)
 end
 
 function GetInventoryItemLink(unit, slotId)
-  return "item:" .. random(50000) ..":0:0:0:0:0:0:0:" .. random(60)
+  return "item:" .. random(50000) ..":0:0:0:0:0:0:0:" .. random(300)
 end
 
 function GiveMasterLoot(slot, i)

@@ -13,7 +13,7 @@ local Player = AddOn.ImportPackage('Models').Player
 local Bitfield = Util.Bitfield.Bitfield
 --- @type LibEncounter
 local LibEncounter = AddOn:GetLibrary("Encounter")
-local PlaySoundFile = _G.PlaySoundFile
+
 
 --- @class Core.Mode
 local Mode = AddOn.Package('Core'):Class('Mode', Bitfield)
@@ -141,11 +141,22 @@ end
 --
 -- @return true if two items are the same item
 function AddOn.ItemIsItem(item1, item2)
-    if not Util.Objects.IsString(item1) or not Util.Objects.IsString(item2) then return item1 == item2 end
+    --Logging:Debug("ItemIsItem(%s, %s)", item1, item2)
+
+    if (not Util.Objects.IsString(item1)) or (not Util.Objects.IsString(item2)) then
+        return item1 == item2
+    end
+
     item1 = ItemUtil:ItemLinkToItemString(item1)
     item2 = ItemUtil:ItemLinkToItemString(item2)
-    if not (item1 and item2) then return false end
-    return ItemUtil:NeutralizeItem(item1) ==  ItemUtil:NeutralizeItem(item2)
+    if not (item1 and item2) then
+        return false
+    end
+
+    item1 = ItemUtil:NeutralizeItem(item1)
+    item2 = ItemUtil:NeutralizeItem(item2)
+
+    return item1 ==  item2
 end
 
 function AddOn.TransmittableItemString(item)
@@ -195,10 +206,13 @@ function AddOn.EquipmentLocationToName(...)
 end
 --]]
 
+--- https://wowpedia.fandom.com/wiki/GUID#Creature
+--- [unitType]-0-[serverID]-[instanceID]-[zoneUID]-[ID]-[spawnUID]
+---
+--- @return number the id of the create for the passed guid or 0 if it cannot be extracted
 function AddOn:ExtractCreatureId(guid)
-    if not guid then return nil end
-    local id = guid:match(".+(%b--)")
-    return id and (id:gsub("-", "")) or nil
+    local id = select(6, strsplit("-", guid or ""))
+    return tonumber(id or 0)
 end
 
 local BlacklistedItemClasses = {

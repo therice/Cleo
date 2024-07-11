@@ -13,7 +13,7 @@ AddOn.author = GetAddOnMetadata(AddOnName, "Author")
 --@debug@
 -- if local development and not substituted, then use a dummy version
 if AddOn.version == '@project-version@' then
-    AddOn.version = '2021.1.0-dev'
+    AddOn.version = '2024.1.0-dev'
 end
 --@end-debug@
 

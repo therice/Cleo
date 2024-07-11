@@ -750,8 +750,6 @@ end
 --- @return boolean, table<number, Models.Item.ItemRef>
 function AddOn:_PreProcessLootTable(lt, uncachedCallback)
     --Logging:Debug("_PreProcessLootTable(%d)", Util.Tables.Count(lt))
-
-    --- return continue, lt
     if not self.enabled then
         for i = 1, #lt do
             self:SendResponse(self.masterLooter, i, C.Responses.Disabled)

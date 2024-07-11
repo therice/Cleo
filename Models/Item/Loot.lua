@@ -10,17 +10,72 @@ local ItemRef = AddOn.Package('Models.Item').ItemRef
 --- @type Models.Item.Item
 local  Item = AddOn.Package('Models.Item').Item
 
+--- @class Models.Item.LootSlotSource
+--- @field public id number @the id of the source of the loot
+--- @field public name string
+local LootSlotSource = AddOn.Package('Models.Item'):Class('LootSlotSource')
+function LootSlotSource:initialize(id, name)
+	self.id = id
+	-- may not need to collect the source's name
+	self.name = name
+end
+
+function LootSlotSource:__eq(o)
+	return self.id == o.id
+end
+
+--- @return  Models.Item.LootSlotSource
+function LootSlotSource.FromCurrent(slot)
+	-- if no slot provided, find a random slot to use
+	-- they will be from the same source
+	if Util.Objects.IsEmpty(slot) then
+		-- it doesn't matter which one it is
+		slot = GetNumLootItems()
+	else
+		slot = tonumber(slot)
+	end
+
+	local id
+
+	-- https://wow.gamepedia.com/API_GetLootSourceInfo
+	-- the creature being looted
+	if not Util.Objects.IsNil(slot) and slot > 0 then
+		id = AddOn:ExtractCreatureId(GetLootSourceInfo(slot))
+	end
+
+	-- we're looting a creature, so the target will be that creature
+	-- could potentially use LibEncounter here with id
+	local name = GetUnitName("target")
+
+	return LootSlotSource(id, name)
+end
+
+local function IsSameLootSource(source1, source2)
+	-- both nil, this should evaluate to true
+	if Util.Objects.IsNil(source1) and Util.Objects.IsNil(source2) then
+		return true
+	end
+
+	if Util.Objects.IsNil(source1) then
+		return false
+	end
+
+	-- is from the same source if (creature) id is equivalent
+	return not Util.Objects.IsNil(source2) and (source1 == source2)
+
+end
+
 --- @class Models.Item.LootSlotInfo
 local LootSlotInfo = AddOn.Package('Models.Item'):Class('LootSlotInfo', ItemRef)
-function LootSlotInfo:initialize(slot, name, link, quantity, quality, bossGuid, bossName)
+function LootSlotInfo:initialize(slot, name, link, quantity, quality)
 	-- links work as item references
 	ItemRef.initialize(self, link)
 	self.slot = slot
 	self.name = name
 	self.quantity = quantity
 	self.quality = quality
-	self.bossGuid = bossGuid
-	self.bossName = bossName
+	--- @type Models.Item.LootSlotSource
+	self.source = LootSlotSource.FromCurrent(self.slot)
 	self.looted = false
 end
 
@@ -29,14 +84,31 @@ function LootSlotInfo:GetItemLink()
 	return self.item
 end
 
+--- @param source  Models.Item.LootSlotSource
+function LootSlotInfo:IsFromSource(source)
+	return IsSameLootSource(source, self.source)
+end
+
+
 --- @class Models.Item.LootTableEntry
 local LootTableEntry = AddOn.Package('Models.Item'):Class('LootTableEntry', ItemRef)
-function LootTableEntry:initialize(slot, item)
+--- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
+--- @param item any  ItemID|ItemString|ItemLink
+--- @param source Models.Item.LootSlotSource source from which loot (slot) was obtained, can be Nil if item was not added from a loot table
+function LootTableEntry:initialize(slot, item, source)
 	ItemRef.initialize(self, item)
-	self.slot    = slot
+	self.slot = slot
+	--- @type Models.Item.LootSlotSource
+	self.source = source
 	self.awarded = false
-	self.sent    = false
-	Logging:Debug("LootTableEntry : %s", Util.Objects.ToString(self:toTable()))
+	self.sent = false
+	Logging:Trace("LootTableEntry() : %s", Util.Objects.ToString(self:toTable()))
+end
+
+
+--- @param source  Models.Item.LootSlotSource
+function LootTableEntry:IsFromSource(source)
+	return IsSameLootSource(source, self.source)
 end
 
 -- trims down the entry to minimal amount of needed information
@@ -69,8 +141,11 @@ end
 
 --- @class Models.Item.LootQueueEntry
 local LootQueueEntry = AddOn.Package('Models.Item'):Class('LootQueueEntry')
+--- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
+--- @param callback function function to invoke after entry is cleared, can be nil
+--- @param args  table parameters to pass to callback function, can be nil
 function LootQueueEntry:initialize(slot, callback, args)
-	self.slot = slot
+	self.slot = tonumber(slot) -- verify people are not passing non-numeric values
 	self.callback = callback
 	self.args = args
 	self.timer = nil
@@ -125,7 +200,6 @@ function LootEntry.Rolled()
 	return entry
 end
 
-
 --- @class Models.Item.LootAllocateResponse
 local LootAllocateResponse = AddOn.Package('Models.Item'):Class('LootAllocateResponse')
 --- @type table
@@ -140,19 +214,24 @@ LootAllocateResponse.Attributes = {
 
 function LootAllocateResponse:initialize(player)
 	self.name      = player:GetName()
-	self.class     = player.class or "Unknown"
-	self.guildRank = player.guildRank or "Unknown"
+	self.class     = player.class or L['unknown']
+	self.guildRank = player.guildRank or L['unknown']
 	self.response  = C.Responses.Announced
-	self.ilvl      = player.ilvl or 0 -- could be cached (see PlayerInfo comms handling)
+	-- could be cached (see PlayerInfo communications handling)
+	self.ilvl      = player.ilvl or 0 
 	self.diff      = 0
 	self.gear1     = nil
 	self.gear2     = nil
 	self.roll      = nil
 end
 
-function LootAllocateResponse:Set(key, value) self[key] = value end
+function LootAllocateResponse:Set(key, value)
+	self[key] = value
+end
 
-function LootAllocateResponse:Get(key) return self[key] end
+function LootAllocateResponse:Get(key)
+	return self[key]
+end
 
 ---@class Models.Item.ItemAward
 local ItemAward = AddOn.Package('Models.Item'):Class('ItemAward')

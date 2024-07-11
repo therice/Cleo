@@ -20,9 +20,9 @@ local Metrics = AddOn.Package('Models').Metrics
 local Player = AddOn.Package('Models').Player
 
 --- scrubs passed value for transmission over the wire
--- specifically, entries that are modeled as classes via LibClass
--- need to have their functions removed as not serializable
--- when they are received, they will be reconstituted into the appropriate class
+--- specifically, entries that are modeled as classes via LibClass
+--- need to have their functions removed as not serializable
+--- when they are received, they will be reconstituted into the appropriate class
 local function ScrubValue(value)
     if Util.Objects.IsTable(value) and not value.clazz then
         local t = {}

@@ -671,14 +671,13 @@ function RaidStatsTab:BuildData(intervalInDays)
 
 	local function AddRow(instanceId, encounterId, stats)
 		local instanceName, encounterName =
-			LibEncounter:GetMapName(instanceId),
-			(encounterId and stats.name or L["all"])
+			LibEncounter:GetMapName(instanceId), (encounterId and stats.name or L["all"])
 
-		if not Util.Tables.ContainsKey(instanceData, instanceName) then
+		if instanceName and not Util.Tables.ContainsKey(instanceData, instanceName) then
 			instanceData[instanceName] = {instanceName, instanceId = instanceId}
 		end
 
-		if not Util.Tables.ContainsKey(encounterData, encounterName) then
+		if encounterName and not Util.Tables.ContainsKey(encounterData, encounterName) then
 			encounterData[encounterName] = {encounterName, encounterId = encounterId or -1}
 		end
 

@@ -299,7 +299,7 @@ function ItemRef:Embed(into, ...)
 end
 
 --- @return Models.Item.ItemRef if passed instance is an ItemRef, returns "as is". if the passed instance is a table and has a
---- 'ref' attribute, it will return an new ItemRef  based upon that value. otherwise, returns nil
+--- 'ref' attribute, it will return a new ItemRef based upon that value. otherwise, returns nil
 function ItemRef.Resolve(i)
 	if Util.Objects.IsInstanceOf(i, ItemRef) then
 		return i
