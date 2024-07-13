@@ -106,7 +106,9 @@ end
 function CustomItems:AddDefaultCustomItems()
 	Logging:Debug("AddDefaultCustomItems(%s)", self:GetName())
 	local config = self.db.factionrealm
-	if not config.custom_items then config.custom_items = { } end
+	if not config.custom_items then
+		config.custom_items = { }
+	end
 	local custom_items = config.custom_items
 	local ignored_default_items = config.ignored_default_items
 

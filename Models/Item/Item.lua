@@ -158,9 +158,15 @@ function Item:GetEquipmentLocation()
 			end
 		end
 
+		-- check for items which should be evaluated as "self" (not mapped to location, but rather use the item for lookup)
+		if Util.Strings.Equal(self.equipLoc, ItemUtil.CustomItemInvTypeSelf) then
+			--Logging:Debug("GetEquipmentLocation(%s) => %d", tostring(self.equipLoc), tonumber(self.id))
+			-- always return a string due to way stored in addon configuration and referenced
+			return tostring(self.id)
+		end
+
 		-- this uses an item which is a reward from the token for determining equipment location
-		-- this works because all rewards are like items (shoulders, chest, etc.)
-		--
+		-- this works because all rewards for the token are like items (shoulders, chest, etc.)
 		if ItemUtil:IsTokenBasedItem(self.id) then
 			local items = ItemUtil:GetTokenItems(self.id)
 			if items and Util.Tables.Count(items) > 0 then
@@ -169,12 +175,6 @@ function Item:GetEquipmentLocation()
 				local _, _, _, equipLoc  = GetItemInfoInstant(items[1])
 				return equipLoc
 			end
-		end
-
-		if Util.Strings.Equal(self.equipLoc, ItemUtil.CustomItemInvTypeSelf) then
-			--Logging:Debug("GetEquipmentLocation(%s) => %d", tostring(self.equipLoc), tonumber(self.id))
-			-- always return a string due to way stored in addon configuration and referenced
-			return tostring(self.id)
 		end
 	end
 

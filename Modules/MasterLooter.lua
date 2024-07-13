@@ -1192,8 +1192,8 @@ end
 --- @param source Models.Item.LootSlotSource source from which loot (slot) was obtained, can be Nil if item was not added from a loot table
 function ML:_AddLootTableEntry(slot, item, source)
 	Logging:Trace(
-		"_AddLootTableEntry(slot=%d, item=%s, source=%s)",
-		tonumber(slot), tostring(item), Util.Objects.ToString(source and source:toTable() or nil)
+		"_AddLootTableEntry(slot=%s, item=%s, source=%s)",
+		tostring(slot), tostring(item), Util.Objects.ToString(source and source:toTable() or {})
 	)
 
 	local entry = LootTableEntry(slot, item, source)
