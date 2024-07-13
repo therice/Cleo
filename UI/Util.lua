@@ -131,7 +131,7 @@ function U.DecoratePopup(frame)
     frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
     -- change the border and backdroup
-    frame.border = BaseWidget.Shadow(frame, 20)
+    -- frame.border = BaseWidget.Shadow(frame, 20)
     frame:SetBackdrop({bgFile=BaseWidget.ResolveTexture('white')})
     frame:SetBackdropColor(0.05,0.05,0.07,0.98)
 
