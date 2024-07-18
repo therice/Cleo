@@ -72,7 +72,6 @@ function Lists:OnEnable()
 	self:RegisterMessage(C.Messages.ModeChanged, "OnModeChange")
 	self:RegisterMessage(C.Messages.ResourceRequestCompleted, "OnResourceRequestCompleted")
 	AddOn.Timer.Schedule(function() AddOn.Timer.After(3, function() self:ValidateConfigurations() end) end)
-
 end
 
 function Lists:OnDisable()
@@ -269,10 +268,10 @@ function Lists:_EnqueueEvent(queue, event, eventDetail)
 		self:_ProcessEvents(queue)
 	-- otherwise, wait a bit of time for other events to be enqueued
 	else
-		-- every 5 seconds seems to aggressive, as typical loot session(s) have multiple items
-		-- with a reasonable response time of 60 seconds
-		-- likely still to aggressive at 30 seconds, but start conservatively with extending interval
-		queue.timer = self:ScheduleTimer(function() self:_ProcessEvents(queue) end, 30 --[[ 5 --]])
+		-- every 5 seconds seems to aggressive, as typical loot session(s) have multiple items with a reasonable response time of 60 seconds
+		-- likely still too aggressive at 30 seconds, but start conservatively with extending interval
+		-- increasing this from 30 seconds to 60 seconds to reduce the back and forth between ML and other players
+		queue.timer = self:ScheduleTimer(function() self:_ProcessEvents(queue) end, 60 --[[ 30 --]])
 	end
 end
 
@@ -482,7 +481,7 @@ function Lists:ActivateConfiguration(idOrConfig, callback)
 	return false, nil
 end
 
-local MaxActivationReattempts = 3
+local MaxActivationReattempts = 4
 
 --- @param sender string
 --- @param activation table
@@ -593,9 +592,9 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 
 		-- we have missing data, request it and reschedule activation
 		if Util.Tables.Count(toRequest) > 0 then
-			Logging:Warn("OnActivateConfigReceived() : Requesting %s", Util.Objects.ToString(Util.Tables.Copy(toRequest, function(r) return tostring(r) end)))
+			--Logging:Warn("OnActivateConfigReceived() : Requesting %s", Util.Objects.ToString(Util.Tables.Copy(toRequest, function(r) return tostring(r) end)))
 			ListsDp:SendRequest(AddOn.masterLooter, nil, unpack(toRequest))
-			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 10)
+			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 30)
 			return
 		end
 	end

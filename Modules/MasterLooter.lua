@@ -348,7 +348,7 @@ function ML:SubscribeToComms()
 				-- having passed for a response to be received and to transition response from announced after
 				-- starting the loot session
 				self:ScheduleTimer(
-					function() self:Send(AddOn.player, C.Commands.CheckIfOffline)  end,
+					function() self:Send(AddOn.player, C.Commands.CheckIfOffline) end,
 					15 + (0.5 * #self.lootTable)
 				)
 			end

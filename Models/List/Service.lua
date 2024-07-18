@@ -209,7 +209,11 @@ function Service:EnsureSingleDefaultConfiguration(defaultConfig)
 			for id, c in pairs(configs) do
 				if not Util.Strings.Equal(id, defaultConfig.id) and c.default then
 					c.default = false
-					self.Configuration:Update(c, 'default')
+					-- don't fire callbacks here, it's meant to be scoped to player only and as a result
+					-- of things being out of sync due to manner in which configurations were updated
+					--
+					-- also, firing callbacks will result in audit events being sent (which are unnecessary and confusing)
+					self.Configuration:Update(c, 'default', false)
 					Logging:Debug("EnsureSingleDefaultConfiguration() : set default to 'false' for %s", c.id)
 				end
 			end
