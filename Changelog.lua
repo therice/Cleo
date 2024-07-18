@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.9 (2024-07-13)
+* Various small changes to comments and changelog 90011ad
+* Check if an item is self referencing (the item itself, not equipment location) prior to evaluating based upon token 388ac9a
+* Remove the ugly shadow border on dialog popups dcddd57
+
 2025.0.8 (2024-07-11)
 * Address a few minor UI issues, including changelog not being completely displayed, fixing typo in Omnitron encounter, and displaying difficulty for raid encounters f988e6c
 * Address issue with trailing space causing linting to fail bed6145
