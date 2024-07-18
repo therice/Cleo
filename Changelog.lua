@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.10 (2024-07-18)
+* Enabled audit purging by default, retain less data, and execute more frequently 27c2ada
+* Send updates less frequently for configuration/lists after raid based updates and be more tolerant of time allowed to synchronize bd590a1
+
 2025.0.9 (2024-07-13)
 * Various small changes to comments and changelog 90011ad
 * Check if an item is self referencing (the item itself, not equipment location) prior to evaluating based upon token 388ac9a
