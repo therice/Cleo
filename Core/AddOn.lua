@@ -53,8 +53,6 @@ function AddOn:OnInitialize()
         gear = {
         }
     }
-    -- our guild (start off as unguilded, will get callback when ready to populate)
-    self.guildRank = L["unguilded"]
     -- the ML DB, sent by the master looter
     -- it contains settings as controlled by the ML
     self.mlDb = {}
@@ -140,34 +138,8 @@ function AddOn:OnEnable()
 
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))
 
-    local function SetGuildRank()
-        if IsInGuild() then
-            -- Register with guild storage for state change callback
-            GuildStorage.RegisterCallback(
-                self,
-                GuildStorage.Events.StateChanged,
-                function(event, state)
-                    Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
-                    if state == GuildStorage.States.Current then
-                        local me = GuildStorage:GetMember(AddOn.player:GetName())
-                        if me then
-                            AddOn.guildRank = me.rank
-                            GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
-                            Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
-                        else
-                            Logging:Warn("GuildStorage.Callback() : Not Found")
-                            AddOn.guildRank = L["not_found"]
-                        end
-                    end
-                end
-            )
-        end
-    end
-
     -- purge expired player cache entries
     AddOn.Timer.Schedule(function() AddOn.Timer.After(2, function() Player.MaintainCache() end) end)
-    -- establish guild rank
-    AddOn.Timer.Schedule(function() AddOn.Timer.After(1, function() SetGuildRank() end) end)
 
 
     local configSupplements, lpadSupplements = {}, {}

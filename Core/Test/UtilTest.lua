@@ -45,14 +45,18 @@ describe("Util", function()
         end)
         it("GetPlayerInfo", function()
             local guildRank, enchanter, enchantLvl, avgItemLevel = AddOn:GetPlayerInfo()
-            assert.equal(guildRank, "Unguilded")
-            assert.equal(enchanter,  true)
+            assert.equal(guildRank, nil)
+            assert.equal(enchanter, true)
             assert.equal(enchantLvl, 298)
-            assert.equal(avgItemLevel, 70) -- see GetItemInfo in WowItemInfo.lua
+            -- see GetAverageItemLevel in WowApi.lua
+            assert(avgItemLevel < 401)
+            assert(avgItemLevel > 100)
         end)
         it("UpdatePlayerData", function()
             AddOn:UpdatePlayerData()
-            assert.equal(70, AddOn.playerData.ilvl)
+            -- see GetAverageItemLevel in WowApi.lua
+            assert(AddOn.playerData.ilvl < 401)
+            assert(AddOn.playerData.ilvl > 100)
             assert(#AddOn.playerData.gear > 0) -- see GetItemInfo in WowItemInfo.lua
         end)
     end)

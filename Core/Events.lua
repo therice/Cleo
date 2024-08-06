@@ -59,13 +59,14 @@ function AddOn:PlayerEnteringWorld(_, isLogin, isReload)
     self:NewMasterLooterCheck()
     -- if we have not yet handled the initial entering world event
     if initialLoad then
-        self:UpdatePlayerData()
+        AddOn.Timer.Schedule(function() AddOn.Timer.After(2, function() self:UpdatePlayerData() end) end)
 
         if not self:IsMasterLooter() and Util.Objects.IsSet(self.masterLooter) then
             Logging:Debug("Player '%s' entering world (initial load)", tostring(self.player))
-            AddOn.Timer.Schedule(function() self:ScheduleTimer("Send", 2, self.masterLooter, C.Commands.Reconnect) end)
-            self:Send(self.masterLooter, C.Commands.PlayerInfo, self:GetPlayerInfo())
+            AddOn.Timer.Schedule(function() AddOn.Timer.After(4, function() self:Send(self.masterLooter, C.Commands.Reconnect) end) end)
+            AddOn.Timer.Schedule(function() AddOn.Timer.After(5, function()  self:Send(self.masterLooter, C.Commands.PlayerInfo, self:GetPlayerInfo()) end) end)
         end
+
         initialLoad = false
     end
 end
@@ -117,7 +118,7 @@ end
 local function DispatchEncounterEvent(self)
     -- only dispatch the encounter if it's set and we are the master looter w/ cleo is handling loot
     if self.encounter and (self.encounter ~= Encounter.None) and self:MasterLooterModule():IsHandled() then
-        self:ScheduleTimer(function()  AddOn:RaidAuditModule():OnEncounterEvent(self.encounter) end, 2)
+        self:ScheduleTimer(function() AddOn:RaidAuditModule():OnEncounterEvent(self.encounter) end, 2)
     end
 end
 
@@ -127,7 +128,6 @@ function AddOn:EncounterStart(_, ...)
     Logging:Debug("EncounterStart()")
     self.encounter = Encounter.Start(...)
     DispatchEncounterEvent(self)
-    self:UpdatePlayerData()
 end
 
 -- https://wow.gamepedia.com/ENCOUNTER_END
@@ -136,6 +136,7 @@ function AddOn:EncounterEnd(_, ...)
     Logging:Debug("EncounterEnd()")
     self.encounter = Encounter.End(self.encounter, ...)
     DispatchEncounterEvent(self)
+    self:ScheduleTimer(function() self:UpdatePlayerData() end, 2)
 end
 
 -- https://wow.gamepedia.com/RAID_INSTANCE_WELCOME

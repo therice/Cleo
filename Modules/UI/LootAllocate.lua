@@ -31,23 +31,21 @@ local RightClickMenu, FilterMenu, Enchanters
 
 local ScrollColumns, ScrollColumnCells =
 	ST.ColumnBuilder()
-		:column(""):set("col", "class"):sortnext(5):width(20)                           -- 1
+		:column(""):set("col", "class"):sortnext(4):width(20)                           -- 1
 		:column(_G.NAME):set("col", "name"):width(120)                                         -- 2
-		:column(_G.RANK):set("col", "rank"):width(95)                                          -- 3
-			:comparesort(function(...) return LA.SortByRank(...) end)
-		:column(L["response"]):set("col", "response"):width(240)                               -- 4
-			:defaultsort(STColumnBuilder.Ascending):sortnext(5)
+		:column(L["response"]):set("col", "response"):width(240)                               -- 3
+			:defaultsort(STColumnBuilder.Ascending):sortnext(4)
 			:comparesort(function(...) return LA.SortByResponse(...) end)
-		:column(L["priority_active"]):set("col", "pa"):width(100)                              -- 5
-			:defaultsort(STColumnBuilder.Ascending):sortnext(6)
+		:column(L["priority_active"]):set("col", "pa"):width(100)                              -- 4
+			:defaultsort(STColumnBuilder.Ascending):sortnext(5)
 			:comparesort(function(...) return LA.SortByActivePrio(...) end)
-		:column(L["priority_overall"]):set("col", "po"):sortnext(11):width(100)                -- 6
+		:column(L["priority_overall"]):set("col", "po"):sortnext(10):width(100)                -- 5
 			:comparesort(function(...) return LA.SortByOverallPrio(...) end)
-		:column(_G.ITEM_LEVEL_ABBR):set("col", "ilvl"):sortnext(8):width(45)                   -- 7
-		:column(L["diff"]):set("col", "diff"):width(40)                                        -- 8
-		:column(L["g1"]):set("col", "gear1"):width(20):align('CENTER')                         -- 9
-		:column(L["g2"]):set("col", "gear2"):width(20):align('CENTER')                         -- 10
-		:column(_G.ROLL):set("col", "roll"):sortnext(8):width(50):align('CENTER')              -- 11
+		:column(_G.ITEM_LEVEL_ABBR):set("col", "ilvl"):sortnext(7):width(45)                   -- 6
+		:column(L["diff"]):set("col", "diff"):width(40)                                        -- 7
+		:column(L["g1"]):set("col", "gear1"):width(20):align('CENTER')                         -- 8
+		:column(L["g2"]):set("col", "gear2"):width(20):align('CENTER')                         -- 9
+		:column(_G.ROLL):set("col", "roll"):sortnext(7):width(50):align('CENTER')              -- 10
 	:build()
 
 
@@ -374,14 +372,6 @@ function LA:BuildScrollingTable()
 	end
 end
 
-LA.SortByRank =
-	ST.SortFn(
-		function(row)
-			local cr = LA:CurrentEntry():GetCandidateResponse(row.name)
-			return AddOn.GetGuildRanks()[cr.guildRank] or 100
-		end
-	)
-
 LA.SortByResponse =
 	ST.SortFn(
 		function(row)
@@ -430,14 +420,6 @@ function LA:SetCellName(_, frame, data, _, _, realrow, column, _, _, ...)
 		frame.text:SetTextColor(c.r, c.g, c.b, c.a)
 	end
 	data[realrow].cols[column].value = name or ""
-end
-
-function LA:SetCellRank(_, frame, data, _, _, realrow, column, _, _, ...)
-	local name = data[realrow].name
-	local response = self:GetCandidateResponse(self.session, name)
-	frame.text:SetText(response.guildRank)
-	frame.text:SetTextColor(AddOn:GetResponseColor(response.response))
-	data[realrow].cols[column].value = response.guildRank or ""
 end
 
 function LA:SetCellResponse(_, frame, data, _, _, realrow, _, _, _, ...)

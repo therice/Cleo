@@ -85,6 +85,7 @@ read_globals = {
 	"GetContainerNumFreeSlots",
 	"GetGuildRosterInfo",
 	"GetInstanceInfo",
+	"GetAverageItemLevel",
 	"GetInventoryItemLink",
 	"GetInventorySlotInfo",
 	"GetItemFamily",

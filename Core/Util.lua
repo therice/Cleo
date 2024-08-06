@@ -264,22 +264,9 @@ local function IsIgnoredItemSlot(slot)
 end
 
 local function GetAverageItemLevel()
-    --Logging:Debug("%s", Util.Objects.ToString(IGNORED_ITEM_SLOTS))
-    local sum, count = 0, 0
-    for i = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
-        if not IsIgnoredItemSlot(i) then
-            local link = GetInventoryItemLink(C.player, i)
-            if not Util.Strings.IsEmpty(link)  then
-                local ilvl = select(4, GetItemInfo(link)) or 0
-                sum = sum + ilvl
-                count = count + 1
-            end
-        end
-    end
-
-    local avgItemLevel = Util.Numbers.Round(sum / count, 2)
-    --Logging:Debug("GetAverageItemLevel() : %d", avgItemLevel)
-    return avgItemLevel
+    -- https://wowpedia.fandom.com/wiki/API_GetAverageItemLevel
+    local _, avgItemLevelEquipped, _ = _G.GetAverageItemLevel()
+    return avgItemLevelEquipped
 end
 
 local enchanting_localized_name
@@ -300,7 +287,7 @@ function AddOn:GetPlayerInfo()
     end
 
     local avgItemLevel = GetAverageItemLevel()
-    return self.guildRank, enchanter, enchanterLvl, avgItemLevel
+    return nil --[[ guildRank (deprecated) --]], enchanter, enchanterLvl, avgItemLevel
 end
 
 
@@ -326,7 +313,7 @@ function AddOn:UpdatePlayerGear(startSlot, endSlot)
 end
 
 function AddOn:UpdatePlayerData()
-    Logging:Trace("UpdatePlayerData()")
+    --Logging:Trace("UpdatePlayerData()")
     self.playerData.ilvl = GetAverageItemLevel()
     self:UpdatePlayerGear()
 end

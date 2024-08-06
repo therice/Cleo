@@ -1744,7 +1744,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	end
 
 	--- @param rank number numeric rank of guild
-	--- @param modifier LibUtil.Optional if empty, only the specified rank. if present and true, that rank and any rank "higher", if presentfalse, that rank and any rank "lower"
+	--- @param modifier LibUtil.Optional if empty, only the specified rank. if present and true, that rank and any rank "higher", if present and false, that rank and any rank "lower"
 	tab.ClearAndPopulatePrioritiesViaGuild = function(self, rank, modifier)
 		modifier = modifier or Util.Optional.empty()
 		local list = listSupplier()
@@ -1764,7 +1764,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 					local resolved = configSupplier():ResolvePlayer(sname)
 					-- only add players which resolve to themselves (i.e. not an ALT) and make sure their level is
 					-- reasonable for raiding (in this case 71+)
-					if resolved and Util.Strings.Equal(resolved:GetShortName(), sname) and player.level >= 71 then
+					if resolved and Util.Strings.Equal(resolved:GetShortName(), sname) and player.level >= 80 then
 						Util.Tables.Push(priorities, resolved)
 					end
 				end

@@ -623,6 +623,12 @@ function GetItemFamily(item)
     return "INVTYPE_BAG"
 end
 
+-- https://wowpedia.fandom.com/wiki/API_GetAverageItemLevel
+function GetAverageItemLevel()
+    local itemLevel, decimal = random(100, 400), random(1, 99)
+    itemLevel = itemLevel + (decimal/100)
+    return itemLevel, itemLevel, itemLevel
+end
 
 _G.BACKPACK_CONTAINER = 0
 _G.NUM_BAG_SLOTS = 4

@@ -23,9 +23,9 @@ function AddOn:SubscribeToComms()
         end,
         [C.Commands.PlayerInfo] = function(data, sender)
             Logging:Debug("PlayerInfo %s from %s", Util.Objects.ToString(data), tostring(sender))
-            local guildRank, enchanter, enchanterLvl, ilvl = unpack(data)
+            local _, enchanter, enchanterLvl, ilvl = unpack(data)
             Player:Get(sender):Update({
-              guildRank    = guildRank,
+              guildRank = nil, --[[ deprecated, can be removed in future version --]]
               enchanter    = enchanter,
               enchanterLvl = enchanterLvl,
               ilvl         = ilvl

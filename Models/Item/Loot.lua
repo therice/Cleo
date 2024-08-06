@@ -215,7 +215,6 @@ LootAllocateResponse.Attributes = {
 function LootAllocateResponse:initialize(player)
 	self.name      = player:GetName()
 	self.class     = player.class or L['unknown']
-	self.guildRank = player.guildRank or L['unknown']
 	self.response  = C.Responses.Announced
 	-- could be cached (see PlayerInfo communications handling)
 	self.ilvl      = player.ilvl or 0
