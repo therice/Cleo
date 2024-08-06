@@ -397,6 +397,19 @@ function ML:OnPlayerEvent(event, player)
 		local ac = AddOn:ListsModule():GetActiveConfiguration()
 		ac:OnPlayerEvent(player, Util.Strings.Equal(event, C.Messages.PlayerJoinedGroup))
 		if Util.Strings.Equal(event, C.Messages.PlayerJoinedGroup) then
+			-- send a request for player info upon joining, as the group can change after
+			-- establishing the master looter
+			Util.Functions.try(
+				function()
+					self:Send(player, C.Commands.PlayerInfoRequest)
+				end
+			)
+			.catch(
+				function(err)
+					Logging:Error("OnPlayerEvent(PlayerInfoRequest, %s) : %s / %s", tostring(event), tostring(player), Util.Objects.ToString(err))
+				end
+			)
+
 			self:SendActiveConfig(player, ac.config)
 
 			-- send a version ping to player when they join group so we can proactively notify them that
@@ -410,7 +423,7 @@ function ML:OnPlayerEvent(event, player)
 			)
 		    .catch(
 				function(err)
-					Logging:Error("OnPlayerEvent(%s) : %s / %s", tostring(event), tostring(player) ,Util.Objects.ToString(err))
+					Logging:Error("OnPlayerEvent(VersionPing, %s) : %s / %s", tostring(event), tostring(player), Util.Objects.ToString(err))
 				end
 			)
 		end
