@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.11 (2024-08-06)
+* Purge expired player cache entries on login when addon is enabled e4b4805
+* Remove guild rank as a displayed column in loot allocation and use WOW API for calculating average item level fe2dffc
+* Request player info when they join the group in addition to when new master looter is established 422cf22
+
 2025.0.10 (2024-07-18)
 * Enabled audit purging by default, retain less data, and execute more frequently 27c2ada
 * Send updates less frequently for configuration/lists after raid based updates and be more tolerant of time allowed to synchronize bd590a1
