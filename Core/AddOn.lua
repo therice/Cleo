@@ -113,9 +113,6 @@ function AddOn:OnEnable()
     --@debug@
     -- this enables certain code paths that wouldn't otherwise be available in normal usage
     self.mode:Enable(AddOn.Constants.Modes.Develop)
-    --if not AddOn._IsTestContext() then
-    --    AddOn.Timer.Schedule(function() AddOn:ScheduleRepeatingTimer(function() collectgarbage("collect") end, 90) end)
-    --end
     --@end-debug@
 
     --@debug@
@@ -167,6 +164,8 @@ function AddOn:OnEnable()
         end
     end
 
+    -- purge expired player cache entries
+    AddOn.Timer.Schedule(function() AddOn.Timer.After(2, function() Player.MaintainCache() end) end)
     -- establish guild rank
     AddOn.Timer.Schedule(function() AddOn.Timer.After(1, function() SetGuildRank() end) end)
 
@@ -244,9 +243,7 @@ function AddOn:Test(itemCount, playerCount)
     local players = {}
     if Util.Objects.IsNumber(playerCount) and IsInGuild() then
         local candidates = Util.Tables.Keys(GuildStorage:GetMembers())
-        --Logging:Debug("%s", Util.Objects.ToString(candidates))
         Util.Tables.Shuffle(candidates)
-        --Logging:Debug("%s", Util.Objects.ToString(candidates))
 
         for _ , name in pairs(candidates) do
             if Util.Objects.IsNil(name) then
@@ -262,8 +259,6 @@ function AddOn:Test(itemCount, playerCount)
                 end
             end
         end
-
-        --Logging:Debug("%s", Util.Objects.ToString(players))
     end
 
 

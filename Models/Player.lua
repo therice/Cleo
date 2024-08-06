@@ -25,14 +25,22 @@ local function InitializeCache()
             {},
             {
                 __index = function(_, id)
-                    if not AddOn.db.global.cache.player then AddOn.db.global.cache.player = {} end
+                    if not AddOn.db.global.cache.player then
+                        AddOn.db.global.cache.player = {}
+                    end
                     return AddOn.db.global.cache.player[id]
                 end,
                 __newindex = function(_, id, v)
                     AddOn.db.global.cache.player[id] = v
-                end
+                end,
             }
     )
+end
+
+local function Remove(guid)
+    if guid then
+        cache[guid] = nil
+    end
 end
 
 local function Put(player)
@@ -52,17 +60,22 @@ local function GetCacheDuration()
     end
 end
 
+local function IsCachedPlayerValid(player)
+    if player and (GetServerTime() - player.timestamp <= GetCacheDuration()) then
+        return true
+    end
+
+    return false
+end
+
 local function Get(guid)
     local player = cache[guid]
-    if player then
-        --Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
-        if GetServerTime() - player.timestamp <= GetCacheDuration() then
-            return Player:reconstitute(player)
-        else
-            Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), DateFormat.Full:format(Date(player.timestamp)))
-        end
+
+    if IsCachedPlayerValid(player) then
+        return Player:reconstitute(player)
     else
-        --Logging:Trace("Get(%s) : No cached entry", tostring(guid))
+        Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), player and DateFormat.Full:format(Date(player.timestamp)) or nil)
+        Remove(guid)
     end
 
     return nil
@@ -286,6 +299,23 @@ end
 
 function Player.ClearCache()
     AddOn.db.global.cache.player = {}
+end
+
+function Player.MaintainCache()
+    if AddOn.db then
+        -- We wrap the db as 'cache' for access (above), but cannot use it directly due to setmetatable semantics
+        -- Certainly there's a way to access it consistently, but not investing time and instead access underlying
+        -- storage directly
+        local playerCache = Util.Tables.Get(AddOn.db, "global.cache.player")
+        if playerCache then
+            for guid, entry in pairs(playerCache) do
+                if not IsCachedPlayerValid(entry) then
+                    Logging:Debug("MaintainCache(%s, %s) : Removing from player cache", guid, Util.Objects.ToString(entry))
+                    Remove(guid)
+                end
+            end
+        end
+    end
 end
 
 if AddOn._IsTestContext('Models_Player') then
