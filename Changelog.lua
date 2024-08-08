@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.12 (2024-08-08)
+* Correct regression with player information, which was introduced upon removal of tracking guild rank c7dbe77
+
 2025.0.11 (2024-08-06)
 * Purge expired player cache entries on login when addon is enabled e4b4805
 * Remove guild rank as a displayed column in loot allocation and use WOW API for calculating average item level fe2dffc
