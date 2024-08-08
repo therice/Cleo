@@ -22,13 +22,23 @@ function AddOn:SubscribeToComms()
             }
         end,
         [C.Commands.PlayerInfo] = function(data, sender)
-            Logging:Debug("PlayerInfo %s from %s", Util.Objects.ToString(data), tostring(sender))
-            local _, enchanter, enchanterLvl, ilvl = unpack(data)
+            Logging:Debug("PlayerInfo %s (%d) from %s", Util.Objects.ToString(data), #data, tostring(sender))
+
+            local enchanter, enchanterLvl, ilvl
+            if #data == 4 then
+                _, enchanter, enchanterLvl, ilvl = unpack(data)
+            elseif #data == 3 then
+                enchanter, enchanterLvl, ilvl = unpack(data)
+            else
+                Logging:Warn("Unexpected PlayerInfo %s (%d) from %s, not handling", Util.Objects.ToString(data), #data, tostring(sender))
+                return
+            end
+
             Player:Get(sender):Update({
-              guildRank = nil, --[[ deprecated, can be removed in future version --]]
-              enchanter    = enchanter,
-              enchanterLvl = enchanterLvl,
-              ilvl         = ilvl
+                guildRank    = self.NIL, --[[ deprecated, can be removed in future version --]]
+                enchanter    = enchanter,
+                enchanterLvl = enchanterLvl,
+                ilvl         = ilvl,
             })
         end,
         [C.Commands.LootTable] = function(data, sender)

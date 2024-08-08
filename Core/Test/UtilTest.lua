@@ -1,4 +1,8 @@
-local AddOnName, AddOn, Util
+local AddOnName
+--- @type AddOn
+local AddOn
+--- @type LibUtil
+local Util
 
 describe("Util", function()
     setup(function()
@@ -44,8 +48,7 @@ describe("Util", function()
             assert(AddOn:UnitClass("noguid") == 'WARRIOR')
         end)
         it("GetPlayerInfo", function()
-            local guildRank, enchanter, enchantLvl, avgItemLevel = AddOn:GetPlayerInfo()
-            assert.equal(guildRank, nil)
+            local enchanter, enchantLvl, avgItemLevel = AddOn:GetPlayerInfo()
             assert.equal(enchanter, true)
             assert.equal(enchantLvl, 298)
             -- see GetAverageItemLevel in WowApi.lua

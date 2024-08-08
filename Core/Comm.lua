@@ -190,7 +190,7 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
             Logging:Trace(
                 "SendComm(%s, %s, %s) : %s (%d)", prefix,
                 isPlayer and target:GetName() or Util.Objects.ToString(target),
-                command, '[omitted]' or Util.Objects.ToString(ScrubData(...)), #toSend
+                command, '[omitted]' --[[or Util.Objects.ToString(ScrubData(...))--]], #toSend
             )
 
             if target == C.group then

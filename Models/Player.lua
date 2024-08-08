@@ -126,9 +126,15 @@ function Player:ForTransmit()
 end
 
 function Player:Update(data)
+    --Logging:Debug("Player[Before] : %s, Data : %s", Util.Objects.ToString(self:toTable()), Util.Objects.ToString(data))
     for k, v in pairs(data) do
-        self[k] = v
+        if v == AddOn.NIL then
+            self[k] = nil
+        else
+            self[k] = v
+        end
     end
+    --Logging:Debug("Player[After] : %s", Util.Objects.ToString(self:toTable()))
     Put(self)
 end
 

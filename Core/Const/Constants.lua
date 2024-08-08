@@ -7,6 +7,11 @@ local L = LibStub("AceLocale-3.0"):GetLocale(name)
 -- shim it here so available until re-established
 if not AddOn._IsTestContext then AddOn._IsTestContext = function() return false end end
 
+local NIL = {__tostring = function() return "NIL (FAUX)" end}
+setmetatable(NIL, NIL)
+
+AddOn.NIL = NIL
+
 AddOn.Constants = {
     name        =   name,
     name_c      =   "|CFF87CEFA" .. name .. "|r",

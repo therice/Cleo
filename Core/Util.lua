@@ -287,7 +287,7 @@ function AddOn:GetPlayerInfo()
     end
 
     local avgItemLevel = GetAverageItemLevel()
-    return nil --[[ guildRank (deprecated) --]], enchanter, enchanterLvl, avgItemLevel
+    return enchanter, enchanterLvl, avgItemLevel
 end
 
 
