@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.13 (2024-08-12)
+* Correct regression with logging when no cached player entry 7a47411
+
 2025.0.12 (2024-08-08)
 * Correct regression with player information, which was introduced upon removal of tracking guild rank c7dbe77
 
