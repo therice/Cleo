@@ -71,10 +71,11 @@ end
 local function Get(guid)
     local player = cache[guid]
 
+
     if IsCachedPlayerValid(player) then
         return Player:reconstitute(player)
     else
-        Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), player and DateFormat.Full:format(Date(player.timestamp)) or nil)
+        Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), player and DateFormat.Full:format(Date(player.timestamp)) or "(nil)")
         Remove(guid)
     end
 
