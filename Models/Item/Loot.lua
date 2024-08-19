@@ -10,9 +10,12 @@ local ItemRef = AddOn.Package('Models.Item').ItemRef
 --- @type Models.Item.Item
 local  Item = AddOn.Package('Models.Item').Item
 
+---
+--- The source of loot, specifically the id and name
+---
 --- @class Models.Item.LootSlotSource
---- @field public id number @the id of the source of the loot
---- @field public name string
+--- @field public id number the id of the source of the loot
+--- @field public name string the name of the source of the loot
 local LootSlotSource = AddOn.Package('Models.Item'):Class('LootSlotSource')
 function LootSlotSource:initialize(id, name)
 	self.id = id
@@ -65,7 +68,17 @@ local function IsSameLootSource(source1, source2)
 
 end
 
+---
+--- An item in a loot slot from a loot source
+---
 --- @class Models.Item.LootSlotInfo
+--- @see Models.Item.ItemRef
+--- @field public slot number the loot slot index
+--- @field public name string the item name
+--- @field public quantity number the number of items
+--- @field public quality number the quality of the item
+--- @field public source Models.Item.LootSlotSource the source of the loot
+--- @field public looted boolean has the item been looted
 local LootSlotInfo = AddOn.Package('Models.Item'):Class('LootSlotInfo', ItemRef)
 function LootSlotInfo:initialize(slot, name, link, quantity, quality)
 	-- links work as item references
@@ -89,8 +102,15 @@ function LootSlotInfo:IsFromSource(source)
 	return IsSameLootSource(source, self.source)
 end
 
-
+---
+--- An item from a loot table, appropriate for transmitting loot table to a player
+---
 --- @class Models.Item.LootTableEntry
+--- @see Models.Item.ItemRef
+--- @field public slot number index of the item within the loot table, can be Nil if item was not added from a loot table
+--- @field public source Models.Item.LootSlotSource the source of the loot (item), can be Nil if item was not added from a loot table
+--- @field public awarded boolean has the item been awarded
+--- @field public sent boolean has the item been transmitted to players
 local LootTableEntry = AddOn.Package('Models.Item'):Class('LootTableEntry', ItemRef)
 --- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param item any  ItemID|ItemString|ItemLink
@@ -139,11 +159,18 @@ function LootTableEntry.ItemRefFromTransmit(t, session)
 	return ir
 end
 
+---
+--- An item from a loot table queue, used for triggering functions after the associated loot slot is cleared
+---
 --- @class Models.Item.LootQueueEntry
+--- @field public slot number index of the item within the loot table, can be Nil if item was not added from a loot table
+--- @field public callback function function to invoke after entry is cleared, can be nil
+--- @field public args table parameters to pass to callback function, can be nil
+--- @field public timer AceTimer timer which will invoke associated callback, can be nil
 local LootQueueEntry = AddOn.Package('Models.Item'):Class('LootQueueEntry')
 --- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param callback function function to invoke after entry is cleared, can be nil
---- @param args  table parameters to pass to callback function, can be nil
+--- @param args table parameters to pass to callback function, can be nil
 function LootQueueEntry:initialize(slot, callback, args)
 	self.slot = tonumber(slot) -- verify people are not passing non-numeric values
 	self.callback = callback
@@ -160,9 +187,15 @@ function LootQueueEntry:Cleared(awarded, reason)
 	end
 end
 
-
---- used for presenting items to a player through the Loot interface
+---
+--- An item for presentation to a player through the Loot interface
+---
 --- @class Models.Item.LootEntry
+--- @see Models.Item.Item
+--- @field public rolled boolean has player responded
+--- @field public sessions table the sessions associated with the loot
+--- @field public timeLeft number|boolean how much time is left for response or false if timeout not being used
+--- @field public responders table players who have responded to loot
 local LootEntry = AddOn.Package('Models.Item'):Class('LootEntry', Item)
 function LootEntry:initialize(session, timeout)
 	Item.initialize(self)
@@ -200,7 +233,18 @@ function LootEntry.Rolled()
 	return entry
 end
 
+---
+--- A player's response, associated with the process of allocating loot (item)
+---
 --- @class Models.Item.LootAllocateResponse
+--- @field public name string the player's name
+--- @field public class string the player's class
+--- @field public response string the player's response
+--- @field public ilvl number the player's average equipped item level
+--- @field public diff number the difference in item level between equipped and item associated with the response
+--- @field public gear1 string the item currently equipped (1)
+--- @field public gear2 string the item currently equipped (2)
+--- @field public roll number if a player roll was requested, what number was rolled
 local LootAllocateResponse = AddOn.Package('Models.Item'):Class('LootAllocateResponse')
 --- @type table
 LootAllocateResponse.Attributes = {
@@ -232,16 +276,39 @@ function LootAllocateResponse:Get(key)
 	return self[key]
 end
 
----@class Models.Item.ItemAward
+---
+--- The award of an item to a player
+---
+--- @class Models.Item.ItemAward
+--- @field public session number the session associated with the loot
+--- @field public winner string the player who is being awarded the item
+--- @field public class string the player's class
+--- @field public gear1 string the item currently equipped (1)
+--- @field public gear2 string the item currently equipped (2)
+--- @field public link string the item link
+--- @field public equipLoc string the item's equipment location
+--- @field public texture string the item's texture (picture)
+--- @field public responseId string the player's actual response
+--- @field public reason string the reason for the award, if not the player's response this does not need to be provided
+--- @field public awardReason string the name (key) of the award reason
+--- @field public normalizedReason table normalized response/reason  for consistent access (1 .. N indexes)
 local ItemAward = AddOn.Package('Models.Item'):Class('ItemAward')
+
+---
+--- An loot allocation entry, associated with an item, which tracks player's responses
+---
 --- @class Models.Item.LootAllocateEntry
+--- @see Models.Item.Item
+--- @field public session number the session associated with the loot
+--- @field public added string has entry been added to allocation interface
+--- @field public awarded string|boolean has item been awarded and if so, to whom
+--- @field public candidates  table<string, Models.Item.LootAllocateResponse> player's response to the loot
 local LootAllocateEntry = AddOn.Package('Models.Item'):Class('LootAllocateEntry', Item)
 function LootAllocateEntry:initialize(session)
 	Item.initialize(self)
 	self.session = session
 	self.added = false
-	-- initialized as boolean indicating not awarded, but once awarded
-	-- will be changed to winner's name
+	-- initialized as boolean indicating not awarded, but once awarded will be changed to winner's name
 	self.awarded = false
 	--- @type table<string, Models.Item.LootAllocateResponse>
 	self.candidates = {}

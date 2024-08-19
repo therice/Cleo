@@ -45,6 +45,9 @@ Example Item(s) via GetItemInfo
     classes = 4294967295,
 }
 --]]
+---
+--- An Item
+---
 --- @class Models.Item.Item
 local Item = AddOn.Package('Models.Item'):Class('Item')
 function Item:initialize(id, link, quality, ilvl, type, equipLoc, subType, texture, typeId, subTypeId, bindType, classes)
@@ -266,8 +269,11 @@ function Item.ClearCache(item)
 	end
 end
 
---- a reference to an item, such that the actual item but can be obtained as needed
+---
+--- A reference to an item, such that the actual item can be obtained as needed
+---
 --- @class Models.Item.ItemRef
+--- @field public item any the identifier for the item (item strings, item links, and item ids)
 local ItemRef = AddOn.Package('Models.Item'):Class('ItemRef')
 --- @param item any supports item strings, item links and item ids (not item names)
 function ItemRef:initialize(item)
