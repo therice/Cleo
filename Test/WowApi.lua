@@ -679,7 +679,7 @@ function GetSkillLineInfo(index)
 end
 
 function GetInventoryItemLink(unit, slotId)
-  return "item:" .. random(50000) ..":0:0:0:0:0:0:0:" .. random(300)
+  return "item:" .. random(50000) .. ":::::::::::::::::"
 end
 
 function GiveMasterLoot(slot, i)

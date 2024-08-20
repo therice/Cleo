@@ -419,10 +419,16 @@ function lib:ContainsItemString(item)
     return strmatch(item, "item[%-?%d:]+") and true or false
 end
 
--- itemId (1), enchantId (2), gemId1 (3), gemId2 (4), gemId3(5), gemId4(6), suffixId(7), uniqueId(8), linkLevel(9)
--- neutralization removes uniqueId and linkLevel, leaving rest unchanged
-local NEUTRALIZE_ITEM_PATTERN = "item:(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):%d*:%d*"
-local NEUTRALIZE_ITEM_REPLACEMENT = "item:%1:%2:%3:%4:%5:%6:%7::"
+-- https://wowpedia.fandom.com/wiki/ItemLink
+--  E.G. When run by character of level 2, as of Wow Version 4.4.0 (Cataclysm) there are 18 indices
+--
+--  /run local _, l = GetItemInfo(63536); print(l:gsub('\124','\124\124')) => |cffa335ee|Hitem:63536::::::::2:::::::::|h[Blade of the Witching Hour]|h|r
+--
+-- itemId (1), enchantId (2), gemId1 (3), gemId2 (4), gemId3(5), gemId4(6), suffixId(7), uniqueId(8), linkLevel(9), specializationID(10), modifiersMask(11),  itemContext(12), numModifiers(13), ...
+-- neutralization removes uniqueId, linkLevel, specializationID, modifiersMask, and numModifiers
+-- the remainder (up to index 13) are unchanged
+local NEUTRALIZE_ITEM_PATTERN = "item:(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):%d*:%d*:%d*:%d*:(%d*):%d*"
+local NEUTRALIZE_ITEM_REPLACEMENT = "item:%1:%2:%3:%4:%5:%6:%7::::%8:"
 
 -- 'item:22356:0:0:0:0:0:0:0:60' -> 'item:22356:0:0:0:0:0:0::'
 -- input can be an item link or item string, in each case the item string is neutralized
@@ -437,7 +443,9 @@ lib.HEROIC = HEROIC
 
 lib.IsItemHeroic = Util.Memoize.Memoize(
     function(itemLink)
-        if type(itemLink) == "string" and itemLink:trim() == "" then return false end
+        if type(itemLink) == "string" and itemLink:trim() == "" then
+            return false
+        end
 
         tooltip:SetOwner(UIParent, "ANCHOR_NONE")
         tooltip:SetHyperlink(itemLink)

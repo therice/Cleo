@@ -244,7 +244,9 @@ function Item.Get(item, callback)
 	end
 
 	-- Logging:Debug('Get(%s) : %s', tostring(item), tostring(itemId))
-	if not itemId then error(format("item '%s' couldn't be parsed into a cache key", tostring(item))) end
+	if not itemId then
+		error(format("item '%s' couldn't be parsed into a cache key", tostring(item)))
+	end
 
 	local instance = cache[itemId]
 	-- local cached = Util.Objects.IsSet(instance)

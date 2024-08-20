@@ -65,7 +65,6 @@ local function IsSameLootSource(source1, source2)
 
 	-- is from the same source if (creature) id is equivalent
 	return not Util.Objects.IsNil(source2) and (source1 == source2)
-
 end
 
 ---
@@ -398,8 +397,7 @@ function ItemAward:initialize(entry, candidate, reason)
 	self.texture = entry.texture
 	-- the actual player's response
 	self.responseId = cr.response
-	-- the reason for the award, if not the player's response
-	-- this does not need to be provided
+	-- the reason for the award, if not the player's response this does not need to be provided
 	self.reason = reason
 	-- the name (key) of the award reason
 	self.awardReason = awardReason

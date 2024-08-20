@@ -132,14 +132,14 @@ function AddOn:UnitClass(name)
     return select(2, UnitClass(Ambiguate(name, "short")))
 end
 
--- The link of same item generated from different players, or if two links are generated between player spec switch, are NOT the same
--- This function compares the raw item strings with link level and spec ID removed.
---
--- Also compare with unique id removed, because wowpedia says that:
--- "In-game testing indicates that the UniqueId can change from the first loot to successive loots on the same item."
--- Although log shows item in the loot actually has no uniqueId in Legion, but just in case Blizzard changes it in the future.
---
--- @return true if two items are the same item
+--- The link of same item generated from different players, or if two links are generated between player spec switch, are NOT the same
+--- This function compares the raw item strings with link level and spec ID removed.
+---
+--- Also compare with unique id removed, because wowpedia says that:
+--- "In-game testing indicates that the UniqueId can change from the first loot to successive loots on the same item."
+--- Although log shows item in the loot actually has no uniqueId in Legion, but just in case Blizzard changes it in the future.
+---
+--- @return boolean true if two items are the same item, otherwise false
 function AddOn.ItemIsItem(item1, item2)
     --Logging:Debug("ItemIsItem(%s, %s)", item1, item2)
 
@@ -442,23 +442,24 @@ local EncounterCreatures = Util.Memoize.Memoize(
             else
                 local creatureIds = LibEncounter:GetEncounterCreatureId(encounterId)
                 if creatureIds then
-                    local creatureNames = Util(creatureIds):Copy()
-                                                           :Map(
-                        function(id)
-                            local eh, name = geterrorhandler()
-                            Util.Functions.try(
-                                function()
-                                    seterrorhandler(function(msg) Logging:Warn("%s", msg) end)
-                                    name = LibEncounter:GetCreatureName(id)
+                    local creatureNames =
+                        Util(creatureIds):Copy()
+                            :Map(
+                                function(id)
+                                    local eh, name = geterrorhandler()
+                                    Util.Functions.try(
+                                        function()
+                                            seterrorhandler(function(msg) Logging:Warn("%s", msg) end)
+                                            name = LibEncounter:GetCreatureName(id)
+                                        end
+                                    ).finally(
+                                        function()
+                                            seterrorhandler(eh)
+                                        end
+                                    )
+                                    return name
                                 end
-                            )   .finally(
-                                function()
-                                    seterrorhandler(eh)
-                                end
-                            )
-                            return name
-                        end
-                    )()
+                            )()
 
                     return Util.Strings.Join(", ", Util.Tables.Values(creatureNames))
                 end

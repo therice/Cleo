@@ -978,7 +978,12 @@ function ML:OnLootOpened(...)
 					function(...)
 						-- failure processing loot slots, go no further
 						local _, autoLoot, attempt = ...
-						if not attempt then attempt = 1 else attempt = attempt + 1 end
+						if not attempt then
+							attempt = 1
+						else
+							attempt = attempt + 1
+						end
+
 						return self:ScheduleTimer("OnLootOpened", attempt / 10, C.Events.LootOpened, autoLoot, attempt)
 					end,
 					...
@@ -1424,7 +1429,9 @@ end
 function ML:HaveFreeSpaceForItem(item)
 	local itemFamily = GetItemFamily(item)
 	local equipSlot = select(4, GetItemInfoInstant(item))
-	if equipSlot == "INVTYPE_BAG" then itemFamily = 0 end
+	if equipSlot == "INVTYPE_BAG" then
+		itemFamily = 0
+	end
 
 	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
 		local freeSlots, bagFamily = GetContainerNumFreeSlots(bag)
@@ -1556,14 +1563,6 @@ function ML:GiveLoot(slot, winner, callback, ...)
 				break
 			end
 		end
-
-		-- This should be handled by the previous block and unneeded
-		--[[
-		if AddOn.UnitIsUnit(winner, C.player) then
-			Logging:Debug("GiveLoot(slot=%d) : Giving to ML", slot)
-			LootSlot(slot)
-		end
-		--]]
 	end
 end
 
