@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.14 (2024-09-01)
+* Add comments to Item and Loot classes for future reference and clarity bd10d49
+* Update handling of item links to be consistent with number of indices currently used (provided) bfdab19
+
 2025.0.13 (2024-08-12)
 * Correct regression with logging when no cached player entry 7a47411
 
