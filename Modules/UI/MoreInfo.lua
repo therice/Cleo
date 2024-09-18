@@ -159,7 +159,6 @@ function MI.Context(frame, data, row, attr)
 end
 
 function MI.UpdateMoreInfoWithLootStats(frame, data, row)
-
     local proceed, name = MI.Context(frame, data, row, 'name')
     if proceed then
         local class = AddOn:UnitClass(name)

@@ -31,7 +31,6 @@ local MasterLooterDb = AddOn.Require('MasterLooterDb')
 local ItemUtil = AddOn:GetLibrary('ItemUtil')
 -- handles to globals
 local SendChatMessage = _G.SendChatMessage
-local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots or (_G.C_Container and _G.C_Container.GetContainerNumFreeSlots)
 
 --- @class MasterLooter
 local ML = AddOn:NewModule("MasterLooter", "AceEvent-3.0", "AceBucket-3.0", "AceTimer-3.0", "AceHook-3.0")
@@ -151,6 +150,8 @@ ML.defaults = {
 		autoAddNonEquipable = false,
 		-- automatically add all BoE (Bind on Equip) items to a session
 		autoAddBoe = false,
+		-- should 'award later' be checked by default on loot session interface
+		awardLater = false,
 		-- how long (in seconds) does a candidate have to respond to an item
 		timeout = {
 			enabled = true, duration = 60
@@ -325,20 +326,20 @@ function ML:SubscribeToComms()
 	Logging:Debug("SubscribeToComms(%s)", self:GetName())
 	self.commSubscriptions = Comm():BulkSubscribe(C.CommPrefixes.Main, {
 		[C.Commands.MasterLooterDbRequest] = function(_, sender)
-			Logging:Debug("MasterLooterDbRequest from %s", tostring(sender))
+			Logging:Trace("MasterLooterDbRequest from %s", tostring(sender))
 			-- previously this was sending to group, but why? a specific person asked for it
 			-- so changed the send to be targeted to that player only
 			MasterLooterDb:Send(Player:Get(sender))
 		end,
 		[C.Commands.Reconnect] = function(_, sender)
-			Logging:Debug("Reconnect from %s", tostring(sender))
+			Logging:Trace("Reconnect from %s", tostring(sender))
 			-- only handle for other players, not ourselves
 			if not AddOn.UnitIsUnit(sender, AddOn.player) then
 				self:OnReconnectReceived(sender)
 			end
 		end,
 		[C.Commands.LootTable] = function(_, sender)
-			Logging:Debug("LootTable from %s", tostring(sender))
+			Logging:Trace("LootTable from %s", tostring(sender))
 			-- if the sender was ourself, which implies we are ML (otherwise this module wouldn't be active)
 			if AddOn.UnitIsUnit(sender, AddOn.player) then
 				-- this is only used in the loot allocation interface
@@ -354,7 +355,7 @@ function ML:SubscribeToComms()
 			end
 		end,
 		[C.Commands.HandleLootStart] = function(_, sender)
-			Logging:Debug("HandleLootStart from %s", tostring(sender))
+			Logging:Trace("HandleLootStart from %s", tostring(sender))
 			if AddOn:IsMasterLooter() then
 				self:OnHandleLootStart()
 			end
@@ -363,13 +364,13 @@ function ML:SubscribeToComms()
 end
 
 function ML:UnsubscribeFromEvents()
-	Logging:Debug("UnsubscribeFromEvents(%s)", self:GetName())
+	Logging:Trace("UnsubscribeFromEvents(%s)", self:GetName())
 	AddOn.Unsubscribe(self.eventSubscriptions)
 	self.eventSubscriptions = nil
 end
 
 function ML:UnsubscribeFromComms()
-	Logging:Debug("UnsubscribeFromComms(%s)", self:GetName())
+	Logging:Trace("UnsubscribeFromComms(%s)", self:GetName())
 	AddOn.Unsubscribe(self.commSubscriptions)
 	self.commSubscriptions = nil
 end
@@ -444,11 +445,11 @@ function ML:ConfigTableChanged(msg)
 
 	for serializedMsg, _ in pairs(msg) do
 		local success, module, val = AddOn:Deserialize(serializedMsg)
-		Logging:Debug("ConfigTableChanged(%s) : %s",  Util.Objects.ToString(module), Util.Objects.ToString(val))
+		Logging:Trace("ConfigTableChanged(%s) : %s",  Util.Objects.ToString(module), Util.Objects.ToString(val))
 		if success and Util.Strings.Equal(module, self:GetName()) then
 			if not updateDb then
 				for key in pairs(AddOn.mlDb) do
-					Logging:Debug("ConfigTableChanged() : examining %s, %s, %s", tostring(module), tostring(key), tostring(val))
+					Logging:Trace("ConfigTableChanged() : examining %s, %s, %s", tostring(module), tostring(key), tostring(val))
 					if Util.Strings.StartsWith(val, key) or Util.Strings.Equal(val, key)then
 						updateDb = true
 						break
@@ -457,7 +458,7 @@ function ML:ConfigTableChanged(msg)
 			end
 		end
 		if updateDb then
-			Logging:Debug("ConfigTableChanged() : Updating ML Db")
+			Logging:Trace("ConfigTableChanged() : Updating ML Db")
 			self:UpdateDb()
 		end
 	end
@@ -596,7 +597,7 @@ end
 function ML:StartSession()
 	Logging:Debug("StartSession(%s)", tostring(self.running))
 
-	local forTransmit = self:_GetLootTableForTransmit()
+	local forTransmit = self:GetLootTableForTransmit()
 	if self.running then
 		self:Send(C.group, C.Commands.LootTableAdd, forTransmit)
 	else
@@ -623,14 +624,20 @@ function ML:EndSession()
 	self.running = false
 	self:CancelAllTimers()
 
+	-- will only resign ML if test mode is enabled
+	-- will also disable test mode after resigning
+	AddOn.Testing:ResignMasterLooterAndDisable()
+	-- below is the previous implementation, kept as reference for an interim amount of time
+	--[[
 	if AddOn:TestModeEnabled() then
 		-- deactivate the configuration 1st
 		self:DeactivateConfiguration()
 		AddOn:StopHandleLoot()
-		AddOn:ScheduleTimer("NewMasterLooterCheck", 1)
-		AddOn.mode:Disable(C.Modes.Test)
+		AddOn:ScheduleTimer(function() AddOn:NewMasterLooterCheck() end, 1)
 		self.testGroupMembers = nil
+		AddOn.Testing:Disable()
 	end
+	--]]
 end
 
 function ML:HaveUnawardedItems()
@@ -645,10 +652,8 @@ end
 ML.AnnounceItemStrings = {
 	["&s"] = function(session) return session end,
 	["&i"] = function(_, item) return item and item.link or "[???]" end,
-	["&l"] = function(_, item)
-		return item and item:GetLevelText() or "" end,
-	["&t"] = function(_, item)
-		return item and item:GetTypeText() or "" end,
+	["&l"] = function(_, item) return item and item:GetLevelText() or "" end,
+	["&t"] = function(_, item) return item and item:GetTypeText() or "" end,
 	["&ln"] = function(_, item)
 		if item then
 			local LM = AddOn:ListsModule()
@@ -788,7 +793,7 @@ function ML:OnHandleLootStart(...)
 		elseif configSelectionMethod == SelectionEnum.Default then
 			local configs = listService:Configurations(true, true)
 			local count = configs and Util.Tables.Count(configs) or -1
-			Logging:Debug("OnHandleLootStart() : %d viable configurations (should be 1)", count)
+			Logging:Trace("OnHandleLootStart() : %d viable configurations (should be 1)", count)
 			local config = (count == 1) and Util.Tables.Values(configs)[1] or nil
 			self:ActivateConfiguration(config)
 		else
@@ -863,7 +868,7 @@ function ML:DeactivateConfiguration()
 
 	if self:IsHandled() then
 		local activeConfig = LM:GetActiveConfiguration()
-		Logging:Debug("DeactivateConfiguration(%s)", tostring(activeConfig))
+		Logging:Trace("DeactivateConfiguration(%s)", tostring(activeConfig))
 		if activeConfig then
 			LM:DeactivateConfiguration(activeConfig.config)
 			AddOn:Send(C.group, C.Commands.DeactivateConfig, activeConfig.config.id)
@@ -937,17 +942,19 @@ end
 
 function ML:OnHandleLootStop(...)
 	Logging:Debug("OnHandleLootStop")
-	-- cannot call IsHandled() here because the workflow
-	-- may have already captured the new ML (even if current player was the previous ML)
+	-- cannot call IsHandled() here as the workflow may have already captured
+	-- the new ML (even if current player was the previous ML)
 	-- see NewMasterLooterCheck()
 	if self:IsEnabled() then
-		-- todo : may need to check that active configuration is persisted and broadcast
-		-- todo : however, that should have been kept up to date as events occurred
 		self:Disable()
 	end
 end
 
+-- This is fired when looting begins, but before the loot window is shown.
+-- Loot functions like GetNumLootItems will be available until LOOT_CLOSED is fired.
+-- boolean
 function ML:OnLootReady(...)
+	--Logging:Debug("OnLootReady() : %s", Util.Objects.ToString({...}))
 	if self:IsHandled() then
 		wipe(self.lootSlots)
 
@@ -960,7 +967,7 @@ function ML:OnLootReady(...)
 		end
 
 		self.lootOpen = true
-		self:_ProcessLootSlots(
+		self:ProcessLootSlots(
 			function(...)
 				return self:ScheduleTimer("OnLootReady", 0, C.Events.LootReady, ...)
 			end,
@@ -969,24 +976,28 @@ function ML:OnLootReady(...)
 	end
 end
 
+-- Fires when a corpse is looted, after LOOT_READY.
+-- Documentation says it should be autoLoot (boolean), isFromItem (boolean)
+-- However, from testing it's only one argument which is autoLoot
 function ML:OnLootOpened(...)
+	--Logging:Debug("OnLootOpened() : %s", Util.Objects.ToString({...}))
 	if self:IsHandled() then
 		self.lootOpen = true
 
 		local rescheduled =
-			self:_ProcessLootSlots(
-					function(...)
-						-- failure processing loot slots, go no further
-						local _, autoLoot, attempt = ...
-						if not attempt then
-							attempt = 1
-						else
-							attempt = attempt + 1
-						end
+			self:ProcessLootSlots(
+				function(...)
+					-- failure processing loot slots, go no further
+					local autoLoot, attempt = ...
+					if not attempt then
+						attempt = 1
+					else
+						attempt = attempt + 1
+					end
 
-						return self:ScheduleTimer("OnLootOpened", attempt / 10, C.Events.LootOpened, autoLoot, attempt)
-					end,
-					...
+					return self:ScheduleTimer("OnLootOpened", attempt / 10, C.Events.LootOpened, autoLoot, attempt)
+				end,
+				...
 			)
 
 		-- we made it through the loot slots (not rescheduled) so we can continue
@@ -994,7 +1005,7 @@ function ML:OnLootOpened(...)
 		if Util.Objects.IsNil(rescheduled) then
 			wipe(self.lootQueue)
 			if not InCombatLockdown() then
-				self:_BuildLootTable()
+				self:BuildLootTable()
 			else
 				AddOn:Print(L['cannot_start_loot_session_in_combat'])
 			end
@@ -1002,16 +1013,21 @@ function ML:OnLootOpened(...)
 	end
 end
 
+-- Fired when a player ceases looting a corpse.
+-- Note that this will fire before the last CHAT_MSG_LOOT event for that loot.
 function ML:OnLootClosed(...)
 	if self:IsHandled() then
 		self.lootOpen = false
 	end
 end
 
+-- Fired when loot is removed from a corpse.
 function ML:OnLootSlotCleared(slot)
+	Logging:Debug("OnLootSlotCleared(%d)", slot)
 	if self:IsHandled() then
-		local loot = self:_GetLootSlot(slot)
-		Logging:Debug("OnLootSlotCleared(slot=%d) : %s", slot, Util.Objects.ToString(loot and loot:toTable() or {}))
+		local loot = self:GetLootSlot(slot)
+
+		Logging:Debug("OnLootSlotCleared(slot=%d) : %s", slot, function() return Util.Objects.ToString(loot and loot:toTable() or {}) end)
 		if loot and not loot.looted then
 			loot.looted = true
 
@@ -1055,39 +1071,36 @@ function ML:OnReconnectReceived(sender)
 	
 	-- if currently running, send the loot table
 	if self.running then
-		self:ScheduleTimer("Send", 4, player, C.Commands.LootTable, self:_GetLootTableForTransmit(true))
+		self:ScheduleTimer("Send", 4, player, C.Commands.LootTable, self:GetLootTableForTransmit(true))
 	end
 end
 
 --- @return Models.Item.LootSlotInfo
-function ML:_GetLootSlot(slot)
+function ML:GetLootSlot(slot)
 	return self.lootSlots and self.lootSlots[slot] or nil
 end
 
 --- @param onFailure function a function to be invoked should a loot slot be unhandled
---- @return table reference to any schedule that resulted from invoking onFailure
-function ML:_ProcessLootSlots(onFailure, ...)
+--- @return table the value returned from 'onFailure' or nil if all loot slots are handled
+function ML:ProcessLootSlots(onFailure, ...)
 	local numItems = GetNumLootItems()
-	Logging:Debug("_ProcessLootSlots(count=%d)", numItems)
+	Logging:Debug("ProcessLootSlots(count=%d)", numItems)
 	if numItems > 0 then
 		-- iterate through the available items, tracking each individual loot slot
 		for slot = 1, numItems do
 			-- see if we have already added it, because of callbacks
-			local loot = self:_GetLootSlot(slot)
-			local missing = (loot==nil and LootSlotHasItem(slot))
-			local itemChanged = (loot~=nil and not AddOn.ItemIsItem(loot:GetItemLink(), GetLootSlotLink(slot)))
+			local loot = self:GetLootSlot(slot)
+			local missing = (loot == nil and LootSlotHasItem(slot))
+			local itemChanged = (loot ~= nil and not AddOn.ItemIsItem(loot:GetItemLink(), GetLootSlotLink(slot)))
 
 			if missing or itemChanged then
 				Logging:Debug(
-						"_ProcessLootSlots(slot=%d, missing=%s, itemChanged=%s): attempting to (re)add info for item=%s",
-						slot, tostring(missing), tostring(itemChanged), (missing and "<missing>" or loot.item)
+				"ProcessLootSlots(slot=%d, missing=%s, itemChanged=%s): attempting to (re)add info for item=%s",
+					slot, tostring(missing), tostring(itemChanged), (missing and "<missing>" or loot.item)
 				)
 
-				if not self:_AddLootSlot(slot, ...) then
-					Logging:Warn(
-							"_ProcessLootSlots(slot=%d) : uncached item in loot table, invoking 'onFailure' (function) ...",
-							slot
-					)
+				if not self:AddLootSlot(slot, ...) then
+					Logging:Warn("ProcessLootSlots(slot=%d) : uncached item in loot table, invoking 'onFailure' (function) ...", slot)
 					return onFailure(...)
 				end
 			end
@@ -1095,9 +1108,10 @@ function ML:_ProcessLootSlots(onFailure, ...)
 	end
 end
 
+--- @param slot number the loot slot index
 --- @return boolean indicating if loot slot was handled (not necessarily added to loot slots, i.e. currency or blacklisted)
-function ML:_AddLootSlot(slot, ...)
-	Logging:Debug("_AddLootSlot(slot=%d)", slot)
+function ML:AddLootSlot(slot, ...)
+	Logging:Debug("AddLootSlot(slot=%d)", slot)
 	-- https://wow.gamepedia.com/API_GetLootSlotInfo
 	local texture, name, quantity, currencyId, quality = GetLootSlotInfo(slot)
 	if texture then
@@ -1105,15 +1119,18 @@ function ML:_AddLootSlot(slot, ...)
 		-- https://wow.gamepedia.com/API_GetLootSlotLink
 		local link = GetLootSlotLink(slot)
 		Logging:Trace(
-			"_AddLootSlot(slot=%d) : link=%s, texture=%s, name=%s, quantity=%s, currencyId=%s, quality=%s",
+			"AddLootSlot(slot=%d) : link=%s, texture=%s, name=%s, quantity=%s, currencyId=%s, quality=%s",
 			slot, tostring(link), tostring(texture), tostring(name), tostring(quantity), tostring(currencyId), tostring(quality)
 		)
 
 		if currencyId then
-			Logging:Trace("_AddLootSlot(slot=%d) : ignoring %s as it's currency", slot, tostring(link))
+			Logging:Trace("AddLootSlot(slot=%d) : ignoring %s as it's currency", slot, tostring(link))
 		elseif not AddOn:IsItemBlacklisted(link) then
 			local lootSlotInfo = LootSlotInfo(slot, name, link, quantity, quality)
-			Logging:Debug("_AddLootSlot(slot=%d) : added %s to loot table", slot, Util.Objects.ToString(lootSlotInfo:toTable()))
+			Logging:Trace(
+				"AddLootSlot(slot=%d) : added %s to loot table",
+				slot, function() return Util.Objects.ToString(lootSlotInfo:toTable()) end
+			)
 			self.lootSlots[slot] = lootSlotInfo
 		end
 
@@ -1123,8 +1140,8 @@ function ML:_AddLootSlot(slot, ...)
 	return false
 end
 
-function ML:_UpdateLootSlots()
-	Logging:Debug("_UpdateLootSlots()")
+function ML:UpdateLootSlots()
+	Logging:Debug("UpdateLootSlots()")
 
 	if not self.lootOpen then
 		Logging:Warn("UpdateLootSlots() : attempting to update loot slots without an open loot window")
@@ -1135,14 +1152,14 @@ function ML:_UpdateLootSlots()
 	for slot = 1, GetNumLootItems() do
 		local item = GetLootSlotLink(slot)
 		for session = 1, #self.lootTable do
-			local itemEntry = self:_GetLootTableEntry(session)
+			local itemEntry = self:GetLootTableEntry(session)
 			if not itemEntry.awarded and not updatedLootSlots[session] then
 				-- this will create a loot source for the entry's slot based upon the currently targeted source's loot
 				-- it may not necessarily be the same source, which we need to verify before updating anything
 				local source = LootSlotSource.FromCurrent(slot)
 				if AddOn.ItemIsItem(item, itemEntry.item) and itemEntry:IsFromSource(source) then
 					if slot ~= itemEntry.slot then
-						Logging:Debug("_UpdateLootSlots(session=%d) : item %s previously at slot=%d, now at slot=%d", session, itemEntry.item, itemEntry.slot, slot)
+						Logging:Debug("UpdateLootSlots(session=%d) : item %s previously at slot=%d, now at slot=%d", session, itemEntry.item, itemEntry.slot, slot)
 					end
 					itemEntry.slot = slot
 					updatedLootSlots[session] = true
@@ -1154,36 +1171,40 @@ function ML:_UpdateLootSlots()
 
 end
 
+--- @param session number the session id
 --- @return Models.Item.LootTableEntry
-function ML:_GetLootTableEntry(session)
+function ML:GetLootTableEntry(session)
 	return self.lootTable and self.lootTable[session] or nil
 end
 
+--- @param session number the session id
 function ML:RemoveLootTableEntry(session)
-	Logging:Debug("RemoveLootTableEntry(%d)", session)
+	--Logging:Debug("RemoveLootTableEntry(%d)", session)
 	Util.Tables.Remove(self.lootTable, session)
 end
 
-function ML:_BuildLootTable()
+function ML:BuildLootTable()
 	local numItems = GetNumLootItems()
-	Logging:Debug("_BuildLootTable(%d, %s)", numItems, tostring(self.running))
+	Logging:Debug("BuildLootTable(%d, %s)", numItems, tostring(self.running))
 
 	if numItems > 0 then
 		local LS = AddOn:LootSessionModule()
 		if self.running or LS:IsRunning() then
-			self:_UpdateLootSlots()
+			self:UpdateLootSlots()
 		else
 			for slot = 1, numItems do
-				local item = self:_GetLootSlot(slot)
-				if item then
+				local loot = self:GetLootSlot(slot)
+				if loot then
 					self:ScheduleTimer("HookLootButton", 0.5, slot)
-					local link, quantity, quality = item:GetItemLink(), item.quantity, item.quality
+
+					local link, quantity, quality = loot:GetItemLink(), loot.quantity, loot.quality
 					local autoAward, mode, winner = self:ShouldAutoAward(link, quality)
+
 					if autoAward and quantity > 0 then
-						self:AutoAward(slot, link, quality, winner, mode)
+						self:AutoAward(link, slot, quality, winner, mode)
 					elseif link and quantity > 0 and self:ShouldAddItem(link, quality) then
 						-- item that should be added
-						self:_AddLootTableEntry(slot, link, item.source)
+						self:AddLootTableItem(link, slot, loot.source)
 					elseif quantity == 0 then
 						-- currency
 						LootSlot(slot)
@@ -1191,7 +1212,7 @@ function ML:_BuildLootTable()
 				end
 			end
 
-			Logging:Debug("_BuildLootTable(%d, %s)", #self.lootTable, tostring(self.running))
+			Logging:Debug("BuildLootTable(%d, %s)", #self.lootTable, tostring(self.running))
 
 			if #self.lootTable > 0 and not self.running then
 				if self.db.profile.autoStart then
@@ -1205,19 +1226,19 @@ function ML:_BuildLootTable()
 	end
 end
 
---- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param item any  ItemID|ItemString|ItemLink
+--- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param source Models.Item.LootSlotSource source from which loot (slot) was obtained, can be Nil if item was not added from a loot table
-function ML:_AddLootTableEntry(slot, item, source)
+function ML:AddLootTableItem(item, slot, source)
 	Logging:Trace(
-		"_AddLootTableEntry(slot=%s, item=%s, source=%s)",
-		tostring(slot), tostring(item), Util.Objects.ToString(source and source:toTable() or {})
+		"AddLootTableEntry(slot=%s, item=%s, source=%s)",
+		tostring(slot), tostring(item), function() return Util.Objects.ToString(source and source:toTable() or {}) end
 	)
 
-	local entry = LootTableEntry(slot, item, source)
+	local entry = LootTableEntry(item, slot, source)
 	Util.Tables.Push(self.lootTable, entry)
 	Logging:Debug(
-			"_AddLootTableEntry() : %s (slot %d) added to loot table at index %d",
+			"AddLootTableEntry() : %s (slot %d) added to loot table at index %d",
 			tostring(item), tonumber(slot), tostring(#self.lootTable)
 	)
 
@@ -1227,15 +1248,27 @@ function ML:_AddLootTableEntry(slot, item, source)
 	if not itemRef or not itemRef:IsValid() then
 		-- no need to schedule another invocation of this
 		-- the call to GetItem() submitted a query, it should be available by time it's needed
-		Logging:Trace("_AddLootTableEntry() : item info unavailable for %s, but query has been initiated", tostring(item))
+		Logging:Trace("AddLootTableEntry() : item info unavailable for %s, but query has been initiated", tostring(item))
 	else
 		AddOn:SendMessage(C.Messages.MasterLooterAddItem, item, entry)
 	end
 end
 
-function ML:_GetLootTableForTransmit(overrideSent)
+--- @param containerItem Models.Item.ContainerItem
+function ML:AddLootTableItemFromContainer(containerItem)
+	Logging:Trace("AddLootTableItemFromContainer(%s)", function() return Util.Objects.ToString(containerItem) end)
+	-- todo : add extra stuff
+	self:AddLootTableItem(containerItem.item, nil, nil)
+	-- show the loot session with added item
+	local LS = AddOn:LootSessionModule()
+	AddOn:CallModule(LS:GetName())
+	LS:Show(self.lootTable)
+end
+
+
+function ML:GetLootTableForTransmit(overrideSent)
 	overrideSent = Util.Objects.Default(overrideSent, false)
-	Logging:Trace("_GetLootTableForTransmit(%s)", tostring(overrideSent))
+	Logging:Trace("GetLootTableForTransmit(%s)", tostring(overrideSent))
 	local lt =
 		Util(self.lootTable)
 			:Copy()
@@ -1248,7 +1281,7 @@ function ML:_GetLootTableForTransmit(overrideSent)
 					end
 				end
 			)()
-	Logging:Trace("_GetLootTableForTransmit() : %s", Util.Objects.ToString(lt))
+	Logging:Trace("GetLootTableForTransmit() : %s", Util.Objects.ToString(lt))
 	return lt
 end
 
@@ -1295,18 +1328,20 @@ function ML:LootOnClick(button)
 		end
 	end
 
-
 	local LS = AddOn:LootSessionModule()
 	local slotLink = GetLootSlotLink(slot)
-	Logging:Debug("LootOnClick() : adding to lootTable for button(slot=%s), link=%s, source=%s", tostring(slot), slotLink, Util.Objects.ToString(source:toTable()))
-	self:_AddLootTableEntry(slot, slotLink, source)
+	Logging:Debug(
+		"LootOnClick() : adding to lootTable for button(slot=%s), link=%s, source=%s",
+		tostring(slot), slotLink, Util.Objects.ToString(source:toTable())
+	)
+	self:AddLootTableItem(slotLink, slot, source)
 	AddOn:CallModule(LS:GetName())
 	LS:Show(self.lootTable)
 end
 
----@param item any
----@param quality number
----@return boolean
+---@param item string the item link
+---@param quality number the item quality
+---@return boolean should item be added to the loot table
 function ML:ShouldAddItem(item, quality)
 	local addItem = false
 
@@ -1323,7 +1358,7 @@ function ML:ShouldAddItem(item, quality)
 		end
 	end
 
-	Logging:Debug("ShouldAddItem(%s, %s) : %s", tostring(item), tostring(quality), tostring(addItem))
+	Logging:Trace("ShouldAddItem(%s, %s) : %s", tostring(item), tostring(quality), tostring(addItem))
 	return addItem
 end
 
@@ -1351,34 +1386,33 @@ ML.AwardStatus = {
 	}
 }
 
---- @param slot number index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param item string ItemID|ItemString|ItemLink
+--- @param slot number index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param source Models.Item.LootSlotSource source from which loot (slot) was obtained, can be Nil if item was not added from a loot table
 --- @param winner string name of the player which won the item
-function ML:CanGiveLoot(slot, item, source, winner)
-	local AS, lootSlotInfo = self.AwardStatus, self:_GetLootSlot(slot)
+function ML:CanGiveLoot(item, slot, source, winner)
+	local AS, loot = self.AwardStatus, self:GetLootSlot(slot)
 
 	Logging:Debug(
 		"CanGiveLoot(slot=%d, item=%s, source=%s, winner=%s) : lootsSlot=%s",
 		slot, tostring(item), Util.Objects.ToString(source and source:toTable() or nil), tostring(winner),
-		Util.Objects.ToString(lootSlotInfo and lootSlotInfo:toTable() or nil)
+		function() return Util.Objects.ToString(loot and loot:toTable() or nil) end
 	)
-
 
 	if not self.lootOpen then
 		return false, AS.Failure.LootNotOpen
-	elseif Util.Objects.IsNil(lootSlotInfo) then
+	elseif Util.Objects.IsNil(loot) then
 		return false, AS.Failure.LootGone
 	-- only check source if one was provided
-	elseif not Util.Objects.IsNil(source) and not lootSlotInfo:IsFromSource(source) then
+	elseif not Util.Objects.IsNil(source) and not loot:IsFromSource(source) then
 		return false, AS.Failure.LootSourceMismatch
-	elseif not AddOn.ItemIsItem(lootSlotInfo.item, item) then
+	elseif not AddOn.ItemIsItem(loot.item, item) then
 		return false, AS.Failure.LootGone
 	elseif AddOn.UnitIsUnit(winner, C.player) and not self:HaveFreeSpaceForItem(item) then
 		return false, AS.Failure.MLInventoryFull
 	elseif not AddOn.UnitIsUnit(winner, C.player) then
 		-- item quality below loot threshold
-		if lootSlotInfo.quality < GetLootThreshold() then
+		if loot.quality < GetLootThreshold() then
 			return false, AS.Failure.QualityBelowThreshold
 		end
 
@@ -1434,7 +1468,7 @@ function ML:HaveFreeSpaceForItem(item)
 	end
 
 	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
-		local freeSlots, bagFamily = GetContainerNumFreeSlots(bag)
+		local freeSlots, bagFamily = AddOn.C_Container.GetContainerNumFreeSlots(bag)
 		if freeSlots and freeSlots > 0 and (bagFamily == 0 or bit.band(itemFamily, bagFamily) > 0) then
 			return true
 		end
@@ -1449,7 +1483,7 @@ function ML:RegisterAndAnnounceAward(award)
 		award.session, award.winner, award:NormalizedReason().text, award.reason
 
 	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
-	local ltEntry = self:_GetLootTableEntry(session)
+	local ltEntry = self:GetLootTableEntry(session)
 	local previouslyAwarded = ltEntry.awarded
 	ltEntry.awarded = true
 
@@ -1527,7 +1561,14 @@ function ML:PrintLootError(cause, item, winner)
 end
 
 function ML:AwardResult(success, session, winner, status, callback, ...)
-	AddOn:SendMessage(success and C.Messages.AwardSuccess or C.Messages.AwardFailed, session, winner, status)
+	local lootTableEntry = self.lootTable[session]
+	-- these messages aren't currently being consumed by the addon itself
+	-- regardless of success or failure
+	AddOn:SendMessage(
+		success and C.Messages.AwardSuccess or C.Messages.AwardFailed,
+		session, winner, status, lootTableEntry and lootTableEntry.item or nil
+	)
+
 	if callback then
 		callback(success, session, winner, status, ...)
 	end
@@ -1587,22 +1628,22 @@ function ML:Award(award, callback, ...)
 
 	local AS = self.AwardStatus
 	local args = {...}
-	local ltEntry = self:_GetLootTableEntry(session)
+	local ltEntry = self:GetLootTableEntry(session)
 	local link, slot, source = award.link, ltEntry.slot, ltEntry.source
 
-	Logging:Debug("Award(session=%d) : award=%s, lte=%s, slot=%d, item=%s",
-	              session,
-	              Util.Objects.ToString(award and award:toTable() or {}),
-	              Util.Objects.ToString(ltEntry:toTable()),
-	              slot,
-	              tostring(link)
+	Logging:Debug("Award(session=%d) : award=%s, lte=%s, slot=%s, item=%s",
+		session,
+		Util.Objects.ToString(award and award:toTable() or {}),
+		Util.Objects.ToString(ltEntry:toTable()),
+		tostring(slot),
+		tostring(link)
 	)
 
-	-- previously awarded
+	-- previously awarded, change the award
 	if ltEntry.awarded then
 		self:RegisterAndAnnounceAward(award)
 		-- the entry could be missing a loot slot if not added from a loot table
-		if not ltEntry.slot then
+		if not slot then
 			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
 		else
 			self:AwardResult(true, session, winner, AS.Success.Normal, callback, ...)
@@ -1622,17 +1663,16 @@ function ML:Award(award, callback, ...)
 		end
 	end
 
-
 	if self.lootOpen then
 		local lootSlotLink = GetLootSlotLink(slot)
 		if not AddOn.ItemIsItem(link, lootSlotLink) then
 			Logging:Debug("Award(session=%d) : Loot slot (%d) changed before award completed, award=%s, slot=%s", session, slot, link, lootSlotLink)
 			-- will verify that the source is from current target's loot table before mutating loot slots
-			self:_UpdateLootSlots()
+			self:UpdateLootSlots()
 		end
 	end
 
-	local ok, cause = self:CanGiveLoot(slot, link, source, winner or AddOn.player:GetName())
+	local ok, cause = self:CanGiveLoot(link, slot, source, winner or AddOn.player:GetName())
 	Logging:Debug("Award(session=%d) : canGiveLoot=%s, cause=%s", award.session, tostring(ok), tostring(cause))
 	if not ok then
 		self:AwardResult(false, session, winner, cause, callback, ... )
@@ -1696,7 +1736,7 @@ function ML:ShouldAutoAward(item, quality)
 			"IsEligibleItem(%d) : isEquippable=%s, autoAwardType=%s",
 			itemId, tostring(isEquippable), tostring(db.autoAwardType)
 		)
-		return  (db.autoAwardType == ML.AutoAwardType.All) or
+		return (db.autoAwardType == ML.AutoAwardType.All) or
 				(db.autoAwardType == ML.AutoAwardType.Equippable and isEquippable) or
 				(db.autoAwardType == ML.AutoAwardType.NotEquippable and not isEquippable)
 	end
@@ -1705,7 +1745,6 @@ function ML:ShouldAutoAward(item, quality)
 		"ShouldAutoAward() : quality=%d, autoAwardLowerThreshold=%d, autoAwardUpperThreshold=%d, lootThreshold=%d",
 		quality, db.autoAwardLowerThreshold, db.autoAwardUpperThreshold, GetLootThreshold()
 	)
-
 
 	if db.autoAward and
 		quality >= db.autoAwardLowerThreshold and
@@ -1729,17 +1768,17 @@ function ML:ShouldAutoAward(item, quality)
 	return false
 end
 
---- @param slot number index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param item string ItemID|ItemString|ItemLink
+--- @param slot number index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param quality number item quality
 --- @param winner string name of the player which won the item
 --- @param mode string
 --- @return boolean
-function ML:AutoAward(slot, item, quality, winner, mode)
+function ML:AutoAward(item, slot, quality, winner, mode)
 	winner = AddOn:UnitName(winner)
 	Logging:Debug(
-			"AutoAward() : slot=%d, item=%s, quality=%d, winner=%s, mode=%s",
-			tonumber(slot), tostring(item), tonumber(quality), winner, tostring(mode)
+			"AutoAward() : slot=%s, item=%s, quality=%d, winner=%s, mode=%s",
+			tostring(slot), tostring(item), tonumber(quality), winner, tostring(mode)
 	)
 
 	local db = self.db.profile
@@ -1760,10 +1799,9 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 		end
 	end
 
-
 	-- don't need to provide loot source here, as auto award is implicitly from currently looted source (not from a
 	-- built loot table)
-	local canGiveLoot, cause = self:CanGiveLoot(slot, item, nil, winner)
+	local canGiveLoot, cause = self:CanGiveLoot(item, slot, nil, winner)
 	if not canGiveLoot then
 		AddOn:Print(L["cannot_auto_award"])
 		self:PrintLootError(cause, item, winner)
@@ -1785,7 +1823,7 @@ function ML:AutoAward(slot, item, quality, winner, mode)
 				awardReason = AddOn:LootAllocateModule().db.profile.awardReasons[1]
 			end
 
-			Logging:Trace("AutoAward() : awardReason=%s", Util.Objects.ToString(awardReason))
+			Logging:Trace("AutoAward() : awardReason=%s", function() return Util.Objects.ToString(awardReason) end)
 		else
 			AddOn:Print(L["cannot_auto_award"])
 			AddOn:Print(format(L["auto_award_invalid_mode"], mode))
@@ -1835,7 +1873,8 @@ function ML:Test(items, players)
 	AddOn:StartHandleLoot()
 
 	for _, item in ipairs(items) do
-		self:_AddLootTableEntry(nil, item, nil)
+		--self:AddLootTableItem(item, nil, AddOn.Testing.LootSource)
+		self:AddLootTableItem(item, nil, nil)
 	end
 
 	if self.db.profile.autoStart then

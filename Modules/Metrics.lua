@@ -9,6 +9,8 @@ local Util =  AddOn:GetLibrary("Util")
 local Comm = AddOn.RequireOnUse('Core.Comm')
 --- @type Core.Event
 local Event = AddOn.RequireOnUse('Core.Event')
+--- @type Core.Message
+local Message = AddOn.RequireOnUse('Core.Message')
 
 --- @class Metrics
 local Metrics = AddOn:NewModule("Metrics")
@@ -16,6 +18,7 @@ local Metrics = AddOn:NewModule("Metrics")
 local MetricsType = {
 	Comms  = 1,
 	Events = 2,
+	Messages = 3,
 }
 
 Metrics.MetricsType = MetricsType
@@ -27,6 +30,8 @@ function Metrics:GetMetrics(metricType)
 		rawMetrics = Comm():GetMetrics()
 	elseif Util.Objects.Equals(metricType, MetricsType.Events) then
 		rawMetrics = Event():GetMetrics()
+	elseif Util.Objects.Equals(metricType, MetricsType.Messages) then
+		rawMetrics = Message():GetMetrics()
 	end
 
 	local metrics = {}

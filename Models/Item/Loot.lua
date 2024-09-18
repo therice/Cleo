@@ -8,49 +8,48 @@ local Logging = AddOn:GetLibrary("Logging")
 --- @type Models.Item.ItemRef
 local ItemRef = AddOn.Package('Models.Item').ItemRef
 --- @type Models.Item.Item
-local  Item = AddOn.Package('Models.Item').Item
+local Item = AddOn.Package('Models.Item').Item
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 
 ---
---- The source of loot, specifically the id and name
+--- The source of loot, specifically the unique id (GUID)
 ---
---- @class Models.Item.LootSlotSource
---- @field public id number the id of the source of the loot
---- @field public name string the name of the source of the loot
-local LootSlotSource = AddOn.Package('Models.Item'):Class('LootSlotSource')
-function LootSlotSource:initialize(id, name)
+--- @class Models.Item.LootSource
+--- @field public id number the guid of the source of the loot
+local LootSource = AddOn.Package('Models.Item'):Class('LootSource')
+function LootSource:initialize(id)
 	self.id = id
-	-- may not need to collect the source's name
-	self.name = name
 end
 
-function LootSlotSource:__eq(o)
+function LootSource:__eq(o)
 	return self.id == o.id
+end
+---
+--- The source of loot obtained via a loot slot
+---
+--- @class Models.Item.LootSlotSource : Models.Item.LootSource
+--- @field public id number the guid of the source of the loot
+--- @field public slot number the slot at which loot is located
+local LootSlotSource = AddOn.Package('Models.Item'):Class('LootSlotSource', LootSource)
+function LootSlotSource:initialize(id, slot)
+	LootSource.initialize(self, id)
+	self.slot = slot
 end
 
 --- @return  Models.Item.LootSlotSource
 function LootSlotSource.FromCurrent(slot)
-	-- if no slot provided, find a random slot to use
-	-- they will be from the same source
-	if Util.Objects.IsEmpty(slot) then
-		-- it doesn't matter which one it is
-		slot = GetNumLootItems()
-	else
-		slot = tonumber(slot)
-	end
+	slot = tonumber(slot)
+	assert(slot ~= nil, "loot slot must be a number")
+	assert(slot >= 1, "loot slot must greater than or equal to 1")
 
-	local id
+	local numLootItems = GetNumLootItems()
+	assert(slot <= numLootItems, format("%d is not a valid loot slot (%d available)", slot, numLootItems))
 
-	-- https://wow.gamepedia.com/API_GetLootSourceInfo
-	-- the creature being looted
-	if not Util.Objects.IsNil(slot) and slot > 0 then
-		id = AddOn:ExtractCreatureId(GetLootSourceInfo(slot))
-	end
+	local guid = GetLootSourceInfo(slot)
+	assert(guid ~= nil, "loot slot source could not be obtained")
 
-	-- we're looting a creature, so the target will be that creature
-	-- could potentially use LibEncounter here with id
-	local name = GetUnitName("target")
-
-	return LootSlotSource(id, name)
+	return LootSlotSource(guid, slot)
 end
 
 local function IsSameLootSource(source1, source2)
@@ -70,25 +69,27 @@ end
 ---
 --- An item in a loot slot from a loot source
 ---
---- @class Models.Item.LootSlotInfo
+--- @class Models.Item.LootSlotInfo : Models.Item.ItemRef
 --- @see Models.Item.ItemRef
---- @field public slot number the loot slot index
 --- @field public name string the item name
 --- @field public quantity number the number of items
 --- @field public quality number the quality of the item
---- @field public source Models.Item.LootSlotSource the source of the loot
+--- @field public source Models.Item.LootSlotSource the source of the loot, along with slot
 --- @field public looted boolean has the item been looted
 local LootSlotInfo = AddOn.Package('Models.Item'):Class('LootSlotInfo', ItemRef)
 function LootSlotInfo:initialize(slot, name, link, quantity, quality)
 	-- links work as item references
 	ItemRef.initialize(self, link)
-	self.slot = slot
+	--- @type Models.Item.LootSlotSource
+	self.source = LootSlotSource.FromCurrent(slot)
 	self.name = name
 	self.quantity = quantity
 	self.quality = quality
-	--- @type Models.Item.LootSlotSource
-	self.source = LootSlotSource.FromCurrent(self.slot)
 	self.looted = false
+end
+
+function LootSlotInfo:GetSlot()
+	return self.source.slot
 end
 
 --- @return string the full item link
@@ -104,9 +105,9 @@ end
 ---
 --- An item from a loot table, appropriate for transmitting loot table to a player
 ---
---- @class Models.Item.LootTableEntry
+--- @class Models.Item.LootTableEntry : Models.Item.ItemRef
 --- @see Models.Item.ItemRef
---- @field public slot number index of the item within the loot table, can be Nil if item was not added from a loot table
+--- @field public slot number the index at which loot is located on the loot table, can be Nil if item was not added from a loot table
 --- @field public source Models.Item.LootSlotSource the source of the loot (item), can be Nil if item was not added from a loot table
 --- @field public awarded boolean has the item been awarded
 --- @field public sent boolean has the item been transmitted to players
@@ -114,16 +115,14 @@ local LootTableEntry = AddOn.Package('Models.Item'):Class('LootTableEntry', Item
 --- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param item any  ItemID|ItemString|ItemLink
 --- @param source Models.Item.LootSlotSource source from which loot (slot) was obtained, can be Nil if item was not added from a loot table
-function LootTableEntry:initialize(slot, item, source)
+function LootTableEntry:initialize(item, slot, source)
 	ItemRef.initialize(self, item)
 	self.slot = slot
 	--- @type Models.Item.LootSlotSource
 	self.source = source
 	self.awarded = false
 	self.sent = false
-	Logging:Trace("LootTableEntry() : %s", Util.Objects.ToString(self:toTable()))
 end
-
 
 --- @param source  Models.Item.LootSlotSource
 function LootTableEntry:IsFromSource(source)
@@ -162,7 +161,7 @@ end
 --- An item from a loot table queue, used for triggering functions after the associated loot slot is cleared
 ---
 --- @class Models.Item.LootQueueEntry
---- @field public slot number index of the item within the loot table, can be Nil if item was not added from a loot table
+--- @field public slot number the index at which loot is located on the loot table, cannot be nil
 --- @field public callback function function to invoke after entry is cleared, can be nil
 --- @field public args table parameters to pass to callback function, can be nil
 --- @field public timer AceTimer timer which will invoke associated callback, can be nil
@@ -171,7 +170,8 @@ local LootQueueEntry = AddOn.Package('Models.Item'):Class('LootQueueEntry')
 --- @param callback function function to invoke after entry is cleared, can be nil
 --- @param args table parameters to pass to callback function, can be nil
 function LootQueueEntry:initialize(slot, callback, args)
-	self.slot = tonumber(slot) -- verify people are not passing non-numeric values
+	-- verify non-numeric values aren't passed
+	self.slot = tonumber(slot)
 	self.callback = callback
 	self.args = args
 	self.timer = nil
@@ -189,7 +189,7 @@ end
 ---
 --- An item for presentation to a player through the Loot interface
 ---
---- @class Models.Item.LootEntry
+--- @class Models.Item.LootEntry : Models.Item.Item
 --- @see Models.Item.Item
 --- @field public rolled boolean has player responded
 --- @field public sessions table the sessions associated with the loot
@@ -296,7 +296,7 @@ local ItemAward = AddOn.Package('Models.Item'):Class('ItemAward')
 ---
 --- An loot allocation entry, associated with an item, which tracks player's responses
 ---
---- @class Models.Item.LootAllocateEntry
+--- @class Models.Item.LootAllocateEntry : Models.Item.Item
 --- @see Models.Item.Item
 --- @field public session number the session associated with the loot
 --- @field public added string has entry been added to allocation interface
@@ -414,4 +414,86 @@ end
 --- @return table indicating the attributes associated with the resolved reason for the item award (player response vs award reason)
 function ItemAward:NormalizedReason()
 	return self.normalizedReason
+end
+
+local State = {
+	AwardLater = "AL",
+	ToTrade    = "TT",
+}
+local StateNames = tInvert(State)
+
+---
+--- An item, which has been looted by a player (master looter) for later distribution
+---
+--- @class Models.Item.LootedItem : Models.Item.ItemRef
+--- @see Models.Item.ItemRef
+--- @field item string the item string
+--- @field state string the state of the bagged item
+--- @field guid string the item GUID, which must be in inventory (bags or bank). will be nil if not yet in inventory and evaluated
+--- @field added number timestamp when item added (seconds since the epoch), not necessarily when it entered bags
+local LootedItem = AddOn.Package('Models.Item'):Class('LootedItem', ItemRef)
+LootedItem.State = State
+LootedItem.StateNames = StateNames
+
+--- @param item Models.Item.LootedItem
+--- @param skipNilCheck boolean should validation omit check for nil attributes before evaluating
+--- @return Models.Item.LootedItem
+local function validate(item, skipNilCheck)
+	skipNilCheck = (skipNilCheck == true)
+
+	if Util.Objects.IsNil(item) then
+		error("LootedItem is nil")
+	end
+
+	-- GUID isn't available until item is actually bagged, so don't obey skipNilCheck here
+	if Util.Objects.IsSet(item.guid) and not AddOn:IsItemGUID(item.guid) then
+		error(format("%s is not a valid item GUID", tostring(item.guid)))
+	end
+
+	if (skipNilCheck or Util.Objects.IsSet(item.item)) and not ItemUtil:ContainsItemString(item.item) then
+		error(format("%s is not a valid item string", tostring(item.item)))
+	end
+
+	if (skipNilCheck or Util.Objects.IsSet(item.state)) and not StateNames[item.state] then
+		error(format("%s is not a valid item state", tostring(item.state)))
+	end
+
+	return item
+end
+
+function LootedItem:initialize(item, state, guid)
+	ItemRef.initialize(self, item)
+	-- the state of the looted item
+	self.state = state
+	-- the item GUID
+	self.guid = guid
+	-- timestamp when item added (not necessarily when it entered bags)
+	self.added = GetServerTime()
+	validate(self)
+end
+
+function LootedItem:__eq(other)
+	return AddOn.ItemIsItem(self.item, other.item) and Util.Strings.Equal(self.guid, other.guid)
+end
+
+function LootedItem:afterReconstitute(instance)
+	return validate(instance, true)
+end
+
+--- @return number time, in seconds, since item was added
+function LootedItem:TimeSinceAdded()
+	return (GetServerTime() - self.added)
+end
+
+--- @return boolean true if item's attributes are valid
+function LootedItem:IsValid()
+	return ItemUtil:ContainsItemString(self.item) and Util.Tables.ContainsKey(StateNames, self.state)
+end
+
+function LootedItem:IsAwardLater()
+	return self.state == LootedItem.State.AwardLater
+end
+
+function LootedItem:IsToTrade()
+	return self.state == LootedItem.State.ToTrade
 end

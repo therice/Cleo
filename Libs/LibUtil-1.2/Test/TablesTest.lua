@@ -226,6 +226,18 @@ describe("LibUtil", function()
             local deltac = Util.Tables.CopyUnselect({a=1, b=1, c=1}, 'a', 'b', 'c')
             assert(Util.Tables.Count(deltac) == 0)
         end)
+        it("sorts", function()
+            local t = {
+                ['a'] = {x=1,t=GetServerTime()},
+                ['b'] = {x=2,t=GetServerTime() + 100},
+                ['c'] = {x=3,t=GetServerTime() - 100},
+                ['d'] = {x=4,t=GetServerTime()},
+            }
+
+            for k, v in Util.Tables.SortedByValue(t, function(a, b) return a.t < b.t end) do
+                print(tostring(k) .. ' -> ' .. Util.Objects.ToString(v))
+            end
+        end)
         it("sorts table via user specified function", function()
             local t = {
                 [1] = {'Zed', 'Aba', 'Noas'},
@@ -234,10 +246,10 @@ describe("LibUtil", function()
 
             for k, v in pairs(t) do
                 local sorted =
-                Util.Tables.Sort(
-                    Util.Tables.Copy(v),
-                    function (a, b) return a < b end
-                )
+                    Util.Tables.Sort(
+                        Util.Tables.Copy(v),
+                        function (a, b) return a < b end
+                    )
 
                 if k == 1 then
                     assert(Util.Tables.Equals(sorted, {'Aba', 'Noas', 'Zed'}, true))
@@ -411,3 +423,47 @@ describe("LibUtil", function()
         end)
     end)
 end )
+
+--[[
+
+loadfile("/mnt/c/Users/tedri/src/Cleo/Libs/LibStub/LibStub.lua")()
+loadfile("/mnt/c/Users/tedri/src/Cleo/Libs/LibUtil-1.2/LibUtil-1.2.lua")()
+loadfile("/mnt/c/Users/tedri/src/Cleo/Libs/LibUtil-1.2/Tables.lua")()
+loadfile("/mnt/c/Users/tedri/src/Cleo/Libs/LibUtil-1.2/Objects.lua")()
+loadfile("/mnt/c/Users/tedri/src/Cleo/Libs/LibUtil-1.2/Functions.lua")()
+Util =  LibStub("LibUtil-1.2")
+
+
+a = {"a", "b", "c", "d"}
+print(a[3]) -- c
+table.remove(a, 3)
+print(a[3]) -- d
+
+a = {"a", "b", "c", "d"}
+print(Util.Tables.Count(a)) -- 4
+
+for i, _ in ipairs(a) do
+	print("#" .. Util.Tables.Count(a) .. " before(" .. i .. ") => " .. Util.Objects.ToString(a))
+	table.remove(a, i)
+	print("#" .. Util.Tables.Count(a) .. " after(" .. i .. ") => " .. Util.Objects.ToString(a))
+end
+
+#4 before(1) => {a, b, c, d}
+#3 after(1) => {b, c, d}
+#3 before(2) => {b, c, d}
+#2 after(2) => {b, d}
+
+print(Util.Objects.ToString(a)) -- {b, d}
+
+function tUnorderedRemove(tbl, index)
+	if index ~= #tbl then
+		tbl[index] = tbl[#tbl];
+	end
+	table.remove(tbl);
+end
+
+a = {"a", "b", "c", "d"}
+tUnorderedRemove(a, 2)
+print(Util.Objects.ToString(a)) -- {a, d, c}
+
+--]]

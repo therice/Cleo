@@ -257,6 +257,7 @@ function Self.Call(t, fn, index, notVal, ...)
     for i,v in pairs(t) do
         Util.Functions.Call(Util.Functions.New(fn, v), v, i, index, notVal, ...)
     end
+    return t
 end
 
 -- COUNT, SUM, MULTIPLY, MIN, MAX
@@ -296,7 +297,7 @@ function Self.Max(t, start)
     return Self.FoldL(t, math.max, start or select(2, next(t)))
 end
 
--- Count the # of occurences of given value(s)
+-- Count the # of occurrences of given value(s)
 ---@param t table
 function Self.CountOnly(t, ...)
     local n = 0
@@ -306,7 +307,7 @@ function Self.CountOnly(t, ...)
     return n
 end
 
--- Count the # of occurences of everything except given value(s)
+-- Count the # of occurrences of everything except given value(s)
 function Self.CountExcept(t, ...)
     local n = 0
     for i,v in pairs(t) do
@@ -602,11 +603,11 @@ function Self.Only(t, val, k)
 end
 
 -- Filter by not being a value
-local Fn = function (v, val) return v ~= val end
+local ExceptFn = function (v, val) return v ~= val end
 ---@param val any
 ---@param k boolean
 function Self.Except(t, val, k)
-    return Self.Filter(t, Fn, nil, nil, k, val)
+    return Self.Filter(t, ExceptFn, nil, nil, k, val)
 end
 
 -- Filter by a set of key/value pairs in a table
@@ -617,13 +618,13 @@ function Self.Where(t, k, ...)
 end
 
 -- Filter by not having a set of key/value pairs in a table
-local Fn = function (...)
+local ExceptWhereFn = function (...)
     return not Self.Matches(...)
 end
 ---@param t table
 ---@param k boolean
 function Self.ExceptWhere(t, k, ...)
-    return Self.Filter(t, Fn, nil, nil, k, ...)
+    return Self.Filter(t, ExceptWhereFn, nil, nil, k, ...)
 end
 
 -- COPY
@@ -984,9 +985,9 @@ function Self.Rotate(t, l)
 end
 
 -- Sort a table
-local Fn = function (a, b) return a > b end
+local SortFn = function (a, b) return a > b end
 function Self.Sort(t, fn)
-    fn = fn == true and Fn or Util.Functions.New(fn) or nil
+    fn = fn == true and SortFn or Util.Functions.New(fn) or nil
     table.sort(t, fn)
     return t
 end
@@ -1039,12 +1040,33 @@ local function OrderedNext(t, state)
     return
 end
 
--- Equivalent of the pairs() function on tables, but allows to iterate
--- in order
+-- Equivalent of the pairs() function on tables, but allows to iterate in order
 function Self.OrderedPairs(t)
     local u = Self.New()
     Self.CopyInto(u, t)
     return OrderedNext, u, nil
+end
+
+---
+--- return an iterator to a table sorted by its values
+---
+--- @param t table the table
+--- @param fn function optional comparison function  such that (f(x,y) is true if x < y)
+function Self.SortedByValue(t, fn)
+    fn = fn == true and SortFn or Util.Functions.New(fn) or nil
+
+    local keys = {}
+    for k in pairs(t) do
+        keys[#keys + 1] = k
+    end
+
+    table.sort(keys,function(x, y) return fn(t[x], t[y]) end)
+
+    local i = 0
+    return function()
+        i = i + 1
+        return keys[i], t[keys[i]]
+    end
 end
 
 -- Sort a table which represents an associative array
@@ -1070,13 +1092,13 @@ function Self.ASort(t, fn)
 end
 
 -- Sort a table of tables by given table keys and default values
-local Fn = function (a, b) return Util.Compare(b, a) end
+local SortByFn = function (a, b) return Util.Compare(b, a) end
 function Self.SortBy(t, ...)
     local args = type(...) == "table" and (...) or Self.Tmp(...)
     return Self.Sort(t, function (a, b)
         for i=1, #args, 3 do
             local key, default, fn = args[i], args[i+1], args[i+2]
-            fn = fn == true and Fn or Util.Functions.New(fn) or Util.Compare
+            fn = fn == true and SortByFn or Util.Functions.New(fn) or Util.Compare
 
             local cmp = fn(a and a[key] or default, b and b[key] or default)
             if cmp ~= 0 then return cmp == -1 end
@@ -1120,11 +1142,11 @@ function Self.Tuple(t, n)
 end
 
 -- Flatten a list of tables by one dimension
-local Fn = function (u, v) return Self.Merge(u, v) end
+local FlattenFn = function (u, v) return Self.Merge(u, v) end
 ---@param t table
 ---@return table
 function Self.Flatten(t)
-    return Self.FoldL(t, Fn, Self.New())
+    return Self.FoldL(t, FlattenFn, Self.New())
 end
 
 -- Wipe multiple tables at once
@@ -1206,10 +1228,10 @@ function Self.Release(...)
 end
 
 -- Unpack and release a table
-local Fn = function (t, ...) Self.Release(t) return ... end
+local UnpackFn = function (t, ...) Self.Release(t) return ... end
 ---@param t table
 function Self.Unpack(t)
-    return Fn(t, unpack(t))
+    return UnpackFn(t, unpack(t))
 end
 
 Self.Sparse = {

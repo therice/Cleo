@@ -112,7 +112,7 @@ function CustomItems:LayoutInterface(container)
 				function(self)
 					local item = self:GetParent().item
 					if item then
-						UIUtil.Link(self, item.link)
+						UIUtil.Link(item.link, self)
 					end
 				end
 		)

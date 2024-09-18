@@ -18,12 +18,14 @@ function LootSession:OnEnable()
 	self.ml = AddOn:MasterLooterModule()
 	self.loadingItems = false
 	self.showPending  = false
+	self.awardLater = false
 end
 
 function LootSession:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())
 	self.loadingItems = false
 	self.showPending  = false
+	self.awardLater = false
 	self:Hide()
 end
 
@@ -43,10 +45,14 @@ function LootSession:Start()
 		return
 	end
 
-	if InCombatLockdown() then
-		return AddOn:Print(L["session_in_combat"])
+	if self.awardLater then
+		-- todo : logic for award later
 	else
-		self.ml:StartSession()
+		if InCombatLockdown() then
+			return AddOn:Print(L["session_in_combat"])
+		else
+			self.ml:StartSession()
+		end
 	end
 
 	self:Disable()

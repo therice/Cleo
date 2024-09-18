@@ -75,7 +75,7 @@ function Lists:OnEnable()
 end
 
 function Lists:OnDisable()
-	Logging:Debug("OnEnable(%s)", self:GetName())
+	Logging:Debug("OnDisable(%s)", self:GetName())
 	self:UnregisterCallbacks()
 	self:UnsubscribeFromComms()
 	self:UnregisterMessage(C.Messages.ModeChanged)

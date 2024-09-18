@@ -16,8 +16,9 @@ local Date = AddOn.Package('Models').Date
 --- @type Models.DateFormat
 local DateFormat = AddOn.Package('Models').DateFormat
 
-local GuidPatternPremable, GuidPatternRemainder = "Player%-", "%d?%d?%d?%d%-%x%x%x%x%x%x%x%x"
-local GuidPattern = GuidPatternPremable .. GuidPatternRemainder
+-- e.g. Player-4372-0232E2F9
+local GUIDPatternPremable, GUIDPatternRemainder = "Player%-", "%d?%d?%d?%d%-%x%x%x%x%x%x%x%x"
+local GUIDPattern = GUIDPatternPremable .. GUIDPatternRemainder
 local cache
 
 local function InitializeCache()
@@ -71,7 +72,6 @@ end
 local function Get(guid)
     local player = cache[guid]
 
-
     if IsCachedPlayerValid(player) then
         return Player:reconstitute(player)
     else
@@ -123,7 +123,7 @@ function Player:GetClassId()
 end
 
 function Player:ForTransmit()
-    return Player.StripGuidPrefix(self.guid)
+    return Player.StripGUIDPrefix(self.guid)
 end
 
 function Player:Update(data)
@@ -161,10 +161,8 @@ function Player.Available()
     return Util.Objects.IsSet(name)
 end
 
-Player.Nobody = Player()
-Player.Nobody.name = "Nobody"
-Player.Nobody.class = "DEATHKNIGHT"
-Player.Nobody.guid = "Player-9999-XXXXXXXX"
+-- Memoize to avoid necessary WOW API not yet being available (i.e. UnitName in testing)
+Player.Nobody = Util.Memoize.Memoize(function() return Player("Player-9999-XXXXXXXX", "Nobody", "DEATHKNIGHT") end)
 
 function Player.Create(guid, info)
     --Logging:Debug("Create(%s) : info=%s", tostring(guid), tostring(Util.Objects.IsSet(info)))
@@ -208,7 +206,7 @@ function Player:Get(input)
     --Logging:Trace("Get(%s)", tostring(input))
 
     if Util.Strings.IsSet(input) then
-        guid = Player.ParseGuid(input)
+        guid = Player.ParseGUID(input)
         --Logging:Debug("Get(%s) : %s", tostring(input), tostring(guid))
 
         if Util.Objects.IsNil(guid) then
@@ -266,20 +264,28 @@ function Player.Resolve(p)
     end
 end
 
-function Player.ParseGuid(input)
+function Player.IsPlayerGUID(guid)
+    if Util.Strings.IsEmpty(guid) then
+        return false
+    end
+
+    return guid:match(GUIDPattern)
+end
+
+function Player.ParseGUID(input)
     local guid
 
-    if not strmatch(input, GuidPatternPremable) and strmatch(input, GuidPatternRemainder) then
+    if not strmatch(input, GUIDPatternPremable) and strmatch(input, GUIDPatternRemainder) then
         guid = "Player-" .. input
-    elseif strmatch(input, GuidPattern) then
+    elseif strmatch(input, GUIDPattern) then
         guid = input
     end
 
     return guid
 end
 
-function Player.StripGuidPrefix(input)
-    return gsub(input, GuidPatternPremable, "")
+function Player.StripGUIDPrefix(input)
+    return gsub(input, GUIDPatternPremable, "")
 end
 
 function Player.IsUnknown(p)
@@ -289,7 +295,7 @@ function Player.IsUnknown(p)
 end
 
 function Player.Unknown(guid)
-    return Player(Player.ParseGuid(guid), 'Unknown','DEATHKNIGHT', select(2, UnitFullName("player")))
+    return Player(Player.ParseGUID(guid), 'Unknown', 'DEATHKNIGHT', select(2, UnitFullName("player")))
 end
 
 function Player.ToggleCache()

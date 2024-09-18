@@ -104,7 +104,7 @@ end
 ---@param t T[]
 ---@param i I
 ---@return I, T
-local Fn = function (t, i)
+local EachFn = function (t, i)
     i = (i or 0) + 1
     if i > #t then
         Util.Tables.ReleaseTmp(t)
@@ -113,6 +113,7 @@ local Fn = function (t, i)
         return i, Self.Check(v == Util.Tables.NIL, nil, v)
     end
 end
+
 ---@generic T, I
 ---@return function(t: T[], i: I): I, T
 ---@return T
@@ -123,16 +124,17 @@ function Self.Each(...)
     elseif select("#", ...) == 0 then
         return Util.Functions.Noop
     else
-        return Fn, Util.Tables.Tmp(...)
+        return EachFn, Util.Tables.Tmp(...)
     end
 end
+
 ---@generic T, I
 ---@return function(t: T[], i: I): I, T
 ---@return T
 ---@return I
 function Self.IEach(...)
     if ... and type(...) == "table" then
-        return Fn, ...
+        return EachFn, ...
     else
         return Self.Each(...)
     end
@@ -142,7 +144,7 @@ end
 ---@param val any
 ---@return boolean
 function Self.In(val, ...)
-    for i,v in Self.Each(...) do
+    for _,v in Self.Each(...) do
         if v == val then return true end
     end
     return false

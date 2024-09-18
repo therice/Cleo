@@ -16,7 +16,7 @@ function Widget:initialize(parent, name)
 end
 
 function Widget.ResolveTexture(texture)
-    return "Interface\\Addons\\" .. AddOn.name .. "\\Media\\Textures\\" ..texture
+    return "Interface\\Addons\\" .. AddOn.name .. "\\Media\\Textures\\" .. texture
 end
 
 function Widget.Border(self, cR, cG, cB, cA, size, offsetX, offsetY)
@@ -122,17 +122,27 @@ function Widget.LayerBorder(parent, size, cR, cG, cB, cA, outside, layer)
     left:Show()
     right:Show()
 
-    parent.SetBorderColor = function(self, cR, cG, cB, cA, layer)
-        layer = Util.Objects.Default(layer, "")
-        local top, bottom, left, right =
-            GetLayerBorder("Top", self), GetLayerBorder("Bottom", self),
-            GetLayerBorder("Left", self), GetLayerBorder("Right", self)
-
+    parent.SetBorderColor = function(_, cR, cG, cB, cA)
         top:SetColorTexture(cR, cG, cB, cA)
         bottom:SetColorTexture(cR, cG, cB, cA)
         left:SetColorTexture(cR, cG, cB, cA)
         right:SetColorTexture(cR, cG, cB, cA)
     end
+
+    parent.HideBorders = function(_)
+        top:Hide()
+        bottom:Hide()
+        left:Hide()
+        right:Hide()
+    end
+
+    parent.ShowBorder = function(self, position)
+        local border = GetLayerBorder(position, self)
+        if border then
+            border:Show()
+        end
+    end
+
 end
 
 function Widget.Shadow(parent, size, edgeSize)
@@ -263,6 +273,11 @@ do
         return self
     end
 
+    local function SetAllPoints(self, relativeTo, doResize)
+        self:SetAllPoints(relativeTo, doResize)
+        return self
+    end
+
     -- width, height
     local function SetSize(self, ...)
         --Logging:Debug("Native.SetSize(%s) : %s", tostring(self:GetName()), Util.Objects.ToString(Util.Tables.New(...)))
@@ -325,7 +340,9 @@ do
     local function SetMultipleScripts(self, scripts)
         -- event, function
         for k, v in pairs(scripts) do
-            self:SetScript(k, v)
+            if self.SetScript then
+                self:SetScript(k, v)
+            end
         end
         return self
     end
@@ -397,6 +414,7 @@ do
         self.Point                      = SetPoint
         self.Size                       = SetSize
         self.NewPoint                   = SetNewPoint
+        self.AllPoints                  = SetAllPoints
         self.Scale                      = SetScale
         self.OnClick                    = OnClick
         self.OnShow                     = OnShow

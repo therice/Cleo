@@ -20,6 +20,7 @@ local Metrics = AddOn:GetModule('Metrics')
 local Tabs = {
 	[L["metrics_comms"]]    = L["metrics_comms_desc"],
 	[L["metrics_events"]]   = L["metrics_events_desc"],
+	[L["metrics_messages"]] = L["metrics_messages_desc"],
 }
 
 function Metrics:LayoutInterface(container)
@@ -38,6 +39,7 @@ function Metrics:LayoutInterface(container)
 
 	self:LayoutMetricsTab(container.tabs:Get(1), self.MetricsType.Comms)
 	self:LayoutMetricsTab(container.tabs:Get(2), self.MetricsType.Events)
+	self:LayoutMetricsTab(container.tabs:Get(3), self.MetricsType.Messages)
 
 	self.interfaceFrame = container
 end

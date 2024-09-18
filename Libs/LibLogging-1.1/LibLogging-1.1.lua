@@ -160,7 +160,7 @@ local function Log(writer, level, fmt, ...)
     -- wrap in pcall to prevent logging errors from bombing caller
     -- instead capture and report error as needed
     local success, result = pcall(
-            function(f, ...)
+        function(f, ...)
                 local args = {}
                 for i,v in pairs({ ... }) do
                     args[i] = type(v) == 'function' and v() or v
@@ -168,7 +168,6 @@ local function Log(writer, level, fmt, ...)
 
                 writer(format(f, unpack(args)))
             end,
-
             "%s [%s] (%s): " .. fmt,
             LevelColors[levelThreshold],
             "|cFFFFFACD" .. GetDateTime() .. "|r",

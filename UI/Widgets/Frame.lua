@@ -36,25 +36,18 @@ end
 
 function Frame:Create()
     local f = CreateFrame("Frame", AddOn:Qualify(self.name), self.parent, BackdropTemplateMixin and "BackdropTemplate")
-
-    f.GetStorage = function()
-        local path = 'ui.'  .. (self.name and (self.module .. '_' .. self.name) or self.module)
-        local storage = Util.Tables.Get(AddOn.db.profile, path) or {}
-        --Logging:Trace('Create() : storage at %s is %s', path, Util.Objects.ToString(storage))
-        return storage
-    end
-
-    local storage = f:GetStorage()
     f:Hide()
     f:SetFrameStrata("DIALOG")
     f:SetToplevel(true)
     f:SetWidth(self.width or 450)
     f:SetHeight(self.height or 325)
-    f:SetScale(storage.scale)
-    Window:Embed(f)
-    f:RegisterConfig(storage)
-    f:RestorePosition()
-    f:MakeDraggable()
+
+    local function getStorage()
+        local path = 'ui.'  .. (self.name and (self.module .. '_' .. self.name) or self.module)
+        local storage = Util.Tables.Get(AddOn.db.profile, path) or {}
+        return storage
+    end
+    UIUtil.EmbedExtras(f, getStorage)
     f:SetScript("OnMouseWheel", function(f,delta) if IsControlKeyDown() then Window.OnMouseWheel(f,delta) end end)
     f:SetScript("OnKeyDown",
             function(self, key)
@@ -99,7 +92,7 @@ function Frame:Create()
     self:CreateContent(f)
     self:EmbedScalingSupport(f)
     self:CreateButtons(f)
-    self:EmbedMinimizeSupport(f)
+    UIUtil.EmbedMinimizeSupport(f)
     NativeUI:TrackFrame(f)
 
     BaseWidget.Mod(
@@ -135,11 +128,10 @@ function Frame:CreateTitle(f)
             if frame:GetScale() and frame:GetLeft() and frame:GetRight() and frame:GetTop() and frame:GetBottom() then
                 frame:SavePosition()
             end
-            if self.lastClick and GetTime() - self.lastClick <= 0.5 then
-                self.lastClick = nil
-                if frame.minimized then frame:Maximize() else frame:Minimize() end
-            else
-                self.lastClick = GetTime()
+
+            --- @see UIUtil.EmbedMinimizeSupport
+            if frame.OnMouseUp then
+                frame:OnMouseUp()
             end
         end)
 
@@ -277,33 +269,5 @@ function Frame:CreateButtons(f)
     f.close = close
 end
 
-local _MinimizePrototype = {
-    minimized = false,
-    IsMinimized = function(f)
-        return f.minimized
-    end,
-    Minimize = function(f)
-        if not f.minimized then
-            if f.content then f.content:Hide() else f:Hide() end
-            if f.border then f.border:Hide() end
-            if f.HideShadow then f:HideShadow() end
-            f.minimized = true
-        end
-    end,
-    Maximize = function(f)
-        if f.minimized then
-            if f.content then f.content:Show() else f:Show() end
-            if f.border then f.border:Show() end
-            if f.ShowShadow then f:ShowShadow() end
-            f.minimized = false
-        end
-    end
-}
-
-function Frame:EmbedMinimizeSupport(f)
-    for field, obj in pairs(_MinimizePrototype) do
-        f[field] = obj
-    end
-end
 
 NativeUI:RegisterWidget('Frame', Frame)

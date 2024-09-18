@@ -1,6 +1,8 @@
 local Lib = LibStub("LibRx-1.1", true)
 local Observer = Lib.rx.Observer
 
+if not Lib or Lib:_ClassDefined('rx', 'Observable') then return end
+
 --- @class Observable
 local Observable = Lib:_DefineClass('rx', 'Observable')
 Observable.__index = Observable

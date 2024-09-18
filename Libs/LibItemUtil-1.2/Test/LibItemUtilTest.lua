@@ -1,3 +1,4 @@
+--- @type LibItemUtil
 local ItemUtil
 
 describe("LibItemUtil", function()

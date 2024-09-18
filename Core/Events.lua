@@ -1,4 +1,4 @@
---- @type  AddOn
+--- @type AddOn
 local _, AddOn = ...
 local L, C  = AddOn.Locale, AddOn.Constants
 --- @type LibLogging
@@ -110,7 +110,7 @@ end
 --- Fired when loot is removed from a corpse.
 --- lootSlot : number
 function AddOn:LootSlotCleared(_, ...)
-    Logging:Debug("LootSlotCleared()")
+    Logging:Debug("LootSlotCleared(%s)", Util.Objects.ToString({...}))
     self:MasterLooterModule():OnLootSlotCleared(...)
 end
 

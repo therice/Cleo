@@ -3,7 +3,9 @@ _G.random = math.random
 -- need to set random seed and invoke once to avoid non-random behavior
 math.randomseed(os.time())
 math.random()
-
+-- useful links for WOW API Stuff
+--  https://wowpedia.fandom.com/wiki/Lua_functions
+--  https://wowpedia.fandom.com/wiki/FrameXML_functions
 
 -- utility function for "dumping" a number of arguments (return a string representation of them)
 function dump(...)
@@ -65,6 +67,15 @@ _G.string.trim = function(s)
     return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
+_G.randomHexBytes = function(count)
+    local bytes = {}
+    for i = 1, count do
+        bytes[i] = string.format("%02X", math.random(0, 255))
+    end
+
+    return strjoin('', unpack(bytes))
+end
+
 _G.strtrim = _G.string.trim
 _G.strfind = string.find
 _G.gsub = string.gsub
@@ -112,15 +123,17 @@ _G.pack = table.pack
 _G.unpack = table.unpack
 _G.sort = table.sort
 
+-- https://www.townlong-yak.com/framexml/latest/Blizzard_SharedXMLBase/TableUtil.lua#60
 _G.tDeleteItem = function(tbl, item)
-    local index = 1;
-    while tbl[index] do
-        if ( item == tbl[index] ) then
+    local size = #tbl;
+    local index = size;
+    while index > 0 do
+        if item == tbl[index] then
             tremove(tbl, index);
-        else
-            index = index + 1;
         end
+        index = index - 1;
     end
+    return size - #tbl;
 end
 
 --[[ Test code for debugprofilestop
@@ -184,12 +197,14 @@ function C_Timer.After(duration, callback)
              delay = duration,
              recurring = false,
              callback = function()
-                 print(format('%s C_Timer.After[END](%d, %d, %d)', GetDateTime(), ref, duration, os.time()))
+                 print(format('%s C_Timer.After[END](%d, %d, %d)  Async(%s)', GetDateTime(), ref, duration, os.time(), tostring(_G.IsAsync())))
                  SetTime()
                  callback()
              end
          })
     else
+        print(format('%s C_Timer.After[END](%d, %d, %d)  Async(%s)', GetDateTime(), ref, duration, os.time(), tostring(_G.IsAsync())))
+        --SetTime()
         callback()
         return nil
     end
@@ -204,6 +219,7 @@ function C_Timer.Cancel(t)
         t:cancel()
     end
 end
+
 function C_Timer.IsMock()
     return true
 end
@@ -633,25 +649,6 @@ end
 _G.BACKPACK_CONTAINER = 0
 _G.NUM_BAG_SLOTS = 4
 
-_G.C_Container = {
-    FreeSlotsByContainer = nil,
-
-    _SetFreeSlotsByContainer = function(...)
-        _G.C_Container.FreeSlotsByContainer = {...}
-    end,
-    _ClearFreeSlotsByContainer = function()
-        _G.C_Container.FreeSlotsByContainer = nil
-    end,
-}
-
-_G.C_Container.GetContainerNumFreeSlots = function(_)
-    if _G.C_Container.FreeSlotsByContainer then
-        return unpack(_G.C_Container.FreeSlotsByContainer)
-    else
-        return 4, 0
-    end
-end
-
 function escapePatternSymbols(value)
     return value
 end
@@ -679,7 +676,9 @@ function GetSkillLineInfo(index)
 end
 
 function GetInventoryItemLink(unit, slotId)
-  return "item:" .. random(50000) .. ":::::::::::::::::"
+    local id = random(50000)
+    return "|cffa335ee|Hitem:" .. id .. format(":::::::::::::::::|h[%s]|h|r", "ItemName" .. id)
+    -- return "item:" .. random(50000) .. ":::::::::::::::::"
 end
 
 function GiveMasterLoot(slot, i)
@@ -803,7 +802,6 @@ function _G.C_PlayerInfo.IsConnected(playerLocation)
     return true
 end
 
-
 _G.SlashCmdList = {}
 _G.hash_SlashCmdList = {}
 
@@ -882,8 +880,9 @@ _G.CreateFont = function(name)
     font.GetFont = function(self)  return {} end
     font.SetFont = function()  end
     font.SetShadowColor = function()  end
+    font.GetShadowColor = function()  end
     font.SetShadowOffset = function()  end
-    font.SetShadowOffset = function()  end
+    font.GetShadowOffset = function()  end
     font.SetTextColor = function()  end
 
     return font
@@ -891,6 +890,7 @@ end
 _G.GetFont = _G.CreateFont()
 _G.GameFontNormal = _G.CreateFont()
 _G.GameFontHighlightSmall = _G.CreateFont()
+_G.GameFontHighlightSmallOutline = _G.CreateFont()
 _G.GameFontNormalSmall = _G.CreateFont()
 _G.PlaySoundFile = function(...)  end
 
@@ -960,6 +960,23 @@ _G.ITEM_QUALITY4_DESC = 'Epic'
 _G.ITEM_QUALITY5_DESC = 'Legendary'
 _G.ITEM_QUALITY6_DESC = 'Artifact'
 
+--[[
+_G.Enum = {
+    ItemQuality = {
+        Poor      = 0,
+        Standard  = 1,
+        Good      = 2,
+        Rare      = 3,
+        Epic      = 4,
+        Legendary = 5,
+        Artifact  = 6,
+        Heirloom  = 7,
+        WoWToken  = 8,
+
+    }
+}
+--]]
+
 _G.INVSLOT_AMMO           = 0
 _G.INVSLOT_HEAD           = 1
 _G.INVSLOT_NECK           = 2
@@ -984,6 +1001,17 @@ _G.INVSLOT_FIRST_EQUIPPED = _G.INVSLOT_HEAD
 _G.INVSLOT_LAST_EQUIPPED  = _G.INVSLOT_TABARD
 
 _G.RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)"
+_G.BIND_TRADE_TIME_REMAINING = "You may trade this item with players that were also eligible to loot this item for the next %s."
+_G.ITEM_SOULBOUND = "Soulbound"
+_G.ITEM_ACCOUNTBOUND = "Account Bound"
+_G.ITEM_BNETACCOUNTBOUND = "Blizzard Account Bound"
+_G.INT_SPELL_DURATION_HOURS = "%d |4hour:hrs;"
+_G.INT_SPELL_DURATION_MIN = "%d min"
+_G.INT_SPELL_DURATION_SEC = "%d sec"
+_G.LOOT_ITEM_MULTIPLE = "%s receives loot: %sx%d."
+_G.LOOT_ITEM= "%s receives loot: %s."
+_G.LOOT_ITEM_SELF_MULTIPLE= "You receive loot: %sx%d."
+_G.LOOT_ITEM_SELF = "You receive loot: %s."
 
 _G.RandomRoll = function(low, high)
     local result = random(low, high)
@@ -1058,6 +1086,32 @@ function GetItemSubClassInfo(classId, subClassId)
     return ""
 end
 
-loadfile('Test/WowItemInfo.lua')()
+function Mixin(object, ...)
+    for i = 1, select("#", ...) do
+        local mixin = select(i, ...)
+        for k, v in pairs(mixin) do
+            object[k] = v
+        end
+    end
+
+    return object
+end
+
+function CreateFromMixins(...)
+    return Mixin({}, ...)
+end
+
+function CreateAndInitFromMixin(mixin, ...)
+    local object = CreateFromMixins(mixin)
+    object:Init(...)
+    return object
+end
+
+-- currently, there is a hodgepodge of WOW API implementations spread across various files
+-- this is an artifact of how addon has evolved since initial implementation and testing requirements
+-- at some point it would be create to consolidate into the API definitions exclusively
 loadfile('Test/WowApiUI.lua')()
+loadfile('Test/API/loader.lua')()
+loadfile('Test/WowItemInfo.lua')()
+
 

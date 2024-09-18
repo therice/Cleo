@@ -153,6 +153,10 @@ function AddOn:SyncModule()
     return self:GetModule("Sync")
 end
 
+--- @return LootLedger
+function AddOn:LootLedgerModule()
+    return self:GetModule("LootLedger")
+end
 
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
@@ -244,6 +248,53 @@ function AddOn:RegisterChatCommands()
                 function(count, players)
                     self:Test(tonumber(count) or 2, players and tonumber(players) or nil)
                 end
+            },
+            {
+                {'add', },
+                L['chat_commands_add'],
+                function(...)
+                    local args = { ...}
+                    Logging:Trace("ChatCommand(add) : %s, isMasterLooter=%s", Util.Objects.ToString(args), tostring(self.masterLooter))
+
+                    if self:MasterLooterModule():IsHandled()  then
+                        local function IsEligibleItemQuality(location)
+                            return Util.Objects.In(C_Item.GetItemQuality(location), 4, 5)
+                        end
+
+                        local locatedItems
+                        if Util.Objects.In(Util.Strings.Lower(args[1]), "all", "bags") then
+                            locatedItems = self:FindItemsInBagsWithTradeTimeRemaining(
+                            -- only consider epic and legendary
+                            -- may want to also consider limiting to items which aren't BOE
+                                function(location, _, _)
+                                    -- documentation says should be able to use Enum.ItemQuality, but it's inconsistent
+                                    -- e.g.It uses Standard instead of Common, Good instead of Uncommon
+                                    -- therefore use the constants for Epic (4) and Legendary (5)
+                                    --
+                                    -- Patch 9.0.1 (2020-10-13): Renamed Standard, Good, Superior fields to Common, Uncommon, Rare
+                                    return IsEligibleItemQuality(location)
+                                end
+                            )
+                        else
+                            local items = AddOn:SplitItemLinks(args)
+                            locatedItems = self:FindItemsInBagsWithTradeTimeRemaining(
+                                function(location, _, _)
+                                    local bagItemLink = C_Item.GetItemLink(location)
+                                    return IsEligibleItemQuality(location) and
+                                        Util.Tables.FindFn(items, function(i) return self.ItemIsItem(i, bagItemLink) end)
+                                end
+                            )
+                        end
+
+                        Logging:Trace("ChatCommand(add all) : items=%s", Util.Objects.ToString(locatedItems))
+
+                        for _, containerItem in pairs(locatedItems) do
+                            AddOn:MasterLooterModule():AddLootTableItemFromContainer(containerItem)
+                        end
+                    else
+                        self:Print(L["command_must_be_master_looter"])
+                    end
+                end
             }
     )
 end
@@ -253,7 +304,6 @@ function AddOn:IsMasterLooter(unit)
     --Logging:Trace("IsMasterLooter() : unit=%s, ml=%s", tostring(unit), tostring(self.masterLooter))
     return Util.Objects.IsSet(self.masterLooter) and not Player.IsUnknown(self.masterLooter) and self.masterLooter:IsValid() and AddOn.UnitIsUnit(unit, self.masterLooter)
 end
-
 
 --- @return boolean, Models.Player
 function AddOn:GetMasterLooter()
@@ -270,7 +320,8 @@ function AddOn:GetMasterLooter()
     )
 
     -- always the player when testing alone
-    if GetNumGroupMembers() == 0 and (self:TestModeEnabled() or self:DevModeEnabled()) then
+    -- if GetNumGroupMembers() == 0 and (self:TestModeEnabled() or self:DevModeEnabled()) then
+    if GetNumGroupMembers() == 0 and self:TestModeEnabled() then
         self:ScheduleTimer(
                 function()
                     if Util.Objects.IsSet(self.masterLooter) then
@@ -282,7 +333,7 @@ function AddOn:GetMasterLooter()
                 end,
                 5
         )
-        Logging:Debug("GetMasterLooter() : ML is '%s' (no group or test/dev mode)", tostring(self.player))
+        Logging:Debug("GetMasterLooter() : ML is '%s' (no group OR test mode)", tostring(self.player))
         return true, self.player
     end
 
@@ -317,7 +368,7 @@ function AddOn:NewMasterLooterCheck()
     -- ML is set, but it's not valid or an unknown player
     if Util.Objects.IsSet(self.masterLooter) and (not self.masterLooter:IsValid() or Player.IsUnknown(self.masterLooter)) then
         Logging:Warn("NewMasterLooterCheck() : Unknown Master Looter")
-        AddOn.Timer.Schedule(function() self:ScheduleTimer("NewMasterLooterCheck", 1) end)
+        AddOn.Timer.Schedule(function() AddOn.Timer.After(1, function() self:NewMasterLooterCheck() end) end)
         return
     end
 
@@ -450,8 +501,6 @@ function AddOn:OnMasterLooterDbReceived(mlDb)
 
     --Logging:Trace("OnMasterLooterDbReceived() : %s", Util.Objects.ToString(self.mlDb, 4))
 end
-
-
 
 --- this only returns a value when in test mode and a number of players has been specified, never relevant outside
 --- of test mode
@@ -872,7 +921,6 @@ function AddOn:OnLootTableAddReceived(lt)
     self:SendMessage(C.Messages.LootTableAddition, processed)
 end
 
-
 function AddOn:OnLootSessionEnd()
     if not self.enabled then return end
     self:Print(format(L["player_ended_session"], self.Ambiguate(self.masterLooter:GetName())))
@@ -880,7 +928,6 @@ function AddOn:OnLootSessionEnd()
     self:LootAllocateModule():EndSession(false)
     self.lootTable = {}
 end
-
 
 function AddOn:OnReRollReceived(sender, lt)
     --Logging:Debug("OnReRollReceived(%s) : %s", tostring(sender), Util.Objects.ToString(lt))

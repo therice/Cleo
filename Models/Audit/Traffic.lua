@@ -33,7 +33,7 @@ local DeltaParsers = {
 	[ResourceType.List]          = {},
 }
 
---- @class Models.Audit.TrafficRecord
+--- @class Models.Audit.TrafficRecord : Models.Audit.Audit
 local TrafficRecord = AuditPkg:Class('TrafficRecord', Audit)
 
 TrafficRecord.ActionType = ActionType

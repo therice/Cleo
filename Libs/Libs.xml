@@ -34,6 +34,7 @@
     <Include file="LibDialog-1.0\LibDialog-1.0.xml" />
     <Script file="LibWindow-1.1\LibWindow-1.1.lua" />
     <Include file="lib-st\lib-st.xml" />
+    <Include file="LibCandyBar-3.0\LibCandyBar-3.0.xml" />
     <Include file="MSA-DropDownMenu-1.0\MSA-DropDownMenu-1.0.xml" />
     <Include file="LibGuildStorage-1.4\LibGuildStorage-1.4.xml"/>
     <Include file="LibJSON-1.0\LibJSON-1.0.xml" />

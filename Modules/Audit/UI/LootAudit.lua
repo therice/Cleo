@@ -310,30 +310,30 @@ function LootAudit:BuildData(container)
 							:cell(entry.item)
 							:cell(""):DoCellUpdate(ST.DoCellUpdateFn(function (...) LootAudit.SetCellResponse(...) end))
 							:deleteCell(
-							function(_, d, r)
-								local name, num = d[r].entry.owner, d[r].num
+								function(_, d, r)
+									local name, num = d[r].entry.owner, d[r].num
 
-								--Logging:Trace("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
+									--Logging:Trace("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
 
-								local history = self:GetHistory()
-								history:del(name, num)
-								tremove(d, r)
+									local history = self:GetHistory()
+									history:del(name, num)
+									tremove(d, r)
 
-								for _, v in pairs(d) do
-									if v.name == name and v.num >= num then
-										v.num = v.num - 1
+									for _, v in pairs(d) do
+										if v.name == name and v.num >= num then
+											v.num = v.num - 1
+										end
+									end
+
+									self.interfaceFrame.st:SortData()
+
+									local charHistory = history:get(name)
+									if #charHistory == 0 then
+										--Logging:Trace("Last LootAudit entry deleted, removing %s", tostring(name))
+										history:del(name)
 									end
 								end
-
-								self.interfaceFrame.st:SortData()
-
-								local charHistory = history:get(name)
-								if #charHistory == 0 then
-									--Logging:Trace("Last LootAudit entry deleted, removing %s", tostring(name))
-									history:del(name)
-								end
-							end
-						)
+							)
 							:build()
 					}
 

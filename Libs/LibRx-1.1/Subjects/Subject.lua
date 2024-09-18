@@ -4,6 +4,8 @@ local Observable = Lib.rx.Observable
 local Observer = Lib.rx.Observer
 local Subscription = Lib.rx.Subscription
 
+if not Lib or Lib:_ClassDefined('rx', 'Subject') then return end
+
 --- @class rx.Subject
 -- @description Subjects function both as an Observer and as an Observable. Subjects inherit all
 -- Observable functions, including subscribe. Values can also be pushed to the Subject, which will

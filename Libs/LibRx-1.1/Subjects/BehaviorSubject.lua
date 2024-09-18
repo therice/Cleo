@@ -3,6 +3,8 @@ local Lib = LibStub("LibRx-1.1", true)
 local Subject = Lib.rx.Subject
 local Observer = Lib.rx.Observer
 
+if not Lib or Lib:_ClassDefined('rx', 'BehaviorSubject') then return end
+
 --- @class BehaviorSubject
 -- @description A Subject that tracks its current value. Provides an accessor to retrieve the most
 -- recent pushed value, and all subscribers immediately receive the latest value.

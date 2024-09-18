@@ -84,7 +84,7 @@ function LA:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())
 	self.session = 1
 	-- intentionally don't wipe loot table on disable
-	-- as the UI may still be visible and doing so will make it unsuable
+	-- as the UI may still be visible and doing so will make it unusable
 	-- wipe(self.lootTable)
 	self.alarm:Disable()
 	self:UnregisterAllMessages()

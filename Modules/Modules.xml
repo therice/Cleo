@@ -8,6 +8,7 @@
     <Script file="MasterLooter.lua" />
     <Script file="Loot.lua" />
     <Script file="LootAllocate.lua" />
+    <Script file="LootLedger.lua" />
     <Script file="VersionCheck.lua" />
     <Script file="Metrics.lua" />
     <Include file="UI\UI.xml"/>

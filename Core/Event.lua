@@ -4,6 +4,8 @@ local _, AddOn = ...
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
+--- @type AceEvent
+local AceEvent = AddOn:GetLibrary('AceEvent')
 --- @type LibRx
 local Rx = AddOn:GetLibrary("Rx")
 --- @type rx.Subject
@@ -23,13 +25,16 @@ function Events:initialize()
     -- tracks the stats for received events
     self.metricsRcv = Metrics("EventsReceived")
     self.AceEvent = {}
+
+    AceEvent:Embed(self.AceEvent)
 end
 
 --- @return rx.Subject
 function Events:Subject(event)
-    local name = event
-    if not self.subjects[name] then self.subjects[name] = Subject.create() end
-    return self.subjects[name]
+    if not self.subjects[event] then
+        self.subjects[event] = Subject.create()
+    end
+    return self.subjects[event]
 end
 
 function Events:HandleEvent(event, ...)
@@ -45,7 +50,11 @@ function Events:RegisterEvent(event)
         self.registered[event] = true
         self.AceEvent:RegisterEvent(
                 event,
-                self.metricsRcv:Timer(event):Timed(function(e, ...) return self:HandleEvent(e, ...) end)
+                self.metricsRcv:Timer(event):Timed(
+                    function(e, ...)
+                        return self:HandleEvent(e, ...)
+                    end
+                )
         )
     end
 end
@@ -61,8 +70,6 @@ local Event = AddOn.Instance(
         end
 )
 
-AddOn:GetLibrary('AceEvent'):Embed(Event.private.AceEvent)
-
 function Event:GetMetrics()
     return {self.private.metricsRcv}
 end
@@ -70,7 +77,7 @@ end
 --- @return rx.Subscription
 function Event:Subscribe(event, func)
     assert(Util.Strings.IsSet(event), "'event' was not provided")
-    assert(Util.Objects.IsFunction(func), "'func' was not provided")
+    assert(Util.Objects.IsCallable(func), "'func' was not provided")
     Logging:Trace("Subscribe(%s) : %s", tostring(event), Util.Objects.ToString(func))
     self.private:RegisterEvent(event)
     return self.private:Subject(event):subscribe(func)
@@ -83,7 +90,7 @@ function Event:BulkSubscribe(funcs)
                     Util.Tables.CountFn(
                             funcs,
                             function(v, k)
-                                if Util.Objects.IsString(k) and Util.Objects.IsFunction(v) then return 1 end
+                                if Util.Objects.IsString(k) and Util.Objects.IsCallable(v) then return 1 end
                                 return 0
                             end,
                             true, false
@@ -101,3 +108,12 @@ function Event:BulkSubscribe(funcs)
     return subs
 end
 
+function Event:Fire(event, ...)
+    local args = {...}
+    self.private.metricsRcv:Timer(event):Time(
+        function(e, ...)
+            self.private:HandleEvent(e, ...)
+        end,
+        event, unpack(args)
+    )
+end

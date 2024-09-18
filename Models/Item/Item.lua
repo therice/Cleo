@@ -72,7 +72,7 @@ local function ItemQuery(item, callback)
 	Logging:Debug("ItemQuery(%s)", tostring(item))
 
 	local function Query()
-		local name, link, rarity, ilvl, _, type, subType, _, equipLoc, texture, _, typeId, subTypeId, bindType  =
+		local name, link, rarity, ilvl, _, type, subType, _, equipLoc, texture, _, typeId, subTypeId, bindType =
 			GetItemInfo(item)
 
 		if name then
@@ -350,4 +350,29 @@ end
 
 function ItemRef.FromTransmit(ref)
 	return ItemRef(AddOn.DeSanitizeItemString(ref))
+end
+
+---
+--- An item, which is located in a player's bags
+---
+--- @class Models.Item.ContainerItem : Models.Item.ItemRef
+--- @see Models.Item.ItemRef
+--- @field bag number the state of the bagged item
+--- @field slot number the state of the bagged item
+--- @field guid string the item GUID, which uniquely represents the item in bags
+local ContainerItem = AddOn.Package('Models.Item'):Class('ContainerItem', ItemRef)
+function ContainerItem:initialize(item, bag, slot, guid)
+	ItemRef.initialize(self, item)
+	self.bag = bag
+	self.slot = slot
+	self.guid = guid
+end
+
+--- @see AddOn.GetInventoryItemTradeTimeRemaining
+function ContainerItem:TradeTimeRemaining()
+	return AddOn:GetInventoryItemTradeTimeRemaining(self.bag, self.slot)
+end
+
+function ContainerItem:tostring()
+	return Util.Objects.ToString(self:toTable())
 end

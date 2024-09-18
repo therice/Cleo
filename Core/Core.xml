@@ -4,10 +4,12 @@
     <Script file="SlashCommands.lua"/>
     <Script file="Event.lua"/>
     <Script file="Events.lua"/>
+    <Script file="Message.lua"/>
     <Script file="Comm.lua"/>
     <Script file="Comms.lua"/>
     <Script file="Core.lua"/>
     <Script file="UI.lua"/>
+    <Script file="Testing.lua"/>
     <Script file="AddOn.lua"/>
     <Include file="UI\UI.xml"/>
 </Ui>

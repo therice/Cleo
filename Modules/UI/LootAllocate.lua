@@ -19,6 +19,7 @@ local STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
 local MI = AddOn.Require('UI.MoreInfo')
 --- @type UI.DropDown
 local DropDown = AddOn.Require('UI.DropDown')
+---@type LibDialog
 local Dialog = AddOn:GetLibrary("Dialog")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
@@ -691,7 +692,7 @@ do
 				:text(function(candidate, _, self) return LA.SolicitResponseText(candidate, category, self) end)
 	end
 
-	local RighClickEntriesBuilder  =
+	local RightClickEntriesBuilder =
 		DropDown.EntryBuilder()
 				-- level 1
 		        :nextlevel()
@@ -728,12 +729,12 @@ do
 
 	-- Reannounce/Reroll entries
 	-- e.g. Reannounce -> Candidate, Reroll -> Response, etc.
-	LA.SolicitResponseCategoryEntry(RighClickEntriesBuilder, RC.Candidate)
-	LA.SolicitResponseCategoryEntry(RighClickEntriesBuilder, RC.Group)
-	LA.SolicitResponseCategoryEntry(RighClickEntriesBuilder, RC.Roll)
-	LA.SolicitResponseCategoryEntry(RighClickEntriesBuilder, RC.Response)
+	LA.SolicitResponseCategoryEntry(RightClickEntriesBuilder, RC.Candidate)
+	LA.SolicitResponseCategoryEntry(RightClickEntriesBuilder, RC.Group)
+	LA.SolicitResponseCategoryEntry(RightClickEntriesBuilder, RC.Roll)
+	LA.SolicitResponseCategoryEntry(RightClickEntriesBuilder, RC.Response)
 
-	RighClickEntriesBuilder
+	RightClickEntriesBuilder
 		-- level 3
 		:nextlevel()
 			:add():checkable(false):set('isTitle', true)
@@ -786,7 +787,7 @@ do
 				)
 				:fn(function(candidate, _, self) return LA.SolicitResponseButton(candidate, false, self) end)
 
-	LA.RightClickEntries = RighClickEntriesBuilder:build()
+	LA.RightClickEntries = RightClickEntriesBuilder:build()
 
 	LA.RightClickMenu = DropDown.RightClickMenu(
 			function() return AddOn:IsMasterLooter() end,

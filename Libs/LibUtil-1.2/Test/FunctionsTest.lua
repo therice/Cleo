@@ -58,7 +58,7 @@ describe("LibUtil", function()
 			fn()
 			fn()
 		end)
-		it("Try/Finally", function()
+		it("Try/Catch/Finally", function()
 			local finalized = false
 			Util.Functions.try(
 				function()
@@ -69,20 +69,35 @@ describe("LibUtil", function()
 					finalized = true
 				end
 			)
-
 			assert(finalized)
 
-			Util.Functions.try(
+			assert.error(function()
+				Util.Functions.try(
 					function()
 						error("try error simulated")
 					end
-			).finally(
+				).finally(
 					function()
 						finalized = false
 					end
-			)
+				)
+			end)
 
 			assert(not finalized)
+
+			local caughtErr = false
+
+			Util.Functions.try(
+				function()
+					error("try error simulated (2)")
+				end
+			).catch(
+				function(err)
+					caughtErr = true
+				end
+			)
+
+			assert(caughtErr)
 		end)
 
 	end)

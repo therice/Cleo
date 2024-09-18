@@ -27,7 +27,7 @@ local Referenceable = AddOn.Require('Models.Referenceable')
 
 local Version = SemanticVersion(1, 0, 0)
 
---- @class Models.List.List
+--- @class Models.List.List : Models.Versioned
 local List =
 	AddOn.Package('Models.List'):Class('List', Versioned)
 		:include(Hashable.Includable('sha256'))
@@ -351,7 +351,7 @@ function List.CreateInstance(configId)
 end
 
 
---- @class Models.List.ListDao
+--- @class Models.List.ListDao : Models.Dao
 local ListDao = AddOn.Package('Models.List'):Class('ListDao', Dao)
 function ListDao:initialize(module, db)
 	Dao.initialize(self, module, db, List)

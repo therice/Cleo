@@ -13,6 +13,8 @@ local addOnTestNs, testNs, loadAddon, logFileName, logFile, caller =
 
 loadAddon = params[1] or false
 
+
+
 --local copas = require('copas')
 --_G.async = copas.async
 
@@ -114,7 +116,7 @@ end
 -- It seems Wow doesn't follow the 5.1 spec for xpcall (no additional arguments),
 -- but instead the one from 5.2 where that's allowed.
 -- Try to recreate that here.
-local xpcall_orig = _G.xpcall
+_G.xpcall_orig = _G.xpcall
 function xpcall_patch()
     --there's an issue on lua5.1 with xpcall accepting function aruments, so patch it
     --_G.xpcall = function(fn, err, ...)  return Dispatchers[select("#", ...)](fn, ...) end
@@ -174,16 +176,18 @@ function GuildRosterUpdate()
     WoWAPI_FireUpdate()
 end
 
+
 local _async = false
+
 _G.IsAsync = function()
     return _async
 end
 
+
 local copas = require("copas")
 function async(thunk)
-    _async = true
-
     return function()
+        _async = true
         local e
 
         copas.loop(
@@ -191,6 +195,7 @@ function async(thunk)
                 copas.seterrorhandler(function(err, _, _)
                     e = copas.gettraceback(err)
                     print(format("copas[errorhandler] : %s", tostring(err)))
+                    _async = false
                 end)
 
                 print('copas[loop] : calling thunk')
@@ -208,6 +213,7 @@ function async(thunk)
     end
 end
 
+-- function After(reset)
 function After()
     if logFile then
         logFile:close()
@@ -218,7 +224,17 @@ function After()
     _G[addOnTestNs .. '_GetLogFile'] = nil
     _G.print = _G.print_orig
     ResetLogging()
+    --if reset then Reset() end
 end
+
+
+function Reset()
+    print("Resetting all loaded AddOns and Modules")
+    rawset(LibStub, 'libs', {})
+    rawset(LibStub, 'minors', {})
+end
+
+
 
 function NewAceDb(defaults)
     local AceDB = LibStub('AceDB-3.0')

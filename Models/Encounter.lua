@@ -10,9 +10,9 @@ local Util = AddOn:GetLibrary("Util")
 --- @field groupSize Models.Encounter
 --- @field success Models.Encounter
 local Encounter = AddOn.Package('Models'):Class('Encounter')
---- @class Models.EncounterStart
+--- @class Models.EncounterStart : Models.Encounter
 local EncounterStart = AddOn.Package('Models'):Class('EncounterStart', Encounter)
---- @class Models.EncounterEnd
+--- @class Models.EncounterEnd : Models.Encounter
 local EncounterEnd = AddOn.Package('Models'):Class('EncounterEnd', Encounter)
 
 -- https://wow.gamepedia.com/ENCOUNTER_START

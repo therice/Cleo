@@ -14,16 +14,15 @@ local LootSession = AddOn:GetModule('LootSession')
 
 local ScrollColumns =
 	ST.ColumnBuilder()
-        :column(""):width(30)   -- remove item (1)
-        :column(""):width(40)   -- item icon (2)
-        :column(""):width(50)   -- item level (3)
-        :column(""):width(160)  -- item link (4)
+		:column(""):width(30)   -- remove item (1)
+        :column(""):width(40)           -- item icon (2)
+        :column(""):width(50)           -- item level (3)
+        :column(""):width(160)          -- item link (4)
     :build()
 
 function LootSession:GetFrame()
 	if not self.frame then
-		local f = UI:NewNamed('Frame', UIParent, 'LootSession', 'LootSession', L['frame_loot_session'], 275, 305)
-
+		local f = UI:NewNamed('Frame', UIParent, 'LootSession', 'LootSession', L['frame_loot_session'], 275, 325)
 		local st = ST.New(ScrollColumns, 5, 40, nil, f)
 		-- disable sorting
 		st:RegisterEvents({
@@ -36,15 +35,24 @@ function LootSession:GetFrame()
 		st.frame:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -30)
 		st.frame:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 10, 75)
 
+		local toggle = UI:New('Checkbox', f.content)
+		toggle:SetText(L['award_later'])
+		toggle:Tooltip(L['award_later_tooltip'])
+		toggle:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 10, 43)
+		toggle:SetSize(14, 14)
+		toggle:SetChecked(self.awardLater)
+		toggle:SetScript("OnClick", function() self.awardLater = not self.awardLater end)
+		f.toggle = toggle
+
 		local start = UI:New('Button', f.content)
 		start:SetText(_G.START)
-		start:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 15, 20)
+		start:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 15, 15) -- 20
 		start:SetScript("OnClick", function() self:Start() end)
 		f.start = start
 
 		local cancel = UI:NewNamed('Button', f.content)
 		cancel:SetText(_G.CANCEL)
-		cancel:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -15, 20)
+		cancel:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -15, 15)
 		cancel:SetScript("OnClick", function() self:Cancel() end)
 		f.cancel = cancel
 
@@ -52,6 +60,7 @@ function LootSession:GetFrame()
 		f.close:SetScript("OnClick", function() self:Cancel() end)
 
 		f.Update = function()
+			self.frame.toggle:SetChecked(self.awardLater)
 			if self.ml.running then
 				self.frame.start:SetText(_G.ADD)
 			else
@@ -126,10 +135,20 @@ function LootSession:DeleteItem(session)
 	self:Show(self.ml.lootTable)
 end
 
-function LootSession:Show(items)
+function LootSession:Show(items, disableAwardLater)
+	disableAwardLater = (disableAwardLater == true)
+
 	local frame = self:GetFrame()
 	frame:Show()
 	self.showPending = false
+
+	if disableAwardLater then
+		self.awardLater = false
+		self.frame.toggle:Disable()
+	else
+		self.awardLater = self.ml.db.profile.awardLater
+		self.frame.toggle:Enable()
+	end
 
 	if items then
 		self.loadingItems = false

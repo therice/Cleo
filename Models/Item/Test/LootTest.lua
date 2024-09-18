@@ -7,16 +7,19 @@ local LootSlotInfo
 local LootTableEntry
 --- @type Models.Item.LootSlotSource
 local LootSlotSource
+--- @type Models.Item.LootedItem
+local LootedItem
 --- @type LibUtil
 local Util
 
 describe("Item Model", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Item_Loot')
-		Item, Util, LootSlotInfo, LootTableEntry, LootSlotSource =
+		Item, Util, LootSlotInfo, LootTableEntry, LootSlotSource, LootedItem =
 			AddOn.Package('Models.Item').Item, AddOn:GetLibrary('Util'),
 			AddOn.Package('Models.Item').LootSlotInfo, AddOn.Package('Models.Item').LootTableEntry,
-			AddOn.Package('Models.Item').LootSlotSource
+			AddOn.Package('Models.Item').LootSlotSource, AddOn.Package('Models.Item').LootedItem
+		SetTime()
 	end)
 
 	teardown(function()
@@ -37,12 +40,29 @@ describe("Item Model", function()
 			assert.are_not.equal(ls2, nil)
 			assert.are_not.equal(ls3, nil)
 		end)
+		it("raises errors", function()
+			assert.has.errors(function() LootSlotSource.FromCurrent() end, "loot slot must be a number")
+			assert.has.errors(function() LootSlotSource.FromCurrent(-1) end, "loot slot must greater than or equal to 1")
+
+			local _GetNumLootItems, _GetLootSourceInfo = _G.GetNumLootItems, _G.GetLootSourceInfo
+
+			_G.GetNumLootItems = function() return 1 end
+			assert.has.errors(function() LootSlotSource.FromCurrent(2) end, "2 is not a valid loot slot (1 available)")
+
+			_G.GetLootSourceInfo = function(_) return nil, 0, nil, 0 end
+			assert.has.errors(function() LootSlotSource.FromCurrent(1) end, "loot slot source could not be obtained")
+
+			finally(function()
+				_G.GetNumLootItems = _GetNumLootItems
+				_G.GetLootSourceInfo = _GetLootSourceInfo
+			end)
+		end)
 	end)
 
 	describe("LootSlotInfo", function()
 		it("is created", function()
 			local lsi = LootSlotInfo(1, "name", "item:1:0:0:0:0:0:0:0:60", 1, 4)
-			assert.equal(lsi.slot, 1)
+			assert.equal(lsi:GetSlot(), 1)
 			assert.equal(lsi.item, "item:1:0:0:0:0:0:0:0:60")
 		end)
 
@@ -67,11 +87,10 @@ describe("Item Model", function()
 			assert(not lsi1:IsFromSource(lsi2.source))
 			assert(not lsi2:IsFromSource(lsi1.source))
 
-			local source = LootSlotSource.FromCurrent()
+			local source = LootSlotSource.FromCurrent(1)
 			source.id = 99999 -- make sure it doesn't pick up a random one that could be equivalent
 			assert(not lsi1:IsFromSource(source))
 			assert(not lsi2:IsFromSource(source))
-
 
 			local lsi3 = LootSlotInfo(3, "name", "item:3:0:0:0:0:0:0:0:60", 1, 4)
 			lsi3.source = nil
@@ -82,24 +101,22 @@ describe("Item Model", function()
 
 	describe("LootTableEntry", function()
 		it("is created", function()
-			local lte = LootTableEntry(1, 18832)
+			local lte = LootTableEntry(18832, 1)
 			assert.equal(lte.slot, 1)
 			assert(not lte.awarded)
 			assert(not lte.sent)
 		end)
-
 		it("provides item", function()
-			local lte = LootTableEntry(1, 18832)
+			local lte = LootTableEntry(18832, 1)
 			local item = lte:GetItem()
 			assert(item)
 			assert.equals(item.id, 18832)
 			assert(item:IsValid())
 			assert(not item:IsBoe())
 		end)
-
 		it("supports checking if from source", function()
-			local lte1 = LootTableEntry(1, 18832, LootSlotSource.FromCurrent(1))
-			local lte2 = LootTableEntry(2, 18833, LootSlotSource.FromCurrent(2))
+			local lte1 = LootTableEntry(18832, 1, LootSlotSource.FromCurrent(1))
+			local lte2 = LootTableEntry(18833, 2, LootSlotSource.FromCurrent(2))
 
 			lte1.source.id = 123456
 			lte2.source.id = 789012
@@ -109,14 +126,69 @@ describe("Item Model", function()
 			assert(not lte1:IsFromSource(lte2.source))
 			assert(not lte2:IsFromSource(lte1.source))
 
-			local source = LootSlotSource.FromCurrent()
+			local source = LootSlotSource.FromCurrent(1)
 			source.id = 99999 -- make sure it doesn't pick up a random one that could be equivalent
 			assert(not lte1:IsFromSource(source))
 			assert(not lte2:IsFromSource(source))
 
-			local lte3 = LootTableEntry(3, 18834)
+			local lte3 = LootTableEntry(18834, 3)
 			assert(not lte1:IsFromSource(nil))
 			assert(lte3:IsFromSource(nil))
+		end)
+	end)
+
+	describe("LootedItem", function()
+		it("is created", function()
+			local li = LootedItem("item:18832:0:0:0:0:0:0:0:60", LootedItem.State.AwardLater, "Item-4372-0-400000033D4D1C15")
+			assert.equal("Item-4372-0-400000033D4D1C15", li.guid)
+			assert.equal("item:18832:0:0:0:0:0:0:0:60", li.item)
+			assert.equal(LootedItem.State.AwardLater, li.state)
+			li = LootedItem("item:18833:0:0:0:0:0:0:0:60", LootedItem.State.AwardLater)
+			assert(li.guid == nil)
+			assert.equal("item:18833:0:0:0:0:0:0:0:60", li.item)
+			assert.equal(LootedItem.State.AwardLater, li.state)
+		end)
+		it("is reconstituted", function()
+			local li = LootedItem:reconstitute({guid = 'Item-4372-0-400000033D4D1C15', item = 'item:18832:0:0:0:0:0:0:0:60', added = 1724710817, state = 'AL'})
+			assert.equal("Item-4372-0-400000033D4D1C15", li.guid)
+			assert.equal("item:18832:0:0:0:0:0:0:0:60", li.item)
+			assert.equal(LootedItem.State.AwardLater, li.state)
+			assert.equal(1724710817, li.added)
+			li = LootedItem:reconstitute({item = 'item:18833:0:0:0:0:0:0:0:60', added = 1724710818, state = 'AL'})
+			assert(li.guid == nil)
+			assert.equal("item:18833:0:0:0:0:0:0:0:60", li.item)
+			assert.equal(LootedItem.State.AwardLater, li.state)
+			assert.equal(1724710818, li.added)
+		end)
+		it("supports equality", function()
+			local item1, item2 =
+				LootedItem("|cffa335ee|Hitem:15917:::::::::::::::::|h[ItemName15917]|h|r", LootedItem.State.AwardLater, "Item-4372-0-400000033D4D1C15"),
+				LootedItem("|cffa335ee|Hitem:15917:::::::::::::::::|h[ItemName15917]|h|r", LootedItem.State.AwardLater, "Item-4372-0-400000033D4D1C15")
+			assert.equal(item1, item2)
+		end)
+		it("is validated upon creation/reconstitution", function()
+			assert.has.errors(function() LootedItem(18832, LootedItem.State.AwardLater, "Item-4372-0-") end, "Item-4372-0- is not a valid item GUID")
+			assert.has.errors(function() LootedItem(18832, LootedItem.State.AwardLater, "Item-4372-0-400000033D4D1C15") end, "18832 is not a valid item string")
+			assert.has.errors(function() LootedItem(18832, LootedItem.State.AwardLater) end, "18832 is not a valid item string")
+			assert.has.errors(function() LootedItem("item:18832:0:0:0:0:0:0:0:60", 'NA', "Item-4372-0-400000033D4D1C15") end, "NA is not a valid item state")
+			assert.has.errors(function() LootedItem("item:18832:0:0:0:0:0:0:0:60", 'NA') end, "NA is not a valid item state")
+
+			assert.has.errors(function() LootedItem:reconstitute({guid = 'Item-4372-0-', item = 18832, added = 0, state = 'AL'}) end, "Item-4372-0- is not a valid item GUID")
+			assert.has.errors(function() LootedItem:reconstitute({guid = 'Item-4372-0-400000033D4D1C15', item = 18832, added = 0, state = 'AL'}) end, "18832 is not a valid item string")
+			assert.has.errors(function() LootedItem:reconstitute({item = 18832, added = 0, state = 'AL'}) end, "18832 is not a valid item string")
+			assert.has.errors(function() LootedItem:reconstitute({guid = 'Item-4372-0-400000033D4D1C15', item = 'item:18832:0:0:0:0:0:0:0:60', added = 0, state = 'NA'}) end, "NA is not a valid item state")
+			assert.has.errors(function() LootedItem:reconstitute({ item = 'item:18832:0:0:0:0:0:0:0:60', added = 0, state = 'NA'}) end, "NA is not a valid item state")
+		end)
+		it("handles valid check", function()
+			local li = LootedItem(select(2, GetItemInfo(18832)), LootedItem.State.AwardLater, "Item-4372-0-400000033D4D1C15")
+			assert(li:IsValid())
+			--li:SetTimeRemaining(GetServerTime(), 2700)
+			--assert(li:IsValid())
+			li = LootedItem(select(2, GetItemInfo(18832)), LootedItem.State.AwardLater)
+			li.state = 'FB'
+			assert(not li:IsValid())
+			--li:SetTimeRemaining( GetServerTime(), 2700)
+			--assert(li:IsValid())
 		end)
 	end)
 end)

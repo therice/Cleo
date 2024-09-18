@@ -18,7 +18,7 @@ local ResponseOrigin = {
 	AwardReason         = 2,
 }
 
---- @class Models.Audit.LootRecord
+--- @class Models.Audit.LootRecord : Models.Audit.Audit
 local LootRecord = AuditPkg:Class('LootRecord', Audit)
 LootRecord.ResponseOrigin = ResponseOrigin
 
@@ -211,7 +211,6 @@ function LootStatisticsEntry:AddRaid(entry)
 			Util.Tables.Push(self.raids[instanceId], entry:FormattedDate())
 		end
 
-
 		self.totalled = false
 	end
 end
@@ -259,12 +258,30 @@ function LootStatisticsEntry:CalculateTotals()
 			self.totals.raids[raid] = raidCount
 			totalRaids = totalRaids + raidCount
 		end
-		self.totals.raids.count = totalRaids
 
+		self.totals.raids.count = totalRaids
 		self.totalled = true
 	end
 
-	-- {raids = {409 = 1, 249 = 2, count = 10, 469 = 5, 531 = 2}, responses = {{Main-Spec (Need), 6, 1}, {Off-Spec (Greed), 1, 2}, {Disenchant, 3, 401}, {Free, 2, 402}, {Bank, 2, 403}}, count = 14}
+	--[[
+	{
+		raids = {
+			409 = 1,
+			249 = 2,
+			469 = 5,
+			531 = 2
+			count = 10,
+		},
+		responses = {
+			{'Main-Spec (Need)', 6, 1},
+			{'Off-Spec (Greed)', 1, 2},
+			{'Disenchant', 3, 401},
+			{'Free', 2, 402},
+			{'Bank', 2, 403}
+		},
+		count = 14
+	}
+	--]]
 	return self.totals
 end
 

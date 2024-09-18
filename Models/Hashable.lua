@@ -81,5 +81,15 @@ function Hashable.Include(into, algorithm)
 end
 
 
+--- @class Models.Hashers
+local Hashers = AddOn.Instance(
+	'Models.Hashers',
+	function() return { } end
+)
+
+
+function Hashers.SHA256()
+	return Hasher(SHA['sha256'], MessagePack.pack)
+end
 
 

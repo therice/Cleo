@@ -37,15 +37,15 @@ local ButtonRefresh = AddOn.Package('UI.Widgets'):Class('ButtonRefresh', ButtonI
 local UIUtil = AddOn.Require('UI.Util')
 
 local Type = {
-    Close = 1,
-    Home  = 2,
-    Up    = 3,
-    Down  = 4,
-    Trash = 5,
-    Plus  = 6,
-    Minus = 7,
-    Left  = 8,
-    Right = 9,
+    Close      = 1,
+    Home       = 2,
+    Up         = 3,
+    Down       = 4,
+    Trash      = 5,
+    Plus       = 6,
+    Minus      = 7,
+    Left       = 8,
+    Right      = 9,
     LeftLarge  = 10,
     RightLarge = 11,
     DotDotDot  = 12,
@@ -54,7 +54,7 @@ local Type = {
 
 ButtonIcon.Type = Type
 
--- [1] => {left, right, top, bottom
+-- [1] => {left, right, top, bottom}
 local TypeMetadata = {
     [ButtonIcon.Type.Close]      = { { 0.5, 0.5625, 0.5, 0.625 }, { 1, 1, 1, .7 }, { .8, 0, 0, 1 } },
     [ButtonIcon.Type.Home]       = { { 0.1875, 0.25, 0.5, 0.625 }, { 1, 1, 1, .7 }, { 0.9, 0.75, 0, 1 } },
@@ -148,7 +148,7 @@ function ButtonIcon.SetTooltip(self, tooltip)
     return self
 end
 
--- key is CW
+-- key is Clockwise (CW)
 local TextCoord = {
     [true] = {0, 1, 1, 1, 0, 0, 1, 0},
     [false] = {0, 0, 1, 0, 0, 1, 1, 1}

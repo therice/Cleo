@@ -9,5 +9,6 @@
     <Script file="LootSession.lua" />
     <Script file="Loot.lua" />
     <Script file="LootAllocate.lua" />
+    <Script file="LootLedger.lua" />
     <Script file="Metrics.lua" />
 </Ui>
