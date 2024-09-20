@@ -707,10 +707,14 @@ ML.AwardStrings = {
 	["&s"] = function(_, _, _, _, session) return session or "" end,
 	["&p"] = function(name) return AddOn.Ambiguate(name) end,
 	["&i"] = function(_, item) return item and item.link or "[?]" end,
-	["&r"] = function(...) return select(3, ...) or "" end,
-	["&n"] = function(...) return select(4, ...) or "" end,
+	["&r"] = function(_, _, response) return response or "" end,
+	["&n"] = function(_, _, _, roll) return roll or "" end,
 	["&l"] = function(_, item) return item and item:GetLevelText() or "" end,
 	["&t"] = function(_, item) return item and item:GetTypeText() or "" end,
+	["&o"] = function(_, _, _, _, session)
+		local entry = AddOn:MasterLooterModule():GetLootTableEntry(session)
+		return entry and entry:GetOwner() or L['unknown']
+	end,
 	["&ln"] = function(_, item)
 		if item then
 			local LM = AddOn:ListsModule()
