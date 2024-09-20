@@ -146,19 +146,23 @@ end
 
 ---@param lt table<number, Models.Item.ItemRef>
 function LA:ReceiveLootTable(lt)
-	Logging:Debug("ReceiveLootTable(%d) : START", #lt)
+	Logging:Debug("ReceiveLootTable(START, %d) :", #lt)
 	self.lootTable =
 		Util(lt):Copy()
 			:Map(
 				function(ir, session)
+					Logging:Trace("ReceiveLootTable() : session=%d, data=%s", session, Util.Objects.ToString(ir.toTable and ir:toTable() or ir))
 					return LootAllocateEntry.FromItemRef(ir, session)
 				end, true
 		)()
 
 	self:Setup(self.lootTable)
-	if not AddOn.enabled then return end
+	if not AddOn.enabled then
+		return
+	end
+
 	self:Show()
-	Logging:Debug("ReceiveLootTable(%d) : END", #lt)
+	Logging:Debug("ReceiveLootTable(END, %d) :", #self.lootTable)
 end
 
 function LA:NextUnawardedSession()
@@ -181,11 +185,10 @@ end
 
 --- @return Models.Item.LootAllocateEntry
 function LA:GetEntry(session)
-	if not Util.Objects.IsNumber(session) then session = tonumber(session) end
+	session = tonumber(session)
+	assert(session, format("no session provided %s", tostring(session)))
 	local entry = self.lootTable[session]
-	if not entry then
-		error(format("no loot allocation entry available for session %d", session))
-	end
+	assert(Util.Objects.IsSet(entry), format("no loot allocation entry available for session %d", session))
 	return entry
 end
 
@@ -238,6 +241,7 @@ end
 --- @param session number the session id (if nil, will use current one)
 --- @param candidate string the candidate name
 --- @param reason table representing reason for which being awarded (if not player's response), e.g. 'Award For' in UI
+--- @return Models.Item.ItemAward
 function LA:GetItemAward(session, candidate, reason)
 	session = Util.Objects.Default(session, self.session)
 	return self:GetEntry(session):GetItemAward(candidate, reason)
@@ -306,16 +310,7 @@ function LA:AnnounceResponse(session, candidate)
 					announcement =
 						gsub(announcement, repl,
 						     escapePatternSymbols(
-								tostring(
-									fn(
-										candidate,
-										ItemRef(entry.link):GetItem(),
-										response.text,
-										nil,
-										session,
-										nil
-									)
-								)
+								tostring(fn(candidate, ItemRef(entry.link):GetItem(), response.text, nil, session))
 						     )
 						)
 				end
@@ -330,15 +325,18 @@ end
 --- @param isRoll boolean determines whether we are requesting rolls. true will request rolls and clear the current rolls.
 --- @param noAutoPass boolean determines whether we force no auto-pass
 function LA:SolicitResponse(namePredicate, sessionPredicate, isRoll, noAutoPass)
+	--- @type table<number, table<string, any>>
 	local reRollTable = {}
 
 	for session, entry in pairs(self.lootTable) do
 		local rolls = {}
 		if sessionPredicate == true or
-			(Util.Objects.IsNumber(sessionPredicate) and AddOn.ItemIsItem(self.lootTable[session].link, self.lootTable[sessionPredicate].link)) or
+			(Util.Objects.IsNumber(sessionPredicate) and AddOn.ItemIsItem(entry.link, self.lootTable[sessionPredicate].link)) or
 			(Util.Objects.IsFunction(sessionPredicate) and sessionPredicate(session)) then
 
-			Util.Tables.Push(reRollTable, self:GetEntry(session):GetReRollData(isRoll, noAutoPass))
+			Logging:Trace("SolicitResponse() : %s", Util.Objects.ToString(entry:toTable()))
+
+			Util.Tables.Push(reRollTable, entry:GetReRollData(isRoll, noAutoPass))
 
 			for name, _ in pairs(entry.candidates) do
 				if namePredicate == true or
@@ -446,7 +444,7 @@ function LA:OnLootTableAddReceived(_, lt)
 	Logging:Debug("OnLootTableAddReceived(%d) : %d", Util.Tables.Count(lt), #self.lootTable)
 	local oldLen = #self.lootTable
 	for session, entry in pairs(lt) do
-		Logging:Debug("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
+		--Logging:Trace("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
 		self.lootTable[session] = LootAllocateEntry.FromItemRef(entry, session)
 	end
 

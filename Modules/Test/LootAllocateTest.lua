@@ -1,4 +1,7 @@
-local AddOnName, AddOn, Util, Player, LootAllocateEntry, ItemRef, C
+local AddOnName
+--- @type AddOn
+local AddOn
+local Util, Player, LootAllocateEntry, ItemRef, C
 
 
 describe("LootAllocate", function()
@@ -46,9 +49,11 @@ describe("LootAllocate", function()
 			AddOn.handleLoot = true
 			AddOn.player = Player:Get("Player1")
 			AddOn.masterLooter = AddOn.player
-			AddOn:MasterLooterModule().db.profile.showLootResponses = true
-			AddOn:MasterLooterModule().db.profile.outOfRaid = false
-			AddOn:MasterLooterModule():UpdateDb()
+			local ml = AddOn:MasterLooterModule()
+			ml.db.profile.showLootResponses = true
+			ml.db.profile.outOfRaid = false
+			ml.db.profile.announceItemText = { channel = "group", text = "&s: &i Item Level (&l) Item Type (&t) Owner(&o) List(&ln)"}
+			ml:UpdateDb()
 			AddOn:CallModule("LootAllocate")
 			la = AddOn:LootAllocateModule()
 			WoWAPI_FireUpdate()
@@ -62,10 +67,12 @@ describe("LootAllocate", function()
 
 			local lt = {
 				{
-					ref = ItemRef('item:18832'):ForTransmit()
+					ref = ItemRef('item:18832'):ForTransmit(),
+					owner = "Edwin VanCleef"
 				},
 				{
-					ref = ItemRef('item:18833'):ForTransmit()
+					ref = ItemRef('item:18833'):ForTransmit(),
+					owner = "Jackburton"
 				}
 			}
 

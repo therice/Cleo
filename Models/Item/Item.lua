@@ -291,7 +291,9 @@ end
 --- followed by embedding the referenced item's attributes into the
 --- value returned by the function
 ---
---- @param into function
+--- @param into function function to invoke, which returns an object into which the ref is embedded (attributes coped into)
+--- @param ... any arguments to pass to function
+--- @return any the return value from function
 function ItemRef:Embed(into, ...)
 	local item = self:GetItem()
 	local embed = into(...)
@@ -321,13 +323,13 @@ function ItemRef.Resolve(i)
 end
 
 --[[
-|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:0:60:0:0:0:0|h[Brutality Blade]|h|r ->
-|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:::0:0:0:0|h[Brutality Blade]|h|r ->
-item:18832:2564:0:0:0:0:0:::0:0:0:0 ->
-18832:2564:0:0:0:0:0:::0:0:0:0
+|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:0:60:0:0:0:0|h[Brutality Blade]|h|r -> item:18832:2564:0:0:0:0:0:::0:0:0:0
+|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:::0:0:0:0|h[Brutality Blade]|h|r -> 18832:2564:0:0:0:0:0:::0:0:0:0
+
 --]]
--- not sure we need the actual link here for transmission, but it could contain
--- "stuff" that will eventually be relevant to presenting items to group members
+--- not sure we need the actual link here for transmission, but it could contain
+--- "stuff" that will eventually be relevant to presenting items to group members
+--- @return string
 function ItemRef:ForTransmit()
 	Logging:Trace("ForTransmit(%s)", tostring(self.item))
 	local transmit

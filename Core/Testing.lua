@@ -10,6 +10,13 @@ local LootSource = AddOn.Package('Models.Item').LootSource
 
 --- @class Testing.TestLootSource : Models.Item.LootSource
 local TestLootSource = AddOn.Package('Testing'):Class('TestLootSource', LootSource)
+function TestLootSource:initialize(id)
+	LootSource.initialize(self, id)
+end
+
+function TestLootSource:GetName()
+	return L['unknown_testing']
+end
 
 ---
 --- collection of utilities specifically intended to be used for testing/emulating functionality

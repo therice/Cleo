@@ -141,7 +141,6 @@ function AddOn:OnEnable()
     -- purge expired player cache entries
     AddOn.Timer.Schedule(function() AddOn.Timer.After(2, function() Player.MaintainCache() end) end)
 
-
     local configSupplements, lpadSupplements = {}, {}
     for name, module in self:IterateModules() do
         Logging:Debug("OnEnable(%s) : Examining module (startup) '%s'", self:GetName(), name)

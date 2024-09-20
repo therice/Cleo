@@ -1,4 +1,14 @@
-local AddOnName, AddOn, Util, Player, C, LootSlotSource
+--- @type string
+local AddOnName
+--- @type AddOn
+local AddOn
+--- @type LibUtil
+local Util
+--- @type Models.Player
+local Player
+local C
+--- @type Models.Item.CreatureLootSource
+local LootSlotSource
 
 describe("MasterLooter", function()
 	setup(function()
@@ -142,6 +152,12 @@ describe("MasterLooter", function()
 			module = nil
 		end)
 
+		--
+		-- FYI regarding semantics of testing and stubbed WOW API calls (see Testing/WowApi.lua)
+		--
+		-- GetNumLootItems returns 3
+		-- LootSlotHasItem returns true if mod 2 is not 0 (slot 1 and 3 returns true, 2 is false)
+		-- GetLootSourceInfo returns a random creature, independent of the slot
 		it("handles LOOT_READY", function()
 			WoWAPI_FireEvent("LOOT_READY")
 			assert(module:IsEnabled())
@@ -217,6 +233,7 @@ describe("MasterLooter", function()
 				whenLeader = true,
 			}
 			ml.db.profile.lcSelectionMethod = 1
+			ml.db.profile.announceItemText = { channel = "group", text = "&s: &i Item Level (&l) Item Type (&t) Owner(&o) List(&ln)"}
 			la = AddOn:LootAllocateModule()
 			PlayerEnteredWorld()
 			assert(ml:IsEnabled())
@@ -271,7 +288,7 @@ describe("MasterLooter", function()
 			ok, cause = ml:CanGiveLoot( nil, 5, nil, AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.LootGone)
-			ok, cause = ml:CanGiveLoot( nil, 1, LootSlotSource(-1, nil), AddOn.player:GetName())
+			ok, cause = ml:CanGiveLoot( nil, 1, LootSlotSource("Creature-0-4379-34-1065-46382-00076A3954", -1), AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.LootSourceMismatch)
 			local lootSlotInfo = ml:GetLootSlot(1)

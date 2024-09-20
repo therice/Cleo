@@ -155,6 +155,7 @@ function AddOn.ItemIsItem(item1, item2)
     return ItemUtil:NeutralizeItem(item1) == ItemUtil:NeutralizeItem(item2)
 end
 
+--- @return string
 function AddOn.TransmittableItemString(item)
     local transmit = ItemUtil:ItemLinkToItemString(item)
     transmit = ItemUtil:NeutralizeItem(transmit)
@@ -239,6 +240,11 @@ function AddOn:ExtractCreatureId(guid)
     end
 
     return 0
+end
+
+function AddOn:GetCreatureName(guid)
+    local creatureId = self:ExtractCreatureId(guid)
+    return creatureId > 0 and LibEncounter:GetCreatureName(creatureId) or nil
 end
 
 local ItemGUIDPattern = "Item%-%d+%-0%-%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x"

@@ -693,7 +693,8 @@ end
 --- Fetches a response for given name, based on the group leader's settings if possible
 --- @param name number|string the name or index of the response
 --- @see MasterLooterDb
---- @return table a table of attributes for named response, if available
+--- @see MasterLooter.defaults
+--- @return table a table of attributes for named response, if available. otherwise, an empty table
 function AddOn:GetResponse(name)
     --Logging:Warn('GetResponse(%s)', tostring(name))
 
@@ -797,8 +798,8 @@ function AddOn:SendLootAck(lt, skip)
 end
 
 --- @return boolean, table<number, Models.Item.ItemRef>
-function AddOn:_PreProcessLootTable(lt, uncachedCallback)
-    --Logging:Debug("_PreProcessLootTable(%d)", Util.Tables.Count(lt))
+function AddOn:PreProcessLootTable(lt, uncachedCallback)
+    --Logging:Debug("PreProcessLootTable(%d)", Util.Tables.Count(lt))
     if not self.enabled then
         for i = 1, #lt do
             self:SendResponse(self.masterLooter, i, C.Responses.Disabled)
@@ -810,10 +811,11 @@ function AddOn:_PreProcessLootTable(lt, uncachedCallback)
     -- lootTable will a table of session to LootTableEntry (as ItemRef) representations
     -- each representations will be generated via LootTableEntry:ForTransmit()
     -- ref = ItemRef:ForTransmit()
-    -- E.G.
-    -- {{ref = 15037:0:0:0:0:0:0::}, {ref = 25798:0:0:0:0:0:0::}}
+    -- E.G. {{ref = 15037:0:0:0:0:0:0::}, {ref = 25798:0:0:0:0:0:0::}}
 
     -- convert transmitted reference into a LootTableEntry
+
+    --- @type table<number, Models.Item.ItemRef>
     local interim = Util.Tables.Map(
             Util.Tables.Copy(lt),
             function(e, session)
@@ -824,14 +826,9 @@ function AddOn:_PreProcessLootTable(lt, uncachedCallback)
 
     -- Logging:Debug("%s", Util.Objects.ToString(interim, 4))
     -- determine how many uncached items there are
-    local uncached = Util.Tables.CountFn(
-            interim,
-            function(i)
-                return not i:GetItem()
-            end
-    )
+    local uncached = Util.Tables.CountFn(interim, function(i) return not i:GetItem() end)
 
-    --Logging:Debug("_PreProcessLootTable(%d) : %d, %d", Util.Tables.Count(lt), Util.Tables.Count(interim), uncached)
+    --Logging:Debug("PreProcessLootTable(%d) : %d, %d", Util.Tables.Count(lt), Util.Tables.Count(interim), uncached)
 
     -- uh, oh.. try again
     if uncached > 0 then
@@ -844,9 +841,11 @@ end
 
 function AddOn:OnLootTableReceived(lt)
     --Logging:Debug("OnLootTableReceived() : %d", Util.Tables.Count(lt))
-    local continue, processed = self:_PreProcessLootTable(lt, "OnLootTableReceived")
+    local continue, processed = self:PreProcessLootTable(lt, "OnLootTableReceived")
     -- could not be pre-processed, will have been rescheduled
-    if not continue then return end
+    if not continue then
+        return
+    end
 
     -- index will be the session, entry will be an LootTableEntry
     -- no need for additional processing, as the ItemRef will pointed to a cached item
@@ -890,31 +889,33 @@ function AddOn:OnLootTableReceived(lt)
     AddOn:CallModule("Loot")
     AddOn:LootModule():Start(self.lootTable)
 
-    Logging:Debug("OnLootTableReceived() : %d", Util.Tables.Count(self.lootTable))
+    Logging:Trace("OnLootTableReceived() : %d", Util.Tables.Count(self.lootTable))
 end
 
 function AddOn:OnLootTableAddReceived(lt)
-    Logging:Debug("OnLootTableAddReceived() : %d", Util.Tables.Count(lt))
+    Logging:Trace("OnLootTableAddReceived() : %d", Util.Tables.Count(lt))
 
     local continue, processed =
-        self:_PreProcessLootTable(lt, "OnLootTableAddReceived")
+        self:PreProcessLootTable(lt, "OnLootTableAddReceived")
     -- could not be pre-processed, will have been rescheduled
-    if not continue then return end
+    if not continue then
+        return
+    end
 
-    --Logging:Debug("OnLootTableAddReceived() : %s", Util.Objects.ToString(processed, 4))
+    --Logging:Trace("OnLootTableAddReceived() : %s", Util.Objects.ToString(processed, 2))
 
     self:DoAutoPass(processed)
     self:SendLootAck(processed)
 
     local oldLen = #self.lootTable
     for session, entry in pairs(processed) do
-        --Logging:Debug("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
+        --Logging:Trace("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
         self.lootTable[session] = entry
     end
 
     local Loot = AddOn:LootModule()
     for i = oldLen + 1, #self.lootTable do
-        --Logging:Debug("OnLootTableAddReceived() : AddSingleItem(%d)", i)
+        --Logging:Trace("OnLootTableAddReceived() : AddSingleItem(%d)", i)
         Loot:AddSingleItem(self.lootTable[i])
     end
 
@@ -938,14 +939,12 @@ function AddOn:OnReRollReceived(sender, lt)
         AddOn:Print(format(L["player_requested_reroll"], self.Ambiguate(sender)))
     end
 
-    local continue, processed = self:_PreProcessLootTable(lt, "OnReRollReceived")
+    local continue, processed = self:PreProcessLootTable(lt, "OnReRollReceived")
 
     -- could not be pre-processed, will have been rescheduled
-    if not continue then return end
-
-    --for _, entry in pairs(processed) do
-    --    Logging:Debug("OnReRollReceived() : %s", Util.Objects.ToString(entry:toTable()))
-    --end
+    if not continue then
+        return
+    end
 
     self:DoAutoPass(processed)
     self:SendLootAck(processed)

@@ -358,7 +358,6 @@ function GetDifficultyInfo(id)
     end
 end
 
-
 local Creatures = {
     {44600, "Halfus Wyrmbreaker"},
     {43324, "Cho\'gall"},
@@ -375,7 +374,7 @@ local CreatureGuidTemplate = 'Creature-0-970-0-11-%d-000136DF91'
 -- Returns information about the source of the objects in a loot slot.
 --  guid, quantity, ... = GetLootSourceInfo(lootSlot)
 function GetLootSourceInfo(slot)
-    return format(CreatureGuidTemplate, Creatures[math.random(#Creatures)][1])
+    return format(CreatureGuidTemplate, Creatures[math.random(#Creatures)][1]), 1
 end
 
 function GetUnitName(unit)

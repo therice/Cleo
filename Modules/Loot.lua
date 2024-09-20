@@ -145,7 +145,10 @@ end
 function Loot:AddSingleItem(itemRef)
 	Logging:Debug("AddSingleItem() : %s, %d", itemRef.item, Util.Tables.Count(self.items))
 
-	if not self:IsEnabled() then self:Enable() end
+	if not self:IsEnabled() then
+		self:Enable()
+	end
+
 	if itemRef.autoPass then
 		self.items[#self.items + 1] = LootEntry.Rolled()
 	else

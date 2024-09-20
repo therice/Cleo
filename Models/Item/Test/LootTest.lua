@@ -5,20 +5,25 @@ local Item
 local LootSlotInfo
 --- @type Models.Item.LootTableEntry
 local LootTableEntry
---- @type Models.Item.LootSlotSource
+--- @type Models.Item.CreatureLootSource
 local LootSlotSource
+--- @type Models.Item.PlayerLootSource
+local PlayerLootSource
 --- @type Models.Item.LootedItem
 local LootedItem
+--- @type Models.Player
+local Player
 --- @type LibUtil
 local Util
 
 describe("Item Model", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Item_Loot')
-		Item, Util, LootSlotInfo, LootTableEntry, LootSlotSource, LootedItem =
+		Item, Util, LootSlotInfo, LootTableEntry, LootSlotSource, PlayerLootSource, LootedItem, Player =
 			AddOn.Package('Models.Item').Item, AddOn:GetLibrary('Util'),
 			AddOn.Package('Models.Item').LootSlotInfo, AddOn.Package('Models.Item').LootTableEntry,
-			AddOn.Package('Models.Item').LootSlotSource, AddOn.Package('Models.Item').LootedItem
+			AddOn.Package('Models.Item').LootSlotSource, AddOn.Package('Models.Item').PlayerLootSource,
+			AddOn.Package('Models.Item').LootedItem, AddOn.Package('Models').Player
 		SetTime()
 	end)
 
@@ -26,12 +31,11 @@ describe("Item Model", function()
 		After()
 	end)
 
-
 	describe("LootSlotSource", function()
 		it("supports equality", function()
-			local ls1 = LootSlotSource(1, nil)
-			local ls2 = LootSlotSource(1, "xyz")
-			local ls3 = LootSlotSource(2, "xyz")
+			local ls1 = LootSlotSource("Creature-0-4379-34-1065-46382-00076A3954", nil)
+			local ls2 = LootSlotSource("Creature-0-4379-34-1065-46382-00076A3954", 1)
+			local ls3 = LootSlotSource("Creature-0-4379-34-1065-46383-00006A3954", 2)
 			assert(ls1 == ls2)
 			assert.equal(ls1, ls2)
 			assert.are_not.equal(ls1, ls3)
@@ -41,6 +45,8 @@ describe("Item Model", function()
 			assert.are_not.equal(ls3, nil)
 		end)
 		it("raises errors", function()
+			assert.has.errors(function() LootSlotSource("x") end, "x is not a valid creature GUID")
+
 			assert.has.errors(function() LootSlotSource.FromCurrent() end, "loot slot must be a number")
 			assert.has.errors(function() LootSlotSource.FromCurrent(-1) end, "loot slot must greater than or equal to 1")
 
@@ -55,6 +61,45 @@ describe("Item Model", function()
 			finally(function()
 				_G.GetNumLootItems = _GetNumLootItems
 				_G.GetLootSourceInfo = _GetLootSourceInfo
+			end)
+		end)
+	end)
+
+	describe("PlayerLootSource", function()
+		it("supports equality", function()
+			local ps1 = PlayerLootSource("Player-4372-0232E2F9", "Item-4372-0-400000033D4D1C15")
+			local ps2 = PlayerLootSource("Player-4372-0232E2F9", "Item-4372-0-400000032A8C4E67")
+			local ps3 = PlayerLootSource("Player-4372-0232E2C8", "Item-4372-0-4000000342062402")
+			assert(ps1 == ps2)
+			assert.equal(ps1, ps2)
+			assert.are_not.equal(ps1, ps3)
+
+			assert.are_not.equal(ps1, nil)
+			assert.are_not.equal(ps2, nil)
+			assert.are_not.equal(ps3, nil)
+		end)
+
+		it("raises errors", function()
+			assert.has.errors(function() PlayerLootSource("x") end, "x is not a valid player GUID")
+			assert.has.errors(function() PlayerLootSource("Player-4372-0232E2F9") end, "nil is not a valid item GUID")
+			assert.has.errors(function() PlayerLootSource("Player-4372-0232E2F9", "Player-4372-0232E2F9") end, "Player-4372-0232E2F9 is not a valid item GUID")
+
+			assert.has.errors(function() PlayerLootSource.FromCurrentPlayer() end, "nil is not a valid item GUID")
+
+			local _Player_Get, _UnitGUID = Player.Get, _G.UnitGUID
+			Player.Get = function() return nil end
+			assert.has.errors(function() PlayerLootSource.FromCurrentPlayer() end, "could not determine current player")
+			Player.Get = _Player_Get
+			_G.UnitGUID = function() return nil end
+			assert.has.errors(function() PlayerLootSource.FromCurrentPlayer() end, "player is not valid")
+			_G.UnitGUID = _UnitGUID
+			Player.Get = function() return Player("Player-1122-00000003", "Unknown", "DEATHKNIGHT", "Atiesh") end
+			assert.has.errors(function() PlayerLootSource.FromCurrentPlayer() end, "player is unknown")
+			Player.Get = _Player_Get
+
+			finally(function()
+				Player.Get = _Player_Get
+				_G.UnitGUID = _UnitGUID
 			end)
 		end)
 	end)
@@ -101,13 +146,14 @@ describe("Item Model", function()
 
 	describe("LootTableEntry", function()
 		it("is created", function()
-			local lte = LootTableEntry(18832, 1)
-			assert.equal(lte.slot, 1)
+			local lte = LootTableEntry(18832, LootSlotSource.FromCurrent(1))
+			assert.equal(lte.source.slot, 1)
 			assert(not lte.awarded)
 			assert(not lte.sent)
+			assert.errors(function() LootTableEntry(18834) end, "loot source was not provided")
 		end)
 		it("provides item", function()
-			local lte = LootTableEntry(18832, 1)
+			local lte = LootTableEntry(18832, LootSlotSource.FromCurrent(1))
 			local item = lte:GetItem()
 			assert(item)
 			assert.equals(item.id, 18832)
@@ -115,11 +161,11 @@ describe("Item Model", function()
 			assert(not item:IsBoe())
 		end)
 		it("supports checking if from source", function()
-			local lte1 = LootTableEntry(18832, 1, LootSlotSource.FromCurrent(1))
-			local lte2 = LootTableEntry(18833, 2, LootSlotSource.FromCurrent(2))
+			local lte1 = LootTableEntry(18832, LootSlotSource.FromCurrent(1))
+			local lte2 = LootTableEntry(18833, LootSlotSource.FromCurrent(2))
 
-			lte1.source.id = 123456
-			lte2.source.id = 789012
+			lte1.source.id = "Creature-0-4379-34-1065-46382-00076A3954"
+			lte2.source.id = "Creature-0-4379-34-1065-46383-00006A3954"
 
 			assert(lte1:IsFromSource(lte1.source))
 			assert(lte2:IsFromSource(lte2.source))
@@ -127,13 +173,9 @@ describe("Item Model", function()
 			assert(not lte2:IsFromSource(lte1.source))
 
 			local source = LootSlotSource.FromCurrent(1)
-			source.id = 99999 -- make sure it doesn't pick up a random one that could be equivalent
+			source.id = "Creature-0-1465-0-2105-448-000043F59F" -- make sure it doesn't pick up a random one that could be equivalent
 			assert(not lte1:IsFromSource(source))
 			assert(not lte2:IsFromSource(source))
-
-			local lte3 = LootTableEntry(18834, 3)
-			assert(not lte1:IsFromSource(nil))
-			assert(lte3:IsFromSource(nil))
 		end)
 	end)
 

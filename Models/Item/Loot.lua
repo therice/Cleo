@@ -11,6 +11,8 @@ local ItemRef = AddOn.Package('Models.Item').ItemRef
 local Item = AddOn.Package('Models.Item').Item
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
+--- @type Models.Player
+local Player = AddOn.ImportPackage('Models').Player
 
 ---
 --- The source of loot, specifically the unique id (GUID)
@@ -19,26 +21,45 @@ local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @field public id number the guid of the source of the loot
 local LootSource = AddOn.Package('Models.Item'):Class('LootSource')
 function LootSource:initialize(id)
+	-- assert(AddOn:IsGUID(id), format("%s is not a valid GUID", tostring(id)))
 	self.id = id
+end
+
+function LootSource:GetName()
+	return L["unknown"]
 end
 
 function LootSource:__eq(o)
 	return self.id == o.id
 end
+
+function LootSource:tostring()
+	return Util.Objects.ToString(self:toTable())
+end
+
 ---
---- The source of loot obtained via a loot slot
+--- The source of loot obtained from a loot slot on a creature
 ---
---- @class Models.Item.LootSlotSource : Models.Item.LootSource
---- @field public id number the guid of the source of the loot
+--- @class Models.Item.CreatureLootSource : Models.Item.LootSource
 --- @field public slot number the slot at which loot is located
-local LootSlotSource = AddOn.Package('Models.Item'):Class('LootSlotSource', LootSource)
-function LootSlotSource:initialize(id, slot)
+local CreatureLootSource = AddOn.Package('Models.Item'):Class('LootSlotSource', LootSource)
+function CreatureLootSource:initialize(id, slot)
+	assert(AddOn:IsCreatureGUID(id), format("%s is not a valid creature GUID", tostring(id)))
 	LootSource.initialize(self, id)
 	self.slot = slot
 end
 
---- @return  Models.Item.LootSlotSource
-function LootSlotSource.FromCurrent(slot)
+function CreatureLootSource:GetName()
+	return AddOn:GetCreatureName(self.id) or L['unknown_creature']
+end
+
+function CreatureLootSource:tostring()
+	return Util.Objects.ToString(self:toTable())
+end
+
+--- @param slot number the slot at which loot is located
+--- @return  Models.Item.CreatureLootSource
+function CreatureLootSource.FromCurrent(slot)
 	slot = tonumber(slot)
 	assert(slot ~= nil, "loot slot must be a number")
 	assert(slot >= 1, "loot slot must greater than or equal to 1")
@@ -49,7 +70,41 @@ function LootSlotSource.FromCurrent(slot)
 	local guid = GetLootSourceInfo(slot)
 	assert(guid ~= nil, "loot slot source could not be obtained")
 
-	return LootSlotSource(guid, slot)
+	return CreatureLootSource(guid, slot)
+end
+
+---
+--- The source of loot obtained via a location in a player's bags
+---
+--- @class Models.Item.PlayerLootSource : Models.Item.LootSource
+--- @field public item string the guid of the loot (item)
+local PlayerLootSource =  AddOn.Package('Models.Item'):Class('PlayerLootSource', LootSource)
+--- @param id string the player's GUID
+--- @param item string the item's GUID
+function PlayerLootSource:initialize(id, item)
+	assert(AddOn:IsPlayerGUID(id), format("%s is not a valid player GUID", tostring(id)))
+	assert(AddOn:IsItemGUID(item), format("%s is not a valid item GUID", tostring(item)))
+	LootSource.initialize(self, id)
+	self.item = item
+end
+
+function PlayerLootSource:GetName()
+	local p = Player:Get(self.id)
+	return p and p:GetShortName() or L['unknown_player']
+end
+
+function PlayerLootSource:tostring()
+	return Util.Objects.ToString(self:toTable())
+end
+
+--- @param itemGUID string the item's GUID
+--- @return Models.Item.PlayerLootSource
+function PlayerLootSource.FromCurrentPlayer(itemGUID)
+	local player = Player:Get("player")
+	assert(player, "could not determine current player")
+	assert(player:IsValid(), "player is not valid")
+	assert(not player:IsUNK(), "player is unknown")
+	return PlayerLootSource(player.guid, itemGUID)
 end
 
 local function IsSameLootSource(source1, source2)
@@ -74,20 +129,21 @@ end
 --- @field public name string the item name
 --- @field public quantity number the number of items
 --- @field public quality number the quality of the item
---- @field public source Models.Item.LootSlotSource the source of the loot, along with slot
+--- @field public source Models.Item.CreatureLootSource the source of the loot, along with slot
 --- @field public looted boolean has the item been looted
 local LootSlotInfo = AddOn.Package('Models.Item'):Class('LootSlotInfo', ItemRef)
 function LootSlotInfo:initialize(slot, name, link, quantity, quality)
 	-- links work as item references
 	ItemRef.initialize(self, link)
-	--- @type Models.Item.LootSlotSource
-	self.source = LootSlotSource.FromCurrent(slot)
+	--- @type Models.Item.CreatureLootSource
+	self.source = CreatureLootSource.FromCurrent(slot)
 	self.name = name
 	self.quantity = quantity
 	self.quality = quality
 	self.looted = false
 end
 
+--- @return number the loot slot
 function LootSlotInfo:GetSlot()
 	return self.source.slot
 end
@@ -97,9 +153,13 @@ function LootSlotInfo:GetItemLink()
 	return self.item
 end
 
---- @param source  Models.Item.LootSlotSource
+--- @param source  Models.Item.LootSource
 function LootSlotInfo:IsFromSource(source)
 	return IsSameLootSource(source, self.source)
+end
+
+function LootSlotInfo:tostring()
+	return Util.Objects.ToString(self:toTable())
 end
 
 ---
@@ -107,33 +167,33 @@ end
 ---
 --- @class Models.Item.LootTableEntry : Models.Item.ItemRef
 --- @see Models.Item.ItemRef
---- @field public slot number the index at which loot is located on the loot table, can be Nil if item was not added from a loot table
---- @field public source Models.Item.LootSlotSource the source of the loot (item), can be Nil if item was not added from a loot table
---- @field public awarded boolean has the item been awarded
+--- @field public source Models.Item.LootSource  the source of the loot (item)
+--- @field public awarded boolean|string has item been awarded and if so, to whom
 --- @field public sent boolean has the item been transmitted to players
 local LootTableEntry = AddOn.Package('Models.Item'):Class('LootTableEntry', ItemRef)
---- @param slot number  index of the item within the loot table, can be Nil if item was not added from a loot table
 --- @param item any  ItemID|ItemString|ItemLink
---- @param source Models.Item.LootSlotSource source from which loot (slot) was obtained, can be Nil if item was not added from a loot table
-function LootTableEntry:initialize(item, slot, source)
+--- @param source Models.Item.LootSource source from which loot was obtained
+function LootTableEntry:initialize(item, source)
+	assert(source, "loot source was not provided")
 	ItemRef.initialize(self, item)
-	self.slot = slot
-	--- @type Models.Item.LootSlotSource
+	--- @type Models.Item.LootSource
 	self.source = source
 	self.awarded = false
 	self.sent = false
 end
 
---- @param source  Models.Item.LootSlotSource
+--- @param source  Models.Item.CreatureLootSource
 function LootTableEntry:IsFromSource(source)
 	return IsSameLootSource(source, self.source)
 end
 
 -- trims down the entry to minimal amount of needed information
 -- in order to keep data transmission small
+--- @return table<string, string>
 function LootTableEntry:ForTransmit()
 	return {
-		ref = ItemRef.ForTransmit(self)
+		ref = ItemRef.ForTransmit(self),
+		owner = self.source:GetName()
 	}
 end
 
@@ -157,6 +217,14 @@ function LootTableEntry.ItemRefFromTransmit(t, session)
 	return ir
 end
 
+--- @return string the name of the entity which currently owns the loot
+function LootTableEntry:GetOwner()
+	return self.source and self.source:GetName() or L['unknown']
+end
+
+function LootTableEntry:tostring()
+	return Util.Objects.ToString(self:toTable())
+end
 ---
 --- An item from a loot table queue, used for triggering functions after the associated loot slot is cleared
 ---
@@ -334,15 +402,21 @@ function LootAllocateEntry:GetItemAward(candidate, reason)
 	return ItemAward(self, candidate, reason)
 end
 
+--- @return table<string, any>
 function LootAllocateEntry:GetReRollData(isRoll, noAutoPass)
 	return {
 		ref        = AddOn.TransmittableItemString(self.link),
 		session    = self.session,
 		isRoll     = isRoll,
 		noAutoPass = noAutoPass,
+		-- this may not be set if not originally send with loot table
+		-- which is where the data would be extracted and set on the entry
+		owner      = self.owner,
 	}
 end
 
+--- @param itemRef Models.Item.ItemRef
+--- @param session number
 --- @return Models.Item.LootAllocateEntry
 function LootAllocateEntry.FromItemRef(itemRef, session)
 	return itemRef:Embed(
@@ -352,7 +426,7 @@ function LootAllocateEntry.FromItemRef(itemRef, session)
 end
 
 --- @param entry Models.Item.LootAllocateEntry
---- @param candidate string
+--- @param candidate string the player for award
 --- @param reason string|table if award is for a reason other than candidates' response, this will be provided
 function ItemAward:initialize(entry, candidate, reason)
 	if not entry or not Util.Objects.IsInstanceOf(entry, LootAllocateEntry) then
@@ -414,6 +488,10 @@ end
 --- @return table indicating the attributes associated with the resolved reason for the item award (player response vs award reason)
 function ItemAward:NormalizedReason()
 	return self.normalizedReason
+end
+
+function ItemAward:tostring()
+	return Util.Objects.ToString(self:toTable())
 end
 
 local State = {

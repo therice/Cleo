@@ -619,6 +619,8 @@ do
 	end
 
 	function LA.SolicitResponseRollPrint(target, thisItem, isRoll)
+		Logging:Debug("SolicitResponseRollPrint(%s, %s, %s)", tostring(target), tostring(thisItem), tostring(isRoll))
+
 		local itemText = Util.Objects.Check(thisItem, L["this_item"], L["all_unawarded_items"])
 		if isRoll then
 			AddOn:Print(format(L["requested_rolls_for_i_from_t"], itemText, target))
