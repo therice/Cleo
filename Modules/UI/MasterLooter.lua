@@ -86,7 +86,7 @@ function ML:LayoutAnnouncementsTab(tab)
 		UI:New('InlineGroup',content)
 			:Point("TOPLEFT", content, "TOPLEFT", 0, -5)
 			:Point("TOPRIGHT", content, "TOPRIGHT", -20, 0)
-			:SetHeight(250)
+			:SetHeight(260)
 			:Title(L["awards"])
 
 	content  = tab.awardsGroup.content
@@ -215,7 +215,7 @@ function ML:LayoutAnnouncementsTab(tab)
 		UI:New('InlineGroup',content)
 		  :Point("TOPLEFT", tab.itemsGroup, "BOTTOMLEFT", 0, -5)
 		  :Point("TOPRIGHT", tab.itemsGroup, "BOTTOMRIGHT", 0, 0)
-		  :SetHeight(250)
+		  :SetHeight(260)
 		  :Title(L["responses"])
 	content = tab.responsesGroup.content
 	tab.announceResponses =

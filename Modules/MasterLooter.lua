@@ -98,6 +98,7 @@ ML.AwardStringsDesc = {
 	L["announce_&r_desc"],
 	L["announce_&s_desc"],
 	L["announce_&t_desc"],
+	L["announce_&o_desc"],
 	L["announce_&ln_desc"],
 	L["announce_&lp_desc"],
 }
@@ -107,6 +108,7 @@ ML.AnnounceItemStringsDesc = {
 	L["announce_&l_desc"],
 	L["announce_&s_desc"],
 	L["announce_&t_desc"],
+	L["announce_&o_desc"],
 	L["announce_&ln_desc"],
 }
 
@@ -1648,6 +1650,7 @@ function ML:Award(award, callback, ...)
 	-- previously awarded, change the award
 	if ltEntry.awarded then
 		self:RegisterAndAnnounceAward(award)
+
 		-- the entry could be missing a loot slot if not added from a loot table
 		if not slot then
 			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
