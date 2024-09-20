@@ -499,6 +499,13 @@ end
 
 local UPDATE_THRESHOLD_IN_MS = 1500.0 -- 1.5 seconds
 
+--- Only updates if the currently viewed session is the one specified
+function LA:UpdateIfSession(session)
+	if self.session == tonumber(session) then
+		self:Update()
+	end
+end
+
 function LA:Update(forceUpdate)
 	local elapsed = self.sw:Elapsed()
 	forceUpdate = Util.Objects.Default(forceUpdate, false)

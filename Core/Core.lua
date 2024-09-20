@@ -604,6 +604,10 @@ function AddOn:GroupIterator()
     end
 end
 
+function AddOn:GroupMemberCount()
+    return Util.Tables.Count(self:UpdateGroupMembers())
+end
+
 function AddOn:GuildIterator()
     Logging:Trace("GuildIterator()")
     local guildMembers, index = {}, 1

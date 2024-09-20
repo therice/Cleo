@@ -147,7 +147,9 @@ ML.defaults = {
 		-- is 'out of raid' support enabled (specifies auto-responses when user not in instance, but in raid)
 		outOfRaid = true,
 		-- should a session automatically be started with all eligible items
-		autoStart  = false,
+		autoStart = false,
+		-- should a random roll between 1 and 100 (inclusive) be added to all sessions
+		autoAddRolls = false,
 		-- automatically add all eligible equipable items to session
 		autoAdd = true,
 		-- automatically add all eligible non-equipable items to session (e.g. mounts)

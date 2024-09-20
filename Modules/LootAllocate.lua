@@ -138,8 +138,7 @@ function LA:Setup(entries)
 	self:BuildScrollingTable()
 	self:SwitchSession(self.session)
 
-	local autoRolls = false
-	if AddOn:IsMasterLooter() and autoRolls then
+	if AddOn:IsMasterLooter() and AddOn:MasterLooterModule():GetDbValue('autoAddRolls') then
 		self:DoAllRandomRolls()
 	end
 end
@@ -247,47 +246,50 @@ function LA:GetItemAward(session, candidate, reason)
 	return self:GetEntry(session):GetItemAward(candidate, reason)
 end
 
--- Get rolls ranged from 1 to 100 for all candidates, and guarantee everyone's roll is different
-function LA:GenerateNoRepeatRollTable(session)
+--- Generate a 'count' number of rolls ranged from 1 to 100  and guarantee each roll is different
+--- @param count number the number of rolls to generate (max 100)
+--- @return table<number, number> roll number to roll value
+function LA:GenerateNoRepeatRollTable(count)
+	assert(count <= 100, "cannot generate more than 100 rolls at a time")
+
 	local rolls = {}
 	for i = 1, 100 do
 		rolls[i] = i
 	end
 
 	local t = {}
-	for name, _ in pairs(self:GetEntry(session).candidates) do
+	for i = 1, count do
 		if #rolls > 0 then
-			local i = math.random(#rolls)
-			t[name] = rolls[i]
-			tremove(rolls, i)
-		else -- We have more than 100 candidates !?!?
-			t[name] = 0
+			local roll = tremove(rolls, math.random(#rolls))
+			t[i] = roll
 		end
 	end
+
+	Logging:Debug("GenerateNoRepeatRollTable(%d) : %s", count, Util.Objects.ToString(t))
 	return t
 end
 
 function LA:DoRandomRolls(session)
 	session = Util.Objects.Default(session, self.session)
-	local table = self:GenerateNoRepeatRollTable(session)
+	local rolls = self:GenerateNoRepeatRollTable(AddOn:GroupMemberCount())
 	for k, v in pairs(self.lootTable) do
 		if AddOn.ItemIsItem(self:GetEntry(session).link, v.link) then
-			AddOn:Send(AddOn.masterLooter, C.Commands.Rolls, k, table)
+			AddOn:Send(AddOn.masterLooter, C.Commands.Rolls, k, rolls)
 		end
 	end
 end
 
 function LA:DoAllRandomRolls()
-	local sessionsDone = {}
+	local sessionsDone, rollCount = {}, AddOn:GroupMemberCount()
 
 	for session, entry in pairs(self.lootTable) do
-		-- Don't use auto rolls on a session  requesting rolls from raid members
+		-- Don't use auto rolls on a session requesting rolls from raid members
 		if not sessionsDone[session] and not entry.isRoll then
-			local table = self:GenerateNoRepeatRollTable(session)
+			local rolls = self:GenerateNoRepeatRollTable(rollCount)
 			for session2, entry2 in ipairs(self.lootTable) do
 				if AddOn.ItemIsItem(entry.link, entry2.link) then
 					sessionsDone[session2] = true
-					AddOn:Send(AddOn.masterLooter, C.Commands.Rolls, session2, table)
+					AddOn:Send(AddOn.masterLooter, C.Commands.Rolls, session2, rolls)
 				end
 			end
 		end
@@ -447,11 +449,10 @@ function LA:OnLootTableAddReceived(_, lt)
 		--Logging:Trace("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
 		self.lootTable[session] = LootAllocateEntry.FromItemRef(entry, session)
 	end
-
-	local autoRolls = false
+	
 	for session = oldLen + 1, #self.lootTable do
 		self:SetupSession(session, self.lootTable[session])
-		if AddOn:IsMasterLooter() and autoRolls then
+		if AddOn:IsMasterLooter() and AddOn:MasterLooterModule():GetDbValue('autoAddRolls') then
 			self:DoRandomRolls(session)
 		end
 	end
@@ -502,28 +503,34 @@ function LA:OnCheckIfOfflineReceived()
 	self:Update()
 end
 
-function LA:AnnounceRollPassIfNeeded(candidate, session, roll)
-	-- if the item roll was passed, first (and only) chance to announce it
-	if roll and not Util.Objects.IsNumber(roll) and roll == '-' then
-		AddOn:SendAnnouncement(format(L["roll_pass"], AddOn.Ambiguate(candidate), self:GetEntry(session).link), C.group)
-	end
-end
+--- @see LootAllocate#GenerateNoRepeatRollTable
+--- @param session number the session to which rolls are bound
+--- @param rolls table<number, number> roll number to roll value
+function LA:OnRollsReceived(session, rolls)
+	Logging:Debug("OnRollsReceived(%d) : %s", session, Util.Objects.ToString(rolls))
 
-function LA:OnRollsReceived(session, table)
-	for candidate, roll in pairs(table) do
-		self:SetCandidateData(session, candidate, LAA.Roll, roll)
-		self:AnnounceRollPassIfNeeded(candidate, session, roll)
+	local candidates = {}
+	for name, _ in pairs(self:GetEntry(session).candidates) do
+		tinsert(candidates, name)
 	end
-	self:Update()
+
+	Util.Tables.Shuffle(candidates)
+
+	for _, roll in pairs(rolls) do
+		local candidate = tremove(candidates)
+		if not candidate then
+			break
+		end
+
+		self:SetCandidateData(session, candidate, LAA.Roll, roll)
+	end
 end
 
 function LA:OnRollReceived(candidate, roll, sessions)
 	for _, session in ipairs(sessions) do
 		self:SetCandidateData(session, candidate, LAA.Roll, roll)
-		self:AnnounceRollPassIfNeeded(candidate, session, roll)
+		self:UpdateIfSession(session)
 	end
-
-	self:Update()
 end
 
 function LA:SubscribeToComms()
