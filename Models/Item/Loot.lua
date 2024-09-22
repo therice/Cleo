@@ -389,10 +389,11 @@ function LootAllocateResponse:Get(key)
 end
 
 ---
---- The award of an item to a player
+--- An award of an item to a player
 ---
 --- @class Models.Item.ItemAward
 --- @field public session number the session associated with the loot
+--- @field public link string the item link
 --- @field public winner string the player who is being awarded the item
 --- @field public class string the player's class
 --- @field public gear1 string the item currently equipped (1)
@@ -405,6 +406,33 @@ end
 --- @field public awardReason string the name (key) of the award reason
 --- @field public normalizedReason table normalized response/reason  for consistent access (1 .. N indexes)
 local ItemAward = AddOn.Package('Models.Item'):Class('ItemAward')
+
+---
+--- A deferred award of an item to a player, which will occur sometime in the future
+---
+--- @class Models.Item.DeferredItemAward
+--- @field public session number the session associated with the loot
+--- @field public item string the item link
+local DeferredItemAward = AddOn.Package('Models.Item'):Class('DeferredItemAward')
+--- @param session number the session umber
+--- @param item any ItemID|ItemString|ItemLink
+function DeferredItemAward:initialize(session, item)
+	self.session = tonumber(session)
+	if ItemUtil:ContainsItemString(item) then
+		self.link = item
+	elseif Util.Objects.IsNumber(item) then
+		local itemInstance = Item.Get(item, function(i) self.link = i.link end)
+		if itemInstance then
+			self.link = itemInstance.link
+		end
+	else
+		error("unsupported item format %s", tostring(item))
+	end
+end
+
+function DeferredItemAward:tostring()
+	return Util.Objects.ToString(self:toTable())
+end
 
 ---
 --- An loot allocation entry, associated with an item, which tracks player's responses
@@ -428,7 +456,7 @@ end
 
 ---@param player Models.Player
 function LootAllocateEntry:AddCandidate(player)
-	Logging:Debug("AddCandidate(%s)", tostring(player))
+	Logging:Trace("AddCandidate(%s)", tostring(player))
 	self.candidates[player:GetName()] = LootAllocateResponse(player)
 end
 

@@ -400,6 +400,14 @@ function ML:UnregisterPlayerMessages()
 	end
 end
 
+function ML:GetLootTable()
+	return self.lootTable
+end
+
+function ML:ClearLootTable()
+	self.lootTable = {}
+end
+
 function ML:OnPlayerEvent(event, player)
 	if self:IsHandled() then
 		Logging:Trace("OnPlayerEvent(%s) : %s", tostring(event), tostring(player))
@@ -1717,7 +1725,7 @@ function ML:GiveLoot(slot, winner, callback, ...)
 end
 
 
----@param award Models.Item.ItemAward
+---@param award Models.Item.ItemAward | Models.Item.DeferredItemAward
 ---@param callback function This function will be called as callback(awarded, session, winner, status, ...)
 ---@return boolean true if award is success. false if award is failed. nil if we don't know the result yet.
 function ML:Award(award, callback, ...)
@@ -1808,7 +1816,7 @@ function ML:Award(award, callback, ...)
 			-- testing path
 			if AddOn:TestModeEnabled() then
 				self:AwardResult(false, session, nil, AS.Neutral.TestMode, callback, ...)
-				AddOn:Print(L['award_later_not_supported'])
+				AddOn:Print(L['award_later_not_supported'] .. ' : ' .. link)
 				return false
 			-- award later when added manually via '/cleo add'
 			else
@@ -1864,7 +1872,7 @@ function ML:Award(award, callback, ...)
 					end
 				end
 			)
-		-- add to loot ledger for award later
+		-- add to loot ledger for award later, it's implicitly going to current player (master looter)
 		else
 			self:GiveLoot(
 				slot:get(),

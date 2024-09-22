@@ -232,6 +232,7 @@ end
 -- itemName : string - Name of an item owned by the player at some point during this play session, e.g. "Nordrassil Wrath-Kilt".
 -- itemString : string - A fragment of the itemString for the item, e.g. "item:30234:0:0:0:0:0:0:0" or "item:30234".
 -- itemLink : string - The full itemLink.
+--- @return Models.Item.Item can return nil if item information is not available, in that case use the callback
 function Item.Get(item, callback)
 	-- cannot simply use the itemId as a number, as links could represent stuff
 	-- that the base item id wouldn't capture (e.g. sockets eventually)

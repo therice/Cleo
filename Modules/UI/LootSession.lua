@@ -112,7 +112,7 @@ function LootSession:AddItems(items)
 												self.loadingItems = true
 												if not self.showPending then
 													self.showPending = true
-													self:ScheduleTimer("Show", 0, self.ml.lootTable)
+													self:ScheduleTimer("Show", 0, self.ml:GetLootTable())
 												end
 											else
 												frame.text:SetText(data[row].item.link)
@@ -132,11 +132,16 @@ end
 function LootSession:DeleteItem(session)
 	Logging:Debug("DeleteItem(%s)", tostring(session))
 	self.ml:RemoveLootTableEntry(session)
-	self:Show(self.ml.lootTable)
+	self:Show(self.ml:GetLootTable())
 end
 
 function LootSession:Show(items, disableAwardLater)
 	disableAwardLater = (disableAwardLater == true)
+
+	if self.pendingEndSession then
+		Logging:Debug("Show() : pending end of session, not showing")
+		return
+	end
 
 	local frame = self:GetFrame()
 	frame:Show()
