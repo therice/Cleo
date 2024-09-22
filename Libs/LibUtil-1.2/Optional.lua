@@ -11,7 +11,8 @@ local Self = Util.Optional
 --- @type LibClass
 local Class = LibStub("LibClass-1.1")
 
---- @class Optional
+--- @class LibUtil.Optional.Optional
+--- @field public value any  the optional value
 local Optional = Class("Optional")
 function Optional:initialize(value)
 	self.value = value
@@ -122,18 +123,21 @@ function Optional:__tostring()
 	return format("Optional(%s)", Util.Objects.ToString(self.value))
 end
 
+--- @return LibUtil.Optional.Optional
 function Self.of(value)
-	if value ~= nil  then
+	if value ~= nil then
 		return Optional(value)
 	else
 		error("Optional - Value was nil in 'of' function")
 	end
 end
 
+--- @return LibUtil.Optional.Optional
 function Self.empty()
 	return Optional(nil)
 end
 
+--- @return LibUtil.Optional.Optional
 function Self.ofNillable(value)
 	return Optional(value)
 end

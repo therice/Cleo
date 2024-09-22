@@ -42,15 +42,22 @@ end
 ---
 --- @class Models.Item.CreatureLootSource : Models.Item.LootSource
 --- @field public slot number the slot at which loot is located
-local CreatureLootSource = AddOn.Package('Models.Item'):Class('LootSlotSource', LootSource)
+local CreatureLootSource = AddOn.Package('Models.Item'):Class('CreatureLootSource', LootSource)
 function CreatureLootSource:initialize(id, slot)
 	assert(AddOn:IsCreatureGUID(id), format("%s is not a valid creature GUID", tostring(id)))
+	assert(Util.Objects.IsNumber(slot), format("%s is not a valid loot slot", tostring(slot)))
 	LootSource.initialize(self, id)
 	self.slot = slot
 end
 
+--- @return string the name of the creature
 function CreatureLootSource:GetName()
 	return AddOn:GetCreatureName(self.id) or L['unknown_creature']
+end
+
+--- @return number
+function CreatureLootSource:GetSlot()
+	return self.slot
 end
 
 function CreatureLootSource:tostring()
@@ -88,9 +95,21 @@ function PlayerLootSource:initialize(id, item)
 	self.item = item
 end
 
+--- @return string the name of the player
 function PlayerLootSource:GetName()
 	local p = Player:Get(self.id)
 	return p and p:GetShortName() or L['unknown_player']
+end
+
+
+--- @return string the item guid
+function PlayerLootSource:GetItemGUID()
+	return self.item
+end
+
+--- @return LootLedger.Entry the loot ledger entry for the item or nil if not present
+function PlayerLootSource:GetLootLedgerEntry()
+	return AddOn:LootLedgerModule():GetStorage():GetByItemGUID(self:GetItemGUID())
 end
 
 function PlayerLootSource:tostring()
@@ -217,9 +236,35 @@ function LootTableEntry.ItemRefFromTransmit(t, session)
 	return ir
 end
 
---- @return string the name of the entity which currently owns the loot
+--- @return string the name of the entity which currently owns the loot. if unavailable or unable to be determined, will return 'Unknown'
 function LootTableEntry:GetOwner()
-	return self.source and self.source:GetName() or L['unknown']
+	return self.source:GetName() or L['unknown']
+end
+
+---
+--- Will only be non-empty if the loot source is a Models.Item.CreatureLootSource
+---
+--- @return LibUtil.Optional.Optional an optional, which if present will be the numeric loot slot
+function LootTableEntry:GetSlot()
+	return Util.Optional.ofNillable(self.source.GetSlot and self.source:GetSlot() or nil)
+end
+
+--- Will only be non-empty if the loot source is a Models.Item.PlayerLootSource
+---
+---
+-- @return LibUtil.Optional.Optional an optional, which if present will be the GUID of the item (uniquely identifies in a player's bags)
+function LootTableEntry:GetItemGUID()
+	return Util.Optional.ofNillable(self.source.GetItemGUID and self.source:GetItemGUID() or nil)
+end
+
+---
+--- Can only be non-empty if the loot source is a Models.Item.PlayerLootSource, but even in that case
+--- it may be empty if the item has not yet been added to the LootLedger
+---
+---
+--- @return LibUtil.Optional.Optional an optional, which if present will be a LootLedger.Entry
+function LootTableEntry:GetLootLedgerEntry()
+	return Util.Optional.ofNillable(self.source.GetLootLedgerEntry and self.source:GetLootLedgerEntry() or nil)
 end
 
 function LootTableEntry:tostring()
@@ -566,6 +611,24 @@ end
 --- @return boolean true if item's attributes are valid
 function LootedItem:IsValid()
 	return ItemUtil:ContainsItemString(self.item) and Util.Tables.ContainsKey(StateNames, self.state)
+end
+
+---
+--- Marks the item as 'award later'
+---
+--- @return Models.Item.LootedItem
+function LootedItem:AwardLater()
+	self.state = LootedItem.State.AwardLater
+	return self
+end
+
+---
+--- Marks the item as 'to trade'
+---
+--- @return Models.Item.LootedItem
+function LootedItem:ToTrade()
+	self.state = LootedItem.State.ToTrade
+	return self
 end
 
 function LootedItem:IsAwardLater()

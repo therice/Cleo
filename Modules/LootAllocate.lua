@@ -449,7 +449,7 @@ function LA:OnLootTableAddReceived(_, lt)
 		--Logging:Trace("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
 		self.lootTable[session] = LootAllocateEntry.FromItemRef(entry, session)
 	end
-	
+
 	for session = oldLen + 1, #self.lootTable do
 		self:SetupSession(session, self.lootTable[session])
 		if AddOn:IsMasterLooter() and AddOn:MasterLooterModule():GetDbValue('autoAddRolls') then
@@ -479,11 +479,26 @@ function LA:OnAwardedReceived(session, winner)
 	end
 
 	entry.awarded = winner
+
 	local nextSession = self:NextUnawardedSession()
 	if AddOn:IsMasterLooter() and nextSession then
 		self:SwitchSession(nextSession)
 	else
 		self:SwitchSession(self.session)
+	end
+end
+
+function LA:OnLootedToBags(session, ...)
+	local entry = self:GetEntry(session)
+	if not entry then
+		Logging:Warn("OnLootedToBags() : no entry for session %d", session)
+		return
+	end
+
+	if AddOn:IsMasterLooter() and (session ~= Util.Tables.Count(self.lootTable)) then
+		self:SwitchSession(session + 1)
+	else
+		self:SwitchSession(session)
 	end
 end
 
@@ -514,7 +529,7 @@ function LA:OnRollsReceived(session, rolls)
 		tinsert(candidates, name)
 	end
 
-	Util.Tables.Shuffle(candidates)
+	Util.Tables.Sort(candidates, function(c1, c2) return c1 > c2  end)
 
 	for _, roll in pairs(rolls) do
 		local candidate = tremove(candidates)
@@ -534,6 +549,8 @@ function LA:OnRollReceived(candidate, roll, sessions)
 end
 
 function LA:SubscribeToComms()
+	-- FYI, these comms will implicitly only be subscribed when a player is the Master Looter
+	-- as the Loot Allocate module is never enabled outside of that use case
 	Logging:Debug("SubscribeToComms(%s)", self:GetName())
 	-- LootTableAdd is handled through message hook in initializer
 	self.commSubscriptions = Comm():BulkSubscribe(C.CommPrefixes.Main, {
@@ -555,6 +572,12 @@ function LA:SubscribeToComms()
 			Logging:Debug("Awarded from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
 				self:OnAwardedReceived(unpack(data))
+			end
+		end,
+		[C.Commands.LootedToBags] = function(data, sender)
+			Logging:Debug("LootedToBags from %s", tostring(sender))
+			if AddOn:IsMasterLooter(sender) then
+				self:OnLootedToBags(unpack(data))
 			end
 		end,
 		[C.Commands.CheckIfOffline] = function(_, sender)

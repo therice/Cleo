@@ -665,6 +665,7 @@ function Lists:OnAwardItem(itemAward)
 		local audit = LootRecord.FromItemAward(itemAward)
 		Util.Functions.try(
 			function()
+				-- todo : capture encounter when it wasn't a direct award from a creatures' loot table
 				audit.configuration = self:GetActiveConfiguration().config.name
 				audit.list = list and list.name or L['unknown']
 				AddOn:LootAuditModule():Broadcast(audit)

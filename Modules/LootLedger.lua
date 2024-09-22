@@ -25,12 +25,13 @@ local Deformat =  AddOn:GetLibrary("Deformat")
 ---
 --- Persistent storage for loot ledger
 ---
---- @class LootLedger.Storage
+--- @class LootLedger.Storage : Models.Dao
 local Storage = AddOn.Package("LootLedger"):Class("Storage", Dao)
 ---
 --- Extension to LootedItem which provides a unique key and compatible with Dao
 ---
---- @class LootLedger.Entry
+--- @class LootLedger.Entry : Models.Item.LootedItem
+--- @field id string the entry's id
 local Entry = AddOn.Package("LootLedger"):Class("Entry", LootedItem)
 Entry.Hasher = Hashers.SHA256()
 ---
@@ -79,14 +80,16 @@ function LootLedger:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	SetDb(self, AddOn.Libs.AceDB:New(AddOn:Qualify("LootLedger"), self.defaults))
 	self.testMode = false
-	self.watcher = Watcher()
+	-- due to semantics of how items are looted prior to being added to ledger,
+	-- disabled the loot watcher in favor of direct dispatch
+	-- self.watcher = Watcher()
 	self.tradeTimes = TradeTimes()
 end
 
 function LootLedger:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
 	self:SubscribeToMessages()
-	self.watcher:Start()
+	--self.watcher:Start()
 	self.tradeTimes:Start()
 	TradeTimesOverview():Enable()
 end
@@ -95,7 +98,7 @@ function LootLedger:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())
 	self:UnsubscribeFromMessages()
 	self.tradeTimes:Stop()
-	self.watcher:Stop()
+	--self.watcher:Stop()
 	TradeTimesOverview():Disable()
 end
 
@@ -113,10 +116,12 @@ function LootLedger:GetStorage()
 	return self.storage
 end
 
+--[[
 --- @return LootLedger.Watcher
 function LootLedger:GetWatcher()
 	return self.watcher
 end
+--]]
 
 --- @return LootLedger.TradeTimes
 function LootLedger:GetTradeTimes()
@@ -160,13 +165,17 @@ function LootLedger:ScheduleStorageValidation()
 end
 
 --- @see LootLedger.Watcher#OnChatMessageLoot
---- @param item table<number, string, number, string, number> named key/value pairs as follows, index 1 (id) index 2 (link) index 3 (count) index 4 (player) index 5 (when)
+--- @param item table<number, string, number, string, number> named key/value pairs as follows, id (itemId) link (itemLink) count (itemCount) player (playerName) when (timestamp)
+--- @return table<LootLedger.Entry> all located and updated Loot Ledger entries which correspond to the item. they will be sorted from oldest to most recent creation time
 function LootLedger:OnItemReceived(item)
 	local isHandled = LootLedger:IsHandled()
 	Logging:Debug("OnItemReceived(handled=%s) : items=%s", tostring(isHandled), function() return Util.Objects.ToString(item) end)
+
+	--- @type table<LootLedger.Entry>
+	local entries = {}
+
 	if isHandled then
 		-- only care about received items that have an entry in storage for which a guid has not been assigned
-		--- @type table<LootLedger.Entry>
 		local receivedCount, candidates, assigned = item.count, {}, {}
 		self.storage:ForEach(
 		function(_, entry)
@@ -201,8 +210,8 @@ function LootLedger:OnItemReceived(item)
 				:Filter(function(i) return i.remaining > 0 end)
 				:Sort(function(i1, i2) return i1.remaining < i2.remaining end)()
 
-			-- should receive items one at a time based upon what type of items are being tracked
-			-- and being looted (allocated) to master looter one at a time
+			-- should receive items one at a time based upon what type of items are being tracked and being
+			-- looted (allocated) to the master individually
 			-- log item counts for identification if it becomes an issue
 			Logging:Debug("OnItemReceived(%s) : received=%d | storage=%d | bags=%d", item.link, receivedCount, #candidates, #items)
 
@@ -225,6 +234,7 @@ function LootLedger:OnItemReceived(item)
 					if items[index] then
 						entry.guid = items[index].guid
 						self.storage:Update(entry, 'guid')
+						Util.Tables.Push(entries, entry)
 					end
 				end
 			else
@@ -234,6 +244,11 @@ function LootLedger:OnItemReceived(item)
 			Logging:Debug("OnItemReceived(%s) : no corresponding entries located in storage", item.link)
 		end
 	end
+
+	-- sort the located entries from eldest to most recent
+	Util(entries):Sort(function(e1, e2) return e1.added < e2.added end)()
+
+	return entries
 end
 
 ---

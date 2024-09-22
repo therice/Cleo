@@ -319,10 +319,13 @@ function LA:SwitchSession(session)
 	self.frame.itemIcon:SetBorderColor("purple")
 	self.frame.itemText:SetText(entry.link)
 	self.frame.itemState:SetText(self:GetItemStatus(entry.link))
+
 	local itemList = AddOn:ListsModule():GetActiveListAndPriority(entry:GetEquipmentLocation())
 	self.frame.itemList:SetText((itemList and itemList.name or L['unknown']))
 	self.frame.itemLvl:SetText(_G.ITEM_LEVEL_ABBR..": " .. entry:GetLevelText())
 	self.frame.itemType:SetText(entry:GetTypeText())
+
+	-- todo : add logic for displaying owner
 
 	self:UpdateSessionButtons()
 	-- sessions have switched, we want to default sort by response

@@ -613,8 +613,7 @@ end
 --- @param player string|Models.Player the player receiving the loot
 --- @param equipment string the equipment slot for loot (e.g. INVTYPE_HEAD)
 --- @param count number|nil the number of slots to drop the player on list as result of receiving item
---- @return string, number, number, number, number :
----     list id, active prio (before), active prio (after), original prio (before), orginal prio (after)
+--- @return string, number, number, number, number : list id, active prio (before), active prio (after), original prio (before), orginal prio (after)
 function ActiveConfiguration:OnLootEvent(player, equipment, count)
 	Logging:Debug("OnLootEvent(%s, %s, %s)", tostring(player), tostring(equipment), tostring(count))
 	-- resolve player through configuration as it has potential to be an ALT

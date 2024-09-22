@@ -6,7 +6,7 @@ local LootSlotInfo
 --- @type Models.Item.LootTableEntry
 local LootTableEntry
 --- @type Models.Item.CreatureLootSource
-local LootSlotSource
+local CreatureLootSource
 --- @type Models.Item.PlayerLootSource
 local PlayerLootSource
 --- @type Models.Item.LootedItem
@@ -19,10 +19,10 @@ local Util
 describe("Item Model", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Item_Loot')
-		Item, Util, LootSlotInfo, LootTableEntry, LootSlotSource, PlayerLootSource, LootedItem, Player =
+		Item, Util, LootSlotInfo, LootTableEntry, CreatureLootSource, PlayerLootSource, LootedItem, Player =
 			AddOn.Package('Models.Item').Item, AddOn:GetLibrary('Util'),
 			AddOn.Package('Models.Item').LootSlotInfo, AddOn.Package('Models.Item').LootTableEntry,
-			AddOn.Package('Models.Item').LootSlotSource, AddOn.Package('Models.Item').PlayerLootSource,
+			AddOn.Package('Models.Item').CreatureLootSource, AddOn.Package('Models.Item').PlayerLootSource,
 			AddOn.Package('Models.Item').LootedItem, AddOn.Package('Models').Player
 		SetTime()
 	end)
@@ -31,11 +31,11 @@ describe("Item Model", function()
 		After()
 	end)
 
-	describe("LootSlotSource", function()
+	describe("CreatureLootSource", function()
 		it("supports equality", function()
-			local ls1 = LootSlotSource("Creature-0-4379-34-1065-46382-00076A3954", nil)
-			local ls2 = LootSlotSource("Creature-0-4379-34-1065-46382-00076A3954", 1)
-			local ls3 = LootSlotSource("Creature-0-4379-34-1065-46383-00006A3954", 2)
+			local ls1 = CreatureLootSource("Creature-0-4379-34-1065-46382-00076A3954", 1)
+			local ls2 = CreatureLootSource("Creature-0-4379-34-1065-46382-00076A3954", 1)
+			local ls3 = CreatureLootSource("Creature-0-4379-34-1065-46383-00006A3954", 2)
 			assert(ls1 == ls2)
 			assert.equal(ls1, ls2)
 			assert.are_not.equal(ls1, ls3)
@@ -45,18 +45,18 @@ describe("Item Model", function()
 			assert.are_not.equal(ls3, nil)
 		end)
 		it("raises errors", function()
-			assert.has.errors(function() LootSlotSource("x") end, "x is not a valid creature GUID")
+			assert.has.errors(function() CreatureLootSource("x") end, "x is not a valid creature GUID")
 
-			assert.has.errors(function() LootSlotSource.FromCurrent() end, "loot slot must be a number")
-			assert.has.errors(function() LootSlotSource.FromCurrent(-1) end, "loot slot must greater than or equal to 1")
+			assert.has.errors(function() CreatureLootSource.FromCurrent() end, "loot slot must be a number")
+			assert.has.errors(function() CreatureLootSource.FromCurrent(-1) end, "loot slot must greater than or equal to 1")
 
 			local _GetNumLootItems, _GetLootSourceInfo = _G.GetNumLootItems, _G.GetLootSourceInfo
 
 			_G.GetNumLootItems = function() return 1 end
-			assert.has.errors(function() LootSlotSource.FromCurrent(2) end, "2 is not a valid loot slot (1 available)")
+			assert.has.errors(function() CreatureLootSource.FromCurrent(2) end, "2 is not a valid loot slot (1 available)")
 
 			_G.GetLootSourceInfo = function(_) return nil, 0, nil, 0 end
-			assert.has.errors(function() LootSlotSource.FromCurrent(1) end, "loot slot source could not be obtained")
+			assert.has.errors(function() CreatureLootSource.FromCurrent(1) end, "loot slot source could not be obtained")
 
 			finally(function()
 				_G.GetNumLootItems = _GetNumLootItems
@@ -132,7 +132,7 @@ describe("Item Model", function()
 			assert(not lsi1:IsFromSource(lsi2.source))
 			assert(not lsi2:IsFromSource(lsi1.source))
 
-			local source = LootSlotSource.FromCurrent(1)
+			local source = CreatureLootSource.FromCurrent(1)
 			source.id = 99999 -- make sure it doesn't pick up a random one that could be equivalent
 			assert(not lsi1:IsFromSource(source))
 			assert(not lsi2:IsFromSource(source))
@@ -146,14 +146,14 @@ describe("Item Model", function()
 
 	describe("LootTableEntry", function()
 		it("is created", function()
-			local lte = LootTableEntry(18832, LootSlotSource.FromCurrent(1))
+			local lte = LootTableEntry(18832, CreatureLootSource.FromCurrent(1))
 			assert.equal(lte.source.slot, 1)
 			assert(not lte.awarded)
 			assert(not lte.sent)
 			assert.errors(function() LootTableEntry(18834) end, "loot source was not provided")
 		end)
 		it("provides item", function()
-			local lte = LootTableEntry(18832, LootSlotSource.FromCurrent(1))
+			local lte = LootTableEntry(18832, CreatureLootSource.FromCurrent(1))
 			local item = lte:GetItem()
 			assert(item)
 			assert.equals(item.id, 18832)
@@ -161,8 +161,8 @@ describe("Item Model", function()
 			assert(not item:IsBoe())
 		end)
 		it("supports checking if from source", function()
-			local lte1 = LootTableEntry(18832, LootSlotSource.FromCurrent(1))
-			local lte2 = LootTableEntry(18833, LootSlotSource.FromCurrent(2))
+			local lte1 = LootTableEntry(18832, CreatureLootSource.FromCurrent(1))
+			local lte2 = LootTableEntry(18833, CreatureLootSource.FromCurrent(2))
 
 			lte1.source.id = "Creature-0-4379-34-1065-46382-00076A3954"
 			lte2.source.id = "Creature-0-4379-34-1065-46383-00006A3954"
@@ -172,7 +172,7 @@ describe("Item Model", function()
 			assert(not lte1:IsFromSource(lte2.source))
 			assert(not lte2:IsFromSource(lte1.source))
 
-			local source = LootSlotSource.FromCurrent(1)
+			local source = CreatureLootSource.FromCurrent(1)
 			source.id = "Creature-0-1465-0-2105-448-000043F59F" -- make sure it doesn't pick up a random one that could be equivalent
 			assert(not lte1:IsFromSource(source))
 			assert(not lte2:IsFromSource(source))

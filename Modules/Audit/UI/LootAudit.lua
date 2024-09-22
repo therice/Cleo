@@ -118,7 +118,6 @@ function LootAudit:LayoutInterface(container)
 	container.moreInfoBtn:SetPoint("TOPRIGHT", container.banner, "TOPRIGHT", -5, -25)
 
 	-- todo : apply multi-selection on filter tables?
-
 	container.date = ST.New(DateFilterColumns, 5, 20, nil, container, false)
 	container.date.frame:SetPoint("TOPLEFT", container.banner, "TOPLEFT", 10, -50)
 	container.date:EnableSelection(true)

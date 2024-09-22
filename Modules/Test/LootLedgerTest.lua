@@ -315,9 +315,11 @@ insulate("LootLedger (Watcher)", function()
 
 		it("dispatches loot received messages", function()
 			ModuleWithData(m, {}, true)
+			local Watcher = AddOn.Package("LootLedger").Watcher
 
-			local watcher = m:GetWatcher()
+			local watcher = Watcher()
 			assert(watcher)
+			watcher:Start()
 
 			local _IsHandled = m.IsHandled
 			m.IsHandled = function() return true end
@@ -344,6 +346,7 @@ insulate("LootLedger (Watcher)", function()
 
 			finally(function()
 				AddOn.Unsubscribe(subs)
+				watcher:Stop()
 				m.isHandled = _IsHandled
 			end)
 		end)
@@ -584,6 +587,8 @@ insulate("LootLedger (Module)", function()
 		end)
 
 		it("handles item received", function()
+			--local Watcher = AddOn.Package("LootLedger").Watcher
+
 			ModuleWithData(m, {
 				['deb99e6d9ac4e323b91b161229a720ae75e49c7e9af2bf84a341175afde20dae'] = -- 09/04/24 09:02:32
 					{state = 'TT', item = '|cffa335ee|Hitem:15917:::::::::::::::::|h[ItemName15917]|h|r', added = 1725462152},
@@ -601,7 +606,14 @@ insulate("LootLedger (Module)", function()
 			m.IsHandled = function() return true end
 			assert(m:IsHandled())
 
+			--[[
+			local watcher = Watcher()
+			assert(watcher)
+			watcher:Start()
+			--]]
+
 			AddOn.TestModeEnabled = function(_) return false end
+
 			local containerItemInfo = {
 				[1] = {
 					[4] = { nil, nil, nil, nil, nil, nil, "|cffa335ee|Hitem:159117:::::::::::::::::|h[Item15917]|h|r", nil, nil, 15917 },
@@ -681,25 +693,60 @@ insulate("LootLedger (Module)", function()
 				assert.equal(guid, entry.guid)
 			end
 
-			SendChatMessage("You receive loot: |cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r.", "LOOT")
+			--SendChatMessage("You receive loot: |cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r.", "LOOT")
+			m:OnItemReceived({
+				id = 1,
+				link = '|cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r',
+				count = 1,
+				player = AddOn.player:GetName(),
+				when= GetServerTime()
+			})
 			AssertEntryGuid("255d65a327fa1d1e58ffe80dc10a87922377f34e8b2fefb4a10e20cd11325d61", "Item-4372-0-400000033D4D1C16")
 			AssertEntryGuid("4a154b00055db56f26ed2249bbfdff40710747efb669aaea4527e77648cc44a6", nil)
 			AssertEntryGuid("deb99e6d9ac4e323b91b161229a720ae75e49c7e9af2bf84a341175afde20dae", nil)
 
-			SendChatMessage("You receive loot: |cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r.", "LOOT")
+			--SendChatMessage("You receive loot: |cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r.", "LOOT")
+			m:OnItemReceived({
+				id = 1,
+				link = '|cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r',
+				count = 1,
+				player = AddOn.player:GetName(),
+				when = GetServerTime()
+			})
 			AssertEntryGuid("255d65a327fa1d1e58ffe80dc10a87922377f34e8b2fefb4a10e20cd11325d61", "Item-4372-0-400000033D4D1C16")
 			AssertEntryGuid("4a154b00055db56f26ed2249bbfdff40710747efb669aaea4527e77648cc44a6", "Item-4372-0-400000033D4D1C17")
 			AssertEntryGuid("deb99e6d9ac4e323b91b161229a720ae75e49c7e9af2bf84a341175afde20dae", nil)
 
-			SendChatMessage("You receive loot: |cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r.", "LOOT")
+			--SendChatMessage("You receive loot: |cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r.", "LOOT")
+			m:OnItemReceived({
+				id = 1,
+				link = '|cffa335ee|Hitem:15917:::::::::::::::::|h[Item15917]|h|r',
+				count = 1,
+				player = AddOn.player:GetName(),
+				when = GetServerTime()
+			})
 			AssertEntryGuid("255d65a327fa1d1e58ffe80dc10a87922377f34e8b2fefb4a10e20cd11325d61", "Item-4372-0-400000033D4D1C16")
 			AssertEntryGuid("4a154b00055db56f26ed2249bbfdff40710747efb669aaea4527e77648cc44a6", "Item-4372-0-400000033D4D1C17")
 			AssertEntryGuid("deb99e6d9ac4e323b91b161229a720ae75e49c7e9af2bf84a341175afde20dae", "Item-4372-0-400000033D4D1C20")
 
-			SendChatMessage("You receive loot: |cffa335ee|Hitem:15918:::::::::::::::::|h[Item15918]|h|r.", "LOOT")
+			--SendChatMessage("You receive loot: |cffa335ee|Hitem:15918:::::::::::::::::|h[Item15918]|h|r.", "LOOT")
+			m:OnItemReceived({
+				id = 1,
+				link = '|cffa335ee|Hitem:15918:::::::::::::::::|h[Item15918]|h|r',
+				count=1,
+				player = AddOn.player:GetName(),
+				when = GetServerTime()
+			})
 			AssertEntryGuid("655e6616e3a818c5568a8bd6d671fef27ba9aaf3c0e64de86569d588203c1bda", "Item-4372-0-400000033D4D1C18")
 
-			SendChatMessage("You receive loot: |cffa335ee|Hitem:15919:::::::::::::::::|h[Item15919]|h|r.", "LOOT")
+			--SendChatMessage("You receive loot: |cffa335ee|Hitem:15919:::::::::::::::::|h[Item15919]|h|r.", "LOOT")
+			m:OnItemReceived({
+				id = 1,
+				link = '|cffa335ee|Hitem:15919:::::::::::::::::|h[Item15919]|h|r',
+				count = 1,
+				player = AddOn.player:GetName(),
+				when = GetServerTime()
+			})
 			AssertEntryGuid("f4056dea1b4cc1f277d8a1a408e8daed2fdb788d5c0c53946ee0b74dc56a0051", "Item-4372-0-400000033D4D1C19")
 
 

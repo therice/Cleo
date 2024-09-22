@@ -115,6 +115,7 @@ AddOn.Constants = {
         HandleLootStop          =   "hlstp",
         LootAuditAdd            =   "laa",
         LootAck                 =   "la",
+        LootedToBags            =   "ltb",
         LootSessionEnd          =   "lse",
         LootTable               =   "lt",
         LootTableAdd            =   "lta",

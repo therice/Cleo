@@ -11,16 +11,18 @@ local Event = AddOn.RequireOnUse('Core.Event')
 local Comm = AddOn.RequireOnUse('Core.Comm')
 --- @type Models.Item.ItemRef
 local ItemRef = AddOn.Package('Models.Item').ItemRef
---- @type Models.Item.CreatureLootSource
-local LootSlotSource = AddOn.Package('Models.Item').LootSlotSource
 --- @type Models.Item.PlayerLootSource
 local PlayerLootSource = AddOn.Package('Models.Item').PlayerLootSource
+--- @type Models.Item.CreatureLootSource
+local CreatureLootSource = AddOn.Package('Models.Item').CreatureLootSource
 --- @type Models.Item.LootSlotInfo
 local LootSlotInfo = AddOn.Package('Models.Item').LootSlotInfo
 --- @type Models.Item.LootTableEntry
 local LootTableEntry = AddOn.Package('Models.Item').LootTableEntry
 --- @type Models.Item.LootQueueEntry
 local LootQueueEntry = AddOn.Package('Models.Item').LootQueueEntry
+--- @type LootLedger.Entry
+local LootLedgerEntry = AddOn.Package('LootLedger').Entry
 --- @type table<string, string>
 local LAR = AddOn.Package('Models.Item').LootAllocateResponse.Attributes
 --- @type Models.Player
@@ -1164,7 +1166,7 @@ function ML:UpdateLootSlots()
 				-- todo : verify the entry is from a creature, then check slots
 				-- this will create a loot source for the entry's slot based upon the currently targeted source's loot
 				-- it may not necessarily be the same source, which we need to verify before updating anything
-				local source = LootSlotSource.FromCurrent(slot)
+				local source = CreatureLootSource.FromCurrent(slot)
 				if AddOn.ItemIsItem(item, ltEntry.item) and ltEntry:IsFromSource(source) then
 					if slot ~= ltEntry.slot then
 						Logging:Debug("UpdateLootSlots(session=%d) : item %s previously at slot=%d, now at slot=%d", session, ltEntry.item, ltEntry.slot, slot)
@@ -1325,7 +1327,7 @@ function ML:LootOnClick(button)
 		slot = tonumber(button.slot)
 	end
 
-	local source = LootSlotSource.FromCurrent(slot)
+	local source = CreatureLootSource.FromCurrent(slot)
 
 	-- verify the item in the slot isn't already on the loot table
 	for _, v in ipairs(self.lootTable) do
@@ -1374,55 +1376,75 @@ end
 
 ML.AwardStatus = {
 	Failure = {
-		LootGone                  = "LootGone",
-		LootNotOpen               = "LootNotOpen",
-		LootSourceMismatch        = "LootSourceMismatch",
-		MLInventoryFull           = "MLInventoryFull",
-		MLNotInInstance           = "MLNotInInstance",
-		NotBop                    = "NotBop",
-		NotInGroup                = "NotInGroup",
-		NotMLCandidate            = "NotMLCandidate",
-		Offline                   = "Offline",
-		OutOfInstance             = "OutOfInstance",
-		QualityBelowThreshold     = "QualityBelowThreshold",
-		Timeout                   = "Timeout",
+		AwardLaterMissingWinner = "AwardLaterMissingWinner",
+		AwardLaterCannotReward  = "AwardLaterCannotReward",
+		LootAmbiguity           = "LootAmbiguity",
+		LootGone                = "LootGone",
+		LootNotOpen             = "LootNotOpen",
+		LootSourceMismatch      = "LootSourceMismatch",
+		LootSourceMissing       = "LootSourceMissing",
+		MLInventoryFull         = "MLInventoryFull",
+		MLNotInInstance         = "MLNotInInstance",
+		NotBop                  = "NotBop",
+		NotInGroup              = "NotInGroup",
+		NotMLCandidate          = "NotMLCandidate",
+		Offline                 = "Offline",
+		OutOfInstance           = "OutOfInstance",
+		QualityBelowThreshold   = "QualityBelowThreshold",
+		Timeout                 = "Timeout",
 	},
 	Success = {
+		Indirect      = "Indirect",
 		ManuallyAdded = "ManuallyAdded",
 		Normal        = "Normal",
 	},
 	Neutral = {
-		TestMode = "TestMode",
+		AwardLaterAlreadyInBags = "AwardLaterAlreadyInBags",
+		AwardLaterFromBags      = "AwardLaterAlreadyInBags",
+		TestMode                = "TestMode",
 	}
 }
 
 --- @param item string ItemID|ItemString|ItemLink
 --- @param slot number index of the item within the loot table, can be Nil if item was not added from a loot table
---- @param source Models.Item.CreatureLootSource source from which loot (slot) was obtained, can be Nil if item was not added from a loot table
 --- @param winner string name of the player which won the item
-function ML:CanGiveLoot(item, slot, source, winner)
-	local AS, loot = self.AwardStatus, self:GetLootSlot(slot)
+--- @return boolean, string 'can the loot be given', 'if not, why not?'
+function ML:CanGiveLoot(item, slot, winner)
+	local AS, lootSlotInfo = self.AwardStatus, self:GetLootSlot(slot)
+	local source
+
+	-- attempt to determine the loot source, which should be from the current creature being looted
+	-- if that's not the case, then it will be ignored for purposes of determining result
+	Util.Functions.try(
+		function()
+			source = CreatureLootSource.FromCurrent(slot)
+		end
+	).catch(
+		function(err)
+			Logging:Warn("CanGiveLoot(slot=%s, item=%s) : could not determine loot source '%s'", slot, tostring(item), tostring(err))
+		end
+	)
 
 	Logging:Debug(
 		"CanGiveLoot(slot=%d, item=%s, source=%s, winner=%s) : lootsSlot=%s",
-		slot, tostring(item), Util.Objects.ToString(source and source:toTable() or nil), tostring(winner),
-		function() return Util.Objects.ToString(loot) end
+		slot, tostring(item), Util.Objects.ToString(source), tostring(winner),
+		function() return Util.Objects.ToString(lootSlotInfo) end
 	)
 
 	if not self.lootOpen then
 		return false, AS.Failure.LootNotOpen
-	elseif Util.Objects.IsNil(loot) then
+	elseif Util.Objects.IsNil(lootSlotInfo) then
 		return false, AS.Failure.LootGone
 	-- only check source if one was provided
-	elseif not Util.Objects.IsNil(source) and not loot:IsFromSource(source) then
+	elseif not Util.Objects.IsNil(source) and not lootSlotInfo:IsFromSource(source) then
 		return false, AS.Failure.LootSourceMismatch
-	elseif not AddOn.ItemIsItem(loot.item, item) then
+	elseif not AddOn.ItemIsItem(lootSlotInfo.item, item) then
 		return false, AS.Failure.LootGone
 	elseif AddOn.UnitIsUnit(winner, C.player) and not self:HaveFreeSpaceForItem(item) then
 		return false, AS.Failure.MLInventoryFull
 	elseif not AddOn.UnitIsUnit(winner, C.player) then
 		-- item quality below loot threshold
-		if loot.quality < GetLootThreshold() then
+		if lootSlotInfo.quality < GetLootThreshold() then
 			return false, AS.Failure.QualityBelowThreshold
 		end
 
@@ -1489,13 +1511,22 @@ end
 
 ---@param award Models.Item.ItemAward
 function ML:RegisterAndAnnounceAward(award)
-	local session, winner, response, reason =
-		award.session, award.winner, award:NormalizedReason().text, award.reason
+	local session, winner, response, reason = award.session, award.winner, award:NormalizedReason().text, award.reason
 	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
 
 	local ltEntry = self:GetLootTableEntry(session)
 	local changeAward = ltEntry.awarded
-	ltEntry.awarded = winner -- ltEntry.awarded = true
+	-- ltEntry.awarded = true
+	ltEntry.awarded = winner
+
+	-- if this item is in a player's bags (loot ledger), then change it's status indicate it needs traded
+	local ledgerEntry = ltEntry:GetLootLedgerEntry()
+	if ledgerEntry:isPresent() then
+		-- this will modify the state on the entry to 'to trade' and then update it in the ledger's storage
+		AddOn:LootLedgerModule():GetStorage():Update(
+			ledgerEntry:flatMap(function(e) return e:ToTrade() end), "state"
+		)
+	end
 
 	self:Send(C.group, C.Commands.Awarded, session, winner)
 
@@ -1515,6 +1546,8 @@ function ML:RegisterAndAnnounceAward(award)
 		end
 	).finally(
 		function()
+			-- todo : figure out when to register the award if it's to trade
+			-- todo: probably best to do it when traded
 			AddOn:ListsModule():OnAwardItem(award)
 		end
 	)
@@ -1523,6 +1556,63 @@ function ML:RegisterAndAnnounceAward(award)
 	if not self:HaveUnawardedItems() then
 		AddOn:Print(L["all_items_have_been_awarded"])
 		self:ScheduleTimer('EndSession', 1)
+	end
+end
+
+--- @param session number the loot session
+function ML:RegisterAndAnnounceLootedToBags(session)
+	local lootEntry = self:GetLootTableEntry(session)
+
+	local ledgerEntry = LootLedgerEntry(lootEntry.item, LootLedgerEntry.State.AwardLater, lootEntry:GetItemGUID():orElse(nil))
+	AddOn:LootLedgerModule():GetStorage():Add(ledgerEntry)
+
+	-- item is from a loot slot, going to be (or has been) looted to ML
+	if lootEntry:GetSlot():isPresent() or self.running then
+		-- implicitly ML or this code path wouldn't run
+		self:AnnounceAward(AddOn.player:GetShortName(), lootEntry.item, L['item_looted_for_award_later'], nil, session)
+		-- this is called after the item has been looted to the ML's bags, so identify the corresponding ledger entry
+		-- and then update the loot entry's source
+		--
+		-- it would be nice if this wasn't necessary and it could be done automatically via LootLedger's Watcher
+		-- however, the message for item being received will occur after the actual loot enters the bags
+		-- and that event happens before the LootLedger entry is created here (at beginning of function)
+		--
+		-- therefore, do a manual invocation to update the entry's GUID with looted item
+
+		--- @type table<LootLedger.Entry>
+		local ledgerEntries = AddOn:LootLedgerModule():OnItemReceived({
+			id     = ItemUtil:ItemLinkToId(lootEntry.item),
+			link   = lootEntry.item,
+			count  = 1,
+			player = AddOn.player:GetName(),
+			when   = GetServerTime()
+		})
+
+		-- only one entry should be updated and returned based upon semantics of OnItemReceived
+		-- and count of 1 in the item parameter
+		if #ledgerEntries == 1 then
+			local updatedLedgerEntry = ledgerEntries[1]
+			if Util.Strings.Equal(ledgerEntry.id, updatedLedgerEntry.id) then
+				lootEntry.source = PlayerLootSource.FromCurrentPlayer(updatedLedgerEntry.guid)
+			else
+				Logging:Warn(
+					"RegisterAndAnnounceLootedToBags() : unable to update loot ledger entry with looted item, updated entry was incorrect (expected %s, received %s)",
+					ledgerEntry.id, Util.Objects.ToString(updatedLedgerEntry)
+				)
+				error("unable to update loot ledger entry with looted item, updated entry was incorrect")
+			end
+		else
+			Logging:Warn("RegisterAndAnnounceLootedToBags() : unable to update loot ledger entry with looted item, updated %s entries", #ledgerEntries)
+			error(format("unable to update loot ledger entry with looted item, updated entries count is %d", #ledgerEntries))
+		end
+
+	-- item is from a player and won't need to be updated later, as GUID was provided as part of LootLedgerEntry creation
+	else
+		AddOn:Print(format(L['item_added_to_award_later'], lootEntry.item))
+	end
+
+	if self.running then
+		self:Send(C.group, C.Commands.LootedToBags, session, AddOn.player:GetName())
 	end
 end
 
@@ -1545,10 +1635,18 @@ function ML:PrintLootError(cause, item, winner)
 				UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner)) .. " - "
 			)
 
-		if Util.Objects.Equals(cause, AS.Failure.LootGone) then
+		if Util.Objects.Equals(cause, AS.Failure.LootAmbiguity) then
+			AddOn:Print(prefix, L['item_ambiguous_source'])
+		elseif Util.Objects.Equals(cause, AS.Failure.AwardLaterMissingWinner) then
+			AddOn:Print(prefix, L['award_later_missing_winner'])
+		elseif Util.Objects.Equals(cause, AS.Failure.AwardLaterCannotReward) then
+			AddOn:Print(prefix, L['award_later_cannot_reward'])
+		elseif Util.Objects.Equals(cause, AS.Failure.LootGone) then
 			AddOn:Print(prefix, _G.LOOT_GONE)
+		elseif Util.Objects.Equals(cause, AS.Failure.LootSourceMissing) then
+			AddOn:Print(prefix, L["item_no_source"])
 		elseif Util.Objects.Equals(cause, AS.Failure.LootSourceMismatch) then
-				AddOn:Print(prefix, L["item_from_different_source"])
+			AddOn:Print(prefix, L["item_from_different_source"])
 		elseif Util.Objects.Equals(cause, AS.Failure.MLInventoryFull) then
 			AddOn:Print(prefix, _G.ERR_INV_FULL)
 		elseif Util.Objects.Equals(cause, AS.Failure.QualityBelowThreshold) then
@@ -1572,12 +1670,12 @@ function ML:PrintLootError(cause, item, winner)
 end
 
 function ML:AwardResult(success, session, winner, status, callback, ...)
-	local lootTableEntry = self.lootTable[session]
+	local ltEntry = self:GetLootTableEntry(session)
 	-- these messages aren't currently being consumed by the addon itself
 	-- regardless of success or failure
 	AddOn:SendMessage(
 		success and C.Messages.AwardSuccess or C.Messages.AwardFailed,
-		session, winner, status, lootTableEntry and lootTableEntry.item or nil
+		session, winner, status, ltEntry and ltEntry.item or nil
 	)
 
 	if callback then
@@ -1624,9 +1722,9 @@ end
 ---@return boolean true if award is success. false if award is failed. nil if we don't know the result yet.
 function ML:Award(award, callback, ...)
 	assert(Util.Objects.IsSet(award), "no award specified")
+	-- the winner can be nil (false) if it's being awarded later (loot to ML inventory)
 	local session, winner = award.session, award.winner
 	assert(Util.Objects.IsNumber(session), "no session specified for item award")
-	assert(Util.Objects.IsSet(winner), "no winner specified for item award")
 	Logging:Debug("Award(session=%d) : winner=%s", session, tostring(winner))
 
 	if not self.lootTable or #self.lootTable == 0 then
@@ -1647,64 +1745,143 @@ function ML:Award(award, callback, ...)
 
 	Logging:Debug("Award(session=%d) : award=%s, lte=%s", session, Util.Objects.ToString(award), Util.Objects.ToString(ltEntry))
 
-	local slot = ltEntry.slot
+	-- these are optional attributes, which will be either set of empty based upon the source of the loot
+	--      a creature loot source WILL have a slot, but NO "bagged" item reference
+	--      a player loot source WILL NOT have a slot, but MAY have a "bagged" item reference
+	--      a test loot source WILL NOT have EITHER
+	local slot, ledgerEntry = ltEntry:GetSlot(), ltEntry:GetLootLedgerEntry()
+
+	--
+	-- some various sanity checks, which should never occur unless there is a regression
+	--
+
+	-- ambiguous loot source, available from both creature and player
+	if slot:isPresent() and ledgerEntry:isPresent() then
+		self:AwardResult(false, session, winner, AS.Failure.LootAmbiguity, callback, ...)
+		self:PrintLootError(AS.Failure.LootAmbiguity, link)
+		return false
+	end
+
+	-- loot is destined for or available via player's bags, but no winner specified
+	if ledgerEntry:isPresent() and not winner then
+		self:AwardResult(false, session, winner, AS.Failure.AwardLaterMissingWinner, callback, ...)
+		self:PrintLootError(AS.Failure.AwardLaterMissingWinner, link)
+		return false
+	end
+
+	-- loot is being re-awarded, but no winner
+	if ltEntry.awarded and not winner then
+		self:AwardResult(false, session, winner, AS.Failure.AwardLaterCannotReward, callback, ...)
+		self:PrintLootError(AS.Failure.AwardLaterCannotReward, link)
+		return false
+	end
 
 	-- previously awarded, change the award
 	if ltEntry.awarded then
 		self:RegisterAndAnnounceAward(award)
 
-		-- the entry could be missing a loot slot if not added from a loot table
-		if not slot then
+		-- manual addition via '/cleo add' or testing
+		if slot:isEmpty() and ledgerEntry:isEmpty() then
 			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
+		-- (re) awarding via entry in the loot ledger
+		elseif ledgerEntry:isPresent() then
+			self:AwardResult(true, session, winner, AS.Success.Indirect, callback, ...)
 		else
 			self:AwardResult(true, session, winner, AS.Success.Normal, callback, ...)
 		end
+
 		return true
 	end
 
+	--
 	-- not previously awarded
-	-- the entry could be missing a loot slot if not added from a loot table
-	if not slot then
+	--
+
+	-- missing slot and not previously stored in ledger, e.g. manual addition via '/cleo add' or testing
+	if slot:isEmpty() and ledgerEntry:isEmpty() then
+		-- a winner was assigned, announce it but don't actually take any further action
 		if winner then
-			self:RegisterAndAnnounceAward(award)
 			self:AwardResult(true, session, winner, AddOn:TestModeEnabled() and AS.Neutral.TestMode or AS.Success.ManuallyAdded, callback, ...)
+			self:RegisterAndAnnounceAward(award)
 			return true
 		else
-			return false
+			-- testing path
+			if AddOn:TestModeEnabled() then
+				self:AwardResult(false, session, nil, AS.Neutral.TestMode, callback, ...)
+				AddOn:Print(L['award_later_not_supported'])
+				return false
+			-- award later when added manually via '/cleo add'
+			else
+				self:RegisterAndAnnounceLootedToBags(session)
+				self:AwardResult(false, session, nil, AS.Neutral.AwardLaterAlreadyInBags, callback, ...)
+				return false
+			end
 		end
 	end
 
+	-- entry is already in player's bags
+	if ledgerEntry:isPresent() then
+		self:RegisterAndAnnounceAward(award)
+		self:AwardResult(true, session, winner, AS.Success.Indirect, callback, ...)
+		return true
+	end
+
+	--
+	-- remainder are direct loot allocation from the loot window
+	--
 	if self.lootOpen then
 		local lootSlotLink = GetLootSlotLink(slot)
 		if not AddOn.ItemIsItem(link, lootSlotLink) then
-			Logging:Debug("Award(session=%d) : Loot slot (%d) changed before award completed, award=%s, slot=%s", session, slot, link, lootSlotLink)
+			Logging:Debug("Award(session=%d) : Loot slot (%d) changed before award completed, award=%s, slot=%s", session, slot:orElse("<EMPTY>"), link, lootSlotLink)
 			-- will verify that the source is from current target's loot table before mutating loot slots
 			self:UpdateLootSlots()
 		end
 	end
 
-	local ok, cause = self:CanGiveLoot(link, slot, source, winner or AddOn.player:GetName())
+	local ok, cause = self:CanGiveLoot(link, slot:get(),winner or AddOn.player:GetName())
 	Logging:Debug("Award(session=%d) : canGiveLoot=%s, cause=%s", award.session, tostring(ok), tostring(cause))
 	if not ok then
+		-- could be an extra case to handle here for items below loot threshold or BOE, but whatever...
+		-- ... that should be handled via auto-loot and thresholds being set appropriately
 		self:AwardResult(false, session, winner, cause, callback, ... )
 		self:PrintLootError(cause, link, winner or AddOn.player:GetName())
 		return false
 	else
-		self:GiveLoot(
-			slot,
-			winner,
-			function(awarded, cause)
-				if awarded then
-					self:RegisterAndAnnounceAward(award)
-					self:AwardResult(awarded, session, winner, AS.Success.Normal, callback, unpack(args))
-					return true
-				else
-					self:AwardResult(awarded, session, winner, cause, callback, unpack(args))
-					self:PrintLootError(cause, link, winner)
+		-- actually give the loot to a player
+		if winner then
+			self:GiveLoot(
+				slot:get(),
+				winner,
+				function(awarded, cause)
+					if awarded then
+						self:RegisterAndAnnounceAward(award)
+						self:AwardResult(awarded, session, winner, AS.Success.Normal, callback, unpack(args))
+						return true
+					else
+						self:AwardResult(awarded, session, winner, cause, callback, unpack(args))
+						self:PrintLootError(cause, link, winner)
+						return false
+					end
+				end
+			)
+		-- add to loot ledger for award later
+		else
+			self:GiveLoot(
+				slot:get(),
+				AddOn.player:GetName(),
+				function(awarded, cause)
+					if awarded then
+						self:RegisterAndAnnounceLootedToBags(session)
+						self:AwardResult(false, session, nil, AS.Neutral.AwardLaterFromBags, callback, unpack(args))
+					else
+						self:AwardResult(false, session, nil, cause, callback, unpack(args))
+						self:PrintLootError(cause, link, AddOn.player:GetName())
+
+					end
 					return false
 				end
-            end
-		)
+			)
+		end
 	end
 end
 
@@ -1810,9 +1987,7 @@ function ML:AutoAward(item, slot, quality, winner, mode)
 		end
 	end
 
-	-- don't need to provide loot source here, as auto award is implicitly from currently looted source (not from a
-	-- built loot table)
-	local canGiveLoot, cause = self:CanGiveLoot(item, slot, nil, winner)
+	local canGiveLoot, cause = self:CanGiveLoot(item, slot, winner)
 	if not canGiveLoot then
 		AddOn:Print(L["cannot_auto_award"])
 		self:PrintLootError(cause, item, winner)
