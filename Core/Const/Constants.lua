@@ -181,6 +181,7 @@ AddOn.Constants = {
         PlayerAlive            = "PLAYER_ALIVE",
         PlayerEnteringWorld    = "PLAYER_ENTERING_WORLD",
         PlayerLogin            = "PLAYER_LOGIN",
+        PlayerLogout           = "PLAYER_LOGOUT",
         PlayerUnghost          = "PLAYER_UNGHOST",
         PlayerRegenEnabled     = "PLAYER_REGEN_ENABLED",
         PlayerRegenDisabled    = "PLAYER_REGEN_DISABLED",

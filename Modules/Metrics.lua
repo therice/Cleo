@@ -45,5 +45,5 @@ function Metrics:GetMetrics(metricType)
 end
 
 function Metrics:LaunchpadSupplement()
-	return L["metrics"], function(container) self:LayoutInterface(container) end , false
+	return L["metrics"], function(container) self:LayoutInterface(container) end, false
 end

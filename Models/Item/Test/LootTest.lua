@@ -232,5 +232,13 @@ describe("Item Model", function()
 			--li:SetTimeRemaining( GetServerTime(), 2700)
 			--assert(li:IsValid())
 		end)
+		it("supports auxiliary methods", function()
+			local item = LootedItem("|cffa335ee|Hitem:15917:::::::::::::::::|h[ItemName15917]|h|r", LootedItem.State.AwardLater, "Item-4372-0-400000033D4D1C15")
+			item.added = 1727108404
+			assert.has.match("09/23/2024 %d+%d+:20:04", item:FormattedTimestampAdded())
+			assert.equal("Award Later", item:GetStateDescription())
+			item.state = LootedItem.State.ToTrade
+			assert.equal("To Trade", item:GetStateDescription())
+		end)
 	end)
 end)

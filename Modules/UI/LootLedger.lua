@@ -21,11 +21,132 @@ local LootLedger = AddOn:GetModule("LootLedger")
 local DropDown = AddOn.Require('UI.DropDown')
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
+--- @type UI.ScrollingTable
+local ST = AddOn.Require('UI.ScrollingTable')
+--- @type UI.ScrollingTable.ColumnBuilder
+local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
+--- @type UI.ScrollingTable.CellBuilder
+local  STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
 
+local MaxTradeTimeRemaining= 7200
+
+local ScrollColumns =
+	ST.ColumnBuilder()
+		-- 1 (item icon)
+		:column(""):width(20):sortnext(3)
+		-- 2 (item name)
+		:column(_G.NAME):width(100)
+			:defaultsort(STColumnBuilder.Ascending)
+			:comparesort(ST.SortFn(function(row) return ItemUtil:ItemLinkToItemString(row.entry.item) end))
+		-- 3 (added)
+		:column(L['added']):width(125):sortnext(2)
+			:defaultsort(STColumnBuilder.Descending)
+			:comparesort(ST.SortFn(function(row) return row.entry.added end))
+		-- 4 (state)
+		:column(L['status']):width(125)
+		-- 5 (recipient)
+		:column(L['winner']):width(125)
+		-- 6 (time remaining)
+		:column(L['trade_time_remaining']):width(250)
+	:build()
+
+function LootLedger:LayoutInterface(container)
+	Logging:Debug("LayoutInterface(%s)", tostring(container:GetName()))
+	local module = self
+
+	local st = ST.New(ScrollColumns, 20, 20, nil, container)
+	st.frame:SetPoint("TOPLEFT", container.banner, "BOTTOMLEFT", 10, -30)
+	st.frame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -15, 0)
+	st:EnableSelection(true)
+
+	container:SetScript("OnShow", function(self) module:Populate(self) end)
+	self.interfaceFrame = container
+end
+
+--- Refreshes displayed data if module is enabled and interface is shown
+function LootLedger:Refresh()
+	if self:IsEnabled() and self.interfaceFrame and self.interfaceFrame:IsVisible() then
+		self:Populate(self.interfaceFrame)
+	end
+end
+
+---
+--- Populates the scrolling table with data
+---
+--- @param container Frame
+function LootLedger:Populate(container)
+	--- @type LibScrollingTable.ScrollingTable
+	local st = container.st
+	if st then
+		local rows, row = {}, 1
+		self:GetStorage():ForEach(
+			function(id, e)
+				-- this is only to declare type for help with completion in IDE
+				--- @type LootLedger.Entry
+				local entry = e
+				if entry then
+					rows[row] = {
+						num = row,
+						entry = entry,
+						cols =
+							STCellBuilder()
+								:itemIconCell(entry.item)
+								:cell(entry.item)
+								:cell(entry:FormattedTimestampAdded())
+								:cell(entry:GetStateDescription())
+								:cell("")
+								:timerBarCell(250, 20,
+									function(cdb, _, data, realRow)
+										--- @type LootLedger.Entry
+										local rowEntry = data[realRow].entry
+										local bag, slot = AddOn:GetBagAndSlotByGUID(rowEntry.guid)
+										if bag and slot then
+											local ttRemaining = AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
+											Logging:Trace("LootLedger:timerBarCell(%d, %d, %d)", bag, slot, ttRemaining)
+
+											cdb:SetDuration(ttRemaining)
+											cdb:AddUpdateFunction(
+												function(self)
+													if self.remaining > MaxTradeTimeRemaining then
+														return
+													end
+													local pctRemaining = (self.remaining / MaxTradeTimeRemaining) * 100;
+													if (pctRemaining >= 60) then
+														self:SetColor(C.Colors.Peppermint:GetRGBA())
+													elseif (pctRemaining >= 30) then
+														self:SetColor(C.Colors.YellowLight:GetRGBA())
+													else
+														self:SetColor(C.Colors.RoseQuartz:GetRGBA())
+													end
+												end
+											)
+											cdb:Start(MaxTradeTimeRemaining)
+										else
+											cdb:Stop()
+										end
+									end
+								)
+								:build()
+					}
+					row = row + 1
+				end
+			end
+		)
+
+		st:SetData(rows)
+		st:SortData()
+	end
+end
+
+
+--[[ LootLedger.TradeTimesWindow START --]]
 --- @type LibUtil.Numbers.AtomicNumber
 local EntryCounter = Util.Numbers.AtomicNumber(1)
-local HeaderHeight, RowHeight, MaxTradeTimeRemaining, MaxRows, MaxWidth, MaxHeight = 25, 22, 7200, 5, 1200, 490
+local HeaderHeight, RowHeight,  MaxRows, MaxWidth, MaxHeight = 25, 22, 5, 1200, 490
 
+---
+--- Widget for display trade time remaining on looted items
+---
 --- @class LootLedger.TradeTimesWindow
 --- @field frame table the window frame
 local TradeTimesWindow = AddOn.Package("LootLedger"):Class("TradeTimesWindow")
@@ -347,11 +468,11 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 
 			local pctRemaining = (cdb.remaining / MaxTradeTimeRemaining) * 100;
 			if (pctRemaining >= 60) then
-				cdb:SetColor(C.Colors.Peppermint:GetRGBA())
+				countDownBar:SetColor(C.Colors.Peppermint:GetRGBA())
 			elseif (pctRemaining >= 30) then
-				cdb:SetColor(C.Colors.YellowLight:GetRGBA())
+				countDownBar:SetColor(C.Colors.YellowLight:GetRGBA())
 			else
-				cdb:SetColor(C.Colors.RoseQuartz:GetRGBA())
+				countDownBar:SetColor(C.Colors.RoseQuartz:GetRGBA())
 			end
 
 			local storageEntry = frame:GetLootLedgerEntry()
@@ -391,7 +512,6 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 		self.countDownBar:Hide()
 		_Hide(self)
 	end
-
 
 	countDownBar:Start(MaxTradeTimeRemaining)
 
@@ -524,7 +644,9 @@ function TradeTimesWindow:Hide()
 
 	self:Get():Hide()
 end
+--[[ LootLedger.TradeTimesWindow END --]]
 
+--[[ LootLedger.TradeTimesOverview START --]]
 --- @class LootLedger.TradeTimesOverview
 local TradeTimesOverview = AddOn.Instance(
 	'LootLedger.TradeTimesOverview',
@@ -570,3 +692,4 @@ end
 function TradeTimesOverview:Close()
 	self.private:Hide()
 end
+--[[ LootLedger.TradeTimesOverview END --]]

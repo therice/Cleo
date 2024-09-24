@@ -1571,7 +1571,11 @@ end
 function ML:RegisterAndAnnounceLootedToBags(session)
 	local lootEntry = self:GetLootTableEntry(session)
 
-	local ledgerEntry = LootLedgerEntry(lootEntry.item, LootLedgerEntry.State.AwardLater, lootEntry:GetItemGUID():orElse(nil))
+	local ledgerEntry = LootLedgerEntry(
+		lootEntry.item,
+		LootLedgerEntry.State.AwardLater,
+		lootEntry:GetItemGUID():orElse(nil)
+	)
 	AddOn:LootLedgerModule():GetStorage():Add(ledgerEntry)
 
 	-- item is from a loot slot, going to be (or has been) looted to ML
@@ -1805,7 +1809,7 @@ function ML:Award(award, callback, ...)
 	-- not previously awarded
 	--
 
-	-- missing slot and not previously stored in ledger, e.g. manual addition via '/cleo add' or testing
+	-- missing slot and not previously stored in the ledger, e.g. manual addition via '/cleo add' or testing
 	if slot:isEmpty() and ledgerEntry:isEmpty() then
 		-- a winner was assigned, announce it but don't actually take any further action
 		if winner then
@@ -1813,8 +1817,8 @@ function ML:Award(award, callback, ...)
 			self:RegisterAndAnnounceAward(award)
 			return true
 		else
-			-- testing path
-			if AddOn:TestModeEnabled() then
+			-- testing path and dev mode is disabled
+			if AddOn:TestModeEnabled() and not AddOn:DevModeEnabled() then
 				self:AwardResult(false, session, nil, AS.Neutral.TestMode, callback, ...)
 				AddOn:Print(L['award_later_not_supported'] .. ' : ' .. link)
 				return false

@@ -392,6 +392,7 @@ function FrameClass:SetFixedFrameStrata(isFixed) end
 
 function FrameClass:SetFixedFrameLevel(isFixed) end
 
+--- @return Frame
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind

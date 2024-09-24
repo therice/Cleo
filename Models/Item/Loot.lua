@@ -13,7 +13,10 @@ local Item = AddOn.Package('Models.Item').Item
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
-
+--- @type Models.DateFormat
+local DateFormat = AddOn.Package('Models').DateFormat
+--- @type Models.DateFormat
+local fullDf = DateFormat("mm/dd/yyyy HH:MM:SS")
 ---
 --- The source of loot, specifically the unique id (GUID)
 ---
@@ -612,6 +615,7 @@ local function validate(item, skipNilCheck)
 	return item
 end
 
+--- @return Models.Item.LootedItem
 function LootedItem:initialize(item, state, guid)
 	ItemRef.initialize(self, item)
 	-- the state of the looted item
@@ -636,11 +640,23 @@ function LootedItem:TimeSinceAdded()
 	return (GetServerTime() - self.added)
 end
 
+--- @return string the entry's added timestamp formatted in local TZ in format of mm/dd/yyyy HH:MM:SS
+function LootedItem:FormattedTimestampAdded()
+	return fullDf:format(self.added)
+end
+
 --- @return boolean true if item's attributes are valid
 function LootedItem:IsValid()
 	return ItemUtil:ContainsItemString(self.item) and Util.Tables.ContainsKey(StateNames, self.state)
 end
 
+--- @return string a human readable description of the state
+function LootedItem:GetStateDescription()
+	-- BLECH
+	return Util.Strings.Join(" ",
+		Util.Strings.Split(Util.Strings.FromCamelCase(LootedItem.StateNames[self.state]), " ")
+	)
+end
 ---
 --- Marks the item as 'award later'
 ---
@@ -659,10 +675,12 @@ function LootedItem:ToTrade()
 	return self
 end
 
+--- @return boolean true if state is 'award later', otherwise false
 function LootedItem:IsAwardLater()
 	return self.state == LootedItem.State.AwardLater
 end
 
+--- @return boolean true if state is 'to trade', otherwise false
 function LootedItem:IsToTrade()
 	return self.state == LootedItem.State.ToTrade
 end

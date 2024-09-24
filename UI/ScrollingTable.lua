@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, C  = AddOn.Locale, AddOn.Constants
 --- @type LibLogging
@@ -21,6 +22,8 @@ local UI = AddOn.Require('UI.Native')
 local Player = AddOn.Package('Models').Player
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
+--- @type LibCandyBar
+local CandyBar = AddOn:GetLibrary('CandyBar')
 
 --- @class UI.ScrollingTable
 local ScrollingTable = AddOn.Instance(
@@ -136,6 +139,31 @@ function TextCell:initialize(fn)
     )
 end
 
+--- @class TimerBarCell
+local TimerBarCell = AddOn.Class('TimerBarCell', Cell)
+function TimerBarCell:initialize(width, height, fn)
+    Cell.initialize(self, nil)
+    self:DoCellUpdate(
+        -- rowFrame, cellFrame, data, cols, row, realrow, column
+        function(_, frame, data, _, _, realrow)
+            if not frame.cdb then
+                Logging:Debug("TimerBarCell:DoCellUpdate()")
+
+                local countDownBar = CandyBar:New(UI.ResolveTexture("Clean"), width, height)
+                countDownBar:SetParent(frame)
+                countDownBar:SetColor(C.Colors.Peppermint:GetRGBA())
+                countDownBar:SetFont(_G.GameFontNormalSmall:GetFont(), 12, "OUTLINE")
+                countDownBar:SetBackgroundColor(0, 0, 0, 0.3)
+                countDownBar:SetAllPoints(frame)
+                countDownBar:SetTimeVisibility(true)
+                frame.cdb = countDownBar
+            end
+
+            fn(frame.cdb, frame, data, realrow)
+        end
+    )
+end
+
 --- @class UI.ScrollingTable.CellBuilder
 local CellBuilder = Package:Class('CellBuilder', Builder)
 function CellBuilder:initialize()
@@ -146,6 +174,7 @@ function CellBuilder:initialize()
     tinsert(self.embeds, 'deleteCell')
     tinsert(self.embeds, 'itemIconCell')
     tinsert(self.embeds, 'textCell')
+    tinsert(self.embeds, 'timerBarCell')
 end
 
 --- @return Cell
@@ -201,6 +230,11 @@ function CellBuilder:textCell(fn)
     return self:entry(TextCell, fn)
 end
 
+--- @return TimerBarCell
+function CellBuilder:timerBarCell(width, height, fn)
+    return self:entry(TimerBarCell, width, height, fn)
+end
+
 local DefaultRowCount, DefaultRowHeight, DefaultHighlight =
     20, 25, { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 }
 
@@ -215,7 +249,7 @@ function ScrollingTable.CellBuilder()
 end
 
 --- @param attach boolean should the scrolling table be attached to frame at 'st'
---- @return table
+--- @return LibScrollingTable.ScrollingTable
 function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach, multiSelect)
     cols = cols or {}
     rows = rows or DefaultRowCount
@@ -246,7 +280,6 @@ local STBackdrop = {
 local STBackdropBorderColor = C.Colors.ItemPoor
 
 function ScrollingTable.Decorate(st)
-
     st.ReSkin = function(self)
         self.frame:SetBackdrop(STBackdrop)
         self.frame:SetBackdropColor(0, 0, 0, 1)

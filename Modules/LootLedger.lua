@@ -9,8 +9,6 @@ local Util = AddOn:GetLibrary("Util")
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Dao
 local Dao = AddOn.Package('Models').Dao
---- @type Models.Hashers
-local Hashers = AddOn.Require('Models.Hashers')
 --- @type Models.Item.LootedItem
 local LootedItem = AddOn.Package('Models.Item').LootedItem
 --- @type AceBucket
@@ -21,6 +19,8 @@ local Message = AddOn.RequireOnUse('Core.Message')
 local Event = AddOn.RequireOnUse('Core.Event')
 --- @type LibDeformat
 local Deformat =  AddOn:GetLibrary("Deformat")
+--- @type LibUtil.UUID
+local UUID = Util.UUID
 
 ---
 --- Persistent storage for loot ledger
@@ -33,7 +33,6 @@ local Storage = AddOn.Package("LootLedger"):Class("Storage", Dao)
 --- @class LootLedger.Entry : Models.Item.LootedItem
 --- @field id string the entry's id
 local Entry = AddOn.Package("LootLedger"):Class("Entry", LootedItem)
-Entry.Hasher = Hashers.SHA256()
 ---
 --- Watches for items being looted by current player
 ---
@@ -89,7 +88,9 @@ end
 function LootLedger:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
 	self:SubscribeToMessages()
-	--self.watcher:Start()
+	-- due to semantics of how items are looted prior to being added to ledger,
+	-- disabled the loot watcher in favor of direct dispatch
+	-- self.watcher:Start()
 	self.tradeTimes:Start()
 	TradeTimesOverview():Enable()
 end
@@ -146,6 +147,10 @@ function LootLedger:UnsubscribeFromMessages()
 		AddOn.Unsubscribe(self.messageSubscriptions)
 		self.messageSubscriptions = nil
 	end
+end
+
+function LootLedger:LaunchpadSupplement()
+	return L["loot_ledger"], function(container) self:LayoutInterface(container) end, false
 end
 
 function LootLedger:ScheduleStorageValidation()
@@ -569,16 +574,10 @@ end
 ---[[ LootLedger.TradeTimes END --]]
 
 ---[[ LootLedger.Entry BEGIN --]]
-
------- unique identifier should multiple instances be created at same instant
---- @type LibUtil.Numbers.AtomicNumber
-local EntryCounter = Util.Numbers.AtomicNumber(0)
-
 --- @see Models.Item.LootedItem
 function Entry:initialize(item, state, guid)
 	LootedItem.initialize(self, item, state, guid)
-	-- could use UUID here, but item id, time and incrementing number is sufficient
-	self.id = self.Hasher:hash({ItemUtil:ItemLinkToId(self.item), GetServerTime(), EntryCounter:GetAndIncrement()})
+	self.id = UUID.UUID()
 end
 
 function Entry:tostring()

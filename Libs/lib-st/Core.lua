@@ -14,6 +14,7 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local MAJOR, MINOR = "ScrollingTable", tonumber("1619112418") or 40300;
+--- @class LibScrollingTable
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not lib then
 	return; -- Already loaded and no upgrade necessary.
@@ -652,8 +653,9 @@ do
 		return false;
 	end
 
+	--- @return LibScrollingTable.ScrollingTable
 	function lib:CreateST(cols, numRows, rowHeight, highlight, parent, multiselection)
-		--- @class LibScrollingTable
+		--- @class LibScrollingTable.ScrollingTable
 		local st = {};
 		self.framecount = self.framecount or 1;
 		local f = CreateFrame("Frame", "ScrollTable" .. self.framecount, parent or UIParent, BackdropTemplateMixin and "BackdropTemplate");

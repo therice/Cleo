@@ -80,7 +80,6 @@ local ScrollColumns =
 
 
 -- build data, refresh
-
 function Metrics:LayoutMetricsTab(tab, type)
 	tab.metricType = type
 
