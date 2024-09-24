@@ -493,6 +493,8 @@ end
 local EncounterCreatures = Util.Memoize.Memoize(
     function(encounterId)
         if encounterId then
+            -- the encounter has an overridden name that is the commonly used in reference
+            -- e.g. Omnitron Defense System
             local encounterName = LibEncounter:GetEncounterName(encounterId)
             if Util.Strings.IsSet(encounterName) then
                 return encounterName

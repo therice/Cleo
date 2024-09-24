@@ -50,7 +50,6 @@ function Optional:orElse(other)
 	end
 end
 
-
 function Optional:orElseGet(other)
 	if self.value ~= nil then
 		return self.value

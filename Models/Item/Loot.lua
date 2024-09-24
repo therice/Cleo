@@ -13,6 +13,8 @@ local Item = AddOn.Package('Models.Item').Item
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
+--- @type Models.Encounter
+local Encounter = AddOn.ImportPackage('Models').Encounter
 --- @type Models.DateFormat
 local DateFormat = AddOn.Package('Models').DateFormat
 --- @type Models.DateFormat
@@ -585,6 +587,7 @@ local StateNames = tInvert(State)
 --- @field state string the state of the bagged item
 --- @field guid string the item GUID, which must be in inventory (bags or bank). will be nil if not yet in inventory and evaluated
 --- @field added number timestamp when item added (seconds since the epoch), not necessarily when it entered bags
+--- @field supplemental table<string, any> key/value attributes which can differ by 'type' and 'source' of looted item
 local LootedItem = AddOn.Package('Models.Item'):Class('LootedItem', ItemRef)
 LootedItem.State = State
 LootedItem.StateNames = StateNames
@@ -615,6 +618,17 @@ local function validate(item, skipNilCheck)
 	return item
 end
 
+-- well known and supported supplemental attributes
+local SupplementalAttributes = {
+	Encounter = 'encounter'
+}
+
+-- well known and supported attributes of supplemental 'stuff'
+local EncounterAttributes = {
+	Id         = 'id',
+	InstanceId = 'instanceId'
+}
+
 --- @return Models.Item.LootedItem
 function LootedItem:initialize(item, state, guid)
 	ItemRef.initialize(self, item)
@@ -624,6 +638,8 @@ function LootedItem:initialize(item, state, guid)
 	self.guid = guid
 	-- timestamp when item added (not necessarily when it entered bags)
 	self.added = GetServerTime()
+	-- key/value attributes which can differ by 'type' and 'source' of looted item
+	self.supplemental = {}
 	validate(self)
 end
 
@@ -673,6 +689,34 @@ end
 function LootedItem:ToTrade()
 	self.state = LootedItem.State.ToTrade
 	return self
+end
+
+--- @param encounter Models.Encounter
+function LootedItem:WithEncounter(encounter)
+	if encounter then
+		self.supplemental[SupplementalAttributes.Encounter] = {
+			[EncounterAttributes.InstanceId] = encounter.instanceId,
+			[EncounterAttributes.Id]         = encounter.id,
+		}
+	end
+
+	return self
+end
+
+--- @return LibUtil.Optional.Optional an optional, which if present will be the associated encounter
+function LootedItem:GetEncounter()
+	local encounterAttrs = self.supplemental[SupplementalAttributes.Encounter]
+	if encounterAttrs then
+		-- create an empty encounter and only assign the attributes we capture
+		local encounter = Encounter()
+		for _, attr in pairs(EncounterAttributes) do
+			encounter[attr] = encounterAttrs[attr]
+		end
+
+		return Util.Optional.of(encounter)
+	end
+
+	return Util.Optional.empty()
 end
 
 --- @return boolean true if state is 'award later', otherwise false

@@ -605,13 +605,15 @@ end
 --- @param event string the event type
 --- @param detail EventDetail the associated detail
 function Storage:FireCallbacks(event, detail)
-	--- @type LootLedger.Entry
-	local entity = detail.entity
-	if entity and Util.Strings.IsSet(entity.guid) then
-		if Util.Objects.In(event, Dao.Events.EntityCreated, Dao.Events.EntityUpdated) then
-			self.guidIndex[entity.guid] = entity.id
-		elseif Util.Strings.Equal(event, Dao.Events.EntityDeleted) then
-			self.guidIndex[entity.guid] = nil
+	if event and detail then
+		--- @type LootLedger.Entry
+		local entity = detail.entity
+		if entity and Util.Strings.IsSet(entity.guid) then
+			if Util.Objects.In(event, Dao.Events.EntityCreated, Dao.Events.EntityUpdated) then
+				self.guidIndex[entity.guid] = entity.id
+			elseif Util.Strings.Equal(event, Dao.Events.EntityDeleted) then
+				self.guidIndex[entity.guid] = nil
+			end
 		end
 	end
 

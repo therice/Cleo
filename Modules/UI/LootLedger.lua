@@ -28,31 +28,33 @@ local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
 --- @type UI.ScrollingTable.CellBuilder
 local  STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
 
-local MaxTradeTimeRemaining= 7200
-
-local ScrollColumns =
+local MaxTradeTimeRemaining, ScrollColumns = 7200,
 	ST.ColumnBuilder()
 		-- 1 (item icon)
 		:column(""):width(20):sortnext(3)
 		-- 2 (item name)
-		:column(_G.NAME):width(100)
+		:column(_G.NAME):width(125)
 			:defaultsort(STColumnBuilder.Ascending)
 			:comparesort(ST.SortFn(function(row) return ItemUtil:ItemLinkToItemString(row.entry.item) end))
 		-- 3 (added)
 		:column(L['added']):width(125):sortnext(2)
 			:defaultsort(STColumnBuilder.Descending)
 			:comparesort(ST.SortFn(function(row) return row.entry.added end))
-		-- 4 (state)
-		:column(L['status']):width(125)
-		-- 5 (recipient)
+		-- 4 (state/status)
+		:column(L['status']):width(75)
+		-- 5 (encounter/boss)
+		:column(L['dropped_by']):width(125)
+		-- 6 (recipient/winner)
 		:column(L['winner']):width(125)
-		-- 6 (time remaining)
+		-- 7 (time remaining)
 		:column(L['trade_time_remaining']):width(250)
 	:build()
 
 function LootLedger:LayoutInterface(container)
 	Logging:Debug("LayoutInterface(%s)", tostring(container:GetName()))
 	local module = self
+
+	container:SetWide(1000)
 
 	local st = ST.New(ScrollColumns, 20, 20, nil, container)
 	st.frame:SetPoint("TOPLEFT", container.banner, "BOTTOMLEFT", 10, -30)
@@ -80,7 +82,7 @@ function LootLedger:Populate(container)
 	if st then
 		local rows, row = {}, 1
 		self:GetStorage():ForEach(
-			function(id, e)
+			function(_, e)
 				-- this is only to declare type for help with completion in IDE
 				--- @type LootLedger.Entry
 				local entry = e
@@ -94,6 +96,11 @@ function LootLedger:Populate(container)
 								:cell(entry.item)
 								:cell(entry:FormattedTimestampAdded())
 								:cell(entry:GetStateDescription())
+								:cell(entry:GetEncounter():map(
+								function(encounter)
+										return AddOn.GetEncounterCreatures(encounter.encounterId)
+									end):orElse(L['na'])
+								)
 								:cell("")
 								:timerBarCell(250, 20,
 									function(cdb, _, data, realRow)
@@ -102,8 +109,6 @@ function LootLedger:Populate(container)
 										local bag, slot = AddOn:GetBagAndSlotByGUID(rowEntry.guid)
 										if bag and slot then
 											local ttRemaining = AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
-											Logging:Trace("LootLedger:timerBarCell(%d, %d, %d)", bag, slot, ttRemaining)
-
 											cdb:SetDuration(ttRemaining)
 											cdb:AddUpdateFunction(
 												function(self)
@@ -122,7 +127,9 @@ function LootLedger:Populate(container)
 											)
 											cdb:Start(MaxTradeTimeRemaining)
 										else
+											cdb:SetParent(UIParent)
 											cdb:Stop()
+											cdb:Hide()
 										end
 									end
 								)
@@ -141,8 +148,8 @@ end
 
 --[[ LootLedger.TradeTimesWindow START --]]
 --- @type LibUtil.Numbers.AtomicNumber
-local EntryCounter = Util.Numbers.AtomicNumber(1)
-local HeaderHeight, RowHeight,  MaxRows, MaxWidth, MaxHeight = 25, 22, 5, 1200, 490
+local TTEntryCounter = Util.Numbers.AtomicNumber(1)
+local TTHeaderHeight, TTRowHeight, TTMaxRows, TTMaxWidth, TTMaxHeight = 25, 22, 5, 1200, 490
 
 ---
 --- Widget for display trade time remaining on looted items
@@ -164,7 +171,7 @@ function TradeTimesWindow:Get()
 	--Logging:Trace("Get(%s) : START", tostring(self.frame ~= nil))
 	if not self.frame then
 		local f = CreateFrame("Frame", AddOn:Qualify("TradeTimesWindow"), UIParent, Frame)
-		f:SetSize(250, 100 + HeaderHeight) --.408
+		f:SetSize(250, 100 + TTHeaderHeight) --.408
 		f:SetPoint("CENTER", UIParent, "CENTER");
 		f:SetClampedToScreen(true)
 		f:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -177,7 +184,7 @@ function TradeTimesWindow:Get()
 		-- also adds support for double-clicking to minimize/maximize frame and drag-n-drop
 		local titleTexture =
 			UI:New('Texture', f, 0, 0, 0, 0.6, "BACKGROUND")
-			  :AllPoints(f):Point("BOTTOM", f, "TOP", 0, -HeaderHeight)
+			  :AllPoints(f):Point("BOTTOM", f, "TOP", 0, -TTHeaderHeight)
 			  :SetMultipleScripts({
 	              OnMouseDown = function(self)
 	                  local frame = self:GetParent()
@@ -217,9 +224,9 @@ function TradeTimesWindow:Get()
 
 		-- resizing support
 		-- minWidth, minHeight [, maxWidth, maxHeight]
-		content:SetResizeBounds(250, 100, MaxWidth, MaxHeight)
+		content:SetResizeBounds(250, 100, TTMaxWidth, TTMaxHeight)
 		content:SetResizable(true)
-		f:SetResizeBounds(250, 100 + HeaderHeight, MaxWidth, MaxHeight)
+		f:SetResizeBounds(250, 100 + TTHeaderHeight, TTMaxWidth, TTMaxHeight)
 		f:SetResizable(true)
 
 		UIUtil.AddResizeWidget(content)
@@ -229,13 +236,13 @@ function TradeTimesWindow:Get()
 		content:SetScript("OnSizeChanged",
 			function(self)
 				local width, height = self:GetWidth(), self:GetHeight()
-				self:SetWidth(math.min(width, MaxWidth))
-				self:SetHeight(math.min(height, MaxHeight))
+				self:SetWidth(math.min(width, TTMaxWidth))
+				self:SetHeight(math.min(height, TTMaxHeight))
 
 				local parent = self:GetParent()
 				width, height = parent:GetWidth(), parent:GetHeight()
-				parent:SetWidth(math.min(width, MaxWidth))
-				parent:SetHeight(math.min(height, MaxHeight))
+				parent:SetWidth(math.min(width, TTMaxWidth))
+				parent:SetHeight(math.min(height, TTMaxHeight))
 
 				parent:SaveDimensions()
 				parent:SavePosition()
@@ -248,15 +255,15 @@ function TradeTimesWindow:Get()
 
 		-- do this after establishing to foundation elements, otherwise it can create
 		-- stack overflows due to creation of widgets calling back into this
-		f:HookScript("OnSizeChanged", function(_, w, h) self:SetHeight() end)
+		f:HookScript("OnSizeChanged", function(_, _, _) self:SetHeight() end)
 
 		-- various actions on a row by row basis
 		local actionButtons = CreateFrame("Frame", AddOn:Qualify("TradeTimesWindow", "ActionButtons"), content)
-		actionButtons:SetSize(RowHeight, RowHeight)
+		actionButtons:SetSize(TTRowHeight, TTRowHeight)
 		actionButtons:Hide()
 
 		local hideButton = UI:New('ButtonClose', actionButtons,  AddOn:Qualify("TradeTimesWindow", "ActionButtons", "Hide"))
-		hideButton:SetSize(RowHeight, RowHeight)
+		hideButton:SetSize(TTRowHeight, TTRowHeight)
 		hideButton:SetPoint("TOPLEFT", actionButtons, "TOPLEFT")
 
 		local normalTexture = hideButton:CreateTexture()
@@ -291,6 +298,13 @@ local TradeTimeRowAction = {
 	Hide = "HIDE"
 }
 
+local TradeTimeRowType = {
+	AwardLater = "AWARD_LATER",
+	Item       = "ITEM",
+	Missing    = "MISSING",
+	ToTrade    = "TO_TRADE",
+}
+
 local TradeTimeRowActionsMenu, TradeTimeRowActionsMenuInitializer = nil, nil
 
 do
@@ -305,15 +319,18 @@ do
 						function(_, entry, _)
 							return ItemUtil:ItemLinkToColor(entry.tradeTime.link) .. ItemUtil:ItemLinkToItemName(entry.tradeTime.link) .. "|r"
 						end
-					):arrow(true):checkable(false):value("ITEM")
+					):arrow(true):checkable(false):value(TradeTimeRowType.Item)
 				-- category section
 				:add():text(L['category']):title(true):checkable(false):disabled(true)
 					-- missing
-					:add():text(UIUtil.ColoredDecorator(RHLColorMissing):decorate(L['missing'])):arrow(true):checkable(false):value("MISSING")
+					:add():text(UIUtil.ColoredDecorator(RHLColorMissing):decorate(L['missing']))
+						:arrow(true):checkable(false):value(TradeTimeRowType.Missing)
 					-- award later
-					:add():text(UIUtil.ColoredDecorator(RHLColorAwardLater):decorate(L['award_later'])):arrow(true):checkable(false):value("AWARD_LATER")
+					:add():text(UIUtil.ColoredDecorator(RHLColorAwardLater):decorate(L['award_later']))
+						:arrow(true):checkable(false):value(TradeTimeRowType.AwardLater)
 					-- to trade
-					:add():text(UIUtil.ColoredDecorator(RHLColorToTrade):decorate(L['trade'])):arrow(true):checkable(false):value("TO_TRADE")
+					:add():text(UIUtil.ColoredDecorator(RHLColorToTrade):decorate(L['trade']))
+						:arrow(true):checkable(false):value(TradeTimeRowType.ToTrade)
 			-- level 2
 			:nextlevel()
 				:add():set('special', TradeTimeRowAction.Hide)
@@ -329,13 +346,13 @@ do
 				info.icon = "Interface/BUTTONS/UI-GroupLoot-Pass-Up"
 
 				local hideFn = Util.Functions.Noop
-				if Util.Strings.Equal(value, "ITEM") then
+				if Util.Strings.Equal(value, TradeTimeRowType.Item) then
 					hideFn = function() self:HideItem(menu.entry.tradeTime.guid) end
-				elseif Util.Strings.Equal(value, "MISSING") then
+				elseif Util.Strings.Equal(value, TradeTimeRowType.Missing) then
 					hideFn = function() self:HideItems(true) end
-				elseif Util.Strings.Equal(value, "AWARD_LATER") then
+				elseif Util.Strings.Equal(value, TradeTimeRowType.AwardLater) then
 					hideFn = function() self:HideItems(false, true) end
-				elseif Util.Strings.Equal(value, "TO_TRADE") then
+				elseif Util.Strings.Equal(value, TradeTimeRowType.ToTrade) then
 					hideFn = function() self:HideItems(false, false, true) end
 				end
 
@@ -346,8 +363,6 @@ do
 
 				MSA_DropDownMenu_AddButton(info, level)
 				DropDown.HideCheckButton(level, 1)
-
-			--elseif entry.special == TradeTimeRowAction.Hide then
 			end
 		end
 	)
@@ -366,14 +381,14 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 	end
 
 	local frame = CreateFrame(
-		"Frame", AddOn:Qualify("TradeTimesWindow", "Row", tostring(EntryCounter:GetAndIncrement())), parent
+		"Frame", AddOn:Qualify("TradeTimesWindow", "Row", tostring(TTEntryCounter:GetAndIncrement())), parent
 	)
-	frame:SetHeight(RowHeight);
+	frame:SetHeight(TTRowHeight);
 	frame:SetPoint("LEFT", parent, "LEFT", 0, 0)
 	frame:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
 	frame.order = 0
 
-	local countDownBar = CandyBar:New(UI.ResolveTexture("Clean"), 240, RowHeight)
+	local countDownBar = CandyBar:New(UI.ResolveTexture("Clean"), 240, TTRowHeight)
 	countDownBar:Set("type", "TRADE_TIME_REMAINING")
 	countDownBar:Set("itemGUID", tradeTime.guid)
 	countDownBar:SetParent(frame)
@@ -579,10 +594,10 @@ function TradeTimesWindow:Refresh()
 		end
 	end
 
-	local rowsShown, maxRows = 0, MaxRows
+	local rowsShown, maxRows = 0, TTMaxRows
 	for _, row in pairs(self.rows) do
 		if row.order ~= 0 and row.order <= maxRows then
-			row:SetPoint("TOP", frame.content, "TOP", 0, (row.order - 1) * -RowHeight)
+			row:SetPoint("TOP", frame.content, "TOP", 0, (row.order - 1) * -TTRowHeight)
 			row:UpdateIcon()
 			row:Show()
 			rowsShown = rowsShown + 1
@@ -622,9 +637,9 @@ function TradeTimesWindow:HideItems(missing, awardLater, toTrade)
 end
 
 function TradeTimesWindow:SetHeight()
-	local frame, height = self:Get(), math.ceil(HeaderHeight + (self.rowsShown * RowHeight))
+	local frame, height = self:Get(), math.ceil(TTHeaderHeight + (self.rowsShown * TTRowHeight))
 	frame:SetHeight(height)
-	frame.content:SetHeight(height - HeaderHeight)
+	frame.content:SetHeight(height - TTHeaderHeight)
 end
 
 function TradeTimesWindow:Show()

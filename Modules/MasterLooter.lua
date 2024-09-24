@@ -1531,9 +1531,7 @@ function ML:RegisterAndAnnounceAward(award)
 	local ledgerEntry = ltEntry:GetLootLedgerEntry()
 	if ledgerEntry:isPresent() then
 		-- this will modify the state on the entry to 'to trade' and then update it in the ledger's storage
-		AddOn:LootLedgerModule():GetStorage():Update(
-			ledgerEntry:flatMap(function(e) return e:ToTrade() end), "state"
-		)
+		AddOn:LootLedgerModule():GetStorage():Update(ledgerEntry:get():ToTrade(), "state")
 	end
 
 	self:Send(C.group, C.Commands.Awarded, session, winner)
@@ -1570,12 +1568,13 @@ end
 --- @param session number the loot session
 function ML:RegisterAndAnnounceLootedToBags(session)
 	local lootEntry = self:GetLootTableEntry(session)
-
+	assert(lootEntry, format("no loot table entry available for session %d", session))
 	local ledgerEntry = LootLedgerEntry(
 		lootEntry.item,
 		LootLedgerEntry.State.AwardLater,
 		lootEntry:GetItemGUID():orElse(nil)
-	)
+	):WithEncounter(AddOn.encounter)
+
 	AddOn:LootLedgerModule():GetStorage():Add(ledgerEntry)
 
 	-- item is from a loot slot, going to be (or has been) looted to ML
@@ -1590,7 +1589,6 @@ function ML:RegisterAndAnnounceLootedToBags(session)
 		-- and that event happens before the LootLedger entry is created here (at beginning of function)
 		--
 		-- therefore, do a manual invocation to update the entry's GUID with looted item
-
 		--- @type table<LootLedger.Entry>
 		local ledgerEntries = AddOn:LootLedgerModule():OnItemReceived({
 			id     = ItemUtil:ItemLinkToId(lootEntry.item),
@@ -1617,7 +1615,6 @@ function ML:RegisterAndAnnounceLootedToBags(session)
 			Logging:Warn("RegisterAndAnnounceLootedToBags() : unable to update loot ledger entry with looted item, updated %s entries", #ledgerEntries)
 			error(format("unable to update loot ledger entry with looted item, updated entries count is %d", #ledgerEntries))
 		end
-
 	-- item is from a player and won't need to be updated later, as GUID was provided as part of LootLedgerEntry creation
 	else
 		AddOn:Print(format(L['item_added_to_award_later'], lootEntry.item))
