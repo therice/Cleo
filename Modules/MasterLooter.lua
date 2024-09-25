@@ -356,8 +356,8 @@ function ML:SubscribeToComms()
 				-- schedule the callback to be shortly after any response timeout, which is a reasonable amount of time
 				-- having passed for a response to be received and to transition response from announced after
 				-- starting the loot session
-				self:ScheduleTimer(function()
-					self:Send(AddOn.player, C.Commands.CheckIfOffline) end,
+				self:ScheduleTimer(
+					function() self:Send(AddOn.player, C.Commands.CheckIfOffline) end,
 					15 + (0.5 * #self.lootTable)
 				)
 			end
@@ -1519,22 +1519,30 @@ end
 
 ---@param award Models.Item.ItemAward
 function ML:RegisterAndAnnounceAward(award)
-	local session, winner, response, reason = award.session, award.winner, award:NormalizedReason().text, award.reason
+	local session, winner, response, reason =
+		award.session, award.winner, award:NormalizedReason().text, award.reason
 	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
 
 	local ltEntry = self:GetLootTableEntry(session)
 	local changeAward = ltEntry.awarded
-	-- ltEntry.awarded = true
-	ltEntry.awarded = winner
+	ltEntry.awarded = winner -- true
 
 	-- if this item is in a player's bags (loot ledger), then change it's status indicate it needs traded
 	local ledgerEntry = ltEntry:GetLootLedgerEntry()
 	if ledgerEntry:isPresent() then
-		-- this will modify the state on the entry to 'to trade' and then update it in the ledger's storage
-		AddOn:LootLedgerModule():GetStorage():Update(ledgerEntry:get():ToTrade(), "state")
+		-- this will modify the state on the entry to 'to trade', assign the session and winner,
+		-- and then update it in the ledger's storage
+		--- @type LootLedger.Entry
+		local wrappedEntry = ledgerEntry:get()
+		AddOn:LootLedgerModule():GetStorage():UpdateAll(
+			wrappedEntry:ToTrade():WithWinner(session, winner)
+		)
 	end
 
-	self:Send(C.group, C.Commands.Awarded, session, winner)
+	-- owner in this message could be a creature name, player name, or testing (fake name)
+	-- practically, only will be used when it is a player. could send the GUID (id), but would require
+	-- translation on the receiver's end
+	self:Send(C.group, C.Commands.Awarded, session, winner, ltEntry:GetOwner())
 
 	-- perform award announcement first (as the priority will be changed after actual award)
 	Util.Functions.try(
@@ -1552,16 +1560,17 @@ function ML:RegisterAndAnnounceAward(award)
 		end
 	).finally(
 		function()
-			-- todo : figure out when to register the award if it's to trade
-			-- todo: probably best to do it when traded
-			AddOn:ListsModule():OnAwardItem(award)
+			-- todo: fire this when item is traded
+			if ledgerEntry:isEmpty() then
+				AddOn:ListsModule():OnAwardItem(award)
+			end
 		end
 	)
 
 	-- not more items to award, end the session
 	if not self:HaveUnawardedItems() then
 		AddOn:Print(L["all_items_have_been_awarded"])
-		self:ScheduleTimer('EndSession', 1)
+		self:ScheduleTimer(function() self:EndSession() end, 1)
 	end
 end
 

@@ -58,7 +58,7 @@ function ColumnBuilder:initialize()
 end
 function ColumnBuilder:column(name) return self:entry(Column):named(name) end
 
----- @class Cell
+---- @class Cell : UI.Util.Attributes
 local Cell = AddOn.Class('Cell', Attributes)
 function Cell:initialize(value)
     Attributes.initialize(self, {})
@@ -68,21 +68,21 @@ end
 function Cell:color(color) return self:set('color', color) end
 function Cell:DoCellUpdate(fn) return self:set('DoCellUpdate', fn) end
 
---- @class ClassIconCell
+--- @class ClassIconCell : Cell
 local ClassIconCell = AddOn.Class('ClassIconCell', Cell)
 function ClassIconCell:initialize(value, class)
     Cell.initialize(self, value)
     self:DoCellUpdate(function(_, frame) UIUtil.ClassIconFn()(frame, class) end)
 end
 
---- @class ClassColoredCell
+--- @class ClassColoredCell : Cell
 local ClassColoredCell = AddOn.Class('ClassColoredCell', Cell)
 function ClassColoredCell:initialize(value, class)
     Cell.initialize(self, value)
     self:color(UIUtil.GetClassColor(class))
 end
 
---- @class DeleteButtonCell
+--- @class DeleteButtonCell : Cell
 local DeleteButtonCell = AddOn.Class('DeleteButtonCell', Cell)
 function DeleteButtonCell:initialize(fn)
     Cell.initialize(self, nil)
@@ -110,21 +110,21 @@ function DeleteButtonCell:initialize(fn)
     )
 end
 
---- @class ItemIconCell
+--- @class ItemIconCell : Cell
 local ItemIconCell = AddOn.Class('ItemIconCell', Cell)
 function ItemIconCell:initialize(link, texture)
     Cell.initialize(self, nil)
     self:DoCellUpdate(function(_, frame) UIUtil.ItemIconFn()(frame, link, texture) end)
 end
 
---- @class IconCell
+--- @class IconCell : Cell
 local IconCell = AddOn.Class('IconCell', Cell)
 function IconCell:initialize(texture)
     Cell.initialize(self, nil)
     self:DoCellUpdate(function(_, frame) UIUtil.IconFn()(frame,  texture) end)
 end
 
---- @class TextCell
+--- @class TextCell : Cell
 local TextCell = AddOn.Class('TextCell', Cell)
 function TextCell:initialize(fn)
     Cell.initialize(self, nil)
@@ -139,7 +139,7 @@ function TextCell:initialize(fn)
     )
 end
 
---- @class TimerBarCell
+--- @class TimerBarCell : Cell
 local TimerBarCell = AddOn.Class('TimerBarCell', Cell)
 function TimerBarCell:initialize(width, height, fn)
     Cell.initialize(self, nil)
@@ -164,13 +164,17 @@ function TimerBarCell:initialize(width, height, fn)
     )
 end
 
---- @class UI.ScrollingTable.CellBuilder
+--- @class UI.ScrollingTable.CellBuilder : UI.Util.Builder
 local CellBuilder = Package:Class('CellBuilder', Builder)
 function CellBuilder:initialize()
     Builder.initialize(self, {})
     tinsert(self.embeds, 'cell')
     tinsert(self.embeds, 'classIconCell')
     tinsert(self.embeds, 'classColoredCell')
+    tinsert(self.embeds, 'classAndPlayerIconColoredNameCell')
+    tinsert(self.embeds, 'playerIconAndColoredNameCell')
+    tinsert(self.embeds, 'playerColoredCell')
+    tinsert(self.embeds, 'playerColoredCellOrElse')
     tinsert(self.embeds, 'deleteCell')
     tinsert(self.embeds, 'itemIconCell')
     tinsert(self.embeds, 'textCell')
@@ -198,6 +202,11 @@ end
 function CellBuilder:playerColoredCell(player)
     local p = Player:Get(player) or Player.Unknown(player)
     return self:classColoredCell(p:GetShortName(), p.class)
+end
+
+function CellBuilder:playerColoredCellOrElse(player, other)
+    local p = Util.Strings.IsSet(player) and Player:Get(player) or nil
+    return (p and not p:IsUNK()) and self:classColoredCell(p:GetShortName(), p.class) or self:classColoredCell(other, "PRIEST")
 end
 
 --- @return ClassIconCell

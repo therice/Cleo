@@ -201,6 +201,7 @@ end
 --/run print(Cleo.Package('Models').Player:Get('Eliovak'))
 --/run print(Cleo.Package('Models').Player:Get('Eliovak-Atiesh'))
 --/run print(Cleo.Package('Models').Player:Get('Gnomechómsky'))
+--- @return Models.Player
 function Player:Get(input)
     local guid, info
     --Logging:Trace("Get(%s)", tostring(input))

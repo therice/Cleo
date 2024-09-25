@@ -620,7 +620,9 @@ end
 
 -- well known and supported supplemental attributes
 local SupplementalAttributes = {
-	Encounter = 'encounter'
+	Encounter = 'encounter',
+	Recipient = 'recipient',
+	Session   = 'session'
 }
 
 -- well known and supported attributes of supplemental 'stuff'
@@ -717,6 +719,23 @@ function LootedItem:GetEncounter()
 	end
 
 	return Util.Optional.empty()
+end
+
+function LootedItem:WithWinner(session, winner)
+	if Util.Objects.IsNumber(session) then
+		self.supplemental[SupplementalAttributes.Session] = session
+	end
+
+	if Util.Strings.IsSet(winner) then
+		self.supplemental[SupplementalAttributes.Recipient] = winner
+	end
+
+	return self
+end
+
+--- @return LibUtil.Optional.Optional an optional, which if present will be the item's winner (recipient)
+function LootedItem:GetWinner()
+	return Util.Optional.ofNillable(self.supplemental[SupplementalAttributes.Recipient])
 end
 
 --- @return boolean true if state is 'award later', otherwise false
