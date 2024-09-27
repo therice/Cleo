@@ -43,7 +43,9 @@ function Encounter:initialize(...)
 end
 
 --- @return LibUtil.Optional<boolean>
-function Encounter:IsSuccess()  error("IsSuccess() not implemented") end
+function Encounter:IsSuccess()
+    error("IsSuccess() not implemented")
+end
 
 Encounter.None = Encounter(0, _G.UNKNOWN, nil, nil)
 

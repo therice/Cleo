@@ -1867,7 +1867,7 @@ function ML:Award(award, callback, ...)
 		self:PrintLootError(cause, link, winner or AddOn.player:GetName())
 		return false
 	else
-		-- actually give the loot to a player
+		-- actually give the loot to a player (winner)
 		if winner then
 			self:GiveLoot(
 				slot:get(),
