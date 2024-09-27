@@ -239,12 +239,12 @@ local cpairs = CDB.static.pairs
 function TrafficAudit:BuildData(container)
 	local LM = AddOn:ListsModule()
 
+	--- @type table<number, table<num=number, Models.Audit.TrafficRecord, table<Models.List.Configuration, Models.List.List>, table>>
 	container.rows = {}
 	local tsData = {}
 	for row, entryData in cpairs(self:GetHistory()) do
 		--- @type Models.Audit.TrafficRecord
 		local entry = TrafficRecord:reconstitute(entryData)
-
 		container.rows[row] = {
 			num = row,
 			entry = entry,
@@ -360,6 +360,7 @@ function TrafficAudit.SetCellResourceName(_, frame, data, _, _, realrow, column,
 end
 
 function TrafficAudit.SetCellResourceAttribute(_, frame, data, _, _, realrow, column, _)
+	--- @type Models.Audit.TrafficRecord
 	local record = data[realrow].entry
 	if Util.Objects.In(record.action, TrafficRecord.ActionType.Create, TrafficRecord.ActionType.Delete) then
 		frame.text:SetText(L["na"])
@@ -371,6 +372,7 @@ function TrafficAudit.SetCellResourceAttribute(_, frame, data, _, _, realrow, co
 end
 
 function TrafficAudit.SetCellResourceAttributeValue(_, frame, data, _, _, realrow, column, _)
+	--- @type Models.Audit.TrafficRecord
 	local record = data[realrow].entry
 	local fontName, _, fontFlags = frame.text:GetFont()
 
@@ -394,6 +396,7 @@ function TrafficAudit.SetCellResourceAttributeValue(_, frame, data, _, _, realro
 end
 
 function TrafficAudit:SetCellLootRecord(_, frame, data, _, _, realrow, _, _)
+	--- @type Models.Audit.TrafficRecord
 	local record = data[realrow].entry
 	local playerId, lrId = record:GetLootRecord()
 	if playerId and lrId then

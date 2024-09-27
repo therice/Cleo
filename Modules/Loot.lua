@@ -208,6 +208,8 @@ function Loot:ReRoll(lt)
 	self:Start(lt, true)
 end
 
+--- @param entry Loot.Entry
+--- @param button string|number the button's key, either a string or a number
 function Loot:OnRoll(entry, button)
 	local item = entry.item
 	if not item.isRoll then

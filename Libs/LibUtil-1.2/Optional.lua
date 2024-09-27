@@ -83,24 +83,29 @@ function Optional:filter(fn)
 	return Self.empty()
 end
 
+--- @return LibUtil.Optional.Optional result of applying function to value if present, otherwise empty
 function Optional:map(fn)
-	if self.value ~= nil then
-		local result = fn(self.value)
-		if result then
-			return Self.of(result)
-		end
+	if not self:isPresent() then
+		return Self.empty()
+	else
+		return Self.ofNillable(fn(self.value))
 	end
-	return Self.empty()
 end
 
+---
+--- Similar to map, but the mapping function is one whose result is already an Optional
+---
+--- @see LibUtil.Optional.Optional.map
+--- @return LibUtil.Optional.Optional  result of applying function to value if present, otherwise empty
 function Optional:flatMap(fn)
-	if self.value ~= nil then
+	if not self:isPresent() then
+		return Self.empty()
+	else
 		local result = fn(self.value)
-		if result then
-			return result
-		end
+		assert(result, "result of flatMap was not set")
+		assert(Util.Objects.IsInstanceOf(result, Optional), "result of flatMap was not an Optional")
+		return result
 	end
-	return Self.empty()
 end
 
 function Optional:either(other)

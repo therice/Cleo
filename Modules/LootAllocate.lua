@@ -390,7 +390,7 @@ function LA:OnLootAckReceived(candidate, ilvl, sessionData)
 		for session, value in pairs(values) do
 			if Util.Objects.In(key, LAA.Gear1, LAA.Gear2) then
 				self:SetCandidateData(session, candidate, key, AddOn.DeSanitizeItemString(value))
-			-- handle response diffrently due to it's value being overloaded
+			-- handle response differently due to it's value being overloaded
 			elseif Util.Objects.Equals(key, LAA.Response) then
 				local current = self:GetCandidateData(session, candidate, LAA.Response)
 				-- only replace previous response in situation where it was a boolean or not set
@@ -509,7 +509,7 @@ function LA:OnCheckIfOfflineReceived()
 		for candidate in pairs(self:GetEntry(session).candidates) do
 			response = self:GetCandidateData(session, candidate, LAA.Response)
 			--Logging:Debug("OnCheckIfOfflineReceived(%d, %s) :  %s", tostring(session), tostring(candidate), tostring(response))
-			-- don't including WAIT, as that is the response used when loot has been acknowledged
+			-- don't include WAIT, as that is the response used when loot has been acknowledged
 			if Util.Objects.In(response, C.Responses.Announced) then
 				self:SetCandidateData(session, candidate, LAA.Response, C.Responses.Nothing)
 			end

@@ -96,7 +96,7 @@ function LootLedger:Populate(container)
 								:cell(entry.item)
 								:cell(entry:FormattedTimestampAdded())
 								:cell(entry:GetStateDescription())
-								:cell(entry:GetEncounter():map(function(encounter)return AddOn.GetEncounterCreatures(encounter.encounterId) end):orElse(L['na']))
+								:cell(entry:GetEncounter():map(function(encounter) return AddOn.GetEncounterCreatures(encounter.encounterId) end):orElse(L['na']))
 								:playerColoredCellOrElse(entry:GetWinner():orElse(nil), L['na'])
 								:timerBarCell(250, 20,
 									function(cdb, _, data, realRow)

@@ -622,13 +622,15 @@ function Lists:OnAwardItem(itemAward)
 		-- E.G. ML decides to assign it to someone that passed without changing their response
 		if reason and reason.suicide then
 			local suicideAmt
-
 			-- this code path is only ever invoked by ML, so don't look at ML DB, use our local settings instead
 			-- we don't transmit button meta-information over the wire, which means without direct access to settings
 			-- you cannot access the required meta-information
 			--
 			-- locate the button associated with the award reason to see if there is a modifier for suicide (spots)
-			local _, button = Util.Tables.FindFn(AddOn:MasterLooterModule().db.profile.buttons, function(b) return b.key == itemAward.awardReason end)
+			local _, button = Util.Tables.FindFn(
+				AddOn:MasterLooterModule().db.profile.buttons,
+				function(b) return b.key == itemAward.awardReason end
+			)
 			if button and button.suicide_amt then
 				suicideAmt = tonumber(button.suicide_amt)
 			end

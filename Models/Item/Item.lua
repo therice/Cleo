@@ -175,14 +175,13 @@ function Item:GetEquipmentLocation()
 			if items and Util.Tables.Count(items) > 0 then
 				--Logging:Debug("GetEquipmentLocation(%s) : using token based equipment location", tostring(self.equipLoc))
 				-- they will all have the same equipment location, just grab the 1st one
-				local _, _, _, equipLoc  = GetItemInfoInstant(items[1])
+				local _, _, _, equipLoc = GetItemInfoInstant(items[1])
 				return equipLoc
 			end
 		end
 	end
 
 	return nil
-
 end
 
 --- @return string

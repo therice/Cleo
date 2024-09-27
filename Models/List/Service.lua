@@ -274,6 +274,7 @@ function Service:LoadRefs(refs)
 	return loaded
 end
 
+--- @return Models.List.Configuration, Models.List.List
 function Service:LoadAuditRefs(auditRef)
 	local config, list = nil, nil
 	if Util.Objects.IsInstanceOf(auditRef, AddOn.Package('Models.Audit').TrafficRecord) then

@@ -202,10 +202,11 @@ ML.defaults = {
 		-- we don't support multiple categories/types of buttons, only the 'default'
 		buttons = {
 			--[[
-			  numButtons = 2,
-			  ordering = {},
-			  { text = L["ms_need"],          whisperKey = L["whisperkey_ms_need"], },
-			  { text = L["os_greed"],         whisperKey = L["whisperkey_os_greed"], },
+			  numButtons = 3,
+			  ordering = {1, 3, 5},
+			  {color = ..., text = L["ms_need"], whisperKey = L["whisperkey_ms_need"], suicide_amt = nil, key = 'ms_need'},
+			  {color = ..., text = L["minor_upgrade"], whisperKey = L["whisperkey_minor_upgrade"], suicide_amt = 5, key = 'minor_upgrade''},
+			  {color = ..., text = L["os_greed"], whisperKey = L["whisperkey_os_greed"], suicide_amt = 2, key = 'os_greed''},
 			--]]
 		},
 		-- we don't support multiple categories/types of responses, only the 'default'
@@ -225,8 +226,9 @@ ML.defaults = {
 			-- dynamically constructed below
 			-- example data left behind for illustration
 			--[[
-			{ color = {0,1,0,1},        sort = 1,   text = L["ms_need"], },         [1]
-			{ color = {1,0.5,0,1},	    sort = 2,	text = L["os_greed"], },        [2]
+			{ color = {0,1,0,1},        sort = 1,   text = L["ms_need"], key = 'ms_need'},              [1]
+			{ color = {0,1,0,1},        sort = 2,   text = L["minor_upgrade"], key = 'minor_upgrade'},  [2]
+			{ color = {1,0.5,0,1},	    sort = 3,	text = L["os_greed"], key = 'os_greed' },           [3]
 			--]]
 		}
 	}
@@ -787,6 +789,7 @@ function ML:AnnounceAward(winner, link, response, roll, session, changeAward, is
 	if changeAward then
 		announcement = "(" .. L["change_award"] .. ") " .. announcement
 	end
+
 	AddOn:SendAnnouncement(announcement, channel)
 end
 
@@ -1519,8 +1522,8 @@ end
 
 ---@param award Models.Item.ItemAward
 function ML:RegisterAndAnnounceAward(award)
-	local session, winner, response, reason =
-		award.session, award.winner, award:NormalizedReason().text, award.reason
+	local session, winner, response =
+		award.session, award.winner, award:NormalizedReason().text
 	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
 
 	local ltEntry = self:GetLootTableEntry(session)
@@ -1530,12 +1533,11 @@ function ML:RegisterAndAnnounceAward(award)
 	-- if this item is in a player's bags (loot ledger), then change it's status indicate it needs traded
 	local ledgerEntry = ltEntry:GetLootLedgerEntry()
 	if ledgerEntry:isPresent() then
-		-- this will modify the state on the entry to 'to trade', assign the session and winner,
+		-- this will modify the state on the entry to 'to trade', assign the various award attributes,
 		-- and then update it in the ledger's storage
-		--- @type LootLedger.Entry
-		local wrappedEntry = ledgerEntry:get()
 		AddOn:LootLedgerModule():GetStorage():UpdateAll(
-			wrappedEntry:ToTrade():WithWinner(session, winner)
+			ledgerEntry.map(function(e) return e:WithAward(award) end)
+				:orElseThrow("unable to assign award to loot ledger entry")
 		)
 	end
 
@@ -1551,16 +1553,16 @@ function ML:RegisterAndAnnounceAward(award)
 			self:AnnounceAward(
 				winner,
 				ltEntry.item,
-				reason and reason.text or response,
+				response,
 				AddOn:LootAllocateModule():GetCandidateData(session, winner, LAR.Roll),
 				session,
 				changeAward
 			)
-
 		end
 	).finally(
 		function()
 			-- todo: fire this when item is traded
+			-- only apply to list if the award is occurring now, if it's for 'later' handle on trade
 			if ledgerEntry:isEmpty() then
 				AddOn:ListsModule():OnAwardItem(award)
 			end

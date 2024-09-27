@@ -288,7 +288,11 @@ function LootAudit:BuildData(container)
 	local tsData, instanceData, nameData, droppedByData, row = {}, {}, {}, {}, 1
 	for _, names in pairs(data) do
 		for _, entries in pairs(names) do
-			for index, entry in pairs(entries) do
+			for index, lootRecord in pairs(entries) do
+				-- this is simply to help IDE with type mapping
+				--- @type Models.Audit.LootRecord
+				local entry = lootRecord
+
 				-- some strange corruption, where the entry's encounter id is a table instead of string/number
 				-- just ignore them in results
 				if not Util.Objects.IsTable(entry.encounterId) then

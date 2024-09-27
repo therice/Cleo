@@ -305,7 +305,8 @@ function LootQueueEntry:Cleared(awarded, reason)
 end
 
 ---
---- An item for presentation to a player through the Loot interface
+--- An item for presentation to a player through the Loot interface. Some additional attributes may be present
+--- if specified in message received via comms (e.g. isRoll via LootAllocateEntry:GetReRollData)
 ---
 --- @class Models.Item.LootEntry : Models.Item.Item
 --- @see Models.Item.Item
@@ -356,7 +357,7 @@ end
 --- @class Models.Item.LootAllocateResponse
 --- @field public name string the player's name
 --- @field public class string the player's class
---- @field public response string the player's response
+--- @field public response string the player's response (key/id)
 --- @field public ilvl number the player's average equipped item level
 --- @field public diff number the difference in item level between equipped and item associated with the response
 --- @field public gear1 string the item currently equipped (1)
@@ -393,50 +394,100 @@ function LootAllocateResponse:Get(key)
 	return self[key]
 end
 
+--- @field public session number the session associated with the loot
+--- @field public link string the item link
+--- @field public origin number the origin of the award, either from a player's response or another user non-visible reason
+--- @field public awardReason string|number the key (string/number) of the award reason
+--- @field public normalizedReason table normalized response/reason for consistent access (1 .. N indexes)
+--- @class Models.Item.ItemAwardMixin
+local ItemAwardMixin = {
+	--- what was the origin of the award, either from the player's response (1) or another non-visible to user reason (2)
+	--- @type table<string, number>
+	Origin = {
+		Response = 1,
+		Reason   = 2,
+	},
+	--- @param self Models.Item.ItemAwardMixin the instance of the mixin
+	--- @param session number the session associated with the award
+	WithSession = function(self, session)
+		self.session = tonumber(session)
+		return self
+	end,
+	--- @param self Models.Item.ItemAwardMixin the instance of the mixin
+	--- @param item number|string the item associated with the award
+	WithItem = function(self, item)
+		if ItemUtil:ContainsItemString(item) then
+			self.link = item
+		elseif Util.Objects.IsNumber(item) then
+			local itemInstance = Item.Get(item, function(i) self.link = i.link end)
+			if itemInstance then
+				self.link = itemInstance.link
+			end
+		else
+			error("unsupported item format %s", tostring(item))
+		end
+		return self
+	end,
+	--- @param self Models.Item.ItemAwardMixin the instance of the mixin
+	--- @param response string|number the candidate's (player) response key/id (see Constants.Responses and ML DB's responses)
+	--- @param reason string|table if award is for a reason other than candidate's (player) response, this should be provided
+	WithReason = function(self, response, reason)
+		self.origin = reason and self.Origin.Reason or self.Origin.Response
+
+		local responseAttrs, awardReason = AddOn:GetResponse(response), nil
+		-- if reason is provided, it overrides candidate's response
+		-- it will be entry from ML's responses table. for example, Award For : Disenchant|Bank|Free
+		if reason and Util.Objects.IsTable(reason) then
+			awardReason = reason.key
+		-- otherwise, being awarded for the actual response
+		else
+			awardReason = responseAttrs.key and responseAttrs.key or response
+		end
+
+		-- the name (key) of the award reason
+		self.awardReason = awardReason
+
+		-- normalize the response/reason divergence for consistent access (1 .. N indexes)
+		self.normalizedReason = {
+			id    = reason and reason.sort - 400 or response,
+			text  = reason and reason.text or responseAttrs.text,
+			color = reason and reason.color or responseAttrs.color
+		}
+
+		return self
+	end,
+	--- @param self Models.Item.ItemAwardMixin the instance of the mixin
+	--- @return table indicating the attributes associated with the resolved reason for the item award (player response vs award reason)
+	NormalizedReason = function(self)
+		return self.normalizedReason
+	end,
+	--- @param self Models.Item.ItemAwardMixin the instance of the mixin
+	--- @return string representation of the mixin
+	tostring = function(self)
+		return Util.Objects.ToString(self:toTable())
+	end
+}
+
 ---
 --- An award of an item to a player
 ---
---- @class Models.Item.ItemAward
---- @field public session number the session associated with the loot
---- @field public link string the item link
+--- @class Models.Item.ItemAward : Models.Item.ItemAwardMixin
 --- @field public winner string the player who is being awarded the item
---- @field public class string the player's class
---- @field public gear1 string the item currently equipped (1)
---- @field public gear2 string the item currently equipped (2)
---- @field public link string the item link
---- @field public equipLoc string the item's equipment location
---- @field public texture string the item's texture (picture)
---- @field public responseId string the player's actual response
---- @field public reason string the reason for the award, if not the player's response this does not need to be provided
---- @field public awardReason string the name (key) of the award reason
---- @field public normalizedReason table normalized response/reason  for consistent access (1 .. N indexes)
-local ItemAward = AddOn.Package('Models.Item'):Class('ItemAward')
+--- @field public class string the player's class, which is really a convenience attribute based upon winner
+--- @field public equipLoc string the item's equipment location, required for mapping to appropriate list
+local ItemAward = AddOn.Package('Models.Item'):Class('ItemAward'):include(ItemAwardMixin)
 
 ---
 --- A deferred award of an item to a player, which will occur sometime in the future
 ---
---- @class Models.Item.DeferredItemAward
---- @field public session number the session associated with the loot
---- @field public item string the item link
-local DeferredItemAward = AddOn.Package('Models.Item'):Class('DeferredItemAward')
+--- @class Models.Item.DeferredItemAward : Models.Item.ItemAwardMixin
+local DeferredItemAward = AddOn.Package('Models.Item'):Class('DeferredItemAward'):include(ItemAwardMixin)
 --- @param session number the session umber
 --- @param item any ItemID|ItemString|ItemLink
 function DeferredItemAward:initialize(session, item)
-	self.session = tonumber(session)
-	if ItemUtil:ContainsItemString(item) then
-		self.link = item
-	elseif Util.Objects.IsNumber(item) then
-		local itemInstance = Item.Get(item, function(i) self.link = i.link end)
-		if itemInstance then
-			self.link = itemInstance.link
-		end
-	else
-		error("unsupported item format %s", tostring(item))
-	end
-end
-
-function DeferredItemAward:tostring()
-	return Util.Objects.ToString(self:toTable())
+	self.origin = 0
+	self:WithSession(session)
+	self:WithItem(item)
 end
 
 ---
@@ -470,7 +521,7 @@ end
 function LootAllocateEntry:GetCandidateResponse(name)
 	--Logging:Debug("GetCandidateResponse(%s) : %s", tostring(name), Util.Objects.ToString(self.candidates))
 	local lar = self.candidates[name]
-	assert(lar, format("No response available for candidate %s", tostring(name)))
+	assert(lar, format("no response available for candidate %s", tostring(name)))
 	return lar
 end
 
@@ -487,7 +538,7 @@ function LootAllocateEntry:GetReRollData(isRoll, noAutoPass)
 		session    = self.session,
 		isRoll     = isRoll,
 		noAutoPass = noAutoPass,
-		-- this may not be set if not originally send with loot table
+		-- this may not be set if not originally sent with loot table
 		-- which is where the data would be extracted and set on the entry
 		owner      = self.owner,
 	}
@@ -524,10 +575,10 @@ function ItemAward:initialize(entry, candidate, reason)
 	local cr = entry:GetCandidateResponse(candidate)
 	-- Logging:Trace("ItemAward() : Candidate Response (raw) is %s", Util.Objects.ToString(cr and cr:toTable() or {}))
 
+	--[[
 	local awardReason
 	-- if reason is provided, it overrides candidate's response
-	-- it will be entry from ML's responses table
-	-- for example, Award For : Disenchant|Bank|Free
+	-- it will be entry from ML's responses table. for example, Award For : Disenchant|Bank|Free
 	if reason and Util.Objects.IsTable(reason) then
 		awardReason = reason.key
 	else
@@ -535,18 +586,18 @@ function ItemAward:initialize(entry, candidate, reason)
 		-- Logging:Trace("ItemAward() : Candidate Response (normalized) %s => %s", tostring(cr.response), Util.Objects.ToString(response))
 		awardReason = response.key and response.key or cr.response
 	end
-
+	--]]
 	-- Logging:Trace("ItemAward() : Candidate Award Reason is %s", Util.Objects.ToString(awardReason))
 
-	self.session = entry.session
+	self:WithSession(entry.session)
+	self:WithItem(entry.link)
 	self.winner = candidate
 	self.class = cr.class
-	self.gear1 = cr.gear1
-	self.gear2 = cr.gear2
-	self.link = entry.link
 	-- needed for selecting appropriate list
 	self.equipLoc = entry:GetEquipmentLocation()
-	self.texture = entry.texture
+	self:WithReason(cr.response, reason)
+
+	--[[
 	-- the actual player's response
 	self.responseId = cr.response
 	-- the reason for the award, if not the player's response this does not need to be provided
@@ -561,15 +612,7 @@ function ItemAward:initialize(entry, candidate, reason)
 		text  = self.reason and self.reason.text or r.text,
 		color = self.reason and self.reason.color or r.color
 	}
-end
-
---- @return table indicating the attributes associated with the resolved reason for the item award (player response vs award reason)
-function ItemAward:NormalizedReason()
-	return self.normalizedReason
-end
-
-function ItemAward:tostring()
-	return Util.Objects.ToString(self:toTable())
+	--]]
 end
 
 local State = {
@@ -620,15 +663,24 @@ end
 
 -- well known and supported supplemental attributes
 local SupplementalAttributes = {
+	Award     = 'award',
 	Encounter = 'encounter',
-	Recipient = 'recipient',
-	Session   = 'session'
 }
 
 -- well known and supported attributes of supplemental 'stuff'
 local EncounterAttributes = {
 	Id         = 'id',
 	InstanceId = 'instanceId'
+}
+
+local AwardAttributes = {
+	EquipmentLocation = 'equipLoc',
+	Reason            = 'reason',
+	Response          = 'response',
+	ResponseId        = 'responseId',
+	ResponseOrigin    = 'responseOrigin',
+	Session           = 'session',
+	Winner            = 'winner',
 }
 
 --- @return Models.Item.LootedItem
@@ -721,6 +773,48 @@ function LootedItem:GetEncounter()
 	return Util.Optional.empty()
 end
 
+--- @param award Models.Item.ItemAward
+function LootedItem:WithAward(award)
+	-- an award is being assigned, transition state into 'to trade'
+	self:ToTrade()
+	--[[
+	if award then
+		local normalizedReason = award:NormalizedReason()
+		self.supplemental[SupplementalAttributes.Award] = {
+			-- the equipment location, later used for mapping to appropriate list
+			[AwardAttributes.EquipmentLocation] = award.equipLoc,
+			-- this will be the award reason key, mapping into MasterLooter.AwardReasons
+			-- it's used for determining if it a suicide occurs and, if so, how many spots
+			[AwardAttributes.Reason]            = award.awardReason,
+			-- the 'text' of the response
+			[AwardAttributes.Response]          = normalizedReason.text,
+			-- the 'id' of the response
+			[AwardAttributes.ResponseId]        = normalizedReason.id,
+			-- did the response originate from player or another reason (e.g. 'award for ...')
+			[AwardAttributes.ResponseOrigin]    = award.responseOrigin,
+			-- this is the loot session from which the item is associated
+			-- i'm not so sure it's needed other than potentially helping
+			-- locate the item in absence of other information
+			[AwardAttributes.Session]           = award.session,
+			-- duh, the actual winner
+			[AwardAttributes.Winner]            = award.winner,
+		}
+	end
+	--]]
+	return self
+end
+
+--- @return LibUtil.Optional.Optional an optional, which if present will be the associated item award
+function LootedItem:GetItemAward()
+	local awardAttrs = self.supplemental[SupplementalAttributes.Award]
+	if self:IsToTrade() and awardAttrs then
+
+	end
+
+	return Util.Optional.empty()
+end
+
+--[[
 function LootedItem:WithWinner(session, winner)
 	if Util.Objects.IsNumber(session) then
 		self.supplemental[SupplementalAttributes.Session] = session
@@ -737,6 +831,8 @@ end
 function LootedItem:GetWinner()
 	return Util.Optional.ofNillable(self.supplemental[SupplementalAttributes.Recipient])
 end
+
+--]]
 
 --- @return boolean true if state is 'award later', otherwise false
 function LootedItem:IsAwardLater()
