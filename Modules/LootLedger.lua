@@ -70,9 +70,12 @@ LootLedger.defaults = {
 --- @param self LootLedger
 --- @param db table
 local function SetDb(self, db)
+	self:UnregisterStorageCallbacks()
 	self.storage = Storage(self, db.profile.lootStorage)
 	--replacing storage, need to schedule validation
 	self:ScheduleStorageValidation()
+	-- replacing storage, need to re-register callbacks
+	self:RegisterStorageCallbacks()
 end
 
 function LootLedger:OnInitialize()
@@ -151,6 +154,32 @@ end
 
 function LootLedger:LaunchpadSupplement()
 	return L["loot_ledger"], function(container) self:LayoutInterface(container) end, false
+end
+
+function LootLedger:RegisterStorageCallbacks()
+	if self.storage then
+		self.storage:RegisterCallbacks(self, {
+			[Dao.Events.EntityCreated] = function(...) self:OnStorageEvent(...) end,
+			[Dao.Events.EntityDeleted] = function(...) self:OnStorageEvent(...) end,
+			[Dao.Events.EntityUpdated] = function(...) self:OnStorageEvent(...) end,
+		})
+	end
+end
+
+function LootLedger:UnregisterStorageCallbacks()
+	if self.storage then
+		self.storage.UnregisterAllCallbacks(self)
+	end
+end
+
+--- @param event string the event type
+--- @param detail EventDetail the associated detail
+function LootLedger:OnStorageEvent(event, detail)
+	Logging:Trace("OnStorageEvent(%s) : %s", event, Util.Objects.ToString(detail))
+	TradeTimesOverview():OnLootLedgerStorageEvent(event, detail)
+	-- could handle it by event and onl refresh if create/delete, but the overhead
+	-- on refreshing (rebuild) is low
+	self:Refresh()
 end
 
 function LootLedger:ScheduleStorageValidation()

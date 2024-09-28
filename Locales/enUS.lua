@@ -17,6 +17,7 @@ L["active_configs_desc"] = "Only active configurations are available for selecti
 L["active_desc"] = "Disables " .. name .. " when unchecked. Note: This resets on every logout or UI reload."
 L["actor"] = "Actor"
 L["add"] = "Add"
+L["add_to_loot_session"] = "Add to loot session"
 L["added"] = "Added"
 L["add_all"] = "Add All"
 L["add_item"] = "Add Item"

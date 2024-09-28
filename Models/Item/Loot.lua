@@ -741,9 +741,20 @@ function LootedItem:ToTrade()
 	return self
 end
 
+--- @see AddOn.GetInventoryItemTradeTimeRemaining
+--- @return number remaining time (in seconds) for associated item
+function LootedItem:GetTradeTimeRemaining()
+	local bag, slot = AddOn:GetBagAndSlotByGUID(self.guid)
+	if bag and slot then
+		return AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
+	end
+
+	return 0
+end
+
 --- @param encounter Models.Encounter
 function LootedItem:WithEncounter(encounter)
-	if encounter then
+	if encounter and encounter ~= Encounter.None then
 		-- could just 'toTable' the encounter itself, but has an additional
 		-- 3-4 fields which are not needed for award path taken from a looted item
 		self.supplemental[SupplementalAttributes.Encounter] = {

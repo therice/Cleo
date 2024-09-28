@@ -144,22 +144,22 @@ local TimerBarCell = AddOn.Class('TimerBarCell', Cell)
 function TimerBarCell:initialize(width, height, fn)
     Cell.initialize(self, nil)
     self:DoCellUpdate(
-        -- rowFrame, cellFrame, data, cols, row, realrow, column
-        function(_, frame, data, _, _, realrow)
-            if not frame.cdb then
+        -- rowFrame, cellFrame, data, cols, row, realRow, column, fShow, st, ...
+        function(rowFrame, cellFrame, data, cols, row, realRow, ...)
+            if not cellFrame.cdb then
                 Logging:Debug("TimerBarCell:DoCellUpdate()")
-
                 local countDownBar = CandyBar:New(UI.ResolveTexture("Clean"), width, height)
-                countDownBar:SetParent(frame)
+                countDownBar:SetParent(cellFrame)
                 countDownBar:SetColor(C.Colors.Peppermint:GetRGBA())
                 countDownBar:SetFont(_G.GameFontNormalSmall:GetFont(), 12, "OUTLINE")
                 countDownBar:SetBackgroundColor(0, 0, 0, 0.3)
-                countDownBar:SetAllPoints(frame)
+                countDownBar:SetAllPoints(cellFrame)
                 countDownBar:SetTimeVisibility(true)
-                frame.cdb = countDownBar
+                countDownBar:Hide()
+                cellFrame.cdb = countDownBar
             end
 
-            fn(frame.cdb, frame, data, realrow)
+            fn(rowFrame, cellFrame, data, cols, row, realRow, ...)
         end
     )
 end
@@ -363,27 +363,28 @@ end
 
 --- @return function
 function ScrollingTable.DoCellUpdateFn(fn)
-    local function after(rowFrame, _, _, cols, _, realrow, column, _, table, ...)
-        local rowdata = table:GetRow(realrow)
-        local celldata = table:GetCell(rowdata, column)
+    local function after(rowFrame, _, _, cols, _, realRow, column, _, table, ...)
+        local rowData = table:GetRow(realRow)
+        local cellData = table:GetCell(rowData, column)
 
         local highlight
-        if type(celldata) == "table" then
-            highlight = celldata.highlight
+        if type(cellData) == "table" then
+            highlight = cellData.highlight
         end
 
         if table.fSelect then
-            if table.selected == realrow then
-                table:SetHighLightColor(rowFrame, highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight())
+            if table.selected == realRow then
+                table:SetHighLightColor(rowFrame, highlight or cols[column].highlight or rowData.highlight or table:GetDefaultHighlight())
             else
                 table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank())
             end
         end
     end
 
-    return function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
-        fn(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
-        after(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
+    -- rowFrame, cellFrame, data, cols, row, realRow, column, fShow, table. ...
+    return function(...)
+        fn(...)
+        after(...)
     end
 end
 

@@ -17,6 +17,8 @@ local Message = AddOn.RequireOnUse('Core.Message')
 local LootedItem = AddOn.Package('Models.Item').LootedItem
 --- @type LootLedger
 local LootLedger = AddOn:GetModule("LootLedger")
+--- @type LootLedger.Storage
+local LootLedgerStorage = AddOn.Package('LootLedger').Storage
 --- @type UI.DropDown
 local DropDown = AddOn.Require('UI.DropDown')
 --- @type LibItemUtil
@@ -27,6 +29,8 @@ local ST = AddOn.Require('UI.ScrollingTable')
 local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
 --- @type UI.ScrollingTable.CellBuilder
 local  STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
+--- @type Models.Item.ContainerItem
+local ContainerItem = AddOn.Package('Models.Item').ContainerItem
 
 local MaxTradeTimeRemaining, ScrollColumns = 7200,
 	ST.ColumnBuilder()
@@ -35,7 +39,7 @@ local MaxTradeTimeRemaining, ScrollColumns = 7200,
 		-- 2 (item name)
 		:column(_G.NAME):width(125)
 			:defaultsort(STColumnBuilder.Ascending)
-			:comparesort(ST.SortFn(function(row) return ItemUtil:ItemLinkToItemString(row.entry.item) end))
+			:comparesort(ST.SortFn(function(row) return ItemUtil:ItemLinkToItemName(row.entry.item) end))
 		-- 3 (added)
 		:column(L['added']):width(125):sortnext(2)
 			:defaultsort(STColumnBuilder.Descending)
@@ -56,10 +60,23 @@ function LootLedger:LayoutInterface(container)
 
 	container:SetWide(1000)
 
-	local st = ST.New(ScrollColumns, 20, 20, nil, container)
-	st.frame:SetPoint("TOPLEFT", container.banner, "BOTTOMLEFT", 10, -30)
+	local st = ST.New(ScrollColumns, 28, 20, nil, container)
+	st.frame:SetPoint("TOPLEFT", container.banner, "BOTTOMLEFT", 10, -28)
 	st.frame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -15, 0)
 	st:EnableSelection(true)
+
+	st.RecycleElements = function(self)
+		if self.rows and #self.rows > 0 then
+			for rowIndex, row in pairs(self.rows) do
+				local cdbCell = row.cols[7]
+				if cdbCell and cdbCell.cdb then
+					Logging:Trace("RecycleElements() : recycling CountDownBar in row %d cell '%s'", rowIndex, tostring(cdbCell:GetName()))
+					cdbCell.cdb:Stop()
+					cdbCell.cdb = nil
+				end
+			end
+		end
+	end
 
 	container:SetScript("OnShow", function(self) module:Populate(self) end)
 	self.interfaceFrame = container
@@ -80,6 +97,9 @@ function LootLedger:Populate(container)
 	--- @type LibScrollingTable.ScrollingTable
 	local st = container.st
 	if st then
+		-- recycle any elements that are currently present, they are being replaced
+		st:RecycleElements()
+
 		local rows, row = {}, 1
 		self:GetStorage():ForEach(
 			function(_, e)
@@ -97,14 +117,19 @@ function LootLedger:Populate(container)
 								:cell(entry:FormattedTimestampAdded())
 								:cell(entry:GetStateDescription())
 								:cell(entry:GetEncounter():map(function(encounter) return AddOn.GetEncounterCreatures(encounter.encounterId) end):orElse(L['na']))
-								:playerColoredCellOrElse(entry:GetWinner():orElse(nil), L['na'])
+								:playerColoredCellOrElse(entry:GetItemAward():map(function(a) return a.winner end):orElse(nil), L['na'])
 								:timerBarCell(250, 20,
-									function(cdb, _, data, realRow)
+									function(rowFrame, cellFrame, data, cols, row, realRow, column, show, st, ...)
+										local cdb = cellFrame.cdb
 										--- @type LootLedger.Entry
 										local rowEntry = data[realRow].entry
-										local bag, slot = AddOn:GetBagAndSlotByGUID(rowEntry.guid)
-										if bag and slot then
-											local ttRemaining = AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
+										--Logging:Trace(
+										--	"timerBarCell(%s) : row=%d, realRow=%d, running=%s, num=%s, entry=%s",
+										--	tostring(cdb), row, realRow, tostring(cdb.running), tostring(data[realRow].num), Util.Objects.ToString(rowEntry)
+										--)
+										local ttRemaining = rowEntry:GetTradeTimeRemaining()
+										if ttRemaining > 0 then
+											cdb:SetParent(cellFrame)
 											cdb:SetDuration(ttRemaining)
 											cdb:AddUpdateFunction(
 												function(self)
@@ -122,8 +147,7 @@ function LootLedger:Populate(container)
 												end
 											)
 											cdb:Start(MaxTradeTimeRemaining)
-										else
-											cdb:SetParent(UIParent)
+										elseif cdb.running then
 											cdb:Stop()
 											cdb:Hide()
 										end
@@ -140,7 +164,6 @@ function LootLedger:Populate(container)
 		st:SortData()
 	end
 end
-
 
 --[[ LootLedger.TradeTimesWindow START --]]
 --- @type LibUtil.Numbers.AtomicNumber
@@ -253,6 +276,8 @@ function TradeTimesWindow:Get()
 		-- stack overflows due to creation of widgets calling back into this
 		f:HookScript("OnSizeChanged", function(_, _, _) self:SetHeight() end)
 
+		-- action buttons replaced with right-click handler
+		--[[
 		-- various actions on a row by row basis
 		local actionButtons = CreateFrame("Frame", AddOn:Qualify("TradeTimesWindow", "ActionButtons"), content)
 		actionButtons:SetSize(TTRowHeight, TTRowHeight)
@@ -277,9 +302,9 @@ function TradeTimesWindow:Get()
 				actionButtons:Hide()
 			end
 		)
-
 		actionButtons.hideButton = hideButton
 		f.actionButtons = actionButtons
+		--]]
 
 		self.frame = f
 	end
@@ -291,7 +316,8 @@ local RHLColorDefault, RHLColorMissing, RHLColorAwardLater, RHLColorToTrade =
 	C.Colors.ItemPoor, C.Colors.DeathKnightRed, C.Colors.MageBlue, C.Colors.ShamanBlue
 
 local TradeTimeRowAction = {
-	Hide = "HIDE"
+	Hide             = "HIDE",
+	AddToLootSession = "ADD_TO_LOOT_SESSION"
 }
 
 local TradeTimeRowType = {
@@ -329,7 +355,14 @@ do
 						:arrow(true):checkable(false):value(TradeTimeRowType.ToTrade)
 			-- level 2
 			:nextlevel()
+				:add():set('special', TradeTimeRowAction.AddToLootSession)
 				:add():set('special', TradeTimeRowAction.Hide)
+
+	local function AddToLootTable(item, bag, slot, guid)
+		AddOn:MasterLooterModule():AddLootTableItemFromContainer(
+			ContainerItem(item, bag, slot, guid)
+		)
+	end
 
 	TradeTimeRowActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -358,8 +391,48 @@ do
 				end
 
 				MSA_DropDownMenu_AddButton(info, level)
-				DropDown.HideCheckButton(level, 1)
+			elseif entry.special == TradeTimeRowAction.AddToLootSession and Util.Objects.In(value, TradeTimeRowType.Item, TradeTimeRowType.Missing) then
+				info.text = L['add_to_loot_session']
+				info.icon = "Interface/ICONS/INV_Misc_Note_01"
+				info.disabled = not AddOn:MasterLooterModule():IsHandled()
+
+				local addFn = Util.Functions.Noop
+				if Util.Strings.Equal(value, TradeTimeRowType.Item) then
+					addFn = function()
+						--- @type LootLedger.TradeTime
+						local tradeTime = menu.entry.tradeTime
+						local bag, slot = AddOn:GetBagAndSlotByGUID(tradeTime.guid)
+						if bag and slot then
+							AddToLootTable(tradeTime.link, bag, slot, tradeTime.guid)
+						end
+					end
+				elseif Util.Strings.Equal(value, TradeTimeRowType.Missing) then
+					addFn = function()
+						for itemGUID, row in pairs(self.rows) do
+							--- @type LootLedger.Entry
+							local ledgerEntry = row:GetLootLedgerEntry()
+							if not ledgerEntry then
+								--- @type LootLedger.TradeTime
+								local tradeTime = row:GetTradeTime()
+								local bag, slot = AddOn:GetBagAndSlotByGUID(tradeTime.guid)
+								if bag and slot then
+									AddToLootTable(tradeTime.link, bag, slot, itemGUID)
+								end
+							end
+						end
+					end
+				end
+
+				info.func = function()
+					addFn()
+					MSA_HideDropDownMenu(1)
+				end
+
+				MSA_DropDownMenu_AddButton(info, level)
 			end
+
+			DropDown.HideCheckButton(level, 1)
+			DropDown.HideCheckButton(level, 2)
 		end
 	)
 end
@@ -408,29 +481,42 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 	end
 	frame:UpdateIcon()
 
-	frame.GetLootLedgerEntry = function()
-		return LootLedger:GetStorage():GetByItemGUID(tradeTime.guid)
+	-- cache the loot ledger entry in order to not repeatedly reload unless needed
+	-- any mutations will occur via LootLedger's storage callbacks
+	frame.lootLedgerEntry = LootLedger:GetStorage():GetByItemGUID(tradeTime.guid)
+	frame.GetLootLedgerEntry = function(self)
+		return self.lootLedgerEntry
+	end
+
+	frame.GetTradeTime = function()
+		return tradeTime
 	end
 
 	-- only show time remaining when hovered
 	countDownBar:SetScript("OnEnter",
 		function(cdb)
 			cdb:SetTimeVisibility(true)
-			actionButtons:ClearAllPoints()
-			actionButtons:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-			actionButtons:SetFrameLevel(cdb:GetFrameLevel() + 1)
-			actionButtons:Show()
 
-			actionButtons.hideButton:SetScript("OnClick",
-				function()
-					if IsModifierKeyDown() then
-						return
-					end
+			-- action buttons replaced with right-click handler
+			--[[
+			if actionButtons then
+				actionButtons:ClearAllPoints()
+				actionButtons:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+				actionButtons:SetFrameLevel(cdb:GetFrameLevel() + 1)
+				actionButtons:Show()
 
-					self:HideItem(tradeTime.guid)
-					actionButtons:Hide()
-				end
-	       )
+				actionButtons.hideButton:SetScript("OnClick",
+	               function()
+	                   if IsModifierKeyDown() then
+	                       return
+	                   end
+
+	                   self:HideItem(tradeTime.guid)
+	                   actionButtons:Hide()
+	               end
+				)
+			end
+			--]]
        end
 	)
 
@@ -438,9 +524,11 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 	countDownBar:SetScript("OnLeave",
 		function(cdb)
 			cdb:SetTimeVisibility(false)
-			if not UIUtil.IsMouseOnFrame(actionButtons) then
+			--[[
+			if actionButtons and not UIUtil.IsMouseOnFrame(actionButtons) then
 				actionButtons:Hide()
 			end
+			--]]
 		end
 	)
 
@@ -501,10 +589,7 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 
 	CandyBar.RegisterCallback(self, "LibCandyBar_Stop",
 		function(_, cdb)
-			if cdb and
-				Util.Strings.Equal(cdb:Get("type"), "TRADE_TIME_REMAINING") and
-				not cdb:Get("stopping") then
-
+			if cdb and Util.Strings.Equal(cdb:Get("type"), "TRADE_TIME_REMAINING") and not cdb:Get("stopping") then
 				local itemGUID = cdb:Get("itemGUID")
 				if not Util.Strings.IsEmpty(itemGUID) then
 					self:HideItem(itemGUID)
@@ -533,10 +618,7 @@ end
 function TradeTimesWindow:ReleaseRow(row)
 	if row  then
 		local countDownBar = row.countDownBar
-		if countDownBar and
-			Util.Strings.Equal(countDownBar:Get("type"), "TRADE_TIME_REMAINING") and
-			not countDownBar:Get("stopping") then
-
+		if countDownBar and Util.Strings.Equal(countDownBar:Get("type"), "TRADE_TIME_REMAINING") and not countDownBar:Get("stopping") then
 			countDownBar:SetParent(UIParent)
 			countDownBar:Set("stopping", true)
 
@@ -548,6 +630,21 @@ function TradeTimesWindow:ReleaseRow(row)
 		end
 
 		row:Hide()
+	end
+end
+
+--- @param lootLedgerEntry LootLedger.Entry
+function TradeTimesWindow:OnLootLedgerStorageEvent(storageEvent, lootLedgerEntry)
+	if storageEvent and lootLedgerEntry then
+		Logging:Trace("OnLootLedgerStorageEvent(%s) : %s", storageEvent, function() return Util.Objects.ToString(lootLedgerEntry) end)
+		local row = self.rows[lootLedgerEntry.guid]
+		if row then
+			if storageEvent == LootLedgerStorage.Events.EntityDeleted then
+				row.lootLedgerEntry = nil
+			elseif Util.Objects.In(storageEvent, LootLedgerStorage.Events.EntityCreated, LootLedgerStorage.Events.EntityUpdated) then
+				row.lootLedgerEntry = lootLedgerEntry
+			end
+		end
 	end
 end
 
@@ -578,8 +675,8 @@ function TradeTimesWindow:Refresh()
 	end
 
 	-- implicitly a copy due to use of Values()
-	local entries, index = Util(state):Values()
-	                                  :Sort(function (e1, e2) return e1.remaining and e2.remaining and e1.remaining < e2. remaining end)(), 1
+	local entries, index =
+		Util(state):Values():Sort(function (e1, e2) return e1.remaining and e2.remaining and e1.remaining < e2. remaining end)(), 1
 	-- assign order based upon time remaining and hide
 	for _, entry in pairs(entries) do
 		local row = self.rows[entry.guid]
@@ -673,6 +770,13 @@ local TradeTimesOverview = AddOn.Instance(
 	end
 )
 
+function TradeTimesOverview:OnLootLedgerStorageEvent(event, detail)
+	Logging:Trace("OnLootLedgerStorageEvent(%s) : %s", event, Util.Objects.ToString(detail))
+	if self.private then
+		self.private:OnLootLedgerStorageEvent(event, detail.entity)
+	end
+end
+
 function TradeTimesOverview:Enable()
 	if not self.enabled then
 		self.messageSubs = Message():BulkSubscribe({
@@ -681,7 +785,6 @@ function TradeTimesOverview:Enable()
 				self.private:Refresh()
 			end
 		})
-
 		self.enabled = true
 	end
 end

@@ -655,7 +655,11 @@ function AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
 
     -- in test mode, return a random amount
     if self:TestModeEnabled() then
-        timeRemainingInSecs = random(1800, 7200)
+        local quality = select(4, self:GetContainerItemInfo(bag, slot))
+        -- only do for epic and legendary items
+        if Util.Objects.In(quality, 4, 5) then
+            timeRemainingInSecs = random(1800, 7200)
+        end
     end
 
     -- if specific items are being tested, return a random amount

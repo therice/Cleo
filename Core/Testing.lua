@@ -98,13 +98,16 @@ function Storage:Replace()
 	Logging:Debug("[Testing.LootLedger.Storage] Replace()")
 
 	if not self.original then
-		self.original = AddOn:LootLedgerModule().storage
+		local lootLedgerModule = AddOn:LootLedgerModule()
+		self.original = lootLedgerModule.storage
 		self.eventSubs = Event():BulkSubscribe({
 			[C.Events.PlayerLogout] = function()
 				self:Restore()
 			end
 		})
-		AddOn:LootLedgerModule().storage = TestStorage()
+		lootLedgerModule:UnregisterStorageCallbacks()
+		lootLedgerModule.storage = TestStorage()
+		lootLedgerModule:RegisterStorageCallbacks()
 	end
 end
 
@@ -115,9 +118,12 @@ end
 function Storage:Restore()
 	Logging:Debug("[Testing.LootLedger.Storage] Restore()")
 	if self.original then
-		AddOn:LootLedgerModule().storage = self.original
-		self.original = nil
+		local lootLedgerModule = AddOn:LootLedgerModule()
+		lootLedgerModule:UnregisterStorageCallbacks()
+		lootLedgerModule.storage = self.original
+		lootLedgerModule:RegisterStorageCallbacks()
 
+		self.original = nil
 		if self.eventSubs then
 			AddOn.Unsubscribe(self.eventSub)
 			self.eventSubs = nil
