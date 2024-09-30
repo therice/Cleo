@@ -177,6 +177,7 @@ function CellBuilder:initialize()
     tinsert(self.embeds, 'playerColoredCellOrElse')
     tinsert(self.embeds, 'deleteCell')
     tinsert(self.embeds, 'itemIconCell')
+    tinsert(self.embeds, 'iconCell')
     tinsert(self.embeds, 'textCell')
     tinsert(self.embeds, 'timerBarCell')
 end

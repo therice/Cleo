@@ -18,6 +18,11 @@ function TestLootSource:initialize(id)
 	LootSource.initialize(self, id)
 end
 
+--- @return string the type of the source
+function TestLootSource:GetType()
+	return "Test"
+end
+
 function TestLootSource:GetName()
 	return L['unknown_testing']
 end

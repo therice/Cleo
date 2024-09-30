@@ -7,6 +7,8 @@ local Logging =  AddOn:GetLibrary("Logging")
 local Util =  AddOn:GetLibrary("Util")
 --- @type UI.Native
 local UI = AddOn.Require('UI.Native')
+--- @type UI.Util
+local UIUtil = AddOn.Require('UI.Util')
 --- @type UI.ScrollingTable
 local ST = AddOn.Require('UI.ScrollingTable')
 --- @type LootSession
@@ -14,10 +16,16 @@ local LootSession = AddOn:GetModule('LootSession')
 
 local ScrollColumns =
 	ST.ColumnBuilder()
-		:column(""):width(30)   -- remove item (1)
-        :column(""):width(40)           -- item icon (2)
-        :column(""):width(50)           -- item level (3)
-        :column(""):width(160)          -- item link (4)
+		-- remove item (1)
+		:column(""):width(30)
+		-- item icon (2)
+        :column(""):width(40)
+		-- item level (3)
+        :column(""):width(50)
+		-- item link (4)
+        :column(""):width(160)
+		-- item source (6)
+		:column(""):width(40)
     :build()
 
 function LootSession:GetFrame()
@@ -91,38 +99,82 @@ function LootSession:AddItems(items)
 				--- @type Models.Item.Item
 				local item = entry:GetItem()
 				-- check if item is available and valid, not because it must be at this moment
-				-- but rather it will send a query meaning results should be available when needed
+				-- but rather it will send an item query meaning results should be available when needed
 				if not item or not item:IsValid() then
 					Logging:Warn("AddItems(%s) : referenced item not available, will re-try querying later", tostring(entry.item))
 				end
-				Util.Tables.Push(
-						self.frame.rows,
-						{
-							session = session,
-							item = item,
-							cols =
-								ST.CellBuilder()
-									:deleteCell(function(_, data, row) self:DeleteItem(data[row].session) end)
-							        :itemIconCell(item and item.link or nil, item and item.texture or nil)
-							        :cell(" " .. (item and item.ilvl or ""))
-							        :textCell(
-										function(frame, data, row)
-											if not data[row].item then
-												frame.text:SetText("--".._G.RETRIEVING_ITEM_INFO.."--")
-												self.loadingItems = true
-												if not self.showPending then
-													self.showPending = true
-													self:ScheduleTimer("Show", 0, self.ml:GetLootTable())
-												end
-											else
-												frame.text:SetText(data[row].item.link)
-											end
+				Util.Tables.Push(self.frame.rows,{
+					session = session,
+					entry = entry,
+					item = item,
+					cols =
+						ST.CellBuilder()
+							:deleteCell(function(_, data, realRow) self:DeleteItem(data[realRow].session) end)
+					        :itemIconCell(item and item.link or nil, item and item.texture or nil)
+					        :cell(" " .. (item and item.ilvl or ""))
+					        :textCell(
+								function(frame, data, realRow)
+									if not data[realRow].item then
+										frame.text:SetText("--".._G.RETRIEVING_ITEM_INFO.."--")
+										self.loadingItems = true
+										if not self.showPending then
+											self.showPending = true
+											self:ScheduleTimer("Show", 0, self.ml:GetLootTable())
 										end
-									)
-								:build()
+									else
+										frame.text:SetText(data[realRow].item.link)
+									end
+								end
+							)
+							:cell(""):DoCellUpdate(
+								function(_, frame, data, _, _, realRow)
+									--- @type  Models.Item.LootTableEntry
+									local entry = data[realRow].entry
+									if entry then
+										--- @type Models.Item.LootSource
+										local source = entry.source
+										local sourceType, sourceName = source:GetType(), source:GetName()
+										local sourceIcon, sourceTt = nil, nil
+										local ttTemplate =
+											UIUtil.ColoredDecorator(C.Colors.White):decorate("%s :") .. ' ' ..
+											UIUtil.ColoredDecorator(C.Colors.ItemHeirloom):decorate("%s")
 
-						}
-				)
+
+										if Util.Strings.Equal(sourceType, "Creature") then
+											sourceIcon = "Interface/ICONS/Achievement_Boss_Illidan"
+											sourceTt = format(ttTemplate, L['creature'], sourceName)
+										elseif Util.Strings.Equal(sourceType, "Player") then
+											local ttExtraTemplate =
+												UIUtil.ColoredDecorator(C.Colors.ItemArtifact):decorate(" (%s)")
+
+											local sourceTtExtra = nil
+											-- if the item has a ledger entry, show as such
+											if entry:GetLootLedgerEntry():isPresent() then
+												sourceIcon = "Interface/ICONS/INV_Misc_Note_01"
+												sourceTtExtra = format(ttExtraTemplate, L["in_ledger"])
+											else
+												sourceIcon = "Interface/ICONS/INV_Misc_Bag_08"
+												sourceTtExtra = format(ttExtraTemplate, L["in_bags"])
+											end
+											sourceTt = format(ttTemplate .. sourceTtExtra, L['player'], sourceName)
+										elseif Util.Strings.Equal(sourceType, "Test") then
+											sourceIcon = "Interface/ICONS/Trade_Engineering"
+											sourceTt = format(ttTemplate, L['test'], sourceName)
+										else
+											sourceIcon = "Interface/ICONS/INV_Misc_QuestionMark"
+											sourceTt = format(ttTemplate, L['unknown'], sourceName)
+										end
+
+								        frame:SetNormalTexture(sourceIcon)
+										frame:SetScript("OnEnter", function() UIUtil.ShowTooltip(frame, {"ANCHOR_RIGHT", 0, 0}, sourceTt) end)
+										frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+									else
+										frame:SetNormalTexture(nil)
+									end
+							end)
+						:build()
+
+				})
 			end
 		end
 	    self.frame.st:SetData(self.frame.rows)
@@ -135,6 +187,8 @@ function LootSession:DeleteItem(session)
 	self:Show(self.ml:GetLootTable())
 end
 
+--- @param items table<number, Models.Item.LootTableEntry>
+--- @param disableAwardLater boolean
 function LootSession:Show(items, disableAwardLater)
 	disableAwardLater = (disableAwardLater == true)
 

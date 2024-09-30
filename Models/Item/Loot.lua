@@ -30,6 +30,10 @@ function LootSource:initialize(id)
 	self.id = id
 end
 
+function LootSource:GetType()
+	return L["unknown"]
+end
+
 function LootSource:GetName()
 	return L["unknown"]
 end
@@ -53,6 +57,11 @@ function CreatureLootSource:initialize(id, slot)
 	assert(Util.Objects.IsNumber(slot), format("%s is not a valid loot slot", tostring(slot)))
 	LootSource.initialize(self, id)
 	self.slot = slot
+end
+
+--- @return string the type of the source
+function CreatureLootSource:GetType()
+	return "Creature"
 end
 
 --- @return string the name of the creature
@@ -98,6 +107,11 @@ function PlayerLootSource:initialize(id, item)
 	assert(AddOn:IsItemGUID(item), format("%s is not a valid item GUID", tostring(item)))
 	LootSource.initialize(self, id)
 	self.item = item
+end
+
+--- @return string the type of the source
+function PlayerLootSource:GetType()
+	return "Player"
 end
 
 --- @return string the name of the player
@@ -555,6 +569,7 @@ function LootAllocateEntry:GetCandidateResponse(name)
 	return lar
 end
 
+-- todo : handle 'award later' -> 'to trade'
 --- @return Models.Item.ItemAward
 function LootAllocateEntry:GetItemAward(candidate, reason)
 	-- Logging:Debug("%s", Util.Objects.ToString(self.clazz))
