@@ -77,6 +77,8 @@ function Service:UnregisterAllCallbacks(target)
 	end
 end
 
+--- @param active boolean should only active configurations be returned
+--- @param default boolean should only default configuration be returned
 --- @return table<string, Models.List.Configuration>
 function Service:Configurations(active, default)
 	return self.Configuration:GetAll(

@@ -29,10 +29,8 @@ local ST = AddOn.Require('UI.ScrollingTable')
 local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
 --- @type UI.ScrollingTable.CellBuilder
 local  STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
---- @type Models.Item.ContainerItem
-local ContainerItem = AddOn.Package('Models.Item').ContainerItem
 
-local MaxTradeTimeRemaining, ScrollColumns = 7200,
+local MaxTradeTimeRemaining, LedgerScrollColumns = 7200,
 	ST.ColumnBuilder()
 		-- 1 (item icon)
 		:column(""):width(20):sortnext(3)
@@ -54,16 +52,33 @@ local MaxTradeTimeRemaining, ScrollColumns = 7200,
 		:column(L['trade_time_remaining']):width(250)
 	:build()
 
+local LedgerActionMenu, LedgerActionMenuInitializer
+
 function LootLedger:LayoutInterface(container)
-	Logging:Debug("LayoutInterface(%s)", tostring(container:GetName()))
+	Logging:Trace("LayoutInterface(%s)", tostring(container:GetName()))
 	local module = self
 
 	container:SetWide(1000)
 
-	local st = ST.New(ScrollColumns, 28, 20, nil, container)
+	LedgerActionMenu = MSA_DropDownMenu_Create(C.DropDowns.LootLedgerActions, container)
+	LedgerActionMenu.module = module
+	MSA_DropDownMenu_Initialize(LedgerActionMenu, LedgerActionMenuInitializer, "MENU")
+
+	local st = ST.New(LedgerScrollColumns, 28, 20, nil, container)
 	st.frame:SetPoint("TOPLEFT", container.banner, "BOTTOMLEFT", 10, -28)
 	st.frame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -15, 0)
 	st:EnableSelection(true)
+	st:RegisterEvents({
+		["OnClick"] = function(_, cellFrame, data, _, _, realRow, _, _, button, ...)
+			if Util.Strings.Equal(C.Buttons.Right, button) then
+				--- @type LootLedger.Entry
+				LedgerActionMenu.entry = data[realRow].entry
+				DropDown.ToggleMenu(1, LedgerActionMenu, cellFrame, 0, 0)
+			end
+
+			return false
+		end
+	})
 
 	st.RecycleElements = function(self)
 		if self.rows and #self.rows > 0 then
@@ -119,14 +134,10 @@ function LootLedger:Populate(container)
 								:cell(entry:GetEncounter():map(function(encounter) return AddOn.GetEncounterCreatures(encounter.encounterId) end):orElse(L['na']))
 								:playerColoredCellOrElse(entry:GetItemAward():map(function(a) return a.winner end):orElse(nil), L['na'])
 								:timerBarCell(250, 20,
-									function(rowFrame, cellFrame, data, cols, row, realRow, column, show, st, ...)
+									function(_, cellFrame, data, _, _, realRow, _, _, _, ...)
 										local cdb = cellFrame.cdb
 										--- @type LootLedger.Entry
 										local rowEntry = data[realRow].entry
-										--Logging:Trace(
-										--	"timerBarCell(%s) : row=%d, realRow=%d, running=%s, num=%s, entry=%s",
-										--	tostring(cdb), row, realRow, tostring(cdb.running), tostring(data[realRow].num), Util.Objects.ToString(rowEntry)
-										--)
 										local ttRemaining = rowEntry:GetTradeTimeRemaining()
 										if ttRemaining > 0 then
 											cdb:SetParent(cellFrame)
@@ -165,11 +176,82 @@ function LootLedger:Populate(container)
 	end
 end
 
+local RHLColorAwardLater, RHLColorToTrade = C.Colors.MageBlue, C.Colors.ShamanBlue
+local MenuRightClickAction = {
+	AddToLootSession = "ADD_TO_LOOT_SESSION"
+}
+local MenuRightClickActionModifier = {
+	AwardLater = "AWARD_LATER",
+	Item       = "ITEM",
+	ToTrade    = "TO_TRADE",
+}
+do
+	local LedgerActionMenuEntriesBuilder =
+		DropDown.EntryBuilder()
+			-- level 1
+			:nextlevel()
+				-- item section
+				:add():text(L['item']):title(true):checkable(false):disabled(true)
+					-- the item
+					:add():text(
+						function(_, entry, _)
+							return ItemUtil:ItemLinkToColor(entry.item) .. ItemUtil:ItemLinkToItemName(entry.item) .. "|r"
+						end
+					):arrow(true):checkable(false):value(MenuRightClickActionModifier.Item)
+				-- category section
+				:add():text(L['category']):title(true):checkable(false):disabled(true)
+					-- award later
+					:add():text(UIUtil.ColoredDecorator(RHLColorAwardLater):decorate(L['award_later']))
+						:arrow(true):checkable(false):value(MenuRightClickActionModifier.AwardLater)
+					-- to trade
+					:add():text(UIUtil.ColoredDecorator(RHLColorToTrade):decorate(L['trade']))
+						:arrow(true):checkable(false):value(MenuRightClickActionModifier.ToTrade)
+			-- level 2
+			:nextlevel()
+				:add():set('special', MenuRightClickAction.AddToLootSession)
+
+	LedgerActionMenuInitializer = DropDown.RightClickMenu(
+		Util.Functions.True,
+		LedgerActionMenuEntriesBuilder:build(),
+		function(info, menu, level, entry, value)
+			--- @type LootLedger
+			local self = menu.module
+			if entry.special == MenuRightClickAction.AddToLootSession then
+				info.text = L['add_to_loot_session']
+				info.icon = "Interface/ICONS/INV_Misc_Note_01"
+				info.disabled = not AddOn:MasterLooterModule():IsHandled()
+
+				local addFn = Util.Functions.Noop
+				if Util.Strings.Equal(value, MenuRightClickActionModifier.Item) then
+					addFn = function()
+						--- @type LootLedger.Entry
+						local llEntry = menu.entry
+						AddOn:MasterLooterModule():AddLootTableItemByGUID(llEntry.guid)
+					end
+				elseif Util.Objects.In(value, MenuRightClickActionModifier.AwardLater, MenuRightClickActionModifier.ToTrade) then
+					addFn = function()
+
+					end
+				end
+
+				info.func = function()
+					addFn()
+					MSA_HideDropDownMenu(1)
+				end
+
+				MSA_DropDownMenu_AddButton(info, level)
+			end
+
+			DropDown.HideCheckButton(level, 1)
+			DropDown.HideCheckButton(level, 2)
+		end
+	)
+end
+
 --[[ LootLedger.TradeTimesWindow START --]]
 --- @type LibUtil.Numbers.AtomicNumber
 local TTEntryCounter = Util.Numbers.AtomicNumber(1)
 local TTHeaderHeight, TTRowHeight, TTMaxRows, TTMaxWidth, TTMaxHeight = 25, 22, 5, 1200, 490
-
 ---
 --- Widget for display trade time remaining on looted items
 ---
@@ -275,56 +357,24 @@ function TradeTimesWindow:Get()
 		-- do this after establishing to foundation elements, otherwise it can create
 		-- stack overflows due to creation of widgets calling back into this
 		f:HookScript("OnSizeChanged", function(_, _, _) self:SetHeight() end)
-
-		-- action buttons replaced with right-click handler
-		--[[
-		-- various actions on a row by row basis
-		local actionButtons = CreateFrame("Frame", AddOn:Qualify("TradeTimesWindow", "ActionButtons"), content)
-		actionButtons:SetSize(TTRowHeight, TTRowHeight)
-		actionButtons:Hide()
-
-		local hideButton = UI:New('ButtonClose', actionButtons,  AddOn:Qualify("TradeTimesWindow", "ActionButtons", "Hide"))
-		hideButton:SetSize(TTRowHeight, TTRowHeight)
-		hideButton:SetPoint("TOPLEFT", actionButtons, "TOPLEFT")
-
-		local normalTexture = hideButton:CreateTexture()
-		normalTexture:SetTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up")
-		normalTexture:SetAllPoints(hideButton)
-		hideButton:SetNormalTexture(normalTexture)
-
-		local highlightTexture = hideButton:CreateTexture()
-		highlightTexture:SetTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up")
-		highlightTexture:SetAllPoints(hideButton)
-		hideButton:SetHighlightTexture(highlightTexture)
-
-		hideButton:HookScript("OnLeave",
-			function()
-				actionButtons:Hide()
-			end
-		)
-		actionButtons.hideButton = hideButton
-		f.actionButtons = actionButtons
-		--]]
-
 		self.frame = f
 	end
 
 	return self.frame
 end
 
-local RHLColorDefault, RHLColorMissing, RHLColorAwardLater, RHLColorToTrade =
-	C.Colors.ItemPoor, C.Colors.DeathKnightRed, C.Colors.MageBlue, C.Colors.ShamanBlue
+local RHLColorDefault, RHLColorMissing = C.Colors.ItemPoor, C.Colors.DeathKnightRed
 
 local TradeTimeRowAction = {
 	Hide             = "HIDE",
-	AddToLootSession = "ADD_TO_LOOT_SESSION"
+	AddToLootSession = MenuRightClickAction.AddToLootSession
 }
 
 local TradeTimeRowType = {
-	AwardLater = "AWARD_LATER",
-	Item       = "ITEM",
+	AwardLater = MenuRightClickActionModifier.AwardLater,
+	Item       = MenuRightClickActionModifier.Item,
 	Missing    = "MISSING",
-	ToTrade    = "TO_TRADE",
+	ToTrade    = MenuRightClickActionModifier.ToTrade,
 }
 
 local TradeTimeRowActionsMenu, TradeTimeRowActionsMenuInitializer = nil, nil
@@ -357,12 +407,6 @@ do
 			:nextlevel()
 				:add():set('special', TradeTimeRowAction.AddToLootSession)
 				:add():set('special', TradeTimeRowAction.Hide)
-
-	local function AddToLootTable(item, bag, slot, guid)
-		AddOn:MasterLooterModule():AddLootTableItemFromContainer(
-			ContainerItem(item, bag, slot, guid)
-		)
-	end
 
 	TradeTimeRowActionsMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -401,23 +445,17 @@ do
 					addFn = function()
 						--- @type LootLedger.TradeTime
 						local tradeTime = menu.entry.tradeTime
-						local bag, slot = AddOn:GetBagAndSlotByGUID(tradeTime.guid)
-						if bag and slot then
-							AddToLootTable(tradeTime.link, bag, slot, tradeTime.guid)
-						end
+						AddOn:MasterLooterModule():AddLootTableItemByGUID(tradeTime.guid)
 					end
 				elseif Util.Strings.Equal(value, TradeTimeRowType.Missing) then
 					addFn = function()
-						for itemGUID, row in pairs(self.rows) do
+						for _, row in pairs(self.rows) do
 							--- @type LootLedger.Entry
 							local ledgerEntry = row:GetLootLedgerEntry()
 							if not ledgerEntry then
 								--- @type LootLedger.TradeTime
 								local tradeTime = row:GetTradeTime()
-								local bag, slot = AddOn:GetBagAndSlotByGUID(tradeTime.guid)
-								if bag and slot then
-									AddToLootTable(tradeTime.link, bag, slot, itemGUID)
-								end
+								AddOn:MasterLooterModule():AddLootTableItemByGUID(tradeTime.guid)
 							end
 						end
 					end
@@ -439,14 +477,14 @@ end
 
 --- @param parent Frame
 --- @param tradeTime LootLedger.TradeTime
-function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
+function TradeTimesWindow:CreateRow(parent, tradeTime)
 	-- e.g. Cleo_TradeTimesWindow_Row_1
 	Logging:Trace("CreateRow() : %s", Util.Objects.ToString(tradeTime))
 
 	if not TradeTimeRowActionsMenu then
 		TradeTimeRowActionsMenu = MSA_DropDownMenu_Create(C.DropDowns.TradeTimeActions, parent)
-		MSA_DropDownMenu_Initialize(TradeTimeRowActionsMenu, TradeTimeRowActionsMenuInitializer, "MENU")
 		TradeTimeRowActionsMenu.module = self
+		MSA_DropDownMenu_Initialize(TradeTimeRowActionsMenu, TradeTimeRowActionsMenuInitializer, "MENU")
 	end
 
 	local frame = CreateFrame(
@@ -496,27 +534,6 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 	countDownBar:SetScript("OnEnter",
 		function(cdb)
 			cdb:SetTimeVisibility(true)
-
-			-- action buttons replaced with right-click handler
-			--[[
-			if actionButtons then
-				actionButtons:ClearAllPoints()
-				actionButtons:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-				actionButtons:SetFrameLevel(cdb:GetFrameLevel() + 1)
-				actionButtons:Show()
-
-				actionButtons.hideButton:SetScript("OnClick",
-	               function()
-	                   if IsModifierKeyDown() then
-	                       return
-	                   end
-
-	                   self:HideItem(tradeTime.guid)
-	                   actionButtons:Hide()
-	               end
-				)
-			end
-			--]]
        end
 	)
 
@@ -524,11 +541,6 @@ function TradeTimesWindow:CreateRow(parent, tradeTime, actionButtons)
 	countDownBar:SetScript("OnLeave",
 		function(cdb)
 			cdb:SetTimeVisibility(false)
-			--[[
-			if actionButtons and not UIUtil.IsMouseOnFrame(actionButtons) then
-				actionButtons:Hide()
-			end
-			--]]
 		end
 	)
 

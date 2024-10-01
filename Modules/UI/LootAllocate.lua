@@ -23,6 +23,8 @@ local DropDown = AddOn.Require('UI.DropDown')
 local Dialog = AddOn:GetLibrary("Dialog")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 
 --- @type LootAllocate
 local LA = AddOn:GetModule('LootAllocate')
@@ -148,10 +150,11 @@ function LA:GetFrame()
 		itemText:SetText("")
 		f.itemText = itemText
 
-		local itemList  = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-		itemList:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 5, -5)
+		-- the list to which this item corresponds
+		local itemList= f.content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+		itemList:SetPoint("TOPLEFT", itemText, "BOTTOMLEFT", 0, -5)
 		itemList:SetTextColor(0.90, 0.80, 0.50, 1)
-		itemList:SetText("IT")
+		itemList:SetText("")
 		f.itemList = itemList
 
 		local ilvl = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -165,6 +168,16 @@ function LA:GetFrame()
 		state:SetTextColor(0, 1, 0, 1)
 		state:SetText("")
 		f.itemState = state
+
+		local owner = {}
+		owner.icon = UI:New('ButtonIcon', f.content, nil, "Interface/InventoryItems/WoWUnknownItem01")
+		owner.icon:SetPoint("LEFT", state, "RIGHT", 5, 0)
+		owner.icon:SetSize(15,15)
+		owner.icon:Hide()
+		owner.text = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		owner.text:SetPoint("LEFT", owner.icon, "RIGHT", 5, 0)
+		owner.text:Hide()
+		f.owner = owner
 
 		local type = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		type:SetPoint("TOPLEFT", ilvl, "BOTTOMLEFT", 0, -4)
@@ -213,9 +226,9 @@ function LA:GetFrame()
 		awardPlayer:Hide()
 		f.awardStringPlayer = awardPlayer
 
-		local awardTexture  = f.content:CreateTexture()
-		awardTexture:SetTexture("Interface/ICONS/INV_Misc_QuestionMark.png")
-		awardTexture.SetNormalTexture = function(self, tex)  self:SetTexture(tex) end
+		local awardTexture= f.content:CreateTexture()
+		awardTexture:SetTexture("Interface/ICONS/INV_Misc_QuestionMark")
+		awardTexture.SetNormalTexture = function(self, tex) self:SetTexture(tex) end
 		awardTexture.GetNormalTexture = function(self) return self end
 		awardTexture:SetPoint("RIGHT", f.awardStringPlayer , "LEFT")
 		awardTexture:SetSize(15, 15)
@@ -264,7 +277,7 @@ function LA:UpdateSessionButton(session, texture, link, awarded)
 	end
 
 	-- then update it
-	btn:SetNormalTexture(texture or "Interface\\InventoryItems\\WoWUnknownItem01")
+	btn:SetNormalTexture(texture or "Interface/InventoryItems/WoWUnknownItem01")
 	local lines = { format(L["click_to_switch_item"], link) }
 	if session == session then
 		btn:SetBorderColor("yellow")
@@ -279,16 +292,24 @@ function LA:UpdateSessionButton(session, texture, link, awarded)
 end
 
 function LA:GetItemStatus(item)
-	if not item then return "" end
+	if not item then
+		return ""
+	end
+
 	GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
 	GameTooltip:SetHyperlink(item)
+
 	local text = ""
 	if GameTooltip:NumLines() > 1 then
-		local line = getglobal('GameTooltipTextLeft2')
-		local t = line:GetText()
-		-- Logging:Debug("GetItemStatus() : %s", t)
-		if t and strfind(t, "cFF 0FF 0") then
-			text = t
+		local line = getglobal(GameTooltip:GetName() .. 'TextLeft2')
+		local t = line:GetText() or ""
+		--Logging:Warn("GetItemStatus() : %s", t)
+		if Util.Strings.IsSet(t) then
+			-- looking for the text being colored 'green', check both inline and via the font's color
+			-- https://warcraft.wiki.gg/wiki/API_FontInstance_GetTextColor
+			if strfind(t, "cFF 0FF 0") or Util.Tables.Equals({0, 1, 0, 1}, (line.GetTextColor and {line:GetTextColor()} or {})) then
+				text = t
+			end
 		end
 	end
 	GameTooltip:Hide()
@@ -312,8 +333,10 @@ function LA:Show()
 end
 
 function LA:SwitchSession(session)
-	Logging:Trace("SwitchSession(%d)", session)
+	--- @type  Models.Item.LootAllocateEntry
 	local entry = self:GetEntry(session)
+	Logging:Trace("SwitchSession(%d) : %s", session, tostring(entry.owner))
+
 	self.session = session
 	self.frame.itemIcon:SetNormalTexture(entry.texture)
 	self.frame.itemIcon:SetBorderColor("purple")
@@ -321,13 +344,40 @@ function LA:SwitchSession(session)
 	self.frame.itemState:SetText(self:GetItemStatus(entry.link))
 
 	local itemList = AddOn:ListsModule():GetActiveListAndPriority(entry:GetEquipmentLocation())
-	self.frame.itemList:SetText((itemList and itemList.name or L['unknown']))
+	self.frame.itemList:SetText(itemList and itemList.name or L['unknown'])
 	self.frame.itemLvl:SetText(_G.ITEM_LEVEL_ABBR..": " .. entry:GetLevelText())
 	self.frame.itemType:SetText(entry:GetTypeText())
 
-	-- todo : add logic for displaying owner
+	if entry.owner then
+		local player = Player:Get(entry.owner)
+		-- in this case, currently owned by a player
+		if player and not player:IsUNK() then
+			UIUtil.ClassIconFn()(self.frame.owner.icon, player.class)
+			self.frame.owner.icon:Show()
+			self.frame.owner.text:SetText(player:GetShortName())
+			local color = UIUtil.GetClassColor(player.class)
+			self.frame.owner.text:SetTextColor(color.r, color.g, color.b, color.a)
+			self.frame.owner.text:Show()
+		-- otherwise, it's a creature or testing
+		else
+			-- stupid hack to use different icon for testing purposes
+			if strfind(entry.owner:upper(), "TEST") then
+				self.frame.owner.icon:SetNormalTexture("Interface/ICONS/INV_Misc_EngGizmos_swissArmy")
+			else
+				self.frame.owner.icon:SetNormalTexture("Interface/ICONS/Achievement_Boss_Illidan")
+			end
+			self.frame.owner.icon:Show()
+			self.frame.owner.text:SetText(entry.owner)
+			self.frame.owner.text:SetTextColor(C.Colors.ItemArtifact:GetRGBA())
+			self.frame.owner.text:Show()
+		end
+	else
+		self.frame.owner.icon:Hide()
+		self.frame.owner.text:Hide()
+	end
 
 	self:UpdateSessionButtons()
+
 	-- sessions have switched, we want to default sort by response
 	local j = 1
 	for i in ipairs(self.frame.st.cols) do

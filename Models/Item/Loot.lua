@@ -756,10 +756,16 @@ function LootedItem:ToTrade()
 	return self
 end
 
+--- @see AddOn.GetBagAndSlotByGUID
+--- @return number, number the bag and slot for associated item GUID, or nil if it cannot be located
+function LootedItem:GetBagAndSlot()
+	return AddOn:GetBagAndSlotByGUID(self.guid)
+end
+
 --- @see AddOn.GetInventoryItemTradeTimeRemaining
 --- @return number remaining time (in seconds) for associated item
 function LootedItem:GetTradeTimeRemaining()
-	local bag, slot = AddOn:GetBagAndSlotByGUID(self.guid)
+	local bag, slot = self:GetBagAndSlot()
 	if bag and slot then
 		return AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
 	end

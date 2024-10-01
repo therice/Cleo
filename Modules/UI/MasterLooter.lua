@@ -845,6 +845,12 @@ function ML:LayoutConfigSelectionPopup(frame, ...)
 						local configs = AddOn:ListsModule():GetService():Configurations(true)
 						Util.Tables.Filter(configs, function(c) return c:IsAdminOrOwner(AddOn.player) end)
 						self:SetList(configs)
+
+						if Util.Tables.Count(configs) > 0 then
+							local key = Util.Tables.Keys(configs)[1]
+							self:SetViaKey(key)
+							frame.data = configs[key]
+						end
 					end,
 					false
 				)

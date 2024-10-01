@@ -164,9 +164,10 @@ local MasterLooter = {
 
 }
 
+--- @param configId string id of the configuration to activate, if nil won't be activated
 --- @return boolean indicating if able to become master looter
-function MasterLooter:Become()
-	Logging:Debug("[Testing.MasterLooter] Become(%s)", tostring(AddOn:TestModeEnabled()))
+function MasterLooter:Become(configId)
+	Logging:Debug("[Testing.MasterLooter] Become(%s) : %s", tostring(AddOn:TestModeEnabled()), tostring(configId))
 
 	if AddOn:TestModeEnabled() then
 		_, AddOn.masterLooter = AddOn:GetMasterLooter()
@@ -178,6 +179,14 @@ function MasterLooter:Become()
 		local ML = AddOn:MasterLooterModule()
 		AddOn:CallModule(ML:GetName())
 		ML:NewMasterLooter(AddOn.masterLooter)
+
+		if configId then
+			local config = AddOn:ListsModule():GetService().Configuration:Get(configId)
+			if config then
+				ML:ActivateConfiguration(config)
+			end
+		end
+
 		return true
 	end
 
@@ -229,11 +238,12 @@ end
 --- Enables testing mode for AddOn and becomes the master looter
 --- /run _G.Cleo.Testing:EnableAndBecomeMasterLooter()
 ---
+--- @param configId string id of the configuration to activate, if nil won't be activated
 --- @return boolean indicating if able to enable test mode and become master looter
-function Testing:EnableAndBecomeMasterLooter()
+function Testing:EnableAndBecomeMasterLooter(configId)
 	Logging:Debug("[Testing] EnableAndBecomeMasterLooter(%s)", tostring(AddOn:TestModeEnabled()))
 	self:Enable()
-	if not self.MasterLooter:Become() then
+	if not self.MasterLooter:Become(configId) then
 		self:Disable()
 		return false
 	end

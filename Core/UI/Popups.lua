@@ -194,8 +194,10 @@ Dialog:Register(C.Popups.SelectConfiguration, {
         {
             text = L["select"],
             on_click = function(frame, ...)
+                --Logging:Debug("SelectConfiguration() : %s", Util.Objects.ToString({...}))
                 AddOn:MasterLooterModule():NeuterConfigSelectionPopup(frame)
-                AddOn:MasterLooterModule():ActivateConfiguration(...)
+                -- see on_show function
+                AddOn:MasterLooterModule():ActivateConfiguration(frame.data --[[ will be Configuration instance --]])
             end,
         },
         {

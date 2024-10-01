@@ -240,7 +240,6 @@ function Dropdown:IterateItems(fn)
 	Util.Tables.Call(self.List, fn)
 end
 
-
 local function SortListFn(x, y)
 	local num1, num2 = tonumber(x), tonumber(y)
 	if num1 and num2 then

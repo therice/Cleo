@@ -128,10 +128,18 @@ function ButtonIcon:Create()
     BaseWidget.Mod(
         b,
         'Tooltip', ButtonIcon.SetTooltip,
-        'Rotate', ButtonIcon.Rotate
+        'Rotate', ButtonIcon.Rotate,
+        'HideExtraTextures', ButtonIcon.HideExtraTextures
     )
 
     return b
+end
+
+function ButtonIcon.HideExtraTextures(self)
+
+    self.HighlightTexture:Hide()
+    self.PushedTexture:Hide()
+    self.DisabledTexture:Hide()
 end
 
 function ButtonIcon.SetTooltip(self, tooltip)

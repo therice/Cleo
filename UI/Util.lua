@@ -345,7 +345,7 @@ function U.ClassIconFn()
             frame:SetNormalTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
             frame:GetNormalTexture():SetTexCoord(unpack(coords))
         else
-            frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark.png")
+            frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark")
         end
     end
 end

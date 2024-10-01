@@ -33,6 +33,8 @@ local UIUtil = AddOn.Require('UI.Util')
 local MasterLooterDb = AddOn.Require('MasterLooterDb')
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary('ItemUtil')
+--- @type Models.Item.ContainerItem
+local ContainerItem = AddOn.Package('Models.Item').ContainerItem
 -- handles to globals
 local SendChatMessage = _G.SendChatMessage
 
@@ -1284,6 +1286,19 @@ function ML:AddLootTableItemFromContainer(containerItem)
 	LS:Show(self.lootTable)
 end
 
+--- @param itemGUID string the item GUID (unique id for it in a container)
+function ML:AddLootTableItemByGUID(itemGUID)
+	if itemGUID then
+		local bag, slot = AddOn:GetBagAndSlotByGUID(itemGUID)
+		if bag and slot then
+			local itemLink = C_Item.GetItemLink(ItemLocation:CreateFromBagAndSlot(bag, slot))
+			if itemLink then
+				self:AddLootTableItemFromContainer(ContainerItem(itemLink, bag, slot, itemGUID))
+			end
+		end
+	end
+end
+
 ---
 --- For example
 ---     {1 = { ref = '18832' },  2 = { ref = '18834::0:0:0:0:0::::0' }, ... }
@@ -1387,8 +1402,8 @@ end
 
 ML.AwardStatus = {
 	Failure = {
-		AwardLaterMissingWinner = "AwardLaterMissingWinner",
-		AwardLaterCannotReward  = "AwardLaterCannotReward",
+		AwardLaterCannotRepeat  = "AwardLaterCannotRepeat",
+		AwardedCannotAwardLater = "AwardedCannotAwardLater",
 		LootAmbiguity           = "LootAmbiguity",
 		LootGone                = "LootGone",
 		LootNotOpen             = "LootNotOpen",
@@ -1536,12 +1551,12 @@ function ML:RegisterAndAnnounceAward(award)
 		-- this will modify the state on the entry to 'to trade', assign the various award attributes,
 		-- and then update it in the ledger's storage
 		AddOn:LootLedgerModule():GetStorage():UpdateAll(
-			ledgerEntry.map(function(e) return e:WithAward(award) end)
+			ledgerEntry:map(function(e) return e:WithAward(award) end)
 				:orElseThrow("unable to assign award to loot ledger entry")
 		)
 	end
 
-	-- owner in this message could be a creature name, player name, or testing (fake name)
+	-- owner in this message could be a creature name, player name, or testing (fake name).
 	-- practically, only will be used when it is a player. could send the GUID (id), but would require
 	-- translation on the receiver's end
 	self:Send(C.group, C.Commands.Awarded, session, winner, ltEntry:GetOwner())
@@ -1637,6 +1652,8 @@ function ML:RegisterAndAnnounceLootedToBags(session)
 end
 
 function ML:PrintLootError(cause, item, winner)
+	winner = winner or L['unknown']
+
 	local AS = self.AwardStatus
 
 	if Util.Objects.Equals(cause, AS.Failure.LootNotOpen) then
@@ -1644,7 +1661,7 @@ function ML:PrintLootError(cause, item, winner)
 	elseif Util.Objects.Equals(cause, AS.Failure.Timeout) then
 		AddOn:Print(
 			format(L["timeout_giving_item_to_player"], item, UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner))),
-			" - ",
+			" : ",
 			_G.ERR_INV_FULL
 		)
 	else
@@ -1652,15 +1669,15 @@ function ML:PrintLootError(cause, item, winner)
 			format(
 				L["unable_to_give_item_to_player"],
 				item,
-				UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner)) .. " - "
+				UIUtil.PlayerClassColorDecorator(winner):decorate(AddOn.Ambiguate(winner)) .. " : "
 			)
 
 		if Util.Objects.Equals(cause, AS.Failure.LootAmbiguity) then
 			AddOn:Print(prefix, L['item_ambiguous_source'])
-		elseif Util.Objects.Equals(cause, AS.Failure.AwardLaterMissingWinner) then
-			AddOn:Print(prefix, L['award_later_missing_winner'])
-		elseif Util.Objects.Equals(cause, AS.Failure.AwardLaterCannotReward) then
-			AddOn:Print(prefix, L['award_later_cannot_reward'])
+		elseif Util.Objects.Equals(cause, AS.Failure.AwardLaterCannotRepeat) then
+			AddOn:Print(prefix, L['award_later_cannot_repeat'])
+		elseif Util.Objects.Equals(cause, AS.Failure.AwardedCannotAwardLater) then
+			AddOn:Print(prefix, L['awarded_cannot_award_later'])
 		elseif Util.Objects.Equals(cause, AS.Failure.LootGone) then
 			AddOn:Print(prefix, _G.LOOT_GONE)
 		elseif Util.Objects.Equals(cause, AS.Failure.LootSourceMissing) then
@@ -1783,16 +1800,17 @@ function ML:Award(award, callback, ...)
 	end
 
 	-- loot is destined for or available via player's bags, but no winner specified
+	-- attempt to award later an item that is already for award later
 	if ledgerEntry:isPresent() and not winner then
-		self:AwardResult(false, session, winner, AS.Failure.AwardLaterMissingWinner, callback, ...)
-		self:PrintLootError(AS.Failure.AwardLaterMissingWinner, link)
+		self:AwardResult(false, session, winner, AS.Failure.AwardLaterCannotRepeat, callback, ...)
+		self:PrintLootError(AS.Failure.AwardLaterCannotRepeat, link)
 		return false
 	end
 
 	-- loot is being re-awarded, but no winner
 	if ltEntry.awarded and not winner then
-		self:AwardResult(false, session, winner, AS.Failure.AwardLaterCannotReward, callback, ...)
-		self:PrintLootError(AS.Failure.AwardLaterCannotReward, link)
+		self:AwardResult(false, session, winner, AS.Failure.AwardedCannotAwardLater, callback, ...)
+		self:PrintLootError(AS.Failure.AwardedCannotAwardLater, link)
 		return false
 	end
 

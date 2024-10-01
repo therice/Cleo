@@ -34,8 +34,8 @@ function LootSession:GetFrame()
 		local st = ST.New(ScrollColumns, 5, 40, nil, f)
 		-- disable sorting
 		st:RegisterEvents({
-			["OnClick"] = function(_, _, _, _, row, realrow)
-			  if not (row or realrow) then
+			["OnClick"] = function(_, _, _, _, row, realRow)
+			  if not (row or realRow) then
 			      return true
 			  end
 			end,
@@ -129,10 +129,10 @@ function LootSession:AddItems(items)
 							:cell(""):DoCellUpdate(
 								function(_, frame, data, _, _, realRow)
 									--- @type  Models.Item.LootTableEntry
-									local entry = data[realRow].entry
-									if entry then
+									local ltEntry = data[realRow].entry
+									if ltEntry then
 										--- @type Models.Item.LootSource
-										local source = entry.source
+										local source = ltEntry.source
 										local sourceType, sourceName = source:GetType(), source:GetName()
 										local sourceIcon, sourceTt = nil, nil
 										local ttTemplate =
@@ -147,9 +147,9 @@ function LootSession:AddItems(items)
 											local ttExtraTemplate =
 												UIUtil.ColoredDecorator(C.Colors.ItemArtifact):decorate(" (%s)")
 
-											local sourceTtExtra = nil
+											local sourceTtExtra
 											-- if the item has a ledger entry, show as such
-											if entry:GetLootLedgerEntry():isPresent() then
+											if ltEntry:GetLootLedgerEntry():isPresent() then
 												sourceIcon = "Interface/ICONS/INV_Misc_Note_01"
 												sourceTtExtra = format(ttExtraTemplate, L["in_ledger"])
 											else
@@ -193,7 +193,7 @@ function LootSession:Show(items, disableAwardLater)
 	disableAwardLater = (disableAwardLater == true)
 
 	if self.pendingEndSession then
-		Logging:Debug("Show() : pending end of session, not showing")
+		Logging:Trace("Show() : pending end of session, not showing")
 		return
 	end
 

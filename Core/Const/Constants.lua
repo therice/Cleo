@@ -156,6 +156,7 @@ AddOn.Constants = {
         ListPriorityActions = name .. "_ListPriorityActions",
         ListPlayerActions   = name .. "_ListPlayerActions",
         LootAuditActions    = name .. "_LootAuditActions",
+        LootLedgerActions   = name .. "_LootLedgerActions",
         RaidAuditActions    = name .. "_RaidAuditActions",
         TrafficAuditActions = name .. "_TrafficAuditActions",
         TradeTimeActions    = name .. "_TradeTimeActions",
