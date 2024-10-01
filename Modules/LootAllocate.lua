@@ -182,13 +182,12 @@ function LA:HaveLootTable()
 	return self.lootTable and next(self.lootTable) ~= nil
 end
 
+
 --- @return Models.Item.LootAllocateEntry
 function LA:GetEntry(session)
 	session = tonumber(session)
 	assert(session, format("no session provided %s", tostring(session)))
-	local entry = self.lootTable[session]
-	assert(Util.Objects.IsSet(entry), format("no loot allocation entry available for session %d", session))
-	return entry
+	return self.lootTable[session]
 end
 
 --- @return Models.Item.LootAllocateEntry

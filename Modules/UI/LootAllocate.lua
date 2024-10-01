@@ -23,8 +23,8 @@ local DropDown = AddOn.Require('UI.DropDown')
 local Dialog = AddOn:GetLibrary("Dialog")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
---- @type LibItemUtil
-local ItemUtil = AddOn:GetLibrary("ItemUtil")
+--- @type Models.Item.DeferredItemAward
+local DeferredItemAward = AddOn.Package('Models.Item').DeferredItemAward
 
 --- @type LootAllocate
 local LA = AddOn:GetModule('LootAllocate')
@@ -768,7 +768,26 @@ do
 							end
 						)
 			        :add():text(L["award_for"]):value(RG.AwardFor):checkable(false):arrow(true)
-			        :add():text(""):checkable(false):disabled(true)
+					:add():text(L["award_later"]):checkable(false)
+						:disabled(
+							function(_, _, self)
+								local laEntry = AddOn:LootAllocateModule():GetEntry(self.session)
+								local ltEntry = AddOn:MasterLooterModule():GetLootTableEntry(self.session)
+								return (not laEntry or laEntry.awarded) or (not ltEntry or ltEntry:GetLootLedgerEntry():isPresent())
+							end
+						)
+						:fn(
+							function(name, _, self)
+								Dialog:Spawn(
+									C.Popups.ConfirmAwardLater,
+									DeferredItemAward(
+										self.session,
+										AddOn:LootAllocateModule():GetEntry(self.session).link
+									)
+								)
+							end
+						)
+					:add():text(""):checkable(false):disabled(true)
 			        :add():text(L["change_response"]):value(RG.ChangeResponse):checkable(false):arrow(true)
 			        :add():text(L["reannounce"]):value(RG.Reannounce):checkable(false):arrow(true)
 			        :add():text(L["add_rolls"]):checkable(false)

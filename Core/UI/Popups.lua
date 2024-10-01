@@ -67,6 +67,25 @@ Dialog:Register(C.Popups.ConfirmAward, {
     show_while_dead = true,
 })
 
+Dialog:Register(C.Popups.ConfirmAwardLater, {
+    text = MachuPicchu,
+    icon = "",
+    on_show = AddOn:MasterLooterModule().AwardLaterOnShow,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = AddOn:MasterLooterModule().AwardLaterOnClickYes
+        },
+        {
+            text = _G.NO,
+            on_click = Util.Functions.Noop
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})
+
+
 Dialog:Register(C.Popups.ConfirmBroadcastDelete, {
     text = MachuPicchu,
     on_show = AddOn:ListsModule().ConfirmBroadcastDeleteOnShow,

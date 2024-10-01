@@ -2089,6 +2089,27 @@ function ML.AwardOnClickYes(_, award)
 	ML:Award(award)
 end
 
+function ML.AwardLaterOnShow(frame, award)
+	UIUtil.DecoratePopup(frame)
+	frame.text:SetText(format(L["confirm_award_later"], award.link))
+end
+
+function ML.AwardLaterOnClickYes(_, award)
+	-- this is distinct from the AwardOnClickYes due to semantics of how
+	-- 'award later' is handled based upon source (loot slot on creature or item in player's bags)
+	-- during testing, with specific switches enabled, we allow code paths to be executed where not all information
+	-- will necessarily be available. for example, 'test' execution and 'award later' for a testing item
+	-- therefore, just capture and log the error via this path knowing that a developer/tester will have
+	-- sufficient knowledge to interpret the output based upon what is being executed
+	Util.Functions.try(
+		function() ML:Award(award) end
+	).catch(
+		function(err)
+			Logging:Error("AwardLaterOnClickYes(%s) : %s", Util.Objects.ToString(award), Util.Objects.ToString(err))
+		end
+	)
+end
+
 --- @param items table<number>
 --- @param players table<string>
 function ML:Test(items, players)

@@ -275,6 +275,7 @@ AddOn.Constants = {
     Popups = {
         ConfirmAbort            =   name .. "_ConfigAbort",
         ConfirmAward            =   name .. "_ConfirmAward",
+        ConfirmAwardLater       =   name .. "_ConfirmAwardLater",
         ConfirmBroadcastDelete  =   name .. "_ConfirmBroadcastDelete",
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
         ConfirmDeleteListConfig =   name .. "_ConfirmDeleteListConfig",
