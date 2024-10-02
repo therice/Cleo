@@ -178,12 +178,13 @@ end
 
 local RHLColorAwardLater, RHLColorToTrade = C.Colors.MageBlue, C.Colors.ShamanBlue
 local MenuRightClickAction = {
-	AddToLootSession = "ADD_TO_LOOT_SESSION"
+	AddToLootSession = "ADD_TO_LOOT_SESSION",
+	Remove           = "REMOVE",
 }
 local MenuRightClickActionModifier = {
-	AwardLater = "AWARD_LATER",
+	AwardLater = LootedItem.State.AwardLater,
 	Item       = "ITEM",
-	ToTrade    = "TO_TRADE",
+	ToTrade    = LootedItem.State.ToTrade,
 }
 do
 	local LedgerActionMenuEntriesBuilder =
@@ -209,6 +210,7 @@ do
 			-- level 2
 			:nextlevel()
 				:add():set('special', MenuRightClickAction.AddToLootSession)
+				:add():set('special', MenuRightClickAction.Remove)
 
 	LedgerActionMenuInitializer = DropDown.RightClickMenu(
 		Util.Functions.True,
@@ -249,6 +251,29 @@ do
 
 				info.func = function()
 					addFn()
+					MSA_HideDropDownMenu(1)
+				end
+
+				MSA_DropDownMenu_AddButton(info, level)
+			elseif entry.special == MenuRightClickAction.Remove then
+				info.text = L['remove']
+				info.icon = "Interface/BUTTONS/UI-GroupLoot-Pass-Up"
+				info.disabled = not AddOn:MasterLooterModule():IsHandled()
+
+				local removeFn = Util.Functions.Noop
+				if Util.Strings.Equal(value, MenuRightClickActionModifier.Item) then
+					removeFn = function()
+						self:GetStorage():Remove(menu.entry)
+					end
+				elseif Util.Objects.In(value, MenuRightClickActionModifier.AwardLater, MenuRightClickActionModifier.ToTrade) then
+					removeFn = function()
+						-- the value will be the same as the state used by LootedItem
+						self:GetStorage():RemoveByState(value)
+					end
+				end
+
+				info.func = function()
+					removeFn()
 					MSA_HideDropDownMenu(1)
 				end
 

@@ -15,6 +15,7 @@ local SemanticVersion = AddOn.Package('Models').SemanticVersion
 local Cbh = AddOn:GetLibrary("CallbackHandler")
 
 local Events = {
+	Cleared         =   "Cleared",
 	EntityCreated   =   "EntityCreated",
 	EntityDeleted   =   "EntityDeleted",
 	EntityUpdated   =   "EntityUpdated",
@@ -79,6 +80,19 @@ end
 function Dao:Keys()
 	return Util.Tables.Keys(self.db)
 end
+
+--- Deletes all entries from Dao
+function Dao:Clear(fireCallbacks, ...)
+	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
+	if self.ShouldPersist() then
+		self.db = {}
+
+		if fireCallbacks then
+			self:FireCallbacks(Events.Cleared, EventDetail(nil, nil, nil, nil, ...))
+		end
+	end
+end
+
 
 -- C(reate)
 --- @param entity any the entity to add
@@ -257,7 +271,7 @@ end
 function Dao:Remove(entity, fireCallbacks, ...)
 	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
 	Logging:Trace("Dao.Remove[%s](%s)", tostring(self.entityClass), tostring(entity.id))
-	if self.ShouldPersist() then
+	if entity and self.ShouldPersist() then
 		self.module:SetDbValue(self.db, entity.id, nil)
 
 		if fireCallbacks then

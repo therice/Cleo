@@ -669,19 +669,28 @@ function Storage:Count()
 	return Util.Tables.Count(self.db)
 end
 
---- @return LootLedger.Storage
-function Storage:Clear()
-	if self.ShouldPersist() then
-		self.db = {}
-	end
-	return self
-end
-
 --- @param itemGUID string
 --- @return LootLedger.Entry
 function Storage:GetByItemGUID(itemGUID)
 	if Util.Strings.IsSet(itemGUID) and self.guidIndex[itemGUID] then
 		return self:Get(self.guidIndex[itemGUID])
+	end
+end
+
+--- @param ... string one or more states for which to remove entries
+function Storage:RemoveByState(...)
+	local states = Util({...}):Filter(
+		function(state) return Entry.StateNames[state] ~= nil end
+	)()
+
+	if Util.Tables.Count(states) > 0 then
+		self:ForEach(
+			function(_, entry)
+				if Util.Objects.In(entry.state, states) then
+					self:Remove(entry)
+				end
+			end
+		)
 	end
 end
 
