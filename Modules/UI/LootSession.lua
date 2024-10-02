@@ -43,7 +43,7 @@ function LootSession:GetFrame()
 		st.frame:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -30)
 		st.frame:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 10, 75)
 
-		local toggle = UI:New('Checkbox', f.content)
+		local toggle = UI:New('Checkbox', f.content):AddColorState()
 		toggle:SetText(L['award_later'])
 		toggle:Tooltip(L['award_later_tooltip'])
 		toggle:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 10, 43)
@@ -188,7 +188,7 @@ function LootSession:DeleteItem(session)
 end
 
 --- @param items table<number, Models.Item.LootTableEntry>
---- @param disableAwardLater boolean
+--- @param disableAwardLater boolean should option for awarding later be disabled
 function LootSession:Show(items, disableAwardLater)
 	disableAwardLater = (disableAwardLater == true)
 

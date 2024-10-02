@@ -226,11 +226,24 @@ do
 					addFn = function()
 						--- @type LootLedger.Entry
 						local llEntry = menu.entry
-						AddOn:MasterLooterModule():AddLootTableItemByGUID(llEntry.guid)
+						-- it's implicitly already on the ledger, so do not allow 'award later'
+						AddOn:MasterLooterModule():AddLootTableItemByGUID(llEntry.guid, true)
 					end
 				elseif Util.Objects.In(value, MenuRightClickActionModifier.AwardLater, MenuRightClickActionModifier.ToTrade) then
 					addFn = function()
-
+						local ML = AddOn:MasterLooterModule()
+						-- it's implicitly already on the ledger, so do not allow 'award later'
+						self:GetStorage():ForEach(
+							function(_, e)
+								if e then
+									if (value == MenuRightClickActionModifier.AwardLater and e:IsAwardLater()) or
+										(value == MenuRightClickActionModifier.ToTrade and e:IsToTrade())
+									then
+										ML:AddLootTableItemByGUID(e.guid, true)
+									end
+								end
+							end
+						)
 					end
 				end
 

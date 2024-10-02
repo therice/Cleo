@@ -22,10 +22,10 @@ function Button:Create()
     b:SetText("")
     b:SetSize(100, 20)
 
-    b.text = b:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    b.text:SetPoint("CENTER", b, "CENTER")
-    b.text:SetJustifyV("MIDDLE")
-    b.Text = b.text
+    b.textFont = b:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    b.textFont:SetPoint("CENTER", b, "CENTER")
+    b.textFont:SetJustifyV("MIDDLE")
+    b.Text = b.textFont
     b.Text:SetText(self.text)
     b:SetFontString(b.Text)
 

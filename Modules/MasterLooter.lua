@@ -1276,24 +1276,30 @@ function ML:AddLootTableItem(item, source)
 	end
 end
 
---- @param containerItem Models.Item.ContainerItem
-function ML:AddLootTableItemFromContainer(containerItem)
+--- Adds item from a container to the loot table and then starts a loot session
+---
+--- @param containerItem Models.Item.ContainerItem the item to add to the loot session
+--- @param disableAwardLater boolean should option for awarding later be disabled on loot session
+function ML:AddLootTableItemFromContainer(containerItem, disableAwardLater)
 	Logging:Trace("AddLootTableItemFromContainer(%s)", function() return Util.Objects.ToString(containerItem) end)
 	self:AddLootTableItem(containerItem.item, PlayerLootSource.FromCurrentPlayer(containerItem.guid))
 	-- show the loot session with added item
 	local LS = AddOn:LootSessionModule()
 	AddOn:CallModule(LS:GetName())
-	LS:Show(self.lootTable)
+	LS:Show(self.lootTable, disableAwardLater)
 end
 
+--- Adds item from a container, identified by a GUID, to the loot table and then starts a loot session
+---
 --- @param itemGUID string the item GUID (unique id for it in a container)
-function ML:AddLootTableItemByGUID(itemGUID)
+--- @param disableAwardLater boolean should option for awarding later be disabled on loot session
+function ML:AddLootTableItemByGUID(itemGUID, disableAwardLater)
 	if itemGUID then
 		local bag, slot = AddOn:GetBagAndSlotByGUID(itemGUID)
 		if bag and slot then
 			local itemLink = C_Item.GetItemLink(ItemLocation:CreateFromBagAndSlot(bag, slot))
 			if itemLink then
-				self:AddLootTableItemFromContainer(ContainerItem(itemLink, bag, slot, itemGUID))
+				self:AddLootTableItemFromContainer(ContainerItem(itemLink, bag, slot, itemGUID), disableAwardLater)
 			end
 		end
 	end

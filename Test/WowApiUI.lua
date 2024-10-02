@@ -398,7 +398,6 @@ function CreateFrame(kind, name, parent, template)
     frame.type = kind
     frame.parent = parent
 
-
     if kind == 'Button' then
         frame.Click = function(self)  end
         frame.SetEnabled = function(self, enabled)  end
@@ -451,7 +450,9 @@ function CreateFrame(kind, name, parent, template)
 
     tinsert(frames, frame)
     frame.index = #frames
-    if name then _G[name] = frame end
+    if name then
+        _G[name] = frame
+    end
     --print('Created Frame : ' .. tostring(name))
     return frame
 end
@@ -535,6 +536,8 @@ function TextureClass:SetCheckedTexture(...) end
 function TextureClass:GetWidth() return 100 end
 
 function TextureClass:SetShown(...)  end
+
+function TextureClass:SetTextColor(...) end
 
 function CreateTexture(name, texture, texturePath, parent)
     local tex = TextureClass:New(name)

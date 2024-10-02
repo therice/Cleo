@@ -242,9 +242,8 @@ function LA:GetFrame()
 		sessionToggle:SetPoint("TOPRIGHT", f, "TOPLEFT", -2, 0)
 		f.sessionToggleFrame = sessionToggle
 
-		f.Update = function(name, userResponse)
-			-- todo : may not need this if we don't alter stuff based upon response
-		end
+		-- todo : may not need this if we don't alter stuff based upon response
+		f.Update = function(name, userResponse) end
 
 		self.sessionButtons = {}
 		self.frame = f
