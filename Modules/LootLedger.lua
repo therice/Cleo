@@ -17,6 +17,8 @@ local AceBucket = AddOn:GetLibrary("AceBucket")
 local Message = AddOn.RequireOnUse('Core.Message')
 --- @type Core.Event
 local Event = AddOn.RequireOnUse('Core.Event')
+--- @type Core.Comm
+local Comm = AddOn.RequireOnUse('Core.Comm')
 --- @type LibDeformat
 local Deformat =  AddOn:GetLibrary("Deformat")
 --- @type LibUtil.UUID
@@ -91,6 +93,7 @@ end
 function LootLedger:OnEnable()
 	Logging:Debug("OnEnable(%s)", self:GetName())
 	self:SubscribeToMessages()
+	self:SubscribeToComms()
 	-- due to semantics of how items are looted prior to being added to ledger,
 	-- disabled the loot watcher in favor of direct dispatch
 	-- self.watcher:Start()
@@ -101,6 +104,7 @@ end
 function LootLedger:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())
 	self:UnsubscribeFromMessages()
+	self:UnsubscribeFromComms()
 	self.tradeTimes:Stop()
 	--self.watcher:Stop()
 	TradeTimesOverview():Disable()
@@ -159,6 +163,7 @@ end
 function LootLedger:RegisterStorageCallbacks()
 	if self.storage then
 		self.storage:RegisterCallbacks(self, {
+			[Dao.Events.Cleared] = function(...) self:OnStorageEvent(...) end,
 			[Dao.Events.EntityCreated] = function(...) self:OnStorageEvent(...) end,
 			[Dao.Events.EntityDeleted] = function(...) self:OnStorageEvent(...) end,
 			[Dao.Events.EntityUpdated] = function(...) self:OnStorageEvent(...) end,
@@ -172,12 +177,32 @@ function LootLedger:UnregisterStorageCallbacks()
 	end
 end
 
+function LootLedger:SubscribeToComms()
+	Logging:Debug("SubscribeToComms(%s)", self:GetName())
+	self.commSubscriptions = Comm():BulkSubscribe(C.CommPrefixes.Main, {
+		[C.Commands.Awarded] = function(data, sender)
+			-- only if we're the master looter and send the message ourselves
+			if AddOn:IsMasterLooter() and AddOn:IsMasterLooter(sender) then
+				self:OnAwarded(unpack(data))
+			end
+		end,
+	})
+end
+
+function LootLedger:UnsubscribeFromComms()
+	Logging:Trace("UnsubscribeFromComms(%s)", self:GetName())
+	AddOn.Unsubscribe(self.commSubscriptions)
+	self.commSubscriptions = nil
+end
+
+
 --- @param event string the event type
 --- @param detail EventDetail the associated detail
 function LootLedger:OnStorageEvent(event, detail)
 	Logging:Trace("OnStorageEvent(%s) : %s", event, Util.Objects.ToString(detail))
 	TradeTimesOverview():OnLootLedgerStorageEvent(event, detail)
-	-- could handle it by event and onl refresh if create/delete, but the overhead
+	AddOn:LootTradeModule():OnLootLedgerStorageEvent(event, detail)
+	-- could handle it by event and only refresh if create/delete, but the overhead
 	-- on refreshing (rebuild) is low
 	self:Refresh()
 end
@@ -333,6 +358,25 @@ function LootLedger:ValidateEntries()
 		end
 
 		self.storage.validated = true
+	end
+end
+
+--- Most of the necessary heavy lifting for awards is handled in MasterLooter (see RegisterAndAnnounceAward), but
+--- there may be some extra stuff that needs done after should the
+---
+--- @param _ number the loot session identifier
+--- @param winner string the winner of the item
+--- @param owner string the person who currently has the item
+--- @param ledgerId string the ide of the ledger entry
+function LootLedger:OnAwarded(_, winner, owner, ledgerId)
+	-- we currently own the item (and are implicitly ML) and there is a ledger id
+	if AddOn.UnitIsUnit(owner, "player") and Util.Strings.IsSet(ledgerId) then
+		-- if we are also the winner and not Test Mode (either for addon or this module specifically)
+		if AddOn.UnitIsUnit(winner, "player") and not (AddOn:TestModeEnabled() or self.testMode) then
+			-- we're the winner, no need to track for trading with ourselves
+			-- todo : fire the suicide event
+			self:GetStorage():Remove(ledgerId)
+		end
 	end
 end
 
@@ -612,9 +656,44 @@ end
 function Entry:tostring()
 	return Util.Objects.ToString(self:toTable())
 end
+
 ---[[ LootLedger.Entry END --]]
 
 ---[[ LootLedger.Storage BEGIN --]]
+Storage.Filters = {
+	--- @param recipient string
+	--- @return function
+	IsRecipient = function(recipient)
+		--- @param _ string
+		--- @param entry LootLedger.Entry
+		return function(_, entry)
+			if entry then
+				return entry:GetItemAward():filter(function(award)
+					return AddOn.UnitIsUnit(award.winner, recipient)
+				end):isPresent()
+			end
+
+			return false
+		end
+	end,
+	--- @return function
+	HasTradeTimeRemaining = function()
+		--- @param _ string
+		--- @param entry LootLedger.Entry
+		return function(_, entry)
+			return entry and entry:GetTradeTimeRemaining() > 0 or false
+		end
+	end,
+	--- @return function
+	ToTrade = function()
+		--- @param _ string
+		--- @param entry LootLedger.Entry
+		return function(_, entry)
+			return entry and entry:IsToTrade() or false
+		end
+	end
+}
+
 function Storage:initialize(module, db)
 	Dao.initialize(self, module, db, Entry)
 	-- has the storage been validated since creation
@@ -650,6 +729,7 @@ function Storage:FireCallbacks(event, detail)
 end
 
 function Storage:RegisterCallbacks(target, callbacks)
+	Logging:Debug("RegisterCallbacks(%s) : %d", tostring(target), Util.Tables.Count(callbacks))
 	for event, fn in pairs(callbacks) do
 		self.RegisterCallback(target, event, fn)
 	end
@@ -699,7 +779,8 @@ end
 ---
 --- @param fn function<string, LootLedger.Entry> two arguments, 1st is the entry's id (key) and 2nd is associated LootLedger.Entry. 2nd argument can be nil if it failed to reconstitute. returns boolean indicating if processing should continue, a nil return value is interpreted as true
 --- @param sort function<table, table> optional function for sorting iteration based upon raw values (not reconstituted)
-function Storage:ForEach(fn, sort)
+--- @param ... function<string, LootLedger.Entry> optional list of functions for filtering reconstituted results.  two arguments, 1st is the entry's id (key) and 2nd is associated LootLedger.Entry. 2nd argument can be nil if it failed to reconstitute. returns boolean indicating if entry should be included in results, an return value that is not false is interpreted as true
+function Storage:ForEach(fn, sort, ...)
 	local entry
 
 	--- @return function
@@ -711,7 +792,7 @@ function Storage:ForEach(fn, sort)
 		end
 	end
 
-	local finished = false
+	local finished, filters = false, Util.Tables.New(...)
 
 	for id, _ in _generator() do
 		Util.Functions.try(
@@ -726,10 +807,23 @@ function Storage:ForEach(fn, sort)
 			end
 		)
 
-		finished = fn(id, entry) == false
-		if finished then
-			break
+		-- apply filters if applicable
+		local include = true
+		for _, filter in pairs(filters) do
+			include = filter(id, entry) ~= false
+			if not include then
+				break
+			end
+		end
+
+		if include then
+			finished = fn(id, entry) == false
+			if finished then
+				break
+			end
 		end
 	end
+
+	Util.Tables.Release(filters)
 end
 ---[[ LootLedger.Storage END --]]

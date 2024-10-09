@@ -257,7 +257,7 @@ end
 
 --- @return string the name of the entity which currently owns the loot. if unavailable or unable to be determined, will return 'Unknown'
 function LootTableEntry:GetOwner()
-	return self.source:GetName() or L['unknown']
+	return self.source and self.source:GetName() or L['unknown']
 end
 
 ---

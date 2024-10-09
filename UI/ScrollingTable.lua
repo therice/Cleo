@@ -87,7 +87,7 @@ local DeleteButtonCell = AddOn.Class('DeleteButtonCell', Cell)
 function DeleteButtonCell:initialize(fn)
     Cell.initialize(self, nil)
     self:DoCellUpdate(
-            function(_, frame, data, _, _, realrow)
+            function(_, frame, data, _, _, realRow)
                 -- todo : prevent repeated textures and OnEnter/OnLeave?
                 frame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
                 frame:SetScript("OnEnter", function()
@@ -99,7 +99,7 @@ function DeleteButtonCell:initialize(fn)
                         function()
                             if frame.lastClick and GetTime() - frame.lastClick <= 0.5 then
                                 frame.lastClick = nil
-                                fn(frame, data, realrow)
+                                fn(frame, data, realRow)
                             else
                                 frame.lastClick = GetTime()
                             end

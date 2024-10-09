@@ -176,6 +176,9 @@ function MasterLooter:Become(configId)
 			return false
 		end
 
+		AddOn:StartHandleLoot(configId)
+
+		--[[
 		local ML = AddOn:MasterLooterModule()
 		AddOn:CallModule(ML:GetName())
 		ML:NewMasterLooter(AddOn.masterLooter)
@@ -186,6 +189,7 @@ function MasterLooter:Become(configId)
 				ML:ActivateConfiguration(config)
 			end
 		end
+		--]]
 
 		return true
 	end

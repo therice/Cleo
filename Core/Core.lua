@@ -158,6 +158,11 @@ function AddOn:LootLedgerModule()
     return self:GetModule("LootLedger")
 end
 
+--- @return LootTrade
+function AddOn:LootTradeModule()
+    return self:GetModule("LootTrade")
+end
+
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
     SlashCommands:BulkSubscribe(
@@ -295,6 +300,11 @@ function AddOn:RegisterChatCommands()
                         self:Print(L["command_must_be_master_looter"])
                     end
                 end
+            },
+            {
+                {'trade'},
+                L['chat_commands_trade'],
+                function(...) self:LootTradeModule():Show(true) end
             }
     )
 end
@@ -446,7 +456,8 @@ function AddOn:NewMasterLooterCheck()
     end
 end
 
-function AddOn:StartHandleLoot()
+--- @param ... any list of arguments that will be passed to constituent functions
+function AddOn:StartHandleLoot(...)
     Logging:Debug("StartHandleLoot()")
     local lootMethod = GetLootMethod()
     if not Util.Strings.Equal(lootMethod, "master") and GetNumGroupMembers() > 0 then
@@ -463,11 +474,13 @@ function AddOn:StartHandleLoot()
 
     self:Print(format(L["player_handles_looting"], self.player:GetName()))
     self.handleLoot = true
-    self:CallModule("MasterLooter")
+    self:CallModule(ML:GetName())
     ML:NewMasterLooter(self.masterLooter)
-    ML:OnHandleLootStart()
-    -- this message is not currently used, so commented out
-    -- self:Send(C.group, C.Commands.HandleLootStart)
+    ML:OnHandleLootStart(...)
+    -- sending as message instead of comms to target/group, as only currently consumed
+    -- by master looter. recipients will need to evaluate whether to handle based upon
+    -- current state of loot management
+    self:SendMessage(C.Messages.HandleLootStart) -- self:Send(C.group, C.Commands.HandleLootStart)
 end
 
 function AddOn:StopHandleLoot()
@@ -475,8 +488,11 @@ function AddOn:StopHandleLoot()
     self:MasterLooterModule():OnHandleLootStop()
     -- must set this after, or call to OnHandleLootStop() won't be handled
     self.handleLoot = false
-    -- this message is not currently used, so commented out
-    -- self:Send(C.group, C.Commands.HandleLootStop)
+
+    -- sending as message instead of comms to target/group, as only currently consumed
+    -- by master looter. recipients will need to evaluate whether to handle based upon
+    -- current state of loot management
+    self:SendMessage(C.Messages.HandleLootStop) -- self:Send(C.group, C.Commands.HandleLootStop)
 end
 
 function AddOn:HaveMasterLooterDb()

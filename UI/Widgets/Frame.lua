@@ -47,6 +47,7 @@ function Frame:Create()
         local storage = Util.Tables.Get(AddOn.db.profile, path) or {}
         return storage
     end
+
     UIUtil.EmbedExtras(f, getStorage)
     f:SetScript("OnMouseWheel", function(f,delta) if IsControlKeyDown() then Window.OnMouseWheel(f,delta) end end)
     f:SetScript("OnKeyDown",

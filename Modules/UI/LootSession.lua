@@ -24,7 +24,7 @@ local ScrollColumns =
         :column(""):width(50)
 		-- item link (4)
         :column(""):width(160)
-		-- item source (6)
+		-- item source (5)
 		:column(""):width(40)
     :build()
 

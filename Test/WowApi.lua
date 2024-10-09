@@ -407,6 +407,10 @@ function IsInInstance()
     return (IsInGroup() or IsInRaid()), type
 end
 
+-- https://warcraft.wiki.gg/wiki/API_CheckInteractDistance
+function CheckInteractDistance(...)
+    return 1
+end
 
 local PlayerToGuid = {
     ['Annasthétic'] = {
@@ -687,6 +691,10 @@ end
 function CanEditOfficerNote() return true end
 
 function ChatFrame_AddMessageEventFilter(event, fn)  end
+
+function ClearCursor()  end
+
+function ClickTradeButton(...)  end
 
 -- dubious
 local function SenderName()

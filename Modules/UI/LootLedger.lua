@@ -15,8 +15,6 @@ local Logging = AddOn:GetLibrary('Logging')
 local Message = AddOn.RequireOnUse('Core.Message')
 --- @type Models.Item.LootedItem
 local LootedItem = AddOn.Package('Models.Item').LootedItem
---- @type LootLedger
-local LootLedger = AddOn:GetModule("LootLedger")
 --- @type LootLedger.Storage
 local LootLedgerStorage = AddOn.Package('LootLedger').Storage
 --- @type UI.DropDown
@@ -28,7 +26,9 @@ local ST = AddOn.Require('UI.ScrollingTable')
 --- @type UI.ScrollingTable.ColumnBuilder
 local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
 --- @type UI.ScrollingTable.CellBuilder
-local  STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
+local STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
+--- @type LootLedger
+local LootLedger = AddOn:GetModule("LootLedger")
 
 local MaxTradeTimeRemaining, LedgerScrollColumns = 7200,
 	ST.ColumnBuilder()

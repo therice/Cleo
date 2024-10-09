@@ -21,8 +21,7 @@ local Events = {
 	EntityUpdated   =   "EntityUpdated",
 }
 
-
----@alias EventDetail table<string, any>
+---@alias EventDetail table
 local function EventDetail(entity, attr, diff, ref, ...)
 	return {
 		entity = entity,
@@ -164,7 +163,6 @@ function Dao:UpdateAll(entity, fireCallbacks, ...)
 		end
 	end
 end
-
 
 -- U(pdate)
 --- @param entity any the entity to add

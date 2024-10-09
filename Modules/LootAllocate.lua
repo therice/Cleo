@@ -460,10 +460,10 @@ function LA:OnLootTableAddReceived(_, lt)
 	self:SwitchSession(self.session)
 end
 
-function LA:OnAwardedReceived(session, winner)
+function LA:OnAwarded(session, winner, ...)
 	local entry = self:GetEntry(session)
 	if not entry then
-		Logging:Warn("OnAwardedReceived() : no entry for session %d", session)
+		Logging:Warn("OnAwarded() : no entry for session %d", session)
 		return
 	end
 
@@ -508,7 +508,7 @@ function LA:OnCheckIfOfflineReceived()
 	for session = 1, #self.lootTable do
 		for candidate in pairs(self:GetEntry(session).candidates) do
 			response = self:GetCandidateData(session, candidate, LAA.Response)
-			--Logging:Debug("OnCheckIfOfflineReceived(%d, %s) :  %s", tostring(session), tostring(candidate), tostring(response))
+			-- Logging:Debug("OnCheckIfOfflineReceived(%d, %s) :  %s", tostring(session), tostring(candidate), tostring(response))
 			-- don't include WAIT, as that is the response used when loot has been acknowledged
 			if Util.Objects.In(response, C.Responses.Announced) then
 				self:SetCandidateData(session, candidate, LAA.Response, C.Responses.Nothing)
@@ -571,7 +571,7 @@ function LA:SubscribeToComms()
 		[C.Commands.Awarded] = function(data, sender)
 			Logging:Debug("Awarded from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
-				self:OnAwardedReceived(unpack(data))
+				self:OnAwarded(unpack(data))
 			end
 		end,
 		[C.Commands.LootedToBags] = function(data, sender)

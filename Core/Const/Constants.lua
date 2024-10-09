@@ -92,6 +92,7 @@ AddOn.Constants = {
         Peppermint     = CreateColor(0.14138, 0.60749, 0.29173, 1),
         Pumpkin        = CreateColor(0.8, 0.5, 0, 1),
         Purple         = CreateColor(0.53, 0.53, 0.93, 1),
+        Red            = CreateColor(1, 0, 0, 1),
         RoseQuartz     = CreateColor(0.89815,0.34566,0.35813, 1),
         RogueYellow    = CreateColor(1, 0.96, 0.41, 1),
         Salmon         = CreateColor(0.99216, 0.48627, 0.43137, 1),
@@ -111,8 +112,8 @@ AddOn.Constants = {
         Coordinator             =   "rcl",      -- replication based message (coordinator/leader)
         DeactivateConfig        =   "dlc",      -- sent when a configuration should be deactivated (for loot priorities)
         Election                =   "rer",      -- replication based message (election request)
-        HandleLootStart         =   "hlst",
-        HandleLootStop          =   "hlstp",
+        --HandleLootStart         =   "hlst",
+        --HandleLootStop          =   "hlstp",
         LootAuditAdd            =   "laa",
         LootAck                 =   "la",
         LootedToBags            =   "ltb",
@@ -187,6 +188,23 @@ AddOn.Constants = {
         PlayerRegenEnabled     = "PLAYER_REGEN_ENABLED",
         PlayerRegenDisabled    = "PLAYER_REGEN_DISABLED",
         RaidInstanceWelcome    = "RAID_INSTANCE_WELCOME",
+        -- Fired when the status of the player and target accept buttons has changed
+        --  playerAccepted number - Player has agreed to the trade (1) or not (0)
+        --  targetAccepted number - Target has agreed to the trade (1) or not (0)
+        --
+        -- Target agree status only shown when he has done it first. By this, player and target agree status is only
+        -- shown together (playerAccepted == 1 and targetAccepted == 1), when player agreed after target.
+        TradeAcceptUpdate      = "TRADE_ACCEPT_UPDATE",
+        -- Fired when the trade window is closed by the trade being accepted, or the player or target closes the window
+        TradeClosed            = "TRADE_CLOSED",
+        -- fired when the Trade window appears after a trade request has been accepted or auto-accepted
+        TradeShow              = "TRADE_SHOW",
+        -- fired when the interface generates a message. These are the yellow messages in the top middle of the window.
+        -- https://warcraft.wiki.gg/wiki/UI_INFO_MESSAGE
+        -- "No fish are hooked." is one example.
+        --  errorType number - Info message index for GetGameMessageInfo()
+        --  message string - Info message, same as the globalstring ERR_* value.
+        UIInfoMessage          = "UI_INFO_MESSAGE",
         ZoneChanged            = "ZONE_CHANGED",
     },
 
@@ -253,6 +271,8 @@ AddOn.Constants = {
         AwardSuccess               = name .. "_AwardSuccess",
         AwardFailed                = name .. "_AwardFailed",
         ConfigTableChanged         = name .. "_ConfigTableChanged",
+        HandleLootStart            = name .. "_HandleLootStart",
+        HandleLootStop             = name .. "_HandleLootStop",
         LootItemReceived           = name .. "_LootItemReceived",
         LootTableAddition          = name .. "_LootTableAddition",
         MasterLooterAddItem        = name .. "_MasterLooterAddItem",
@@ -282,6 +302,7 @@ AddOn.Constants = {
         ConfirmDeleteListList   =   name .. "_ConfirmDeleteListList",
         ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
         ConfirmSync             =   name .. "_ConfirmSync",
+        ConfirmTradeItems       =   name .. "_ConfirmTradeItems",
         ConfirmUsage            =   name .. "_ConfirmUsage",
         SelectConfiguration     =   name .. "_SelectConfiguration",
     },

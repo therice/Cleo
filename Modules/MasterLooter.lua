@@ -366,12 +366,14 @@ function ML:SubscribeToComms()
 				)
 			end
 		end,
+		--[[
 		[C.Commands.HandleLootStart] = function(_, sender)
 			Logging:Trace("HandleLootStart from %s", tostring(sender))
 			if AddOn:IsMasterLooter() then
 				self:OnHandleLootStart()
 			end
 		end,
+		--]]
 	})
 end
 
@@ -795,8 +797,9 @@ function ML:AnnounceAward(winner, link, response, roll, session, changeAward, is
 	AddOn:SendAnnouncement(announcement, channel)
 end
 
-function ML:OnHandleLootStart(...)
-	Logging:Debug("OnHandleLootStart")
+--- @param configId string the configuration id to activate, which overrides selection method. if nil, this is ignored
+function ML:OnHandleLootStart(configId)
+	Logging:Debug("OnHandleLootStart(%s)", tostring(configId))
 
 	if self:IsHandled() then
 		-- always grab the list service, it wouldn't affect any active configuration
@@ -804,7 +807,16 @@ function ML:OnHandleLootStart(...)
 		local SelectionEnum = self.ListConfigSelectionMethod
 		local configSelectionMethod = self:GetDbValue('lcSelectionMethod')
 
-		if configSelectionMethod == SelectionEnum.Ask then
+		if Util.Strings.IsSet(configId) then
+			local config = listService.Configuration:Get(configId)
+			if config then
+				self:ActivateConfiguration(config)
+			else
+				local errMsg = format("Specified configuration id '%s' is not available", configId)
+				AddOn:PrintError(errMsg)
+				error(errMsg)
+			end
+		elseif configSelectionMethod == SelectionEnum.Ask then
 			-- this will callback into ActivateConfiguration()
 			self:PromptForConfigSelection()
 		elseif configSelectionMethod == SelectionEnum.Default then
@@ -823,8 +835,6 @@ function ML:OnHandleLootStart(...)
 end
 
 function ML:SendActiveConfig(target, config)
-	--if AddOn._IsTestContext() then return end
-
 	if self:IsHandled() then
 		Logging:Debug("SendActiveConfig(%s) : %s", tostring(target), tostring(config.id))
 		-- dispatch the config activation message to target
@@ -1563,9 +1573,9 @@ function ML:RegisterAndAnnounceAward(award)
 	end
 
 	-- owner in this message could be a creature name, player name, or testing (fake name).
-	-- practically, only will be used when it is a player. could send the GUID (id), but would require
-	-- translation on the receiver's end
-	self:Send(C.group, C.Commands.Awarded, session, winner, ltEntry:GetOwner())
+	-- practically, only will be used when it is a player. could send the player GUID (id), but would require
+	-- translation on the receiver's end. if there is an associated ledger entry, include the id for easy lookup
+	self:Send(C.group, C.Commands.Awarded, session, winner, ltEntry:GetOwner(), ledgerEntry:map(function(e) return e.id end):orElse(nil))
 
 	-- perform award announcement first (as the priority will be changed after actual award)
 	Util.Functions.try(

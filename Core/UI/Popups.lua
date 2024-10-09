@@ -93,7 +93,7 @@ Dialog:Register(C.Popups.ConfirmBroadcastDelete, {
     buttons = {
         {
             text = _G.YES,
-            on_click = function(_, params, _)
+            on_click = function(_, params)
                 local configId, target = params['configId'], params['target']
                 AddOn:ListsDataPlaneModule():BroadcastRemove(configId, target)
             end,
@@ -194,11 +194,11 @@ Dialog:Register(C.Popups.ConfirmSync, {
     buttons = {
         {
             text = _G.YES,
-            on_click = function(_, data, ...) AddOn:SyncModule():OnSyncAccept(data) end,
+            on_click = function(_, data) AddOn:SyncModule():OnSyncAccept(data) end,
         },
         {
             text = _G.NO,
-            on_click = function(_, data, ...) AddOn:SyncModule():OnSyncDeclined(data) end,
+            on_click = function(_, data) AddOn:SyncModule():OnSyncDeclined(data) end,
         },
     },
     hide_on_escape = true,
@@ -225,6 +225,21 @@ Dialog:Register(C.Popups.SelectConfiguration, {
                 AddOn:MasterLooterModule():NeuterConfigSelectionPopup(frame)
             end
         },
+    },
+    hide_on_escape = false,
+    show_while_dead = true,
+})
+
+Dialog:Register(C.Popups.ConfirmTradeItems, {
+    text = MachuPicchu,
+    on_show = function(...) AddOn:LootTradeModule():PerformTradeOnShow(...) end,
+    {
+        text = _G.YES,
+        on_click = function(_, ...) AddOn:LootTradeModule():PerformTradeOnClickYes(...) end,
+    },
+    {
+        text = _G.NO,
+        on_click = Util.Functions.Noop
     },
     hide_on_escape = false,
     show_while_dead = true,
