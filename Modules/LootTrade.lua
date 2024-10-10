@@ -11,6 +11,8 @@ local Comm = AddOn.RequireOnUse('Core.Comm')
 local Event = AddOn.RequireOnUse('Core.Event')
 --- @type Core.Message
 local Message = AddOn.RequireOnUse('Core.Message')
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type LootLedger.Storage
 local LedgerStorage = AddOn.Package('LootLedger').Storage
 ---@type LibDialog
@@ -92,7 +94,6 @@ function LootTrade:UnsubscribeFromEvents()
 	AddOn.Unsubscribe(self.eventSubscriptions)
 	self.eventSubscriptions = nil
 end
-
 
 function LootTrade:SubscribeToComms()
 	Logging:Debug("SubscribeToComms(%s)", self:GetName())
@@ -200,12 +201,82 @@ function LootTrade:OnTradeShow(...)
 	end
 end
 
-function LootTrade:OnTradeAcceptUpdate(...)
-
+---
+--- Target agree status only shown when they complete it first. By this, player and target agree status is only
+--- shown together (playerAccepted == 1 and targetAccepted == 1), when player agreed after target
+---
+--- @param playerAccepted number player has agreed to the trade (1) or not (0)
+--- @param targetAccepted number target has agreed to the trade (1) or not (0)
+function LootTrade:OnTradeAcceptUpdate(playerAccepted, targetAccepted)
+	if playerAccepted == 1 or targetAccepted == 1 then
+		wipe(self.items)
+		for i = 1, _G.MAX_TRADE_ITEMS - 1 do
+			local link = GetTradePlayerItemLink(i)
+			if ItemUtil:ContainsItemString(link) then
+				Util.Tables.Push(self.items, link)
+			end
+		end
+	end
 end
 
-function LootTrade:OnUIInfoMessage(...)
+---
+--- Fired when the interface generates a message
+---
+--- @param errorType number info message index for GetGameMessageInfo()
+--- @param _ string Info message, same as the 'globalstring' ERR_* value
+function LootTrade:OnUIInfoMessage(errorType, _)
+	-- 'trade complete', remove items from ledger that were traded
+	if errorType == _G.LE_GAME_ERR_TRADE_COMPLETE then
+		for _, link in pairs(self.items) do
+			--- @type table<LootLedger.Entry>
+			local items= {}
+			--- @type LootLedger.Entry
+			local entry = nil
+			AddOn:LootLedgerModule():GetStorage():ForEach(
+				function(_, entry)
+					if entry then
+						Util.Tables.Push(items, entry)
+					end
+				end, nil,
+				LedgerStorage.Filters.ToTrade(),
+				LedgerStorage.Filters.IsItem(link)
+			)
 
+			if #items > 0 then
+				Logging:Debug("OnUIInfoMessage() : found %d of item %s", #items, link)
+				-- attempt to find the 1st item belong to the person (winner) we are trading with
+				_, entry = Util.Tables.FindFn(
+					items,
+				function(e) return LedgerStorage.Filters.IsRecipient(self.target)(_, e) end
+				)
+
+				-- if we couldn't find it, then just grab the 1st one (unlikely correct, but the trade has already been completed)
+				if not entry then
+					entry = items[1]
+				end
+			end
+
+			if entry then
+				if LedgerStorage.Filters.IsRecipient(self.target)(_, entry) then
+					self:Send(
+						C.group, C.Commands.TradeComplete,
+						entry.item, self.target, AddOn.player:GetShortName(), entry:GetItemAward():orElse({})
+					)
+				elseif LedgerStorage.Filters.HasWinner()(_, entry) and not LedgerStorage.Filters.IsRecipient(self.target)(_, entry) then
+					self:Send(
+						C.group, C.Commands.TradeWrongWinner,
+						entry.item, self.target, AddOn.player:GetShortName(), entry:GetItemAward():orElse({})
+					)
+				end
+
+				-- this wraps up the workflow for the ledger entry, remove it
+				-- recipients of the 'Trade' commands won't need the ledger entry to handle them
+				AddOn:LootLedgerModule():GetStorage():Remove(entry)
+			end
+		end
+
+		self:Refresh()
+	end
 end
 ---
 --- Adds all passed items to trade window, provided there are enough slots

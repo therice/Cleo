@@ -236,7 +236,6 @@ function LA:GetCandidateData(session, candidate, key)
 	return result
 end
 
- -- todo : handle 'award later' -> 'to trade'
 --- @param session number the session id (if nil, will use current one)
 --- @param candidate string the candidate name
 --- @param reason table representing reason for which being awarded (if not player's response), e.g. 'Award For' in UI

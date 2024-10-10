@@ -518,6 +518,9 @@ end
 
 function GetRealmName() return 'Realm 1' end
 function GetNormalizedRealmName() return gsub(GetRealmName(), " ", "")  end
+function GetTradePlayerItemLink(index)
+    return ""
+end
 
 function UnitName(unit)
     if unit == "player" then
@@ -1066,6 +1069,8 @@ _G.ENABLE = "Enable"
 _G.CLOSES_IN = "Time remaining"
 _G.FRIENDS_FRIENDS_CHOICE_EVERYONE = "Everyone"
 _G.PLAYER_DIFFICULTY2 = "Heroic"
+_G.MAX_TRADE_ITEMS = 7
+_G.LE_GAME_ERR_TRADE_COMPLETE = 235
 
 -- https://wow.gamepedia.com/API_GetItemSubClassInfo
 function GetItemSubClassInfo(classId, subClassId)

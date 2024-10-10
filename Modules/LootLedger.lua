@@ -373,9 +373,17 @@ function LootLedger:OnAwarded(_, winner, owner, ledgerId)
 	if AddOn.UnitIsUnit(owner, "player") and Util.Strings.IsSet(ledgerId) then
 		-- if we are also the winner and not Test Mode (either for addon or this module specifically)
 		if AddOn.UnitIsUnit(winner, "player") and not (AddOn:TestModeEnabled() or self.testMode) then
+			--- @type LootLedger.Entry
+			local entry = self:GetStorage():Get(ledgerId)
 			-- we're the winner, no need to track for trading with ourselves
-			-- todo : fire the suicide event
-			self:GetStorage():Remove(ledgerId)
+			-- however, we do need to modify lists based upon response
+			if entry then
+				local award = entry:GetItemAward()
+				if award:isPresent() then
+					AddOn:ListsModule():OnAwardItem(award)
+					self:GetStorage():Remove(entry)
+				end
+			end
 		end
 	end
 end
@@ -667,13 +675,20 @@ Storage.Filters = {
 		--- @param _ string
 		--- @param entry LootLedger.Entry
 		return function(_, entry)
-			if entry then
-				return entry:GetItemAward():filter(function(award)
-					return AddOn.UnitIsUnit(award.winner, recipient)
-				end):isPresent()
-			end
+			return entry and
+				entry:GetItemAward()
+					:map(function(award) return AddOn.UnitIsUnit(award.winner, recipient) end)
+					:orElse(false) or
+				false
 
-			return false
+		end
+	end,
+	HasWinner = function()
+		return function(_, entry)
+			return entry and
+				entry:GetItemAward()
+					:map(function(a) return Util.Strings.IsSet(a.winner) end):orElse(false) or
+				flase
 		end
 	end,
 	--- @return function
@@ -690,6 +705,15 @@ Storage.Filters = {
 		--- @param entry LootLedger.Entry
 		return function(_, entry)
 			return entry and entry:IsToTrade() or false
+		end
+	end,
+	--- @param item string the item link or string
+	--- @return function
+	IsItem = function(item)
+		--- @param _ string
+		--- @param entry LootLedger.Entry
+		return function(_, entry)
+			return entry and AddOn.ItemIsItem(item, entry.item) or false
 		end
 	end
 }

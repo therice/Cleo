@@ -49,7 +49,6 @@ function LootTrade:GetFrame()
 		close:SetText(_G.CLOSE)
 		close:SetPoint("CENTER", f.content, "CENTER", 0, 0)
 		close:SetPoint("BOTTOM", f.content, "BOTTOM", 0, 15)
-		--close:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -15, 15)
 		close:SetScript("OnClick", function() self:Hide() end)
 		f.cancel = close
 
@@ -84,7 +83,6 @@ end
 function LootTrade:Refresh()
 	Logging:Debug("Refresh()")
 	if self:IsEnabled() and self.frame and self.frame:IsVisible() then
-		--self.frame.st:Refresh()
 		self:Populate()
 	end
 end

@@ -23,6 +23,8 @@ local LootTableEntry = AddOn.Package('Models.Item').LootTableEntry
 local LootQueueEntry = AddOn.Package('Models.Item').LootQueueEntry
 --- @type LootLedger.Entry
 local LootLedgerEntry = AddOn.Package('LootLedger').Entry
+--- @type Models.Item.PartialItemAward
+local PartialItemAward = AddOn.Package('Models.Item').PartialItemAward
 --- @type table<string, string>
 local LAR = AddOn.Package('Models.Item').LootAllocateResponse.Attributes
 --- @type Models.Player
@@ -364,6 +366,18 @@ function ML:SubscribeToComms()
 					function() self:Send(AddOn.player, C.Commands.CheckIfOffline) end,
 					15 + (0.5 * #self.lootTable)
 				)
+			end
+		end,
+		[C.Commands.TradeComplete] = function(data, sender)
+			-- only if the sender was ourself, which implies we are ML
+			if AddOn.UnitIsUnit(sender, AddOn.player) then
+				self:OnTradeComplete(unpack(data))
+			end
+		end,
+		[C.Commands.TradeWrongWinner] = function(data, sender)
+			-- only if the sender was ourself, which implies we are ML
+			if AddOn.UnitIsUnit(sender, AddOn.player) then
+				self:OnTradeWrongWinner(unpack(data))
 			end
 		end,
 		--[[
@@ -1105,6 +1119,23 @@ function ML:OnReconnectReceived(sender)
 	end
 end
 
+function ML:OnTradeComplete(item, recipient, trader, awardData)
+	if self:IsHandled() then
+		AddOn:Print(format(L['item_trade_complete'], AddOn.Ambiguate(trader), item, AddOn.Ambiguate(recipient)))
+		--- @type Models.Item.PartialItemAward
+		local award = PartialItemAward:reconstitute(awardData)
+		AddOn:ListsModule():OnAwardItem(award)
+	end
+end
+
+function ML:OnTradeWrongWinner(item, recipient, trader, awardData)
+	if self:IsHandled() then
+		--- @type Models.Item.PartialItemAward
+		local award = PartialItemAward:reconstitute(awardData)
+		AddOn:Print(format(L["item_trade_wrong_winner"], AddOn.Ambiguate(trader), item, AddOn.Ambiguate(recipient), AddOn.Ambiguate(award.winner)))
+	end
+end
+
 --- @param slot number the loot slot
 --- @return Models.Item.LootSlotInfo
 function ML:GetLootSlot(slot)
@@ -1592,8 +1623,10 @@ function ML:RegisterAndAnnounceAward(award)
 		end
 	).finally(
 		function()
-			-- todo: fire this when item is traded
-			-- only apply to list if the award is occurring now, if it's for 'later' handle on trade
+			-- only apply to list if the award is occurring now, if it's for 'later' then handle on trade
+			-- for items that are traded later they are handled via
+			--      'Awarded' message if ML is winner
+			--      'TradeComplete' message if another player is the winner
 			if ledgerEntry:isEmpty() then
 				AddOn:ListsModule():OnAwardItem(award)
 			end
