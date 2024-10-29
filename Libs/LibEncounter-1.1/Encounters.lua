@@ -42,11 +42,12 @@ local lib = LibStub("LibEncounter-1.1", true)
 --  Bastion of Twilight
 --  Blackwing Descent
 --  Throne of the Four Winds
-
+--  Firelands
 
 --
 -- Mapping from map id to details (name will be used as index for localization)
--- e.g. https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749
+-- https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749 (DEPRECATED)
+-- https://wago.tools/db2/JournalInstance
 lib.Maps = {
     [309] = {
         name = 'Ancient Zul\'Gurub',
@@ -147,6 +148,10 @@ lib.Maps = {
     -- JournalInstance.ID = 74
     [754] = {
         name = 'Throne of the Four Winds'
+    },
+    -- JournalInstance.ID = 78
+    [720] = {
+        name = 'Firelands'
     },
 }
 
@@ -876,6 +881,27 @@ lib.Creatures = {
     },
     [46753] = {
         name = 'Al\'Akir'
+    },
+    [53691] = {
+        name = 'Shannox'
+    },
+    [52558] = {
+        name = 'Lord Rhyolith'
+    },
+    [52498] = {
+        name = 'Beth\'tilac'
+    },
+    [53494] = {
+        name = 'Baleroc'
+    },
+    [52530] = {
+        name = 'Alysrazor'
+    },
+    [52571] = {
+        name = 'Majordomo Staghelm'
+    },
+    [52409] = {
+        name = 'Ragnaros'
     },
 }
 
@@ -1671,5 +1697,39 @@ lib.Encounters = {
         map_id = 754,
         creature_id = {46753},
     },
-
+    -- Shannox
+    [1205] = {
+        map_id = 720,
+        creature_id = {53691}
+    },
+    -- Rhyolith
+    [1204] = {
+        map_id = 720,
+        creature_id = {52558}
+    },
+    -- Beth'tilac
+    [1197] = {
+        map_id = 720,
+        creature_id = {52498}
+    },
+    -- Baleroc
+    [1200] = {
+        map_id = 720,
+        creature_id = {53494}
+    },
+    -- Alysrazor
+    [1206] = {
+        map_id = 720,
+        creature_id = {52530}
+    },
+    -- Majordomo Staghelm
+    [1185] = {
+        map_id = 720,
+        creature_id = {52571}
+    },
+    -- Ragnaros
+    [1203] = {
+        map_id = 720,
+        creature_id = {52409}
+    },
 }
