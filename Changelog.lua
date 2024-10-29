@@ -2,6 +2,12 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.15 (2024-10-29)
+* Add Firelands encounters 398c6c8
+* Add Firelands loot 5841023
+* Attempt to resolve NPM issues by using '--legacy-peer-deps' 01812ee
+* Compatibility with Firelands Patch 06b5e93
+
 2025.0.14 (2024-09-01)
 * Add comments to Item and Loot classes for future reference and clarity bd10d49
 * Update handling of item links to be consistent with number of indices currently used (provided) bfdab19
