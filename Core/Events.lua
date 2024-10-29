@@ -160,18 +160,12 @@ function AddOn:RaidInstanceEnter(_, ...)
     end
 end
 
-local UIOptionsOldCancel = InterfaceOptionsFrameCancel:GetScript("OnClick")
-
 -- https://wow.gamepedia.com/PLAYER_REGEN_DISABLED
 -- Fired whenever you enter combat, as normal regen rates are disabled during combat.
 -- This means that either you are in the hate list of a NPC or that you've been taking part in a pvp action
 -- (either as attacker or victim).
 function AddOn:EnterCombat(_, ...)
     Logging:Debug("EnterCombat()")
-    InterfaceOptionsFrameCancel:SetScript(
-        "OnClick",
-        function() InterfaceOptionsFrameOkay:Click() end
-    )
     self.inCombat = true
     if not self.db.profile.minimizeInCombat then return end
     UINative:MinimizeFrames()
@@ -183,7 +177,6 @@ end
 -- involved with.
 function AddOn:LeaveCombat(_, ...)
     Logging:Debug("LeaveCombat()")
-    InterfaceOptionsFrameCancel:SetScript("OnClick", UIOptionsOldCancel)
     self.inCombat = false
     if not self.db.profile.minimizeInCombat then return end
     UINative:MaximizeFrames()

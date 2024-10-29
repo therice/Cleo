@@ -156,8 +156,6 @@ read_globals = {
 	"BackdropTemplateMixin",
 	"GameFontHighlightLeft",
 	"GameTooltip",
-	"InterfaceOptionsFrameCancel",
-	"InterfaceOptionsFrameOkay",
 	"UIParent",
 	
 	-- Frame API
