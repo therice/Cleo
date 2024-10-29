@@ -15,25 +15,10 @@ local Player
 --- @type Core.Message
 local Message
 
-local function ModuleWithData(m, data, enable)
-	enable = Util.Objects.IsEmpty(enable) and true or enable
-	local db = NewAceDb(m.defaults)
-	db.profile.lootStorage = Util.Tables.Copy(data)
-
-	m:OnInitialize()
-	m:SetDb(db)
-	if enable then
-		AddOn:CallModule(m:GetName())
-		-- by default this is only called upon PLAYER_LOGIN event, which also triggers other stuff
-		m:OnEnable()
-		-- sketchy to do this, but calling Enable() has other ramifications
-		m.enabledState = true
-	end
-end
-
 insulate("LootLedger (Module)", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_LootLedger')
+		loadfile('Modules/Test/ModuleTestUtil.lua')(AddOn)
 		Util = AddOn.Libs.Util
 		AddOnLoaded(AddOnName, true)
 		SetTime()
@@ -67,6 +52,7 @@ end)
 insulate("LootLedger (Storage)", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_LootLedger')
+		loadfile('Modules/Test/ModuleTestUtil.lua')(AddOn)
 		Util, Entry = AddOn.Libs.Util, AddOn.Package('LootLedger').Entry
 		Dao = AddOn.Package('Models').Dao
 		SetTime()
@@ -252,6 +238,7 @@ end)
 insulate("LootLedger (Watcher)", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_LootLedger')
+		loadfile('Modules/Test/ModuleTestUtil.lua')(AddOn)
 		Util, Player = AddOn.Libs.Util, AddOn.Package('Models').Player
 		Message = AddOn.RequireOnUse('Core.Message')
 		AddOn.player = Player:Get("Player1")
@@ -356,6 +343,7 @@ end)
 insulate("LootLedger (TradeTimes)", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_LootLedger')
+		loadfile('Modules/Test/ModuleTestUtil.lua')(AddOn)
 		Util, Entry, TradeTime = AddOn.Libs.Util, AddOn.Package('LootLedger').Entry, AddOn.Package('LootLedger').TradeTime
 		Message = AddOn.RequireOnUse('Core.Message')
 		Dao = AddOn.Package('Models').Dao
@@ -503,6 +491,7 @@ end)
 insulate("LootLedger (Module)", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_LootLedger')
+		loadfile('Modules/Test/ModuleTestUtil.lua')(AddOn)
 		Util = AddOn.Libs.Util
 		AddOn.player = Player:Get("Player1")
 		SetTime()

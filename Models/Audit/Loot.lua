@@ -89,8 +89,13 @@ function LootRecord.FromItemAward(itemAward)
 	loot.response = nr.text
 	loot.responseId = nr.id
 
+	-- in the case of awarding an item via 'award later', the encounter was captured when looted and then re-attached
+	-- when award was created (see LootedItem:GetItemAward())
+	if itemAward.encounter then
+		loot.instance = itemAward.encounter.instanceId
+		loot.encounterId = itemAward.encounter.id
 	-- this should have been populated via AddOn:EncounterEnd()
-	if AddOn.encounter then
+	elseif AddOn.encounter then
 		loot.instanceId = AddOn.encounter.instanceId
 		loot.encounterId = AddOn.encounter.id
 	end
@@ -114,6 +119,8 @@ function LootRecord.FromAutoAward(item, winner, reason)
 	-- see ItemAward constructor for subtraction of 400
 	record.responseId = reason.sort - 400
 
+	-- unlike creation from an item award, auto-awards always occur in proximity to
+	-- the loot dropping from an encounter, no need to check award for this supplemental information
 	if AddOn.encounter then
 		record.instanceId = AddOn.encounter.instanceId
 		record.encounterId = AddOn.encounter.id

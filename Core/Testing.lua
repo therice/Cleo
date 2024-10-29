@@ -229,9 +229,10 @@ local Testing = {
 ---
 function Testing:Enable()
 	Logging:Debug("[Testing] Enable()")
-
 	AddOn.mode:Enable(C.Modes.Test)
-	if not self.warningTimer then
+	-- don't startup the warning timer in test context (not in game), as it will
+	-- result in unnecessary output and stack overflows unless test is async
+	if not self.warningTimer and not AddOn._IsTestContext() then
 		self.warningTimer = AddOn:ScheduleRepeatingTimer(
 			function() AddOn:PrintWarning(L['test_mode_is_enabled']) end, 10
 		)

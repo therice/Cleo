@@ -369,12 +369,14 @@ function ML:SubscribeToComms()
 			end
 		end,
 		[C.Commands.TradeComplete] = function(data, sender)
+			Logging:Trace("TradeComplete from %s", tostring(sender))
 			-- only if the sender was ourself, which implies we are ML
 			if AddOn.UnitIsUnit(sender, AddOn.player) then
 				self:OnTradeComplete(unpack(data))
 			end
 		end,
 		[C.Commands.TradeWrongWinner] = function(data, sender)
+			Logging:Trace("TradeWrongWinner from %s", tostring(sender))
 			-- only if the sender was ourself, which implies we are ML
 			if AddOn.UnitIsUnit(sender, AddOn.player) then
 				self:OnTradeWrongWinner(unpack(data))
@@ -1120,6 +1122,7 @@ function ML:OnReconnectReceived(sender)
 end
 
 function ML:OnTradeComplete(item, recipient, trader, awardData)
+	Logging:Trace("OnTradeComplete()")
 	if self:IsHandled() then
 		AddOn:Print(format(L['item_trade_complete'], AddOn.Ambiguate(trader), item, AddOn.Ambiguate(recipient)))
 		--- @type Models.Item.PartialItemAward

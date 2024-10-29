@@ -441,7 +441,7 @@ local ItemAwardMixin = {
 				self.link = itemInstance.link
 			end
 		else
-			error("unsupported item format %s", tostring(item))
+			error(format("unsupported item format %s", tostring(item)))
 		end
 		return self
 	end,
@@ -534,6 +534,20 @@ function PartialItemAward:initialize(session, item, origin)
 	self.origin = origin
 end
 
+function PartialItemAward:WithItem(item)
+	-- super call may result in an error due to semantics of reconstitution (empty constructor, populated from table)
+	-- this is a valid workflow, so catch and log
+	Util.Functions.try(
+		function()
+			PartialItemAward.super.WithItem(self, item)
+		end
+	).catch(function(err)
+		Logging:Warn("WithItem() : benign error encountered %s", tostring(err))
+	end)
+
+	return self
+end
+
 ---
 --- An loot allocation entry, associated with an item, which tracks player's responses
 ---
@@ -569,7 +583,6 @@ function LootAllocateEntry:GetCandidateResponse(name)
 	return lar
 end
 
--- todo : handle 'award later' -> 'to trade'
 --- @return Models.Item.ItemAward
 function LootAllocateEntry:GetItemAward(candidate, reason)
 	-- Logging:Debug("%s", Util.Objects.ToString(self.clazz))
@@ -766,6 +779,7 @@ end
 --- @return number remaining time (in seconds) for associated item
 function LootedItem:GetTradeTimeRemaining()
 	local bag, slot = self:GetBagAndSlot()
+	Logging:Trace("GetTradeTimeRemaining(%s) : bag=%s, slot=%s", tostring(self.guid), tostring(bag), tostring(slot))
 	if bag and slot then
 		return AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
 	end
@@ -844,7 +858,7 @@ function LootedItem:GetItemAward()
 			awardAttrs[AwardAttributes.Origin]
 		)
 
-		award = award:WithWinner(awardAttrs[AwardAttributes.Winner]):WithEquipmentLocation(AwardAttributes.EquipmentLocation)
+		award = award:WithWinner(awardAttrs[AwardAttributes.Winner]):WithEquipmentLocation(awardAttrs[AwardAttributes.EquipmentLocation])
 		-- these attributes should probably be handled via ItemAwardMixin, however they are mostly derived and
 		-- we've stored the individual attribute that were pre-calculated. just manipulate then directly
 		award.awardReason = awardAttrs[AwardAttributes.Reason]
@@ -852,8 +866,19 @@ function LootedItem:GetItemAward()
 			id =  awardAttrs[AwardAttributes.ResponseId],
 			text = awardAttrs[AwardAttributes.Response],
 			-- this shouldn't be needed, but making it a non-class color for easy identification if used
-			color = C.Colors.ItemLegendary
+			--
+			-- in fact, you cannot easily transmit the color over the wire when transmitting it as part of a
+			-- message, so omit it entirely
+			--
+			-- color = C.Colors.ItemLegendary
 		}
+
+		-- for awarding a looted item, associated the captured encounter detail as otherwise it will
+		-- be based upon 'AddOn.encounter' which is not going to be correct (it's the last completed one)
+		local encounter = self:GetEncounter()
+		if encounter:isPresent() then
+			award.encounter = encounter:get()
+		end
 
 		return Util.Optional.of(award)
 	end

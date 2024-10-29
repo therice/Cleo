@@ -321,7 +321,7 @@ function UnitInParty() return _G.IsInGroupVal end
 -- https://wow.gamepedia.com/API_UnitIsUnit
 function UnitIsUnit(a, b)
     -- extremely rudimentary, doesnt' handle things like resolving targettarget, player, etc
-    -- print('UnitIsUnit -> ' .. tostring(a) .. '/' .. tostring(b))
+    --print('UnitIsUnit -> ' .. tostring(a) .. '/' .. tostring(b))
     if a == b then return 1 else return nil end
 end
 
@@ -518,6 +518,13 @@ end
 
 function GetRealmName() return 'Realm 1' end
 function GetNormalizedRealmName() return gsub(GetRealmName(), " ", "")  end
+-- https://wowpedia.fandom.com/wiki/API_GetTradePlayerItemLink
+-- Returns the item link for an item in the trade window. chatItemLink = GetTradePlayerItemLink(ID);
+-- Arguments
+--  ID (numeric) - index value of the "player's" (your character) trade slots (starts at 1 and proceeds to 6. 7 may be used for the will-not-be-traded-slot.)
+-- Returns
+--  chatItemLink (string) - a string that can be used to link items in the chat log
+--
 function GetTradePlayerItemLink(index)
     return ""
 end

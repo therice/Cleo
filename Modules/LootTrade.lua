@@ -119,7 +119,7 @@ function LootTrade:SubscribeToMessages()
 	-- as it's the hook we use to enable/disable the loot trading module
 	Message():BulkSubscribe({
 		[C.Messages.HandleLootStart] = function(_, _)
-			Logging:Debug("HandleLootStart()")
+			Logging:Debug("HandleLootStart(%s, %s, %s, %s)", tostring(AddOn:IsMasterLooter()), tostring(AddOn.enabled), tostring(AddOn.handleLoot), tostring(AddOn:MasterLooterModule():IsEnabled()))
 			if AddOn:MasterLooterModule():IsHandled() then
 				AddOn:CallModule(self:GetName())
 			end
@@ -140,7 +140,7 @@ end
 --- @param _ number the loot session identifier
 --- @param _ string the winner of the item
 --- @param owner string the person who currently has the item
---- @param ledgerId string the ide of the ledger entry
+--- @param ledgerId string the id of the ledger entry
 function LootTrade:OnAwarded(_, _, owner, ledgerId)
 	-- we currently own the item (and are implicitly ML) and there is a ledger id
 	if AddOn.UnitIsUnit(owner, "player") and Util.Strings.IsSet(ledgerId) then
@@ -162,6 +162,7 @@ end
 --- Handles event for trade window close
 ---
 function LootTrade:OnTradeClosed(...)
+	Logging:Debug("OnTradeClosed()")
 	self.trading = false
 end
 
@@ -169,6 +170,7 @@ end
 --- Handles event for trade window show
 ---
 function LootTrade:OnTradeShow(...)
+	Logging:Debug("OnTradeShow()")
 	-- event should only be dispatched if we are enabled due to registration for events, so don't
 	-- recheck it here
 	self.trading = true
@@ -176,6 +178,7 @@ function LootTrade:OnTradeShow(...)
 	-- capture trade target via UI
 	local target = _G.TradeFrameRecipientNameText and _G.TradeFrameRecipientNameText:GetText() or nil
 	if not Util.Strings.IsSet(target) then
+		-- https://warcraft.wiki.gg/wiki/UnitId
 		target = "NPC"
 	end
 
@@ -208,6 +211,7 @@ end
 --- @param playerAccepted number player has agreed to the trade (1) or not (0)
 --- @param targetAccepted number target has agreed to the trade (1) or not (0)
 function LootTrade:OnTradeAcceptUpdate(playerAccepted, targetAccepted)
+	Logging:Debug("OnTradeAcceptUpdate()")
 	if playerAccepted == 1 or targetAccepted == 1 then
 		wipe(self.items)
 		for i = 1, _G.MAX_TRADE_ITEMS - 1 do
@@ -225,6 +229,7 @@ end
 --- @param errorType number info message index for GetGameMessageInfo()
 --- @param _ string Info message, same as the 'globalstring' ERR_* value
 function LootTrade:OnUIInfoMessage(errorType, _)
+	Logging:Debug("OnUIInfoMessage()")
 	-- 'trade complete', remove items from ledger that were traded
 	if errorType == _G.LE_GAME_ERR_TRADE_COMPLETE then
 		for _, link in pairs(self.items) do
@@ -315,7 +320,7 @@ function LootTrade:AddItemsToTradeWindow(items)
 						AddOn.C_Container.PickupContainerItem(bag, slot)
 						ClickTradeButton(index)
 					else
-						Logging:Warn("AddItemToTradeWindow() : %s in bag=%d/slot=%d is not %s", link, tostring(entry.item))
+						Logging:Warn("AddItemToTradeWindow() : %s in bag=%d/slot=%d is not %s", tostring(link), bag, slot, tostring(entry.item))
 						AddOn:PrintWarning(format(L['item_to_trade_changed'], tostring(entry.item)))
 					end
 				end,

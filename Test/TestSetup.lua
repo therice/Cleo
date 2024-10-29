@@ -234,8 +234,6 @@ function Reset()
     rawset(LibStub, 'minors', {})
 end
 
-
-
 function NewAceDb(defaults)
     local AceDB = LibStub('AceDB-3.0')
     -- need to add random # to end or it will have the same data

@@ -115,14 +115,6 @@ function Optional:either(other)
 	return other
 end
 
-function Optional:ifPresentOrElse(presentFn, nilFn)
-	if self.value ~= nil then
-		presentFn(self.value)
-	else
-		nilFn()
-	end
-end
-
 function Optional:__tostring()
 	return format("Optional(%s)", Util.Objects.ToString(self.value))
 end
