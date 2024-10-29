@@ -688,7 +688,7 @@ Storage.Filters = {
 			return entry and
 				entry:GetItemAward()
 					:map(function(a) return Util.Strings.IsSet(a.winner) end):orElse(false) or
-				flase
+				false
 		end
 	end,
 	--- @return function

@@ -121,6 +121,7 @@ read_globals = {
 	"GetSpellBookItemInfo",
 	"GetSpellInfo",
 	"GetTime",
+	"GetTradePlayerItemLink",
 	"GetUnitName",
 	"GiveMasterLoot",
 	"GuildControlGetNumRanks",
