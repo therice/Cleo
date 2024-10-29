@@ -294,6 +294,32 @@ AddOn.DefaultCustomItems = {
     [65087] = { 4, 372, ItemUtil.CustomItemInvTypeSelf },       -- Shoulders of the Forlorn Protector
     [65089] = { 4, 372, ItemUtil.CustomItemInvTypeSelf },       -- Shoulders of the Forlorn Vanquisher
     [66998] = { 4, 372, ItemUtil.CustomItemInvTypeSelf },       -- Essence of the Forlorn (can be used to purchase any Heroic armor token)
+
+    -- CATA P3 (Firelands)
+    -- T12
+    [71675] = { 4, 378, "INVTYPE_HEAD" },                   -- Helm of the Fiery Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [71682] = { 4, 378, "INVTYPE_HEAD" },                   -- Helm of the Fiery Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [71668] = { 4, 378, "INVTYPE_HEAD" },                   -- Helm of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [71677] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Crown of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71684] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Crown of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71670] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Crown of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71676] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Gauntlets of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71683] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Gauntlets of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71669] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Gauntlets of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71679] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Chest of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71686] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Chest of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71672] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Chest of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71678] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Leggings of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71685] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Leggings of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71671] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Leggings of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71681] = { 4, 378, "INVTYPE_SHOULDER" },               -- Mantle of the Fiery Conqueror (Warrior, Hunter, Shaman) [NORMAL]
+    [71688] = { 4, 378, "INVTYPE_SHOULDER" },               -- Mantle of the Fiery Protector (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [71674] = { 4, 378, "INVTYPE_SHOULDER" },               -- Mantle of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [71680] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71687] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71673] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    -- Omitting for now, but keeping placeholder
+    -- [71617] = { }, -- Crystallized Firestone (can be used to upgrade gear, not enumerating)
 }
 
 AddOn.TestItems = {
@@ -456,5 +482,29 @@ AddOn.TestItems = {
     65145, 65367, 65368, 65369, 65370, 65371, 65372, 65373, 65374, 65375, 65376, 65377, 65378, 65379, 65380, 65381,
     65382, 65383, 65384, 65385, 65386, 66998, 67423, 67424, 67425, 67426, 67427, 67428, 67429, 67430, 67431, 68127,
     68128, 68129, 68130, 68131, 68132, 68600, 69827, 69828, 69829, 69830, 69831, 69833, 69834, 69835, 69878, 69879,
-    69880, 69881, 69882, 69883, 69884, 69885
+    69880, 69881, 69882, 69883, 69884, 69885,
+    -- CATA P1 END
+
+    -- CATA P2 OMITTED (Troll 5 Player Dungeons)
+
+    -- CATA P3 START
+    71041, 71040, 71044, 71031, 71030, 71042, 71043, 70914, 71029, 71032, 68981, 70922, 71039, 71038, 71407, 71411,
+    71410, 71402, 71403, 71412, 71413, 71405, 71404, 71401, 69138, 71406, 71409, 71408, 70992, 71011, 71003, 71010,
+    71005, 71009, 71004, 70993, 71007, 70912, 71012, 71006, 70991, 71415, 71421, 71416, 71424, 71417, 71425, 71418,
+    71419, 71426, 71420, 71423, 71422, 71414, 70990, 70989, 70735, 70987, 70985, 70986, 70736, 70734, 70737, 70988,
+    70739, 70738, 68983, 70733, 71665, 71434, 71435, 71428, 71436, 71438, 71437, 71429, 71430, 71432, 71439, 71431,
+    71433, 69149, 71427, 71679, 71686, 71672, 71023, 71025, 71020, 71018, 71027, 71026, 71021, 71028, 70913, 71019,
+    71024, 71022, 71014, 71013, 71447, 71450, 71440, 71442, 71451, 71452, 71443, 71453, 71444, 71446, 71449, 71448,
+    71445, 71441, 71678, 71685, 71671, 71343, 71345, 71314, 71341, 71340, 71315, 71342, 70916, 70917, 68982, 71323,
+    71312, 70915, 71461, 71456, 71455, 71463, 71464, 71457, 71465, 71459, 71458, 69139, 71462, 71454, 71460, 71676,
+    71683, 71669, 71350, 71349, 71313, 71346, 71344, 70920, 71351, 71348, 68927, 68926, 69897, 71347, 71681, 71688,
+    71674, 71471, 71474, 71467, 71468, 71469, 71470, 71475, 71472, 69112, 69111, 71466, 71473, 71680, 71687, 71673,
+    71358, 71357, 71356, 70921, 71354, 68994, 68925, 68995, 71355, 71352, 71798, 71353, 71675, 71682, 71668, 69224,
+    71614, 71613, 71616, 71612, 71610, 69150, 69110, 69167, 71615, 70723, 71797, 71611, 71677, 71684, 71670, 69224,
+    71779, 71787, 71785, 71780, 71776, 71782, 71775, 71141, 69815, 69237, 71778, 71786, 71784, 71781, 71777, 71783,
+    71774, 71141, 69815, 69237, 71617, 71640, 71365, 70929, 71367, 68972, 68915, 71359, 71362, 71361, 71360, 71366,
+    71641, 71561, 71563, 71564, 69113, 69109, 71560, 71562, 71557, 71559, 71558, 71579, 71575, 71590, 71587, 71577,
+    71567, 71580, 71568, 71593, 71592, 71617, 69976, 69966, 69975, 69965, 69962, 69960, 69971, 69974, 69972, 69961,
+    69963, 69973, 69970, 69969, 69968, 69958, 69957, 69959,
+    -- CATA P3 END
 }

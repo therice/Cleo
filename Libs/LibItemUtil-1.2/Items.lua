@@ -481,4 +481,28 @@ lib.TokenItems = {
     [65087] = { 65268, 65273, 65208, 65248, 65258, 65253 },             -- Shoulders of the Forlorn Protector [HEROIC]
     [65089] = { 65213, 65183, 65188, 65198, 65203, 65193, 65243 },      -- Shoulders of the Forlorn Vanquisher [HEROIC]
     [66998] = { },                                                      -- Essence of the Forlorn (can be used to purchase any Heroic armor token, not enumerating)
+    -- CATA P2 OMITTED (Troll 5 Player Dungeons)
+    -- CATA Classic P3 (T12)
+    [71675] = { 71282, 71093, 71065, 70948, 71272, 71277 },             -- Helm of the Fiery Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [71682] = { 71070, 70944, 71051, 71298, 71303, 71293 },             -- Helm of the Fiery Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [71668] = { 71047, 71287, 71060, 70954, 71098, 71103, 71108 },      -- Helm of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [71677] = { 71514, 71519, 71524, 71528, 71533, 71595 },             -- Crown of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71684] = { 71599, 71606, 71503, 71544, 71549, 71554 },             -- Crown of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71670] = { 71539, 71508, 71478, 71483, 71488, 71492, 71497 },      -- Crown of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71676] = { 71513, 71518, 71523, 71527, 71532, 71594 },             -- Gauntlets of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71683] = { 71601, 71605, 71502, 71543, 71548, 71553 },             -- Gauntlets of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71669] = { 71538, 71507, 71477, 71482, 71487, 71491, 71496 },      -- Gauntlets of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71679] = { 71512, 71517, 71522, 71530, 71535, 71597 },             -- Chest of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71686] = { 71600, 71604, 71501, 71542, 71547, 71552 },             -- Chest of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71672] = { 71537, 71510, 71476, 71481, 71486, 71494, 71499 },      -- Chest of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71678] = { 71515, 71520, 71525, 71529, 71534, 71596 },             -- Leggings of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71685] = { 71602, 71607, 71504, 71545, 71550, 71555 },             -- Leggings of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71671] = { 71540, 71509, 71479, 71484, 71489, 71493, 71498 },      -- Leggings of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [71681] = { 71067, 71095, 70946, 71275, 71280, 71285 },             -- Mantle of the Fiery Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [71688] = { 71072, 70941, 71053, 71300, 71305, 71295 },             -- Mantle of the Fiery Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [71674] = { 71049, 71290, 71062, 70951, 71101, 71106, 71111 },      -- Mantle of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [71680] = { 71516, 71521, 71526, 71531, 71536, 71598 },             -- Shoulders of the Fiery Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [71687] = { 71603, 71608, 71505, 71546, 71551, 71556 },             -- Shoulders of the Fiery Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [71673] = { 71541, 71511, 71480, 71485, 71490, 71495, 71500 },      -- Shoulders of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [71617] = { }, -- Crystallized Firestone (can be used to upgrade gear, not enumerating)
 }
