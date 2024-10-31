@@ -413,7 +413,7 @@ end
 --- @return Models.List.List the list in it's current form as a result of mutations (players add, loot given, etc.)
 function ActiveConfiguration:GetActiveList(listId)
 	local list = self.listsActive[listId]
-	Logging:Trace("GetActiveList(%s) : %s", tostring(listId), Util.Objects.ToString(list))
+	Logging:Trace("GetActiveList(%s) : %s", tostring(listId), function() return Util.Objects.ToString(list and list:toTable() or {}) end)
 
 	if AddOn:IsMasterLooter() then
 		return list

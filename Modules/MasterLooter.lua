@@ -1206,30 +1206,30 @@ function ML:AddLootSlot(slot, ...)
 end
 
 function ML:UpdateLootSlots()
-	Logging:Debug("UpdateLootSlots()")
-
 	-- this implicitly requires loot window to be open
 	if not self.lootOpen then
 		Logging:Warn("UpdateLootSlots() : attempting to update loot slots without an open loot window")
 		return
 	end
 
-	local updatedLootSlots = {}
-	for slot = 1, GetNumLootItems() do
+	local numLootItems, processedLootSessions = GetNumLootItems(), {}
+	Logging:Trace("UpdateLootSlots() : numLootItems=%d",numLootItems)
+
+	for slot = 1, numLootItems do
 		local item = GetLootSlotLink(slot)
 		for session = 1, #self.lootTable do
+			--- @type Models.Item.LootTableEntry
 			local ltEntry = self:GetLootTableEntry(session)
-			if not ltEntry.awarded and not updatedLootSlots[session] then
-				-- todo : verify the entry is from a creature, then check slots
+			if not ltEntry.awarded and not processedLootSessions[session] then
 				-- this will create a loot source for the entry's slot based upon the currently targeted source's loot
 				-- it may not necessarily be the same source, which we need to verify before updating anything
 				local source = CreatureLootSource.FromCurrent(slot)
 				if AddOn.ItemIsItem(item, ltEntry.item) and ltEntry:IsFromSource(source) then
-					if slot ~= ltEntry.slot then
-						Logging:Debug("UpdateLootSlots(session=%d) : item %s previously at slot=%d, now at slot=%d", session, ltEntry.item, ltEntry.slot, slot)
+					local changed, previousSlot = ltEntry:SetSlot(slot)
+					if changed then
+						Logging:Debug("UpdateLootSlots(session=%d) : item %s previously at slot=%d, now at slot=%d", session, ltEntry.item, previousSlot, slot)
 					end
-					ltEntry.slot = slot
-					updatedLootSlots[session] = true
+					processedLootSessions[session] = true
 					break
 				end
 			end
@@ -1404,12 +1404,11 @@ function ML:LootOnClick(button)
 	end
 
 	local source = CreatureLootSource.FromCurrent(slot)
-
 	-- verify the item in the slot isn't already on the loot table
 	for _, v in ipairs(self.lootTable) do
 		Logging:Trace("LootOnClick() : examining button(slot=%s) / lootTable(slot=%s)", tostring(slot), tostring(v.slot))
 		-- if the same slot from the same source, don't add it
-		if slot == v.slot and v:IsFromSource(source) then
+		if v:GetSlot():ifPresent(function(s) return slot == s end) and v:IsFromSource(source) then
 			Logging:Trace("LootOnClick() : button(slot=%s) already present on loot table", tostring(button.slot))
 			AddOn:Print(format(L["item_already_on_loot_table"], tostring(button.slot)))
 			return
@@ -1482,7 +1481,7 @@ ML.AwardStatus = {
 }
 
 --- @param item string ItemID|ItemString|ItemLink
---- @param slot number index of the item within the loot table, can be Nil if item was not added from a loot table
+--- @param slot number index of the item within the loot table
 --- @param winner string name of the player which won the item
 --- @return boolean, string 'can the loot be given', 'if not, why not?'
 function ML:CanGiveLoot(item, slot, winner)
@@ -1920,7 +1919,7 @@ function ML:Award(award, callback, ...)
 	-- remainder are direct loot allocation from the loot window
 	--
 	if self.lootOpen then
-		local lootSlotLink = GetLootSlotLink(slot)
+		local lootSlotLink = GetLootSlotLink(slot:get())
 		if not AddOn.ItemIsItem(link, lootSlotLink) then
 			Logging:Debug("Award(session=%d) : Loot slot (%d) changed before award completed, award=%s, slot=%s", session, slot:orElse("<EMPTY>"), link, lootSlotLink)
 			-- will verify that the source is from current target's loot table before mutating loot slots

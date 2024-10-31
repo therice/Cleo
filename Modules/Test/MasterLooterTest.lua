@@ -180,7 +180,7 @@ describe("MasterLooter", function()
 			assert(#lt == 2)
 			for _, e in pairs(lt) do
 				assert(e.ref)
-				assert(not e.slot)
+				assert(e.owner)
 				assert(not e.awarded)
 				assert(not e.sent)
 			end
@@ -276,7 +276,7 @@ describe("MasterLooter", function()
 			assert(ml:HaveUnawardedItems())
 		end)
 
-		it("UpdateLootSlots", function()
+		it("UpdateLootSlots (with no changes)", function()
 			ml:UpdateLootSlots()
 		end)
 
@@ -425,6 +425,17 @@ describe("MasterLooter", function()
 			local cr2 = la:GetCandidateResponse(2, AddOn.player:GetName())
 			assert(cr2)
 			assert.equal(cr2.response, 1)
+		end)
+
+		it("UpdateLootSlots (with potential changes)", function()
+			local _ItemIsItem = AddOn.ItemIsItem
+			AddOn.ItemIsItem = function() return true end
+
+			ml:UpdateLootSlots()
+
+			finally(function()
+				AddOn.ItemIsItem = _ItemIsItem
+			end)
 		end)
 
 		it("ends session", function()

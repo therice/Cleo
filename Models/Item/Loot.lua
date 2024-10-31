@@ -220,7 +220,7 @@ function LootTableEntry:initialize(item, source)
 	self.sent = false
 end
 
---- @param source  Models.Item.CreatureLootSource
+--- @param source Models.Item.CreatureLootSource
 function LootTableEntry:IsFromSource(source)
 	return IsSameLootSource(source, self.source)
 end
@@ -260,12 +260,36 @@ function LootTableEntry:GetOwner()
 	return self.source and self.source:GetName() or L['unknown']
 end
 
+--- @return boolean does the entry have an associated slot
+function LootTableEntry:HasSlot()
+	return self.source.GetSlot and Util.Objects.IsCallable(self.source.GetSlot)
+end
 ---
 --- Will only be non-empty if the loot source is a Models.Item.CreatureLootSource
 ---
 --- @return LibUtil.Optional.Optional an optional, which if present will be the numeric loot slot
 function LootTableEntry:GetSlot()
-	return Util.Optional.ofNillable(self.source.GetSlot and self.source:GetSlot() or nil)
+	return Util.Optional.ofNillable(self:HasSlot() and self.source:GetSlot() or nil)
+end
+
+---
+--- Should the entry have a slot, update the value (if it's different)
+---
+--- @param slot number
+--- @return boolean, number was slot updated and the previous slot value (if present and set)
+function LootTableEntry:SetSlot(slot)
+	if self:HasSlot() and Util.Objects.IsNumber(slot) then
+		-- intentionally get straight from source, know it's supported
+		local currentSlot = self.source:GetSlot()
+		if currentSlot == slot then
+			return false, currentSlot
+		else
+			self.source.slot = slot
+			return true, currentSlot
+		end
+	end
+
+	return false, nil
 end
 
 --- Will only be non-empty if the loot source is a Models.Item.PlayerLootSource

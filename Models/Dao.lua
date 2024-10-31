@@ -28,9 +28,10 @@ local function EventDetail(entity, attr, diff, ref, ...)
 		attr   = attr,
 		diff   = diff,
 		ref    = ref,
-		extra = {...},
+		extra = {...}
 	}
 end
+
 
 --- @class Models.Dao
 local Dao = AddOn.Package('Models'):Class('Dao')
@@ -171,7 +172,6 @@ end
 --- @param ... any additional callback arguments
 function Dao:Update(entity, attr, fireCallbacks, ...)
 	fireCallbacks = Util.Objects.Default(fireCallbacks, true)
-	Logging:Trace("Dao.Update[%s](%s) : %s=%s", tostring(self.entityClass), tostring(entity.id), attr, Util.Objects.ToString(entity[attr]))
 
 	-- if the entity to update doesn't exist, return
 	if not self.db[entity.id] then
@@ -183,6 +183,13 @@ function Dao:Update(entity, attr, fireCallbacks, ...)
 	local asTable, ref = entity:toTable(), nil
 	local curVal, diff = asTable[attr], nil
 	local shouldPersist = self.ShouldPersist()
+
+	Logging:Trace(
+		"Dao.Update[%s](%s) : %s = %s",
+		tostring(self.entityClass),
+		tostring(entity.id), attr,
+		function() return Util.Objects.ToString(curVal) end
+	)
 
 	if shouldPersist and fireCallbacks then
 		-- if the entity is Referenceable, capture it for any registered callbacks.

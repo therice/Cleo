@@ -195,13 +195,20 @@ function Self.ToString(val, depth)
         return "nil"
     elseif t == "table" then
         local _, fn = pcall(
-            function() return val.ToString or val.toString or val.tostring end
+            function()
+                return val.ToString or val.toString or val.tostring
+            end
         )
 
         if depth == 0 then
             return "{...}"
         elseif type(fn) == "function" and fn ~= Self.ToString then
             return fn(val, depth)
+        -- this is to intended to remove any class meta-data and just provide the data
+        -- 10.30.2024 : for 3 complete iterations of 514 tests, this is approx 4% slower (336s total vs 323s total)
+        -- however, the extra clarity in logging makes it much easier to interpret and not invest time decoding
+        elseif val.toTable then
+            return Self.ToString(val:toTable())
         else
             local j = 1
             return Util.Tables.FoldL(
