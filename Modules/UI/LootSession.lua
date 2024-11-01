@@ -103,6 +103,7 @@ function LootSession:AddItems(items)
 				if not item or not item:IsValid() then
 					Logging:Warn("AddItems(%s) : referenced item not available, will re-try querying later", tostring(entry.item))
 				end
+
 				Util.Tables.Push(self.frame.rows,{
 					session = session,
 					entry = entry,
@@ -113,21 +114,21 @@ function LootSession:AddItems(items)
 					        :itemIconCell(item and item.link or nil, item and item.texture or nil)
 					        :cell(" " .. (item and item.ilvl or ""))
 					        :textCell(
-								function(frame, data, realRow)
+								function(cellFrame, data, realRow)
 									if not data[realRow].item then
-										frame.text:SetText("--".._G.RETRIEVING_ITEM_INFO.."--")
+										cellFrame.text:SetText("--".._G.RETRIEVING_ITEM_INFO.."--")
 										self.loadingItems = true
 										if not self.showPending then
 											self.showPending = true
 											self:ScheduleTimer("Show", 0, self.ml:GetLootTable())
 										end
 									else
-										frame.text:SetText(data[realRow].item.link)
+										cellFrame.text:SetText(data[realRow].item.link)
 									end
 								end
 							)
 							:cell(""):DoCellUpdate(
-								function(_, frame, data, _, _, realRow)
+								function(rowFrame, cellFrame, data, _, _, realRow)
 									--- @type  Models.Item.LootTableEntry
 									local ltEntry = data[realRow].entry
 									if ltEntry then
@@ -139,6 +140,14 @@ function LootSession:AddItems(items)
 											UIUtil.ColoredDecorator(C.Colors.White):decorate("%s :") .. ' ' ..
 											UIUtil.ColoredDecorator(C.Colors.ItemHeirloom):decorate("%s")
 
+										-- this is code to add extra highlight to draw attention to items
+										-- which should not be handled via addon and therefore should not be in
+										-- the loot session
+										if item and Util.Objects.In(item.id, 71141) then
+											self.frame.st:CreateSpecialHighlight(rowFrame)
+										else
+											self.frame.st:HideSpecialHighlight(rowFrame)
+										end
 
 										if Util.Strings.Equal(sourceType, "Creature") then
 											sourceIcon = "Interface/ICONS/Achievement_Boss_Illidan"
@@ -165,11 +174,11 @@ function LootSession:AddItems(items)
 											sourceTt = format(ttTemplate, L['unknown'], sourceName)
 										end
 
-								        frame:SetNormalTexture(sourceIcon)
-										frame:SetScript("OnEnter", function() UIUtil.ShowTooltip(frame, {"ANCHOR_RIGHT", 0, 0}, sourceTt) end)
-										frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+								        cellFrame:SetNormalTexture(sourceIcon)
+										cellFrame:SetScript("OnEnter", function() UIUtil.ShowTooltip(cellFrame, { "ANCHOR_RIGHT", 0, 0}, sourceTt) end)
+										cellFrame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
 									else
-										frame:SetNormalTexture(nil)
+										cellFrame:SetNormalTexture(nil)
 									end
 							end)
 						:build()

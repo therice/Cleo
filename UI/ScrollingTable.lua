@@ -87,25 +87,25 @@ local DeleteButtonCell = AddOn.Class('DeleteButtonCell', Cell)
 function DeleteButtonCell:initialize(fn)
     Cell.initialize(self, nil)
     self:DoCellUpdate(
-            function(_, frame, data, _, _, realRow)
+            function(_, cellFrame, data, _, _, realRow)
                 -- todo : prevent repeated textures and OnEnter/OnLeave?
-                frame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
-                frame:SetScript("OnEnter", function()
-                    UIUtil.ShowTooltip(frame, nil, format(L["double_click_to_delete_this_entry"], L["item"]))
+                cellFrame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
+                cellFrame:SetScript("OnEnter", function()
+                    UIUtil.ShowTooltip(cellFrame, nil, format(L["double_click_to_delete_this_entry"], L["item"]))
                 end)
-                frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
-                frame:SetScript(
+                cellFrame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+                cellFrame:SetScript(
                         "OnClick",
                         function()
-                            if frame.lastClick and GetTime() - frame.lastClick <= 0.5 then
-                                frame.lastClick = nil
-                                fn(frame, data, realRow)
+                            if cellFrame.lastClick and GetTime() - cellFrame.lastClick <= 0.5 then
+                                cellFrame.lastClick = nil
+                                fn(cellFrame, data, realRow)
                             else
-                                frame.lastClick = GetTime()
+                                cellFrame.lastClick = GetTime()
                             end
                         end
                 )
-                frame:SetSize(20,20)
+                cellFrame:SetSize(20, 20)
             end
     )
 end
@@ -129,12 +129,12 @@ local TextCell = AddOn.Class('TextCell', Cell)
 function TextCell:initialize(fn)
     Cell.initialize(self, nil)
     self:DoCellUpdate(
-            function(_, frame, data, _, _, realrow)
-                if frame.text:GetFontObject() ~= _G.GameFontNormal then
-                    frame.text:SetFontObject("GameFontNormal")
+            function(_, cellFrame, data, _, _, realrow)
+                if cellFrame.text:GetFontObject() ~= _G.GameFontNormal then
+                    cellFrame.text:SetFontObject("GameFontNormal")
                 end
 
-                fn(frame, data, realrow)
+                fn(cellFrame, data, realrow)
             end
     )
 end
@@ -273,6 +273,29 @@ function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach, mul
         st.frame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
         frame.st = st
         frame:SetWidth(st.frame:GetWidth() + 20)
+    end
+
+    st.CreateSpecialHighlight = function(self, rowFrame)
+        if not rowFrame.specialHL then
+            rowFrame.specialHL = rowFrame:CreateTexture(nil, "OVERLAY")
+            rowFrame.specialHL:SetAllPoints(rowFrame)
+            rowFrame.specialHL:SetColorTexture(1, 1, 1, 1)
+            rowFrame.specialHL:SetGradient("HORIZONTAL", C.Colors.LuminousYellow, C.Colors.DeathKnightRed)
+        end
+
+        self:ShowSpecialHighlight(rowFrame)
+    end
+
+    st.ShowSpecialHighlight = function(_, rowFrame)
+        if rowFrame.specialHL then
+            rowFrame.specialHL:Show()
+        end
+    end
+
+    st.HideSpecialHighlight = function(_, rowFrame)
+        if rowFrame.specialHL then
+            rowFrame.specialHL:Hide()
+        end
     end
 
     ScrollingTable.Decorate(st)
