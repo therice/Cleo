@@ -214,6 +214,10 @@ function AddOn:GetGUIDType(guid)
 end
 
 local CreatureGUIDPattern = "Creature%-0%-%d+-%d+-%d+-%d+%-%x%x%x%x%x%x%x%x%x%x"
+local PetGUIDPattern= CreatureGUIDPattern:gsub("Creature", "Pet")
+local GameObjectGUIDPattern= CreatureGUIDPattern:gsub("Creature", "GameObject")
+local VehicleGUIDPattern= CreatureGUIDPattern:gsub("Creature", "Vehicle")
+
 --- https://wowpedia.fandom.com/wiki/GUID#Creature
 --- [unitType]-0-[serverID]-[instanceID]-[zoneUID]-[ID]-[spawnUID]
 --- E.G.
@@ -228,7 +232,8 @@ function AddOn:IsCreatureGUID(guid)
         return false
     end
 
-    return guid:match(CreatureGUIDPattern)
+    return guid:match(CreatureGUIDPattern) or guid:match(VehicleGUIDPattern) or
+            guid:match(GameObjectGUIDPattern) or guid:match(PetGUIDPattern)
 end
 
 --- @see AddOn.IsCreatureGUID
