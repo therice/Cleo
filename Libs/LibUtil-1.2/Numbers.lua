@@ -7,6 +7,8 @@ if not lib or next(lib.Numbers) or (minor or 0) > MINOR_VERSION then return end
 local Util = lib
 --- @class LibUtil.Numbers
 local Self = Util.Numbers
+--- @type LibClass
+local Class = LibStub("LibClass-1.1")
 
 function Self.Round(num, p)
     p = math.pow(10, p or 0)
@@ -37,4 +39,21 @@ function Self.BinaryRepr(n)
         n = n % 2^i
     end
     return table.concat(t)
+end
+
+---
+--- it's not really atomic,  but has similar semantics
+---
+--- @class LibUtil.Numbers.AtomicNumber
+local AtomicNumber = Class('AtomicNumber')
+Self.AtomicNumber = AtomicNumber
+
+function AtomicNumber:initialize(initialValue)
+    self.value = initialValue
+end
+
+function AtomicNumber:GetAndIncrement()
+    local value = self.value
+    self.value = self.value + 1
+    return value
 end

@@ -190,6 +190,7 @@ function Entry:UpdateButtons()
                     UIUtil:HideTooltip()
                     Loot.UpdateItemText(self)
                 end,
+                -- this sends the player's response (index) to ML
                 OnClick = function() Loot:OnRoll(self, index) end,
             })
 		end
@@ -233,6 +234,7 @@ local function GetFromPool(self, type)
 end
 
 --- @param item Models.Item.LootEntry
+--- @return Loot.Entry
 function EntryManager:GetEntry(item)
 	if not item then
 		Logging:Warn("GetEntry(%s) : No such item", Util.Objects.ToString(item))

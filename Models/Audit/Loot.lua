@@ -11,16 +11,21 @@ local Date = AddOn.ImportPackage('Models').Date
 local Player = AddOn.Package('Models').Player
 --- @type Models.Audit.Audit
 local Audit = AuditPkg.Audit
+--- @type Models.Item.ItemAward
+local ItemAward =  AddOn.ImportPackage('Models.Item').ItemAward
 
-local ResponseOrigin = {
-	Unknown             = 0,
-	CandidateResponse   = 1,
-	AwardReason         = 2,
-}
-
---- @class Models.Audit.LootRecord
+--- @class Models.Audit.LootRecord : Models.Audit.Audit
+--- @field item string link to the awarded item
+--- @field owner string who received the item
+--- @field class string the class of the winner
+--- @field instanceId number identifier for map (instance id)
+--- @field encounterId number identifier for the encounter
+--- @field responseOrigin number indicates if response was from an award reason (e.g. not from candidate's response)
+--- @field response string the text of the candidate's response or award reason
+--- @field responseId string|number the id of the candidate's response or award reason
+--- @field configuration string  the list configuration name associated with award
+--- @field list string the list name associated with award
 local LootRecord = AuditPkg:Class('LootRecord', Audit)
-LootRecord.ResponseOrigin = ResponseOrigin
 
 function LootRecord:initialize(instant)
 	Audit.initialize(self, instant)
@@ -34,29 +39,26 @@ function LootRecord:initialize(instant)
 	self.instanceId = nil
 	-- identifier for the encounter
 	self.encounterId = nil
-	-- number indicating if response was taken award reason (e.g. not from candidate's response)
-	self.responseOrigin = ResponseOrigin.Unknown
+	-- number indicating if response was taken from award reason or  candidate's response
+	self.responseOrigin = 0
 	-- the text of the candidate's response or award reason
 	self.response = nil
 	-- the id of the candidate's response or award reason
 	self.responseId = nil
-	-- the list configuration associated with award
+	-- the list configuration name associated with award
 	self.configuration = nil
-	-- the list associated with award
+	-- the list name associated with award
 	self.list = nil
 end
 
+--- @return boolean indicating whether loot was awarded based upon the candidate's response  (e.g. 'need')
 function LootRecord:IsCandidateResponse()
-	return self.responseOrigin == ResponseOrigin.CandidateResponse
+	return self.responseOrigin == ItemAward.Origin.Response
 end
 
+--- @return boolean indicating whether loot was awarded for a 'reason' other than specified in candidate's response (e.g. 'free')
 function LootRecord:IsAwardReason()
-	return self.responseOrigin == ResponseOrigin.AwardReason
-end
-
-function LootRecord:SetOrigin(fromAwardReason)
-	self.responseOrigin =
-		Util.Objects.Check(fromAwardReason, ResponseOrigin.AwardReason, ResponseOrigin.CandidateResponse)
+	return self.responseOrigin == ItemAward.Origin.Reaspm
 end
 
 function LootRecord:GetResponseId()
@@ -76,18 +78,24 @@ function LootRecord:GetResponseId()
 end
 
 --- @param itemAward Models.Item.ItemAward
+--- @return Models.Audit.LootRecord
 function LootRecord.FromItemAward(itemAward)
 	local loot = LootRecord()
 	loot.item = itemAward.link
 	loot.owner = itemAward.winner
 	loot.class = itemAward.class
+	loot.responseOrigin = itemAward.origin
 	local nr = itemAward:NormalizedReason()
-	loot:SetOrigin(Util.Objects.Check(Util.Objects.IsEmpty(itemAward.reason), false, true))
 	loot.response = nr.text
 	loot.responseId = nr.id
 
+	-- in the case of awarding an item via 'award later', the encounter was captured when looted and then re-attached
+	-- when award was created (see LootedItem:GetItemAward())
+	if itemAward.encounter then
+		loot.instance = itemAward.encounter.instanceId
+		loot.encounterId = itemAward.encounter.id
 	-- this should have been populated via AddOn:EncounterEnd()
-	if AddOn.encounter then
+	elseif AddOn.encounter then
 		loot.instanceId = AddOn.encounter.instanceId
 		loot.encounterId = AddOn.encounter.id
 	end
@@ -96,22 +104,28 @@ function LootRecord.FromItemAward(itemAward)
 	return loot
 end
 
+--- @param item string the item link
+--- @param winner string the winner of the item (player)
+--- @param reason table the reason for the award
+--- @return Models.Audit.LootRecord
 function LootRecord.FromAutoAward(item, winner, reason)
 	local record = LootRecord()
 	record.item = item
 	local p = Player:Get(winner)
 	record.owner = p and p:GetShortName()
 	record.class = p and p.class
+	record.responseOrigin = ItemAward.Origin.Reason
+	record.response = reason.text
+	-- see ItemAward constructor for subtraction of 400
+	record.responseId = reason.sort - 400
 
+	-- unlike creation from an item award, auto-awards always occur in proximity to
+	-- the loot dropping from an encounter, no need to check award for this supplemental information
 	if AddOn.encounter then
 		record.instanceId = AddOn.encounter.instanceId
 		record.encounterId = AddOn.encounter.id
 	end
 
-	record.responseOrigin = ResponseOrigin.AwardReason
-	record.response = reason.text
-	-- see ItemAward constructor for subtraction of 400
-	record.responseId = reason.sort - 400
 	return record
 end
 
@@ -211,7 +225,6 @@ function LootStatisticsEntry:AddRaid(entry)
 			Util.Tables.Push(self.raids[instanceId], entry:FormattedDate())
 		end
 
-
 		self.totalled = false
 	end
 end
@@ -259,12 +272,30 @@ function LootStatisticsEntry:CalculateTotals()
 			self.totals.raids[raid] = raidCount
 			totalRaids = totalRaids + raidCount
 		end
-		self.totals.raids.count = totalRaids
 
+		self.totals.raids.count = totalRaids
 		self.totalled = true
 	end
 
-	-- {raids = {409 = 1, 249 = 2, count = 10, 469 = 5, 531 = 2}, responses = {{Main-Spec (Need), 6, 1}, {Off-Spec (Greed), 1, 2}, {Disenchant, 3, 401}, {Free, 2, 402}, {Bank, 2, 403}}, count = 14}
+	--[[
+	{
+		raids = {
+			409 = 1,
+			249 = 2,
+			469 = 5,
+			531 = 2
+			count = 10,
+		},
+		responses = {
+			{'Main-Spec (Need)', 6, 1},
+			{'Off-Spec (Greed)', 1, 2},
+			{'Disenchant', 3, 401},
+			{'Free', 2, 402},
+			{'Bank', 2, 403}
+		},
+		count = 14
+	}
+	--]]
 	return self.totals
 end
 

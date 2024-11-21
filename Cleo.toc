@@ -4,7 +4,7 @@
 ## Notes: Cleo : Suicide Kings Loot System for World of Warcraft (Cataclysm Classic)
 ## Author: Jackburtón-Atiesh
 ## Version: @project-version@
-## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit, Cleo_RaidAudit
+## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit, Cleo_RaidAudit, Cleo_LootLedger
 ## X-AddonName: Cleo
 ## X-InterfaceName: Cleo (Cataclysm Classic)
 

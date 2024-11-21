@@ -21,8 +21,6 @@ function Texture:initialize(parent, name, cR, cG, cB, cA, layer)
 		self.color = {cR, cG, cB, cA}
 		self.layer = layer
 	end
-
-	-- Logging:Debug("%s / %s", Util.Objects.ToString(self.texture), Util.Objects.ToString(self.layer))
 end
 
 function Texture:Create()

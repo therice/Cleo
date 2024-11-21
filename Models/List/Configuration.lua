@@ -19,14 +19,13 @@ local UUID = Util.UUID.UUID
 --- @type Models.Date
 local Date = AddOn.Package('Models').Date
 --- @type Models.DateFormat
---- @type Models.DateFormat
 local DateFormat = AddOn.Package('Models').DateFormat
 --- @type Models.Hashable
 local Hashable = AddOn.Require('Models.Hashable')
 --- @type Models.Referenceable
 local Referenceable = AddOn.Require('Models.Referenceable')
 
---- @class Models.List.Configuration
+--- @class Models.List.Configuration : Models.Versioned
 local Configuration =
 	AddOn.Package('Models.List'):Class('Configuration', Versioned)
 		:include(Hashable.Includable('sha256'))
@@ -50,7 +49,7 @@ Configuration.Status = {
 	Inactive    =   2,
 }
 
---- @class Models.List.Permission
+--- @class Models.List.Permission : LibUtil.Bitfield.Bitfield
 local Permission = AddOn.Package('Models.List'):Class('Permission', Bitfield)
 function Permission:initialize()
 	Bitfield.initialize(self, Configuration.Permissions.None)
@@ -93,7 +92,7 @@ function Configuration:toTable()
 	t['alts'] =
 		Util(self.alts)
 			-- this creates a copy, but values point to original
-			:MapKeys(function(_, p) return Player.StripGuidPrefix(p) end, true)
+			:MapKeys(function(_, p) return Player.StripGUIDPrefix(p) end, true)
 			:Map(
 				function(alts)
 					-- need to copy the values, as it will be pointer to original
@@ -163,7 +162,7 @@ function Configuration:afterReconstitute(instance)
 					-- if resolved then use the GUID
 					-- otherwise, 'main' is a stripped GUID so parse it to expected format
 					local player = Player:Get(main)
-					return player and player.guid or Player.ParseGuid(main)
+					return player and player.guid or Player.ParseGUID(main)
 				end, true
 			)
 			:Map(
@@ -357,7 +356,7 @@ function Configuration.CreateInstance(...)
 	return configuration
 end
 
---- @class Models.List.ConfigurationDao
+--- @class Models.List.ConfigurationDao : Models.Dao
 local ConfigurationDao = AddOn.Package('Models.List'):Class('ConfigurationDao', Dao)
 function ConfigurationDao:initialize(module, db)
 	Dao.initialize(self, module, db, Configuration)

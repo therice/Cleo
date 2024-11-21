@@ -1,6 +1,8 @@
 local _, AddOn = ...
 local Util = AddOn:GetLibrary('Util')
 local Attributes, Builder = AddOn.Package('UI.Util').Attributes, AddOn.Package('UI.Util').Builder
+--- @type LibLogging
+local Logging = AddOn:GetLibrary('Logging')
 
 local Entry = AddOn.Class('Entry', Attributes)
 function Entry:initialize() Attributes.initialize(self, {}) end
@@ -69,7 +71,6 @@ function DropDown.EntryBuilder()
     return EntryBuilder()
 end
 
-
 function DropDown.ToggleMenu(level, menu, cellFrame, xOffset, yOffset)
     MSA_ToggleDropDownMenu(level, nil, menu, cellFrame, Util.Objects.Default(xOffset, 0), Util.Objects.Default(yOffset, 0))
 end
@@ -112,4 +113,11 @@ function DropDown.RightClickMenu(predicate, entries, callback)
             end
         end
     end
+end
+
+function DropDown.HideCheckButton(level, index)
+    local buttonPrefix = format("MSA_DropDownList%dButton%d", level, index)
+    local check, uncheck = _G[buttonPrefix .. "Check"], _G[buttonPrefix .. "UnCheck"]
+    if check then check:Hide() end
+    if uncheck then uncheck:Hide() end
 end

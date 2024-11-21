@@ -49,7 +49,7 @@ function Metric:Snapshot()
 	return Snapshot(self)
 end
 
---- @class Models.Timer
+--- @class Models.Timer : Models.Metric
 local Timer = AddOn.Package('Models'):Class('Timer', Metric)
 --- @return Models.Timer
 function Timer:initialize(name)

@@ -1,4 +1,7 @@
-local AddOnName, AddOn, Util, Player, LootAllocateEntry, ItemRef, C
+local AddOnName
+--- @type AddOn
+local AddOn
+local Util, Player, LootAllocateEntry, ItemRef, C
 
 
 describe("LootAllocate", function()
@@ -46,9 +49,11 @@ describe("LootAllocate", function()
 			AddOn.handleLoot = true
 			AddOn.player = Player:Get("Player1")
 			AddOn.masterLooter = AddOn.player
-			AddOn:MasterLooterModule().db.profile.showLootResponses = true
-			AddOn:MasterLooterModule().db.profile.outOfRaid = false
-			AddOn:MasterLooterModule():UpdateDb()
+			local ml = AddOn:MasterLooterModule()
+			ml.db.profile.showLootResponses = true
+			ml.db.profile.outOfRaid = false
+			ml.db.profile.announceItemText = { channel = "group", text = "&s: &i Item Level (&l) Item Type (&t) Owner(&o) List(&ln)"}
+			ml:UpdateDb()
 			AddOn:CallModule("LootAllocate")
 			la = AddOn:LootAllocateModule()
 			WoWAPI_FireUpdate()
@@ -62,10 +67,12 @@ describe("LootAllocate", function()
 
 			local lt = {
 				{
-					ref = ItemRef('item:18832'):ForTransmit()
+					ref = ItemRef('item:18832'):ForTransmit(),
+					owner = "Edwin VanCleef"
 				},
 				{
-					ref = ItemRef('item:18833'):ForTransmit()
+					ref = ItemRef('item:18833'):ForTransmit(),
+					owner = "Jackburton"
 				}
 			}
 
@@ -140,13 +147,13 @@ describe("LootAllocate", function()
 		end)
 
 		it("handles Rolls", function()
-			AddOn:Send(C.group, C.Commands.Rolls, 1, {[AddOn.player:GetName()] = 56})
-			AddOn:Send(C.group, C.Commands.Rolls, 2, {[AddOn.player:GetName()] = 66})
+			AddOn:Send(C.group, C.Commands.Rolls, 1, {61, 58, 24, 63, 35, 78, 19, 12, 16, 4, 26, 10, 6, 71, 48, 67, 57, 8, 85, 51, 75, 65, 83, 49, 59, 7})
+			AddOn:Send(C.group, C.Commands.Rolls, 2, {29, 62, 61, 78, 18, 67, 57, 93, 73, 38, 74, 37, 81, 77, 64, 50, 54, 12, 39, 51, 65, 46, 59, 16, 24, 9})
 			WoWAPI_FireUpdate(GetTime() + 10)
 			local cr1 = la:GetCandidateResponse(1, AddOn.player:GetName())
 			local cr2 = la:GetCandidateResponse(2, AddOn.player:GetName())
-			assert.equal(cr1.roll, 56)
-			assert.equal(cr2.roll, 66)
+			assert.equal(cr1.roll, 61)
+			assert.equal(cr2.roll, 29)
 		end)
 
 		it("handles Roll", function()

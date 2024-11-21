@@ -86,7 +86,7 @@ function ML:LayoutAnnouncementsTab(tab)
 		UI:New('InlineGroup',content)
 			:Point("TOPLEFT", content, "TOPLEFT", 0, -5)
 			:Point("TOPRIGHT", content, "TOPRIGHT", -20, 0)
-			:SetHeight(250)
+			:SetHeight(260)
 			:Title(L["awards"])
 
 	content  = tab.awardsGroup.content
@@ -215,7 +215,7 @@ function ML:LayoutAnnouncementsTab(tab)
 		UI:New('InlineGroup',content)
 		  :Point("TOPLEFT", tab.itemsGroup, "BOTTOMLEFT", 0, -5)
 		  :Point("TOPRIGHT", tab.itemsGroup, "BOTTOMRIGHT", 0, 0)
-		  :SetHeight(250)
+		  :SetHeight(260)
 		  :Title(L["responses"])
 	content = tab.responsesGroup.content
 	tab.announceResponses =
@@ -364,7 +364,7 @@ function ML:LayoutAutoAwardsTab(tab)
 	tab.itemsAAAwardTo.Refresh = function(self)
 		local players = AddOn:Players(true, true, true)
 		-- see MasterLooter.defaults.autoAwardTo
-		players[L["nobody"]] = Player.Nobody
+		players[L["nobody"]] = Player.Nobody()
 		self:SetList(players)
 	end
 
@@ -525,6 +525,19 @@ function ML:LayoutGeneralTab(tab)
 				'autoStart'
 		)
 	tab.autoStartSession:SetSize(14, 14)
+
+	tab.awardLater =
+		UI:New('Checkbox', content, L["award_later"], false)
+			:Point("TOPLEFT", tab.autoStartSession, "TOPRIGHT", 150, 0)
+		    :TextSize(12)
+		    :Tooltip(L["award_later_description"])
+		    :Datasource(
+				module,
+				module.db.profile,
+				'awardLater'
+			)
+	tab.awardLater:SetSize(14, 14)
+
 	UI:New('DecorationLine', content, true, "BACKGROUND", -5)
 			:Point("TOPLEFT", tab.autoStartSession, "BOTTOMLEFT", 0, -10)
 			:Point("RIGHT", content, "RIGHT", -5, 0)
@@ -832,6 +845,12 @@ function ML:LayoutConfigSelectionPopup(frame, ...)
 						local configs = AddOn:ListsModule():GetService():Configurations(true)
 						Util.Tables.Filter(configs, function(c) return c:IsAdminOrOwner(AddOn.player) end)
 						self:SetList(configs)
+
+						if Util.Tables.Count(configs) > 0 then
+							local key = Util.Tables.Keys(configs)[1]
+							self:SetViaKey(key)
+							frame.data = configs[key]
+						end
 					end,
 					false
 				)

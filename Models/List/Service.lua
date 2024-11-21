@@ -77,6 +77,8 @@ function Service:UnregisterAllCallbacks(target)
 	end
 end
 
+--- @param active boolean should only active configurations be returned
+--- @param default boolean should only default configuration be returned
 --- @return table<string, Models.List.Configuration>
 function Service:Configurations(active, default)
 	return self.Configuration:GetAll(
@@ -274,6 +276,7 @@ function Service:LoadRefs(refs)
 	return loaded
 end
 
+--- @return Models.List.Configuration, Models.List.List
 function Service:LoadAuditRefs(auditRef)
 	local config, list = nil, nil
 	if Util.Objects.IsInstanceOf(auditRef, AddOn.Package('Models.Audit').TrafficRecord) then
@@ -410,7 +413,7 @@ end
 --- @return Models.List.List the list in it's current form as a result of mutations (players add, loot given, etc.)
 function ActiveConfiguration:GetActiveList(listId)
 	local list = self.listsActive[listId]
-	Logging:Trace("GetActiveList(%s) : %s", tostring(listId), Util.Objects.ToString(list))
+	Logging:Trace("GetActiveList(%s) : %s", tostring(listId), function() return Util.Objects.ToString(list and list:toTable() or {}) end)
 
 	if AddOn:IsMasterLooter() then
 		return list
@@ -613,8 +616,7 @@ end
 --- @param player string|Models.Player the player receiving the loot
 --- @param equipment string the equipment slot for loot (e.g. INVTYPE_HEAD)
 --- @param count number|nil the number of slots to drop the player on list as result of receiving item
---- @return string, number, number, number, number :
----     list id, active prio (before), active prio (after), original prio (before), orginal prio (after)
+--- @return string, number, number, number, number : list id, active prio (before), active prio (after), original prio (before), orginal prio (after)
 function ActiveConfiguration:OnLootEvent(player, equipment, count)
 	Logging:Debug("OnLootEvent(%s, %s, %s)", tostring(player), tostring(equipment), tostring(count))
 	-- resolve player through configuration as it has potential to be an ALT

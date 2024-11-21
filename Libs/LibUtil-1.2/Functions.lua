@@ -176,11 +176,12 @@ function Self.Debounce(fn, n, leading)
 end
 
 local traceback = (debug and debug.traceback) and debug.traceback or _G.debugstack
+local _xpcall = _G.xpcall_orig or _G.xpcall
 
 function Self.try(tryBlock)
     local status, err = true, nil
     if Util.Objects.IsFunction(tryBlock) then
-        status, err = xpcall(tryBlock, traceback)
+        status, err = _xpcall(tryBlock, traceback)
     end
 
     local finally = function(finallyBlock, hasCatchBlock)

@@ -57,6 +57,8 @@ do
     AddOn:AddLibrary('GuildStorage', 'LibGuildStorage-1.4')
     AddOn:AddLibrary('Encounter', 'LibEncounter-1.1')
     AddOn:AddLibrary('JSON', 'LibJSON-1.0')
+    AddOn:AddLibrary('Deformat', 'LibDeformat-3.0')
+    AddOn:AddLibrary('CandyBar', 'LibCandyBar-3.0')
 end
 
 AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
@@ -188,10 +190,20 @@ local ModulePrototype = {
 
 AddOn:SetDefaultModulePrototype(ModulePrototype)
 
+-- Tooltip frame for parsing item related details, such as checking time remaining for trade
+local tooltip = CreateFrame("GameTooltip", AddOnName .. "_TooltipParse", nil, "GameTooltipTemplate")
+tooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+tooltip:UnregisterAllEvents()
+
+AddOn.TooltipFrame = tooltip
+
 -- stuff below here is strictly for use during tests of addon
 -- not to be confused with addon test mode
 --@debug@
-local function _testNs(name) return  Util.Strings.Join('_', name, 'Testing')  end
+local function _testNs(name)
+    return  Util.Strings.Join('_', name, 'Testing')
+end
+
 local AddOnTestNs = _testNs(AddOnName)
 function AddOn._IsTestContext(name)
     if _G[AddOnTestNs] then

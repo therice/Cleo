@@ -141,7 +141,6 @@ function AddOn:OnEnable()
     -- purge expired player cache entries
     AddOn.Timer.Schedule(function() AddOn.Timer.After(2, function() Player.MaintainCache() end) end)
 
-
     local configSupplements, lpadSupplements = {}, {}
     for name, module in self:IterateModules() do
         Logging:Debug("OnEnable(%s) : Examining module (startup) '%s'", self:GetName(), name)
@@ -233,18 +232,26 @@ function AddOn:Test(itemCount, playerCount)
         end
     end
 
-
+    -- attempt to enable test mode and become master looter
+    -- if not successful, test mode will be disabled so return
+    if not self.Testing:EnableAndBecomeMasterLooter() then
+        return
+    end
+    -- below is the previous implementation, kept as reference for an interim amount of time
+    --[[
     self.mode:Enable(C.Modes.Test)
     _, self.masterLooter = self:GetMasterLooter()
 
     if not self:IsMasterLooter() then
         self:Print(L["error_test_as_non_leader"])
-        self.mode:Disable(C.Modes.Test)
+        self.Testing:Disable()
         return
     end
 
-    self:CallModule("MasterLooter")
     local ML = self:MasterLooterModule()
+    self:CallModule(ML:GetName())
     ML:NewMasterLooter(self.masterLooter)
-    ML:Test(items, Util.Tables.Count(players) > 0 and players or nil)
+    --]]
+
+    self:MasterLooterModule():Test(items, Util.Tables.Count(players) > 0 and players or nil)
 end

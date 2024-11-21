@@ -1,8 +1,10 @@
-local frames, FrameClass = {}, {}
+local frames , FrameClass = {}, {}
 FrameClass.__index = FrameClass
 
-local id = 0
+---@class Frame : VisibleRegion
+Frame = FrameClass
 
+local id = 0
 local function nextid()
     id = id + 1
     return id
@@ -167,10 +169,6 @@ function FrameClass:GetName()
 end
 
 function FrameClass:SetOwner(owner, anchor)
-
-end
-
-function FrameClass:SetHyperlink(link)
 
 end
 
@@ -394,11 +392,11 @@ function FrameClass:SetFixedFrameStrata(isFixed) end
 
 function FrameClass:SetFixedFrameLevel(isFixed) end
 
+--- @return Frame
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind
     frame.parent = parent
-
 
     if kind == 'Button' then
         frame.Click = function(self)  end
@@ -444,20 +442,27 @@ function CreateFrame(kind, name, parent, template)
         elseif template == "GameTooltipTemplate" then
             frame.AddDoubleLine = function() end
             frame.AddLine = function() end
+            frame.ClearLines = function() end
+            frame.SetHyperlink = function()  end
+            frame.SetBagItem = function()  end
         end
     end
 
     tinsert(frames, frame)
     frame.index = #frames
-    if name then _G[name] = frame end
+    if name then
+        _G[name] = frame
+    end
     --print('Created Frame : ' .. tostring(name))
     return frame
 end
 
+WorldFrame = CreateFrame('Frame', 'WorldFrame', {})
 UIParent = CreateFrame('Frame', 'UIParent', {})
-GameTooltip = CreateFrame('Frame', 'GameTooltip', UIParent)
+GameTooltip = CreateFrame('Frame', 'GameTooltip', UIParent, "GameTooltipTemplate")
 Minimap = CreateFrame('Frame', 'Minimap', UIParent)
 
+_G.WorldFrame = WorldFrame
 _G.UIParent = UIParent
 _G.GameTooltip = GameTooltip
 _G.Minimap = Minimap
@@ -530,6 +535,8 @@ function TextureClass:GetWidth() return 100 end
 
 function TextureClass:SetShown(...)  end
 
+function TextureClass:SetTextColor(...) end
+
 function CreateTexture(name, texture, texturePath, parent)
     local tex = TextureClass:New(name)
     tex.texture = texture
@@ -588,33 +595,33 @@ end
 function WoWAPI_FireEvent(event,...)
     for _, frame in pairs(frames) do
         if frame.events[event] then
+            --print('WoWAPI_FireEvent('.. tostring(frame:GetName() or "NO_NAME") .. ') : Event (' .. tostring(event) .. ') OnUpdate(' .. tostring(frame.scripts['OnEvent']) .. ')')
             if frame.scripts["OnEvent"] then
                 for i=1,select('#',...) do
                     _G["arg"..i] = select(i,...)
                 end
                 _G.event=event
-                frame.scripts["OnEvent"](frame,event,...)
+                frame.scripts["OnEvent"](frame, event, ...)
             end
         end
     end
 end
 
-function WoWAPI_FireUpdate(forceNow)
-    if forceNow then  _time = forceNow end
+function WoWAPI_FireUpdate(forcedTime)
+    if forcedTime then  _time = forcedTime end
     local now = GetTime()
     for _,frame in pairs(frames) do
-        --print('WoWAPI_FireUpdate('.. tostring(frame:GetName()) .. ') : isShow (' .. tostring(frame.isShow) .. ') OnUpdate(' .. tostring(frame.scripts.OnUpdate) .. ')')
+        --print('WoWAPI_FireUpdate('.. tostring(frame:GetName() or "NO_NAME") .. ') : isShow (' .. tostring(frame.isShow) .. ') OnUpdate(' .. tostring(frame.scripts.OnUpdate) .. ')')
         if frame.isShow and frame.scripts.OnUpdate then
             -- reset back in case we reset the clock for more testing
             if now == 0 then frame.timer = 0 end
             _G.arg1 = now - frame.timer
-            --print('OnUpdate(' .. tostring(frame:GetName()).. ') => ' .. tostring(now - frame.timer))
+            --print('OnUpdate(' .. tostring(frame:GetName()  or "NO_NAME").. ') => ' .. tostring(now - frame.timer))
             frame.scripts.OnUpdate(frame, now - frame.timer)
             frame.timer = now
         end
     end
 end
-
 
 function PanelTemplates_TabResize() end
 function PanelTemplates_DeselectTab() end
@@ -632,3 +639,5 @@ function EnumerateFrames(f)
 end
 
 function FauxScrollFrame_OnVerticalScroll(...) end
+
+function GetCursorPosition() end

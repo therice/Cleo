@@ -11,9 +11,10 @@ local ItemUtil = AddOn:GetLibrary("ItemUtil")
 local Player = AddOn.ImportPackage('Models').Player
 --- @type LibUtil.Bitfield.Bitfield
 local Bitfield = Util.Bitfield.Bitfield
+--- @type Models.Item.ContainerItem
+local ContainerItem = AddOn.Package('Models.Item').ContainerItem
 --- @type LibEncounter
 local LibEncounter = AddOn:GetLibrary("Encounter")
-
 
 --- @class Core.Mode
 local Mode = AddOn.Package('Core'):Class('Mode', Bitfield)
@@ -87,7 +88,6 @@ function AddOn:UnitName(u)
     return qualified
 end
 
-
 --- @return string the normalized realm name
 function AddOn:RealmName(u)
     local realm
@@ -142,7 +142,6 @@ end
 --- @return boolean true if two items are the same item, otherwise false
 function AddOn.ItemIsItem(item1, item2)
     --Logging:Debug("ItemIsItem(%s, %s)", item1, item2)
-
     if (not Util.Objects.IsString(item1)) or (not Util.Objects.IsString(item2)) then
         return item1 == item2
     end
@@ -153,12 +152,10 @@ function AddOn.ItemIsItem(item1, item2)
         return false
     end
 
-    item1 = ItemUtil:NeutralizeItem(item1)
-    item2 = ItemUtil:NeutralizeItem(item2)
-
-    return item1 ==  item2
+    return ItemUtil:NeutralizeItem(item1) == ItemUtil:NeutralizeItem(item2)
 end
 
+--- @return string
 function AddOn.TransmittableItemString(item)
     local transmit = ItemUtil:ItemLinkToItemString(item)
     transmit = ItemUtil:NeutralizeItem(transmit)
@@ -196,23 +193,88 @@ function AddOn.GetEquipmentLocation(name, alternateMapping)
     return location
 end
 
---[[
-function AddOn.EquipmentLocationToName(...)
-    local names = {}
-    for _, loc in Util.Objects.Each(...) do
-        Util.Tables.Push(names, C.EquipmentLocations[loc])
+local GUIDPreamble = "^%a+%-.*"
+
+--- @return boolean true if the passed string is a GUID, otherwise false
+function AddOn:IsGUID(guid)
+    if Util.Strings.IsEmpty(guid) then
+        return false
     end
-    return names
+
+    return guid:match(GUIDPreamble)
 end
---]]
+
+--- @return string the GUID type if passed string is a GUID, otherwise nil
+function AddOn:GetGUIDType(guid)
+    if AddOn:IsGUID(guid) then
+        return select(1, strsplit("-", guid))
+    end
+
+    return nil
+end
+
+local CreatureGUIDPattern = "Creature%-0%-%d+-%d+-%d+-%d+%-%x%x%x%x%x%x%x%x%x%x"
+local PetGUIDPattern= CreatureGUIDPattern:gsub("Creature", "Pet")
+local GameObjectGUIDPattern= CreatureGUIDPattern:gsub("Creature", "GameObject")
+local VehicleGUIDPattern= CreatureGUIDPattern:gsub("Creature", "Vehicle")
 
 --- https://wowpedia.fandom.com/wiki/GUID#Creature
 --- [unitType]-0-[serverID]-[instanceID]-[zoneUID]-[ID]-[spawnUID]
+--- E.G.
+---     Creature-0-1465-0-2105-448-000043F59F
+---     Creature-0-4379-34-1065-46382-00076A3954
+---     Creature-0-4379-34-1065-46383-00006A3954
 ---
+--- where unitType is one of "Creature", "Pet", "GameObject", "Vehicle"
+---
+function AddOn:IsCreatureGUID(guid)
+    if Util.Strings.IsEmpty(guid) then
+        return false
+    end
+
+    return guid:match(CreatureGUIDPattern) or guid:match(VehicleGUIDPattern) or
+            guid:match(GameObjectGUIDPattern) or guid:match(PetGUIDPattern)
+end
+
+--- @see AddOn.IsCreatureGUID
 --- @return number the id of the create for the passed guid or 0 if it cannot be extracted
 function AddOn:ExtractCreatureId(guid)
-    local id = select(6, strsplit("-", guid or ""))
-    return tonumber(id or 0)
+    if AddOn:IsCreatureGUID(guid) then
+        local id = select(6, strsplit("-", guid or ""))
+        return tonumber(id or 0)
+    end
+
+    return 0
+end
+
+function AddOn:GetCreatureName(guid)
+    local creatureId = self:ExtractCreatureId(guid)
+    return creatureId > 0 and LibEncounter:GetCreatureName(creatureId) or nil
+end
+
+local ItemGUIDPattern = "Item%-%d+%-0%-%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x"
+--- https://wowpedia.fandom.com/wiki/GUID#Item
+--- Item-[serverID]-0-[spawnUID]
+--- E.G.
+---     Item-4372-0-400000033D4D1C15
+---     Item-4372-0-400000032A8C4E67
+---     Item-4372-0-4000000342062402
+---     Item-4372-0-4000000342062C48
+---
+--- "Item%-(%d+)%-0%-([A-Z0-9]+)"
+---
+--- @return boolean true if a valid item GUID, otherwise false
+function AddOn:IsItemGUID(guid)
+    if Util.Strings.IsEmpty(guid) then
+        return false
+    end
+
+    return guid:match(ItemGUIDPattern)
+end
+
+--- @return boolean true if a valid player GUID, otherwise false
+function AddOn:IsPlayerGUID(guid)
+    return Player.IsPlayerGUID(guid)
 end
 
 local BlacklistedItemClasses = {
@@ -243,7 +305,6 @@ function AddOn:IsItemBlacklisted(item)
     return false
 end
 
-
 function AddOn.IsItemBindType(item, bindType)
     if not item then return false end
     return select(14, GetItemInfo(item)) == bindType
@@ -270,6 +331,7 @@ local function GetAverageItemLevel()
 end
 
 local enchanting_localized_name
+--- @return boolean, number, number
 function AddOn:GetPlayerInfo()
     Logging:Trace("GetPlayerInfo()")
     if not enchanting_localized_name then
@@ -289,7 +351,6 @@ function AddOn:GetPlayerInfo()
     local avgItemLevel = GetAverageItemLevel()
     return enchanter, enchanterLvl, avgItemLevel
 end
-
 
 function AddOn:UpdatePlayerGear(startSlot, endSlot)
     startSlot = startSlot or INVSLOT_FIRST_EQUIPPED
@@ -425,6 +486,7 @@ local GuildRanks = Util.Memoize.Memoize(
         return ranks
     end
 )
+
 function AddOn.GetGuildRanks()
     return GuildRanks()
 end
@@ -436,6 +498,8 @@ end
 local EncounterCreatures = Util.Memoize.Memoize(
     function(encounterId)
         if encounterId then
+            -- the encounter has an overridden name that is the commonly used in reference
+            -- e.g. Omnitron Defense System
             local encounterName = LibEncounter:GetEncounterName(encounterId)
             if Util.Strings.IsSet(encounterName) then
                 return encounterName
@@ -470,13 +534,299 @@ local EncounterCreatures = Util.Memoize.Memoize(
     end
 )
 
-
 function AddOn.GetEncounterCreatures(...)
     return EncounterCreatures(...)
 end
 
+function AddOn:PrintWarning(msg)
+    AddOn:Print(format(L["warning_x"], msg))
+end
+
 function AddOn:PrintError(msg)
     AddOn:Print(format(L["error_x"], msg))
+end
+
+---
+--- Based upon which usage/implementation of GetContainerItemInfo which is supported, normalizes the return
+--- type to be unpacked attributes
+---
+--- @see AddOn.C_Container
+--- @see GetContainerItemInfo
+--- @see C_Container.GetContainerItemInfo
+function AddOn:GetContainerItemInfo(bag, slot)
+    local result = { AddOn.C_Container.GetContainerItemInfo(bag, slot) }
+    if Util.Objects.IsTable(result[1])  then
+        local info = result[1]
+        return info.iconFileID, info.stackCount, info.isLocked, info.quality, info.isReadable, info.hasLoot,
+                info.hyperlink, info.isFiltered, info.hasNoValue, info.itemID, info.isBound
+
+    else
+        return unpack(result)
+    end
+end
+
+local TooltipFrameNameFormat = AddOn.TooltipFrame:GetName().."TextLeft%d"
+local TradeTimeRemainingPattern = BIND_TRADE_TIME_REMAINING:gsub("%%s", ".*")
+
+-- establish tables of localize time strings, with mapping to time in seconds
+-- used for parsing remaining trade time from item tooltips
+local TimeFormats = {
+    [INT_SPELL_DURATION_HOURS] = 60 * 60,
+    [INT_SPELL_DURATION_MIN]   = 60,
+    [INT_SPELL_DURATION_SEC]   = 1
+}
+local TimeTable = {}
+
+for pattern, coefficient in pairs(TimeFormats) do
+    local prefix = ""
+
+    pattern = pattern:gsub("%%d(%s?)", function(s) prefix = "(%d+)" .. s; return "" end)
+    pattern = pattern:gsub("|4", ""):gsub("[:;]", " ")
+
+    for s in pattern:gmatch("(%S+)") do
+        TimeTable[prefix .. s] = coefficient
+    end
+end
+
+---
+--- If item is not bound to player and has no associated trade time (e.g. BOE, consumables, etc.), C.Item.NotBoundTradeTime is returned
+--- If item is not bound and it is tradeable (e.g. BOP looted in last 2 hours), the remaining time to trade in seconds is returned
+--- If item is bound or trade time has expired (e.g. Already equipped BOP item, BOP item looted longer than 2 hours ago), 0 is returned
+---
+--- @param tooltip table the GameTooltip to parse
+--- @return number remaining time (in seconds) for item in bag at slot
+function AddOn:GetTooltipItemTradeTimeRemaining(tooltip)
+    local text, isBound = nil, false
+    for i = 1, tooltip:NumLines() or 0 do
+        local line = getglobal(TooltipFrameNameFormat:format(i))
+        if line and line.GetText then
+            text = line:GetText() or ""
+            --Logging:Trace("GetTooltipItemTradeTimeRemaining() : Text=%s", text)
+            if Util.Objects.In(text, ITEM_SOULBOUND, ITEM_ACCOUNTBOUND, ITEM_BNETACCOUNTBOUND) then
+                isBound = true
+            end
+
+            if text:find(TradeTimeRemainingPattern) then
+                break
+            end
+
+            text = nil
+        end
+    end
+
+    if text then
+        local timeRemainingInSecs = 0
+        for pattern, coefficient in pairs(TimeTable) do
+            local timeRemainingSegment = text:match(pattern)
+            if timeRemainingSegment then
+                timeRemainingInSecs = timeRemainingInSecs + (timeRemainingSegment * coefficient)
+            end
+        end
+
+        return timeRemainingInSecs
+    end
+
+    if not isBound then
+        return C.Item.NotBoundTradeTime
+    end
+
+    return 0
+end
+
+---
+--- in test mode, will return a random amount of remaining time
+--- when specific items are specified for testing , will return a random amount of remaining time for those items
+---
+--- @see AddOn.GetTooltipItemTradeTimeRemaining
+--- @param bag number bag in which item is located
+--- @param slot number slot within the bag
+--- @return number remaining time (in seconds) for item in bag at slot
+function AddOn:GetInventoryItemTradeTimeRemaining(bag, slot)
+    Logging:Trace("GetInventoryItemTradeTimeRemaining(%d, %d)", bag, slot)
+    local tooltip = AddOn.TooltipFrame
+    tooltip:ClearLines()
+    tooltip:SetBagItem(bag, slot)
+
+    local timeRemainingInSecs = 0
+    Util.Functions.try(
+        function()
+            timeRemainingInSecs = AddOn:GetTooltipItemTradeTimeRemaining(tooltip)
+        end
+    ).finally(
+        function()
+            tooltip:ClearLines()
+        end
+    )
+
+    -- in test mode, return a random amount
+    if self:TestModeEnabled() then
+        local quality = select(4, self:GetContainerItemInfo(bag, slot))
+        -- only do for epic and legendary items
+        if Util.Objects.In(quality, 4, 5) then
+            timeRemainingInSecs = random(1800, 7200)
+        end
+    end
+
+    -- if specific items are being tested, return a random amount
+    if self.Testing.LootLedger.TradeTimes:HasItems() then
+        local itemId = select(10, self:GetContainerItemInfo(bag, slot))
+        itemId = tonumber(itemId)
+
+        if self.Testing.LootLedger.TradeTimes:ContainsItem(itemId) then
+            timeRemainingInSecs = random(1800, 7200)
+        end
+    end
+
+    Logging:Trace("GetInventoryItemTradeTimeRemaining(%d, %d) : %s seconds", bag, slot, tostring(timeRemainingInSecs))
+
+    return timeRemainingInSecs
+end
+
+---
+--- Executes passed function for each item in bags. Processing can be preempted by returning false from function
+---
+--- @param fn function<ItemLocationMixin, number, number> three arguments, 1st is an ItemLocationMixin, 2nd is the bag, 3rd is the slot within bag. returns boolean indicating if processing should continue, a nil return value is interpreted as true
+function AddOn:ForEachItemInBags(fn)
+    Logging:Trace("ForEachItemInBags(%d,%d)", BACKPACK_CONTAINER, NUM_BAG_SLOTS)
+
+    local finished = false
+    for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
+        --Logging:Trace("ForEachItemInBags(bag=%d)", bag)
+        for slot = 1, self.C_Container.GetContainerNumSlots(bag) do
+            --Logging:Trace("ForEachItemInBags(bag=%d,slot=%d)", bag, slot)
+            local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
+            if itemLocation and C_Item.DoesItemExist(itemLocation) then
+                finished = fn(itemLocation, bag, slot) == false
+            end
+
+            if finished then
+                break
+            end
+        end
+
+        if finished then
+            return
+        end
+    end
+end
+
+---
+--- Finds all the bag and slot locations, with item guid, for a given item in format of
+---     {item = link, bag = bag, slot = slot, guid = guid}
+---
+--- skipSoulBoundCheck
+---     - when false, trade times are evaluated as an additional predicate. if located and not soul bound, it WILL be included.
+---       if located and soul bound (no remaining trade time), it  WILL NOT be included
+---     - when true, an item being soul bound (no trade time remaining) is ignored as a predicate for inclusion of located items in results
+---
+--- @param item string|number item link, item string, or item id
+--- @param skipSoulBoundCheck boolean should check for soul bound items be ignored, defaults to false
+--- @return table<Models.Item.ContainerItem>
+function AddOn:FindItemsInBags(item, skipSoulBoundCheck)
+    skipSoulBoundCheck = (skipSoulBoundCheck == true)
+    Logging:Trace("FindItemsInBags(%s,%s)", tostring(item), tostring(skipSoulBoundCheck))
+
+    local isItemLink = ItemUtil:ContainsItemString(item)
+    local itemId = isItemLink and ItemUtil:ItemLinkToId(item) or tonumber(item)
+    local results = {}
+
+    self:ForEachItemInBags(
+        function(location, bag, slot)
+            local bagItemId, bagItemLink = C_Item.GetItemID(location), C_Item.GetItemLink(location)
+            -- local _, _, _, _, _, _, bagItemLink, _, _, bagItemId = self:GetContainerItemInfo(bag, slot)
+            Logging:Trace("FindItemsInBags(%d,%d) : %s / %s", tostring(bag), tostring(slot), tostring(bagItemId), tostring(bagItemLink))
+            if (
+                -- isn't the item we are looking for (id)
+                (bagItemId ~= itemId) or
+                -- isn't the item we are looking for (link)
+                -- may not want to use ItemIsItem here and compare item strings directly
+                (isItemLink and not self.ItemIsItem(item, bagItemLink)) or
+                -- item is no longer tradeable
+                (not skipSoulBoundCheck and self:GetInventoryItemTradeTimeRemaining(bag, slot) <= 0)
+            ) then
+                Logging:Trace("FindItemsInBags(%s,%s) : Skipping",  tostring(bag), tostring(slot))
+                return true
+            end
+
+            Logging:Trace("FindItemsInBags(%s,%s) : Found",  tostring(bag), tostring(slot))
+            Util.Tables.Push(results, ContainerItem(bagItemLink, bag, slot, C_Item.GetItemGUID(location)))
+            return true
+        end
+    )
+
+    return results
+end
+
+---
+--- Finds the first bag and slot, with item guid, for a given item in format of
+---     {bag = bag, slot = slot, guid = guid}
+---
+--- @see AddOn.FindItemsInBags
+--- @param item string|number item link, item string, or item id
+--- @param skipSoulBoundCheck boolean should check for soul bound items be ignored, defaults to false
+--- @return Models.Item.ContainerItem
+function AddOn:FindItemInBags(item, skipSoulBoundCheck)
+    Logging:Trace("FindItemInBags(%s,%s)", tostring(item), tostring(skipSoulBoundCheck))
+    local results = self:FindItemsInBags(item, skipSoulBoundCheck)
+    --Logging:Trace("FindItemInBags(%s,%s) : %s", tostring(item), tostring(skipSoulBoundCheck), Util.Objects.ToString(results))
+    return #results >= 1 and results[1] or {}
+end
+
+--- @return table<Models.Item.ContainerItem>
+function AddOn:FindItemsInBagsWithTradeTimeRemaining(predicate)
+    predicate = Util.Objects.IsFunction(predicate) and predicate or Util.Functions.True
+    local results = {}
+
+    self:ForEachItemInBags(
+        function(location, bag, slot)
+            if predicate(location, bag, slot) then
+                local tradeTimeRemaining = self:GetInventoryItemTradeTimeRemaining(bag, slot)
+                if tradeTimeRemaining > 0 then
+                    Util.Tables.Push(results, ContainerItem(C_Item.GetItemLink(location), bag, slot, C_Item.GetItemGUID(location)))
+                end
+            end
+        end
+    )
+
+    return results
+end
+
+--- @return number, number the bag and slot for passed item GUID, or nil if it cannot be located
+function AddOn:GetBagAndSlotByGUID(itemGuid)
+    local itemBag, itemSlot
+    self:ForEachItemInBags(
+        function(location, bag, slot)
+            if C_Item.GetItemGUID(location) == itemGuid then
+                itemBag, itemSlot = bag, slot
+                return false
+            end
+        end
+    )
+
+    return itemBag, itemSlot
+end
+
+function AddOn:SplitItemLinks(links)
+    local result = {}
+
+    for _, connected in ipairs(links) do
+        local startPos, endPos = 1, nil
+        while (startPos) do
+            if connected:sub(1, 2) == "|c" then
+                startPos, endPos = connected:find("|c.-|r", startPos)
+            elseif connected:sub(1, 2) == "|H" then
+                startPos, endPos = connected:find("|H.-|h.-|h", startPos)
+            else
+                startPos = nil
+            end
+            if startPos then
+                Util.Tables.Push(result, connected:sub(startPos, endPos))
+                startPos = startPos + 1
+            end
+        end
+    end
+
+    return result
 end
 
 local Alarm = AddOn.Class('Alarm')

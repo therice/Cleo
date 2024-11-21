@@ -93,9 +93,9 @@ end
 
 --- target, session, response, extra (k/v pairs)
 --- @param target string|Models.Player
---- @param session number
---- @param response string
---- @param extra table
+--- @param session number the session associated with the award
+--- @param response string the candidate's (player) response key/id (see Constants.Responses and ML DB's responses
+--- @param extra table any additional data to send along with response
 function AddOn:SendResponse(target, session, response, extra)
     assert(Util.Objects.IsSet(target), "target was not provided")
     assert(Util.Objects.IsNumber(session), "session was not provided")

@@ -16,7 +16,7 @@ local LibEncounter = AddOn:GetLibrary("Encounter")
 --- @type Models.Audit.Audit
 local Audit = AuditPkg.Audit
 
---- @class Models.Audit.RaidRosterRecord
+--- @class Models.Audit.RaidRosterRecord : Models.Audit.Audit
 local RaidRosterRecord = AuditPkg:Class('RaidRosterRecord', Audit)
 
 function RaidRosterRecord:initialize(instant)
@@ -34,7 +34,6 @@ function RaidRosterRecord:initialize(instant)
 	-- e.g. {11, 'Player13'}
 	self.actor = nil
 end
-
 
 function RaidRosterRecord:GetInstanceName()
 	return LibEncounter:GetMapName(self.instanceId) or "N/A"

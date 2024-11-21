@@ -72,7 +72,7 @@ local function ItemQuery(item, callback)
 	Logging:Debug("ItemQuery(%s)", tostring(item))
 
 	local function Query()
-		local name, link, rarity, ilvl, _, type, subType, _, equipLoc, texture, _, typeId, subTypeId, bindType  =
+		local name, link, rarity, ilvl, _, type, subType, _, equipLoc, texture, _, typeId, subTypeId, bindType =
 			GetItemInfo(item)
 
 		if name then
@@ -175,14 +175,13 @@ function Item:GetEquipmentLocation()
 			if items and Util.Tables.Count(items) > 0 then
 				--Logging:Debug("GetEquipmentLocation(%s) : using token based equipment location", tostring(self.equipLoc))
 				-- they will all have the same equipment location, just grab the 1st one
-				local _, _, _, equipLoc  = GetItemInfoInstant(items[1])
+				local _, _, _, equipLoc = GetItemInfoInstant(items[1])
 				return equipLoc
 			end
 		end
 	end
 
 	return nil
-
 end
 
 --- @return string
@@ -232,6 +231,7 @@ end
 -- itemName : string - Name of an item owned by the player at some point during this play session, e.g. "Nordrassil Wrath-Kilt".
 -- itemString : string - A fragment of the itemString for the item, e.g. "item:30234:0:0:0:0:0:0:0" or "item:30234".
 -- itemLink : string - The full itemLink.
+--- @return Models.Item.Item can return nil if item information is not available, in that case use the callback
 function Item.Get(item, callback)
 	-- cannot simply use the itemId as a number, as links could represent stuff
 	-- that the base item id wouldn't capture (e.g. sockets eventually)
@@ -291,7 +291,9 @@ end
 --- followed by embedding the referenced item's attributes into the
 --- value returned by the function
 ---
---- @param into function
+--- @param into function function to invoke, which returns an object into which the ref is embedded (attributes coped into)
+--- @param ... any arguments to pass to function
+--- @return any the return value from function
 function ItemRef:Embed(into, ...)
 	local item = self:GetItem()
 	local embed = into(...)
@@ -321,13 +323,13 @@ function ItemRef.Resolve(i)
 end
 
 --[[
-|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:0:60:0:0:0:0|h[Brutality Blade]|h|r ->
-|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:::0:0:0:0|h[Brutality Blade]|h|r ->
-item:18832:2564:0:0:0:0:0:::0:0:0:0 ->
-18832:2564:0:0:0:0:0:::0:0:0:0
+|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:0:60:0:0:0:0|h[Brutality Blade]|h|r -> item:18832:2564:0:0:0:0:0:::0:0:0:0
+|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:::0:0:0:0|h[Brutality Blade]|h|r -> 18832:2564:0:0:0:0:0:::0:0:0:0
+
 --]]
--- not sure we need the actual link here for transmission, but it could contain
--- "stuff" that will eventually be relevant to presenting items to group members
+--- not sure we need the actual link here for transmission, but it could contain
+--- "stuff" that will eventually be relevant to presenting items to group members
+--- @return string
 function ItemRef:ForTransmit()
 	Logging:Trace("ForTransmit(%s)", tostring(self.item))
 	local transmit
@@ -350,4 +352,29 @@ end
 
 function ItemRef.FromTransmit(ref)
 	return ItemRef(AddOn.DeSanitizeItemString(ref))
+end
+
+---
+--- An item, which is located in a player's bags
+---
+--- @class Models.Item.ContainerItem : Models.Item.ItemRef
+--- @see Models.Item.ItemRef
+--- @field bag number the state of the bagged item
+--- @field slot number the state of the bagged item
+--- @field guid string the item GUID, which uniquely represents the item in bags
+local ContainerItem = AddOn.Package('Models.Item'):Class('ContainerItem', ItemRef)
+function ContainerItem:initialize(item, bag, slot, guid)
+	ItemRef.initialize(self, item)
+	self.bag = bag
+	self.slot = slot
+	self.guid = guid
+end
+
+--- @see AddOn.GetInventoryItemTradeTimeRemaining
+function ContainerItem:TradeTimeRemaining()
+	return AddOn:GetInventoryItemTradeTimeRemaining(self.bag, self.slot)
+end
+
+function ContainerItem:tostring()
+	return Util.Objects.ToString(self:toTable())
 end

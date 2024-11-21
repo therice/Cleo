@@ -16,7 +16,8 @@ end
 
 function SlashCommandsInternal:Help()
     print(format(L["chat_version"], tostring(AddOn.version)))
-    for _, cmd in pairs(self.commands) do
+    -- display the commands in ascending alphabetical order
+    for _, cmd in Util.Tables.OrderedPairs(self.commands) do
         if not cmd.hidden or AddOn:DevModeEnabled() then
             print("|cff20a200", cmd.cmd, "|r:", cmd.desc or "")
         end
@@ -114,9 +115,10 @@ end
 
 function SlashCommands:BulkSubscribe(...)
     assert(
-            (...) and Util.Tables.CountFn(Util.Tables.New(...), function(v) return Util.Objects.IsTable(v) and 1 or 0 end) == select("#", ...),
-            "each 'cmd' parameter must be a table"
+        (...) and Util.Tables.CountFn(Util.Tables.New(...), function(v) return Util.Objects.IsTable(v) and 1 or 0 end) == select("#", ...),
+        "each 'cmd' parameter must be a table"
     )
+
     local subs, idx = {}, 1
     for i=1, select("#", ...) do
         local command = select(i, ...)

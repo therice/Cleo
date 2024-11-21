@@ -7,6 +7,8 @@ local Logging =  AddOn:GetLibrary("Logging")
 local Util = AddOn:GetLibrary("Util")
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
+--- @type LibWindow
+local Window = AddOn:GetLibrary('Window')
 
 local UIPackage, UIUtilPackage = AddOn.Package('UI'), AddOn.Package('UI.Util')
 -- @type UI.Native
@@ -206,15 +208,21 @@ function U:HideTooltip()
     GameTooltip:Hide()
 end
 
-function U.Link(at, data, ...)
-    if not data then return end
-    local x = at:GetRight()
-    if x >= (GetScreenWidth() / 2) then
-        GameTooltip:SetOwner(at, "ANCHOR_LEFT")
-    else
-        GameTooltip:SetOwner(at, "ANCHOR_RIGHT")
+function U.Link(link, at, anchor)
+    if not link then return end
+    if not at then at = UIParent end
+
+    if not anchor then
+        local x = at:GetRight()
+        if x >= (GetScreenWidth() / 2) then
+            anchor = "ANCHOR_LEFT"
+        else
+            anchor = "ANCHOR_RIGHT"
+        end
     end
-    GameTooltip:SetHyperlink(data,...)
+
+    GameTooltip:SetOwner(at, anchor)
+    GameTooltip:SetHyperlink(link)
     GameTooltip:Show()
 end
 
@@ -282,7 +290,7 @@ function U.GetClassColor(class)
     local color = class and RAID_CLASS_COLORS[class:upper()] or nil
     -- if class not found, return epic color.
     if not color then
-        return {r=1,g=1,b=1,a=1}
+        return { r = 1, g = 1, b = 1, a = 1 }
     end
     color.a = 1.0
     return color
@@ -337,7 +345,7 @@ function U.ClassIconFn()
             frame:SetNormalTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
             frame:GetNormalTexture():SetTexCoord(unpack(coords))
         else
-            frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark.png")
+            frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark")
         end
     end
 end
@@ -400,3 +408,111 @@ function U.GetActionTypeColor(actionTYpe)
     return Colors.ActionTypes[actionTYpe]
 end
 
+local _MinimizePrototype = {
+    minimized = false,
+    IsMinimized = function(f)
+        return f.minimized
+    end,
+    Minimize = function(f)
+        if not f.minimized then
+            if f.content then f.content:Hide() else f:Hide() end
+            if f.border then f.border:Hide() end
+            if f.HideShadow then f:HideShadow() end
+            f.minimized = true
+        end
+    end,
+    Maximize = function(f)
+        if f.minimized then
+            if f.content then f.content:Show() else f:Show() end
+            if f.border then f.border:Show() end
+            if f.ShowShadow then f:ShowShadow() end
+            f.minimized = false
+        end
+    end,
+    OnMouseUp = function(f)
+        if f.lastClick and GetTime() - f.lastClick <= 0.5 then
+            f.lastClick = nil
+            if f:IsMinimized() then
+                f:Maximize()
+            else
+                f:Minimize()
+            end
+        else
+            f.lastClick = GetTime()
+        end
+    end
+}
+
+function U.EmbedMinimizeSupport(f)
+    for field, obj in pairs(_MinimizePrototype) do
+        f[field] = obj
+    end
+end
+
+function U.EmbedExtras(f, storageFn)
+    if f and Util.Objects.IsFunction(storageFn) then
+        f.GetStorage = storageFn
+
+        local storage = f:GetStorage()
+        f:SetScale(storage.scale)
+
+        Window:Embed(f)
+
+        f:RegisterConfig(storage)
+        f:RestorePosition()
+        f:RestoreDimensions()
+        f:MakeDraggable()
+    end
+end
+
+function U.AddResizeWidget(f)
+    if f then
+        local resize = CreateFrame("Button", f:GetName() .. "_Resize", f)
+        resize:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -11, 10)
+        resize:SetSize(16, 16)
+
+        local normalTexture = resize:CreateTexture()
+        normalTexture:SetTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Down")
+        normalTexture:ClearAllPoints()
+        normalTexture:SetPoint("CENTER", resize, "CENTER", 0, 0)
+        normalTexture:SetSize(16, 16)
+        resize.normalTexture = normalTexture
+        resize:SetNormalTexture(normalTexture)
+
+        local highlightTexture = resize:CreateTexture()
+        highlightTexture:SetTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Highlight")
+        highlightTexture:ClearAllPoints()
+        highlightTexture:SetPoint("CENTER", resize, "CENTER", 0, 0)
+        highlightTexture:SetSize(16, 16)
+        resize.highlightTexture = highlightTexture
+        resize:SetHighlightTexture(highlightTexture)
+
+        local pushedTexture = resize:CreateTexture()
+        pushedTexture:SetTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Pushed")
+        pushedTexture:ClearAllPoints()
+        pushedTexture:SetPoint("CENTER", resize, "CENTER", 0, 0)
+        pushedTexture:SetSize(16, 16)
+        resize.pushedTexture = pushedTexture
+        resize:SetPushedTexture(pushedTexture)
+        resize:SetHitRectInsets(-6, -6, -6, -6);
+
+        resize:SetScript("OnMouseDown", function() f:StartSizing("BOTTOMRIGHT") end)
+        resize:SetScript("OnMouseUp", function() f:StopMovingOrSizing() end)
+
+        f.resize = resize
+    end
+end
+
+function U.IsMouseOnFrame(f)
+    local x, y = GetCursorPosition()
+    local scale = f:GetEffectiveScale()
+    x, y = x / scale,  y / scale
+
+    local left, right, bottom, top = f:GetLeft(), f:GetRight(), f:GetBottom(), f:GetTop()
+
+    if (not left or not right or not bottom or not top) then
+        return false;
+    end
+
+    return ((x >= left) and (x <= right) and (y >= bottom) and (y <= top))
+end

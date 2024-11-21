@@ -419,6 +419,10 @@ function lib:ContainsItemString(item)
     return strmatch(item, "item[%-?%d:]+") and true or false
 end
 
+function lib:ItemLinkToPrintable(link)
+    return gsub(link or "", "\124", "\124\124")
+end
+
 -- https://wowpedia.fandom.com/wiki/ItemLink
 --  E.G. When run by character of level 2, as of Wow Version 4.4.0 (Cataclysm) there are 18 indices
 --

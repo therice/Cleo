@@ -85,15 +85,20 @@ end
 local function _includeMixin(aClass, mixin)
     assert(type(mixin) == 'table', "mixin must be a table")
 
-    for name,method in pairs(mixin) do
-        if name ~= "included" and name ~= "static" then aClass[name] = method end
+    for name, method in pairs(mixin) do
+        if name ~= "included" and name ~= "static" then
+            aClass[name] = method
+        end
     end
 
-    for name,method in pairs(mixin.static or {}) do
+    for name, method in pairs(mixin.static or {}) do
         aClass.static[name] = method
     end
 
-    if type(mixin.included)=="function" then mixin:included(aClass) end
+    if type(mixin.included) == "function" then
+        mixin:included(aClass)
+    end
+
     return aClass
 end
 

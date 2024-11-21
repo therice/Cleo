@@ -162,6 +162,7 @@ function lib.SavePosition(frame)
 	setStorage(frame, "point", point)
 	setStorage(frame, "scale", s)
 
+	--print(tostring(x) .. "," .. tostring(y) .. " - " .. tostring(point) .. " / " .. tostring(s))
 	frame:ClearAllPoints()
 	frame:SetPoint(point, frame:GetParent(), point, x/s, y/s);
 end
@@ -210,8 +211,21 @@ function lib.SetScale(frame, scale)
 	lib.RestorePosition(frame)
 end
 
+mixins["SaveDimensions"]=true
+function lib.SaveDimensions(frame)
+	setStorage(frame, "width", frame:GetWidth())
+	setStorage(frame, "height", frame:GetHeight())
+end
 
-
+mixins["RestoreDimensions"]=true
+function lib.RestoreDimensions(frame)
+	local width = getStorage(frame, "width")
+	local height = getStorage(frame, "height")
+	if width and height and frame.SetWidth and frame.SetHeight then
+		frame:SetWidth(width)
+		frame:SetHeight(height)
+	end
+end
 ---------------------------------------------------------
 -- DRAG SUPPORT
 ---------------------------------------------------------

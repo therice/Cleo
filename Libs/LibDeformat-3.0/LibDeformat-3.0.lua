@@ -5,7 +5,7 @@ Website: http://www.wowace.com/projects/libdeformat-3-0/
 Description: A library to convert a post-formatted string back to its original arguments given its format string.
 License: MIT
 ]]
-
+--- @class LibDeformat
 local LibDeformat = LibStub:NewLibrary("LibDeformat-3.0", 1)
 
 if not LibDeformat then

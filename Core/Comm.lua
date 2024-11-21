@@ -5,6 +5,7 @@ local C = AddOn.Constants
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
+--- @type AceComm
 local AceComm = AddOn:GetLibrary('AceComm')
 --- @type LibRx
 local Rx = AddOn:GetLibrary("Rx")
@@ -155,7 +156,9 @@ function Comms:ReceiveComm(prefix, msg, dist, sender)
     local success, command, data = self:ProcessReceived(msg)
     if success then
         self.metricsFired:Timer(Util.Strings.Join(':', prefix, command or "")):Time(
-            function(...) self:FireCommand(prefix, dist, senderName, command, data) end
+            function(...)
+                self:FireCommand(prefix, dist, senderName, command, data)
+            end
         )
     end
 end

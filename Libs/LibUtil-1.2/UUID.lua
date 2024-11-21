@@ -48,6 +48,7 @@ local function padbits(num,bits)
 	return num
 end
 
+--- @return string
 function Self.UUID()
 	local time_low = time()
 	local time_mid = _rnd(0, 65535)

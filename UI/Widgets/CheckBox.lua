@@ -22,15 +22,14 @@ end
 local CheckedColor, DisabledColor = C.Colors.Marigold, C.Colors.ItemPoor
 
 function Checkbox:Create()
-
 	local cb = CreateFrame("CheckButton", self.name, self.parent)
 	cb:SetSize(20, 20)
 
-	cb.text = cb:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	cb.text:SetPoint("TOPLEFT", cb, "TOPRIGHT", 4, 0)
-	cb.text:SetPoint("BOTTOMLEFT", cb, "BOTTOMRIGHT", 4, 0)
-	cb.text:SetJustifyV("MIDDLE")
-	cb:SetFontString(cb.text)
+	cb.textFont = cb:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	cb.textFont:SetPoint("TOPLEFT", cb, "TOPRIGHT", 4, 0)
+	cb.textFont:SetPoint("BOTTOMLEFT", cb, "BOTTOMRIGHT", 4, 0)
+	cb.textFont:SetJustifyV("MIDDLE")
+	cb:SetFontString(cb.textFont)
 
 	BaseWidget.Border(cb, 0.24, 0.25, 0.3, 1, 1)
 
@@ -65,7 +64,7 @@ function Checkbox:Create()
 	cb.HighlightTexture:SetPoint("BOTTOMRIGHT")
 	cb:SetHighlightTexture(cb.HighlightTexture)
 
-	cb.text:SetText(self.text)
+	cb.textFont:SetText(self.text)
 	cb:SetChecked(self.state)
 	cb:SetScript("OnEnter", Checkbox.OnEnter)
 	cb:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
@@ -103,7 +102,7 @@ function Checkbox.OnDatasourceConfigured(self)
 end
 
 function Checkbox.SetText(self, text)
-	self.text:SetText(text or "")
+	self.textFont:SetText(text or "")
 	return self
 end
 
@@ -113,7 +112,7 @@ function Checkbox.Tooltip(self, text)
 end
 
 function Checkbox.OnEnter(self)
-	local tooltipTitle, tooltipText = self.text:GetText(), self.tooltipText
+	local tooltipTitle, tooltipText = self.textFont:GetText(), self.tooltipText
 	if Util.Strings.IsEmpty(tooltipTitle) or not tooltipTitle then
 		tooltipTitle = tooltipText
 		tooltipText = nil
@@ -122,13 +121,13 @@ function Checkbox.OnEnter(self)
 end
 
 function Checkbox.Left(self, x)
-	self.text:ClearAllPoints()
-	self.text:SetPoint("RIGHT",self,"LEFT", x and x * (-1) or -2, 0)
+	self.textFont:ClearAllPoints()
+	self.textFont:SetPoint("RIGHT",self,"LEFT", x and x * (-1) or -2, 0)
 	return self
 end
 
 function Checkbox.TextSize(self, size)
-	self.text:SetFont(self.text:GetFont(),size)
+	self.textFont:SetFont(self.textFont:GetFont(),size)
 	return self
 end
 
@@ -147,11 +146,11 @@ function Checkbox.ColorState(self, isBorderInsteadText)
 		self.BorderBottom:SetColorTexture(cR, cG, cB, 1)
 		self.BorderRight:SetColorTexture(cR, cG, cB, 1)
 	elseif self.disabled or not self:IsEnabled() then
-		self.text:SetTextColor(.5, .5, .5, 1)
+		self.textFont:SetTextColor(.5, .5, .5, 1)
 	elseif self:GetChecked() then
-		self.text:SetTextColor(.3, 1, .3, 1)
+		self.textFont:SetTextColor(.3, 1, .3, 1)
 	else
-		self.text:SetTextColor(1, .4, .4, 1)
+		self.textFont:SetTextColor(1, .4, .4, 1)
 	end
 	return self
 end

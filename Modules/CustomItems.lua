@@ -67,6 +67,8 @@ end
 
 function CustomItems:ConfigTableChanged(msg)
 	Logging:Trace("ConfigTableChanged() : '%s", Util.Objects.ToString(msg))
+	-- msg will be a table of arguments to count of each
+	-- however, bucketed messages only pass along arg1 that was passed into the associated handler
 	for serializedMsg, _ in pairs(msg) do
 		local success, module, _ = AddOn:Deserialize(serializedMsg)
 		if success and Util.Strings.Equal(self:GetName(), module) then

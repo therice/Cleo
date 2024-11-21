@@ -8,7 +8,7 @@ local os_time, os_date = time, date
 
 --- @class Models.Date
 local Date = AddOn.Package('Models'):Class('Date')
---- @class Models.DateInterval
+--- @class Models.DateInterval : Models.Date
 local DateInterval = AddOn.Package('Models'):Class('DateInterval', Date)
 --- @class Models.DateFormat
 local DateFormat = AddOn.Package('Models'):Class('DateFormat')

@@ -1,11 +1,22 @@
-local AddOnName, AddOn, Util, Player, C, LootSlotSource
+--- @type string
+local AddOnName
+--- @type AddOn
+local AddOn
+--- @type LibUtil
+local Util
+--- @type Models.Player
+local Player
+local C
+--- @type Models.Item.CreatureLootSource
+local CreatureLootSource
 
 describe("MasterLooter", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_MasterLooter')
 		loadfile('Modules/Test/MasterLooterTestData.lua')()
 		C = AddOn.Constants
-		Util, Player, LootSlotSource = AddOn:GetLibrary('Util'), AddOn.Package('Models').Player, AddOn.Package('Models.Item').LootSlotSource
+		Util, Player, CreatureLootSource =
+			AddOn:GetLibrary('Util'), AddOn.Package('Models').Player, AddOn.Package('Models.Item').CreatureLootSource
 		AddOnLoaded(AddOnName, true)
 		SetTime()
 	end)
@@ -142,28 +153,34 @@ describe("MasterLooter", function()
 			module = nil
 		end)
 
+		--
+		-- FYI regarding semantics of testing and stubbed WOW API calls (see Testing/WowApi.lua)
+		--
+		-- GetNumLootItems returns 3
+		-- LootSlotHasItem returns true if mod 2 is not 0 (slot 1 and 3 returns true, 2 is false)
+		-- GetLootSourceInfo returns a random creature, independent of the slot
 		it("handles LOOT_READY", function()
 			WoWAPI_FireEvent("LOOT_READY")
 			assert(module:IsEnabled())
-			assert(module:_GetLootSlot(1))
-			assert(not module:_GetLootSlot(2))
-			assert(module:_GetLootSlot(3))
+			assert(module:GetLootSlot(1))
+			assert(not module:GetLootSlot(2))
+			assert(module:GetLootSlot(3))
 		end)
 
 		it("handles LOOT_OPENED", function()
 			WoWAPI_FireEvent("LOOT_OPENED")
 			assert(module:IsEnabled())
-			assert(module:_GetLootSlot(1))
-			assert(not module:_GetLootSlot(2))
-			assert(module:_GetLootSlot(3))
-			assert(module:_GetLootTableEntry(1))
-			assert(module:_GetLootTableEntry(2))
-			assert(not module:_GetLootTableEntry(3))
-			local lt = module:_GetLootTableForTransmit()
+			assert(module:GetLootSlot(1))
+			assert(not module:GetLootSlot(2))
+			assert(module:GetLootSlot(3))
+			assert(module:GetLootTableEntry(1))
+			assert(module:GetLootTableEntry(2))
+			assert(not module:GetLootTableEntry(3))
+			local lt = module:GetLootTableForTransmit()
 			assert(#lt == 2)
 			for _, e in pairs(lt) do
 				assert(e.ref)
-				assert(not e.slot)
+				assert(e.owner)
 				assert(not e.awarded)
 				assert(not e.sent)
 			end
@@ -171,7 +188,7 @@ describe("MasterLooter", function()
 		it("handles LOOT_SLOT_CLEARED", function()
 			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 1)
 			assert(module:IsEnabled())
-			assert(module:_GetLootSlot(1).looted)
+			assert(module:GetLootSlot(1).looted)
 		end)
 
 		it("handles LOOT_CLOSED", function()
@@ -217,6 +234,7 @@ describe("MasterLooter", function()
 				whenLeader = true,
 			}
 			ml.db.profile.lcSelectionMethod = 1
+			ml.db.profile.announceItemText = { channel = "group", text = "&s: &i Item Level (&l) Item Type (&t) Owner(&o) List(&ln)"}
 			la = AddOn:LootAllocateModule()
 			PlayerEnteredWorld()
 			assert(ml:IsEnabled())
@@ -258,49 +276,69 @@ describe("MasterLooter", function()
 			assert(ml:HaveUnawardedItems())
 		end)
 
-		it("UpdateLootSlots", function()
-			ml:_UpdateLootSlots()
+		it("UpdateLootSlots (with no changes)", function()
+			ml:UpdateLootSlots()
 		end)
 
 		it("CanGiveLoot", function()
 			ml.lootOpen = false
-			local ok, cause = ml:CanGiveLoot(1, nil, nil, AddOn.player:GetName())
+			local ok, cause = ml:CanGiveLoot(nil, 1, AddOn.player:GetName())
 			assert(not ok)
 			assert(cause == ml.AwardStatus.Failure.LootNotOpen)
+
 			ml.lootOpen = true
-			ok, cause = ml:CanGiveLoot(5, nil, nil, AddOn.player:GetName())
+			ok, cause = ml:CanGiveLoot( nil, 5, AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.LootGone)
-			ok, cause = ml:CanGiveLoot(1, nil, LootSlotSource(-1, nil), AddOn.player:GetName())
+
+			local _CreatureLootSource_FromCurrent = CreatureLootSource.FromCurrent
+			CreatureLootSource.FromCurrent = function(slot) return CreatureLootSource("Creature-0-4379-34-1065-46382-00076A3954", slot) end
+			ok, cause = ml:CanGiveLoot(nil, 1,  AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.LootSourceMismatch)
-			local lootSlotInfo = ml:_GetLootSlot(1)
-			ok, cause = ml:CanGiveLoot(1, "item:999999:0:0:0:0:0:0:0:233", lootSlotInfo.source, AddOn.player:GetName())
+
+			local lootSlotInfo = ml:GetLootSlot(1)
+
+			CreatureLootSource.FromCurrent = function(slot) return ml:GetLootSlot(slot).source end
+			ok, cause = ml:CanGiveLoot("item:999999:0:0:0:0:0:0:0:233", 1, AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.LootGone)
-			_G.C_Container._SetFreeSlotsByContainer(0, 0)
-			ootSlotInfo = ml:_GetLootSlot(1)
-			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
+
+			local _GetContainerNumFreeSlots = _G.C_Container.GetContainerNumFreeSlots
+			_G.C_Container.GetContainerNumFreeSlots = function(container)
+				return 0, 0
+			end
+			lootSlotInfo = ml:GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot(lootSlotInfo.item, 1, AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.MLInventoryFull)
-			_G.C_Container._SetFreeSlotsByContainer(4, 0)
+
+			_G.C_Container.GetContainerNumFreeSlots = function(container)
+				return 4, 0
+			end
 			_G.UnitIsUnit = function(unit1, unit2) return false end
 			_G.UnitIsConnected = function(unit) return false end
-			lootSlotInfo = ml:_GetLootSlot(1)
-			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
+			lootSlotInfo = ml:GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot( lootSlotInfo.item, 1, AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.Offline)
+
 			_G.UnitIsConnected = function(unit) return true end
-			lootSlotInfo = ml:_GetLootSlot(1)
-			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
+			lootSlotInfo = ml:GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot( lootSlotInfo.item, 1, AddOn.player:GetName())
 			assert(not ok)
 			assert.equal(cause, ml.AwardStatus.Failure.NotBop)
+
 			_G.UnitIsUnit = function(unit1, unit2) return true end
-			lootSlotInfo = ml:_GetLootSlot(1)
-			ok, cause = ml:CanGiveLoot(1, lootSlotInfo.item, lootSlotInfo.source, AddOn.player:GetName())
+			lootSlotInfo = ml:GetLootSlot(1)
+			ok, cause = ml:CanGiveLoot( lootSlotInfo.item, 1,  AddOn.player:GetName())
 			assert(ok)
 			assert(cause == nil)
-			_G.C_Container._ClearFreeSlotsByContainer()
+
+			finally(function()
+				CreatureLootSource.FromCurrent = _CreatureLootSource_FromCurrent
+				_G.C_Container.GetContainerNumFreeSlots = _GetContainerNumFreeSlots
+			end)
 		end)
 
 		it("Award", function()
@@ -316,6 +354,9 @@ describe("MasterLooter", function()
 				assert.equal("ms_need", award.awardReason)
 			end
 
+			local _CreatureLootSource_FromCurrent = CreatureLootSource.FromCurrent
+			CreatureLootSource.FromCurrent = function(slot) return ml:GetLootSlot(slot).source end
+
 			WoWAPI_FireUpdate(GetTime() + 10)
 
 			-- partial suicide workflow
@@ -328,7 +369,7 @@ describe("MasterLooter", function()
 			-- normal suicide workflow
 			AddOn:SendResponse(C.group, 1, 1)
 			WoWAPI_FireUpdate(GetTime() + 10)
-			local award = AddOn:LootAllocateModule():GetItemAward(1, AddOn.player:GetName())
+			award = AddOn:LootAllocateModule():GetItemAward(1, AddOn.player:GetName())
 			ml:Award(award, Cb, award)
 			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 1)
 			assert(cbFired)
@@ -339,24 +380,38 @@ describe("MasterLooter", function()
 			award = AddOn:LootAllocateModule():GetItemAward(3, "Player525-Realm1")
 			ml:Award(award, Util.Functions.Noop, award)
 			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 3)
+
+			finally(function()
+				CreatureLootSource.FromCurrent = _CreatureLootSource_FromCurrent
+			end)
 		end)
+
 		it("Auto Award", function()
 			ml.db.profile.autoAward = true
 			ml.db.profile.autoAwardReason = 'bank'
 			ml.db.profile.autoAwardUpperThreshold = 3
 			ml.db.profile.autoAwardType = ml.AutoAwardType.All
 			ml.db.profile.autoAwardTo = AddOn.player:GetShortName()
-			ml:_AddLootSlot(2)
+			ml:AddLootSlot(2)
 
-			local loot = ml:_GetLootSlot(2)
+			local loot = ml:GetLootSlot(2)
 			loot.quality = 3
 
 			local shouldAutoAward, _, awardTo = ml:ShouldAutoAward(loot.item, loot.quality)
 			assert(shouldAutoAward)
 			assert.equal(ml.db.profile.autoAwardTo, awardTo)
-			local awarded = ml:AutoAward(2, loot.item, loot.quality, ml.db.profile.autoAwardTo, "normal")
+
+			local _CreatureLootSource_FromCurrent = CreatureLootSource.FromCurrent
+			CreatureLootSource.FromCurrent = function(slot) return loot.source end
+
+			local awarded = ml:AutoAward(loot.item, 2, loot.quality, ml.db.profile.autoAwardTo, "normal")
 			assert(awarded)
+
+			finally(function()
+				CreatureLootSource.FromCurrent = _CreatureLootSource_FromCurrent
+			end)
 		end)
+
 		it("handles whispers", function()
 			WoWAPI_FireEvent("LOOT_READY")
 			WoWAPI_FireEvent("LOOT_OPENED")
@@ -371,6 +426,18 @@ describe("MasterLooter", function()
 			assert(cr2)
 			assert.equal(cr2.response, 1)
 		end)
+
+		it("UpdateLootSlots (with potential changes)", function()
+			local _ItemIsItem = AddOn.ItemIsItem
+			AddOn.ItemIsItem = function() return true end
+
+			ml:UpdateLootSlots()
+
+			finally(function()
+				AddOn.ItemIsItem = _ItemIsItem
+			end)
+		end)
+
 		it("ends session", function()
 			ml:EndSession()
 			assert(not ml.running)

@@ -61,13 +61,14 @@ local DateFilterColumns, InstanceFilterColumns, NameFilterColumns, DroppedByFilt
 	ST.ColumnBuilder():column(""):width(20):column(_G.NAME):width(100):sort(STColumnBuilder.Ascending):build(),
 	ST.ColumnBuilder():column(L['dropped_by']):width(200):sort(STColumnBuilder.Ascending):build()
 
-local RightClickMenu, FilterSelection, RecordSelection = nil,
+local RightClickMenu, FilterSelection, RecordSelection =
+	nil,
 	{
-		dates = nil,
-		instance = nil,
-		name = nil,
+		dates       = nil,
+		instance    = nil,
+		name        = nil,
 		encounterId = nil,
-		Clear = function(self)
+		Clear       = function(self)
 			self.dates = nil
 			self.instance = nil
 			self.name = nil
@@ -76,11 +77,11 @@ local RightClickMenu, FilterSelection, RecordSelection = nil,
 	},
 	{
 		player = nil,
-		id = nil,
-		IsSet = function(self)
+		id     = nil,
+		IsSet  = function(self)
 			return self.player and self.id
 		end,
-		Clear = function(self)
+		Clear  = function(self)
 			self.player = nil
 			self.id = nil
 		end
@@ -118,7 +119,6 @@ function LootAudit:LayoutInterface(container)
 	container.moreInfoBtn:SetPoint("TOPRIGHT", container.banner, "TOPRIGHT", -5, -25)
 
 	-- todo : apply multi-selection on filter tables?
-
 	container.date = ST.New(DateFilterColumns, 5, 20, nil, container, false)
 	container.date.frame:SetPoint("TOPLEFT", container.banner, "TOPLEFT", 10, -50)
 	container.date:EnableSelection(true)
@@ -288,7 +288,11 @@ function LootAudit:BuildData(container)
 	local tsData, instanceData, nameData, droppedByData, row = {}, {}, {}, {}, 1
 	for _, names in pairs(data) do
 		for _, entries in pairs(names) do
-			for index, entry in pairs(entries) do
+			for index, lootRecord in pairs(entries) do
+				-- this is simply to help IDE with type mapping
+				--- @type Models.Audit.LootRecord
+				local entry = lootRecord
+
 				-- some strange corruption, where the entry's encounter id is a table instead of string/number
 				-- just ignore them in results
 				if not Util.Objects.IsTable(entry.encounterId) then
@@ -300,41 +304,40 @@ function LootAudit:BuildData(container)
 						num = index,    -- this is the index within the player's table
 						entry = entry,
 						cols =
-						STCellBuilder()
-							:classIconCell(entry.class)
-							:classColoredCell(player, entry.class)
-							:cell(entry:FormattedTimestamp() or "")
-							:cell(instanceName)
-							:cell(entry.list)
-							:itemIconCell(entry.item)
-							:cell(entry.item)
-							:cell(""):DoCellUpdate(ST.DoCellUpdateFn(function (...) LootAudit.SetCellResponse(...) end))
-							:deleteCell(
-							function(_, d, r)
-								local name, num = d[r].entry.owner, d[r].num
+							STCellBuilder()
+								:classIconCell(entry.class)
+								:classColoredCell(player, entry.class)
+								:cell(entry:FormattedTimestamp() or "")
+								:cell(instanceName)
+								:cell(entry.list)
+								:itemIconCell(entry.item)
+								:cell(entry.item)
+								:cell(""):DoCellUpdate(ST.DoCellUpdateFn(function (...) LootAudit.SetCellResponse(...) end))
+								:deleteCell(
+									function(_, d, r)
+										local name, num = d[r].entry.owner, d[r].num
 
-								--Logging:Trace("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
+										--Logging:Trace("LootAudit : Deleting %s, %s", tostring(name), tostring(num))
 
-								local history = self:GetHistory()
-								history:del(name, num)
-								tremove(d, r)
+										local history = self:GetHistory()
+										history:del(name, num)
+										tremove(d, r)
 
-								for _, v in pairs(d) do
-									if v.name == name and v.num >= num then
-										v.num = v.num - 1
+										for _, v in pairs(d) do
+											if v.name == name and v.num >= num then
+												v.num = v.num - 1
+											end
+										end
+
+										self.interfaceFrame.st:SortData()
+
+										local charHistory = history:get(name)
+										if #charHistory == 0 then
+											--Logging:Trace("Last LootAudit entry deleted, removing %s", tostring(name))
+											history:del(name)
+										end
 									end
-								end
-
-								self.interfaceFrame.st:SortData()
-
-								local charHistory = history:get(name)
-								if #charHistory == 0 then
-									--Logging:Trace("Last LootAudit entry deleted, removing %s", tostring(name))
-									history:del(name)
-								end
-							end
-						)
-							:build()
+								):build()
 					}
 
 					-- keep a copy of all the timestamps that map to date (could probably calculate later)

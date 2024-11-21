@@ -1,6 +1,8 @@
 local Lib = LibStub("LibRx-1.1", true)
 local Util = LibStub("LibUtil-1.2", true)
 
+if not Lib or Lib:_ClassDefined('rx', 'Subscription') then return end
+
 --- @class rx.Subscription
 local Subscription = Lib:_DefineClass('rx', 'Subscription')
 Subscription.__index = Subscription

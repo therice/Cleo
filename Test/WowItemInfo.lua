@@ -23,20 +23,20 @@ local Items = {
         'Brutality Blade',
         -- there are attributes in this link which aren't standard/plain, but bonuses (e.g. enchant at 2564)
         '|cffa335ee|Hitem:18832:::::::::::::::::|h[Brutality Blade]|h|r',
-        4, --itemRarity
+        4, --itemQuality
         70, --itemLevel
         60, --itemMinLevel
         "Weapon", --itemType
         'One-Handed Swords', --itemSubType
         1, --itemStackCount
         "INVTYPE_WEAPON", --itemEquipLoc
-        135313,--itemIcon
-        104089, --itemSellPrice
+        135313,--itemTexture
+        104089, --sellPrice
         2, --typeId
         7, --subTypeId
         1, --bindType
-        254, --expacID
-        nil, --itemSetID
+        3, --expacID (https://wowpedia.fandom.com/wiki/LE_EXPANSION)
+        nil, --setID
         false --isCraftingReagent
     },
     [21232] = {
@@ -92,7 +92,9 @@ _G.GetItemInfo = function(item)
     if info and #info > 0 then
         return unpack(info)
     else
-        return "ItemName" .. id, "item:" .. id .. ":::::::::::::::::", 4, 70, 60,  "Weapon", 'One-Handed Swords', 1, "INVTYPE_WEAPON"
+        local itemName = "ItemName" .. id
+        return itemName, "|cffa335ee|Hitem:" .. id .. format(":::::::::::::::::|h[%s]|h|r", itemName),
+                4, 70, 60,  "Weapon", 'One-Handed Swords', 1, "INVTYPE_WEAPON", 0, 0, 2, 7, nil --[[ bindType --]], 3, nil, false
     end
 end
 

@@ -38,9 +38,9 @@ function Logging:BuildFrame()
         frame:CreateShadow(20)
         frame:ShadowInside()
 
-        local msg = UI:NewNamed('ScrollingMessageFrame', frame.content or frame, 'Messages')
+        local msg = UI:NewNamed('ScrollingMessageFrame', frame.content, 'Messages')
         msg:SetMaxLines(10000)
-        msg:SetPoint("CENTER",frame.content or frame, "CENTER", 0, 10)
+        msg:SetPoint("CENTER",frame.content, "CENTER", 0, 10)
         frame.msg = msg
 
         local clear = UI:NewNamed("Button", frame.content or frame, "Clear", L['clear'])

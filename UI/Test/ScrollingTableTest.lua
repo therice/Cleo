@@ -66,7 +66,7 @@ describe("Scrolling Table", function()
             cells = STCellBuilder():classIconCell('warlock'):build()
             -- CLASS_ICON_TCOORDS is empty in our test framework
             cells[1].DoCellUpdate(_, f)
-            assert.equal(f:GetNormalTexture().texture, 'Interface/ICONS/INV_Misc_QuestionMark.png')
+            assert.equal(f:GetNormalTexture().texture, 'Interface/ICONS/INV_Misc_QuestionMark')
         end)
     end)
 end)

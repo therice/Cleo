@@ -2,7 +2,7 @@ local _, AddOn = ...
 local Models = AddOn.ImportPackage('Models')
 local Date, DateFormat, SemanticVersion = Models.Date, Models.DateFormat, Models.SemanticVersion
 
-local counter, fullDf, shortDf = 0, DateFormat:new("mm/dd/yyyy HH:MM:SS"), DateFormat("mm/dd/yyyy")
+local counter, fullDf, shortDf = 0, DateFormat("mm/dd/yyyy HH:MM:SS"), DateFormat("mm/dd/yyyy")
 
 local function counterGetAndIncr()
 	local value = counter

@@ -20,7 +20,6 @@ AddOn.Constants = {
     guild       =   "guild",
     player      =   "player",
     party       =   "party",
-    NoGuild     =   "No Guild",
 
     Buttons = {
         Left    =   "LeftButton",
@@ -73,6 +72,7 @@ AddOn.Constants = {
         Fuchsia        = CreateColor(1, 0, 1, 1),
         Green          = CreateColor(0, 1, 0, 1),
         Grey           = CreateColor(0.73725, 0.78824, 0.80392, 1),
+        HunterGreen    = CreateColor(0.67,0.83, 0.45, 1),
         ItemArtifact   = _G.ITEM_QUALITY_COLORS[6].color,
         ItemCommon     = _G.ITEM_QUALITY_COLORS[1].color,
         ItemEpic       = _G.ITEM_QUALITY_COLORS[4].color,
@@ -86,13 +86,19 @@ AddOn.Constants = {
         LuminousYellow = CreateColor(1, 1, 0, 1),
         MageBlue       = CreateColor(0.25, 0.78, 0.92, 1),
         Marigold       = CreateColor(0.7, 0.6, 0, 1),
+        MonkGreen      = CreateColor(0.00,1.00, 0.60, 1),
         Nickel         = CreateColor(0.5, 0.5, 0.5, 1),
         PaladinPink    = CreateColor(0.96, 0.55, 0.73, 1),
+        Peppermint     = CreateColor(0.14138, 0.60749, 0.29173, 1),
         Pumpkin        = CreateColor(0.8, 0.5, 0, 1),
         Purple         = CreateColor(0.53, 0.53, 0.93, 1),
+        Red            = CreateColor(1, 0, 0, 1),
+        RoseQuartz     = CreateColor(0.89815,0.34566,0.35813, 1),
         RogueYellow    = CreateColor(1, 0.96, 0.41, 1),
         Salmon         = CreateColor(0.99216, 0.48627, 0.43137, 1),
-        White          = CreateColor(1, 1, 1, 1)
+        ShamanBlue     = CreateColor(0.00, 0.44,0.87, 1),
+        White          = CreateColor(1, 1, 1, 1),
+        YellowLight    = CreateColor(1, 0.86391, 0.39770, 1),
     },
 
     Commands = {
@@ -106,10 +112,11 @@ AddOn.Constants = {
         Coordinator             =   "rcl",      -- replication based message (coordinator/leader)
         DeactivateConfig        =   "dlc",      -- sent when a configuration should be deactivated (for loot priorities)
         Election                =   "rer",      -- replication based message (election request)
-        HandleLootStart         =   "hlst",
-        HandleLootStop          =   "hlstp",
+        --HandleLootStart         =   "hlst",
+        --HandleLootStop          =   "hlstp",
         LootAuditAdd            =   "laa",
         LootAck                 =   "la",
+        LootedToBags            =   "ltb",
         LootSessionEnd          =   "lse",
         LootTable               =   "lt",
         LootTableAdd            =   "lta",
@@ -133,6 +140,8 @@ AddOn.Constants = {
         SyncACK                 =   "sack",
         SyncNACK                =   "snack",
         SyncSYN                 =   "ssyn",
+        TradeComplete           =   "tc",
+        TradeWrongWinner        =   "tww",
         TrafficAuditAdd         =   "taa",
         VersionCheck            =   "vc",
         VersionCheckReply       =   "vcr",
@@ -150,29 +159,59 @@ AddOn.Constants = {
         ListPriorityActions = name .. "_ListPriorityActions",
         ListPlayerActions   = name .. "_ListPlayerActions",
         LootAuditActions    = name .. "_LootAuditActions",
+        LootLedgerActions   = name .. "_LootLedgerActions",
         RaidAuditActions    = name .. "_RaidAuditActions",
-        TrafficAuditActions = name .. "_TrafficAuditActions"
+        TrafficAuditActions = name .. "_TrafficAuditActions",
+        TradeTimeActions    = name .. "_TradeTimeActions",
     },
 
     Events = {
-        ChatMessageSystem       =   "CHAT_MSG_SYSTEM",
-        ChatMessageWhisper      =   "CHAT_MSG_WHISPER",
-        EncounterEnd            =   "ENCOUNTER_END",
-        EncounterStart          =   "ENCOUNTER_START",
-        GroupFormed             =   "GROUP_FORMED",
-        GroupJoined             =   "GROUP_JOINED",
-        GroupLeft               =   "GROUP_LEFT",
-        LootClosed              =   "LOOT_CLOSED",
-        LootOpened              =   "LOOT_OPENED",
-        LootReady               =   "LOOT_READY",
-        LootSlotCleared         =   "LOOT_SLOT_CLEARED",
-        PlayerEnteringWorld     =   "PLAYER_ENTERING_WORLD",
-        PlayerLogin             =   "PLAYER_LOGIN",
-        PartyLootMethodChanged  =   "PARTY_LOOT_METHOD_CHANGED",
-        PartyLeaderChanged      =   "PARTY_LEADER_CHANGED",
-        PlayerRegenEnabled      =   "PLAYER_REGEN_ENABLED",
-        PlayerRegenDisabled     =   "PLAYER_REGEN_DISABLED",
-        RaidInstanceWelcome     =   "RAID_INSTANCE_WELCOME",
+        BagUpdateDelayed       = "BAG_UPDATE_DELAYED",
+        ChatMessageLoot        = "CHAT_MSG_LOOT",
+        ChatMessageSystem      = "CHAT_MSG_SYSTEM",
+        ChatMessageWhisper     = "CHAT_MSG_WHISPER",
+        EncounterEnd           = "ENCOUNTER_END",
+        EncounterStart         = "ENCOUNTER_START",
+        GroupFormed            = "GROUP_FORMED",
+        GroupJoined            = "GROUP_JOINED",
+        GroupLeft              = "GROUP_LEFT",
+        LoadingScreenDisabled  = "LOADING_SCREEN_DISABLED",
+        LootClosed             = "LOOT_CLOSED",
+        LootOpened             = "LOOT_OPENED",
+        LootReady              = "LOOT_READY",
+        LootSlotCleared        = "LOOT_SLOT_CLEARED",
+        PartyLootMethodChanged = "PARTY_LOOT_METHOD_CHANGED",
+        PartyLeaderChanged     = "PARTY_LEADER_CHANGED",
+        PlayerAlive            = "PLAYER_ALIVE",
+        PlayerEnteringWorld    = "PLAYER_ENTERING_WORLD",
+        PlayerLogin            = "PLAYER_LOGIN",
+        PlayerLogout           = "PLAYER_LOGOUT",
+        PlayerUnghost          = "PLAYER_UNGHOST",
+        PlayerRegenEnabled     = "PLAYER_REGEN_ENABLED",
+        PlayerRegenDisabled    = "PLAYER_REGEN_DISABLED",
+        RaidInstanceWelcome    = "RAID_INSTANCE_WELCOME",
+        -- Fired when the status of the player and target accept buttons has changed
+        --  playerAccepted number - Player has agreed to the trade (1) or not (0)
+        --  targetAccepted number - Target has agreed to the trade (1) or not (0)
+        --
+        -- Target agree status only shown when he has done it first. By this, player and target agree status is only
+        -- shown together (playerAccepted == 1 and targetAccepted == 1), when player agreed after target.
+        TradeAcceptUpdate      = "TRADE_ACCEPT_UPDATE",
+        -- Fired when the trade window is closed by the trade being accepted, or the player or target closes the window
+        TradeClosed            = "TRADE_CLOSED",
+        -- fired when the Trade window appears after a trade request has been accepted or auto-accepted
+        TradeShow              = "TRADE_SHOW",
+        -- fired when the interface generates a message. These are the yellow messages in the top middle of the window.
+        -- https://warcraft.wiki.gg/wiki/UI_INFO_MESSAGE
+        -- "No fish are hooked." is one example.
+        --  errorType number - Info message index for GetGameMessageInfo()
+        --  message string - Info message, same as the globalstring ERR_* value.
+        UIInfoMessage          = "UI_INFO_MESSAGE",
+        ZoneChanged            = "ZONE_CHANGED",
+    },
+
+    Item = {
+        NotBoundTradeTime       = 86400, -- 24 hours
     },
 
     -- this is probably a misnomer since it's mixed names, but whatever...
@@ -231,16 +270,20 @@ AddOn.Constants = {
     },
 
     Messages = {
-        AwardSuccess             = name .. "_AwardFailed",
-        AwardFailed              = name .. "_AwardSuccess",
-        ConfigTableChanged       = name .. "_ConfigTableChanged",
-        LootTableAddition        = name .. "_LootTableAddition",
-        MasterLooterAddItem      = name .. "_MasterLooterAddItem",
-        ModeChanged              = name .. "_ModeChanged",
-        PlayerJoinedGroup        = name .. "_PlayerJoinedGroup",
-        PlayerLeftGroup          = name .. "_PlayerLeftGroup",
-        PlayerNotFound           = name .. "_PlayerNotFound",
-        ResourceRequestCompleted = name .. "_ResourceRequestCompleted",
+        AwardSuccess               = name .. "_AwardSuccess",
+        AwardFailed                = name .. "_AwardFailed",
+        ConfigTableChanged         = name .. "_ConfigTableChanged",
+        HandleLootStart            = name .. "_HandleLootStart",
+        HandleLootStop             = name .. "_HandleLootStop",
+        LootItemReceived           = name .. "_LootItemReceived",
+        LootTableAddition          = name .. "_LootTableAddition",
+        MasterLooterAddItem        = name .. "_MasterLooterAddItem",
+        ModeChanged                = name .. "_ModeChanged",
+        PlayerJoinedGroup          = name .. "_PlayerJoinedGroup",
+        PlayerLeftGroup            = name .. "_PlayerLeftGroup",
+        PlayerNotFound             = name .. "_PlayerNotFound",
+        ResourceRequestCompleted   = name .. "_ResourceRequestCompleted",
+        TradeTimeItemsChanged      = name .. "_TradeTimeItemsChanged",
     },
 
     Modes = {
@@ -254,12 +297,14 @@ AddOn.Constants = {
     Popups = {
         ConfirmAbort            =   name .. "_ConfigAbort",
         ConfirmAward            =   name .. "_ConfirmAward",
+        ConfirmAwardLater       =   name .. "_ConfirmAwardLater",
         ConfirmBroadcastDelete  =   name .. "_ConfirmBroadcastDelete",
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
         ConfirmDeleteListConfig =   name .. "_ConfirmDeleteListConfig",
         ConfirmDeleteListList   =   name .. "_ConfirmDeleteListList",
         ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
         ConfirmSync             =   name .. "_ConfirmSync",
+        ConfirmTradeItems       =   name .. "_ConfirmTradeItems",
         ConfirmUsage            =   name .. "_ConfirmUsage",
         SelectConfiguration     =   name .. "_SelectConfiguration",
     },

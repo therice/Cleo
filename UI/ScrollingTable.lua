@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, C  = AddOn.Locale, AddOn.Constants
 --- @type LibLogging
@@ -21,6 +22,8 @@ local UI = AddOn.Require('UI.Native')
 local Player = AddOn.Package('Models').Player
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
+--- @type LibCandyBar
+local CandyBar = AddOn:GetLibrary('CandyBar')
 
 --- @class UI.ScrollingTable
 local ScrollingTable = AddOn.Instance(
@@ -55,7 +58,7 @@ function ColumnBuilder:initialize()
 end
 function ColumnBuilder:column(name) return self:entry(Column):named(name) end
 
----- @class Cell
+---- @class Cell : UI.Util.Attributes
 local Cell = AddOn.Class('Cell', Attributes)
 function Cell:initialize(value)
     Attributes.initialize(self, {})
@@ -65,87 +68,118 @@ end
 function Cell:color(color) return self:set('color', color) end
 function Cell:DoCellUpdate(fn) return self:set('DoCellUpdate', fn) end
 
---- @class ClassIconCell
+--- @class ClassIconCell : Cell
 local ClassIconCell = AddOn.Class('ClassIconCell', Cell)
 function ClassIconCell:initialize(value, class)
     Cell.initialize(self, value)
     self:DoCellUpdate(function(_, frame) UIUtil.ClassIconFn()(frame, class) end)
 end
 
---- @class ClassColoredCell
+--- @class ClassColoredCell : Cell
 local ClassColoredCell = AddOn.Class('ClassColoredCell', Cell)
 function ClassColoredCell:initialize(value, class)
     Cell.initialize(self, value)
     self:color(UIUtil.GetClassColor(class))
 end
 
---- @class DeleteButtonCell
+--- @class DeleteButtonCell : Cell
 local DeleteButtonCell = AddOn.Class('DeleteButtonCell', Cell)
 function DeleteButtonCell:initialize(fn)
     Cell.initialize(self, nil)
     self:DoCellUpdate(
-            function(_, frame, data, _, _, realrow)
+            function(_, cellFrame, data, _, _, realRow)
                 -- todo : prevent repeated textures and OnEnter/OnLeave?
-                frame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
-                frame:SetScript("OnEnter", function()
-                    UIUtil.ShowTooltip(frame, nil, format(L["double_click_to_delete_this_entry"], L["item"]))
+                cellFrame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
+                cellFrame:SetScript("OnEnter", function()
+                    UIUtil.ShowTooltip(cellFrame, nil, format(L["double_click_to_delete_this_entry"], L["item"]))
                 end)
-                frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
-                frame:SetScript(
+                cellFrame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+                cellFrame:SetScript(
                         "OnClick",
                         function()
-                            if frame.lastClick and GetTime() - frame.lastClick <= 0.5 then
-                                frame.lastClick = nil
-                                fn(frame, data, realrow)
+                            if cellFrame.lastClick and GetTime() - cellFrame.lastClick <= 0.5 then
+                                cellFrame.lastClick = nil
+                                fn(cellFrame, data, realRow)
                             else
-                                frame.lastClick = GetTime()
+                                cellFrame.lastClick = GetTime()
                             end
                         end
                 )
-                frame:SetSize(20,20)
+                cellFrame:SetSize(20, 20)
             end
     )
 end
 
---- @class ItemIconCell
+--- @class ItemIconCell : Cell
 local ItemIconCell = AddOn.Class('ItemIconCell', Cell)
 function ItemIconCell:initialize(link, texture)
     Cell.initialize(self, nil)
     self:DoCellUpdate(function(_, frame) UIUtil.ItemIconFn()(frame, link, texture) end)
 end
 
---- @class IconCell
+--- @class IconCell : Cell
 local IconCell = AddOn.Class('IconCell', Cell)
 function IconCell:initialize(texture)
     Cell.initialize(self, nil)
     self:DoCellUpdate(function(_, frame) UIUtil.IconFn()(frame,  texture) end)
 end
 
---- @class TextCell
+--- @class TextCell : Cell
 local TextCell = AddOn.Class('TextCell', Cell)
 function TextCell:initialize(fn)
     Cell.initialize(self, nil)
     self:DoCellUpdate(
-            function(_, frame, data, _, _, realrow)
-                if frame.text:GetFontObject() ~= _G.GameFontNormal then
-                    frame.text:SetFontObject("GameFontNormal")
+            function(_, cellFrame, data, _, _, realrow)
+                if cellFrame.text:GetFontObject() ~= _G.GameFontNormal then
+                    cellFrame.text:SetFontObject("GameFontNormal")
                 end
 
-                fn(frame, data, realrow)
+                fn(cellFrame, data, realrow)
             end
     )
 end
 
---- @class UI.ScrollingTable.CellBuilder
+--- @class TimerBarCell : Cell
+local TimerBarCell = AddOn.Class('TimerBarCell', Cell)
+function TimerBarCell:initialize(width, height, fn)
+    Cell.initialize(self, nil)
+    self:DoCellUpdate(
+        -- rowFrame, cellFrame, data, cols, row, realRow, column, fShow, st, ...
+        function(rowFrame, cellFrame, data, cols, row, realRow, ...)
+            if not cellFrame.cdb then
+                Logging:Debug("TimerBarCell:DoCellUpdate()")
+                local countDownBar = CandyBar:New(UI.ResolveTexture("Clean"), width, height)
+                countDownBar:SetParent(cellFrame)
+                countDownBar:SetColor(C.Colors.Peppermint:GetRGBA())
+                countDownBar:SetFont(_G.GameFontNormalSmall:GetFont(), 12, "OUTLINE")
+                countDownBar:SetBackgroundColor(0, 0, 0, 0.3)
+                countDownBar:SetAllPoints(cellFrame)
+                countDownBar:SetTimeVisibility(true)
+                countDownBar:Hide()
+                cellFrame.cdb = countDownBar
+            end
+
+            fn(rowFrame, cellFrame, data, cols, row, realRow, ...)
+        end
+    )
+end
+
+--- @class UI.ScrollingTable.CellBuilder : UI.Util.Builder
 local CellBuilder = Package:Class('CellBuilder', Builder)
 function CellBuilder:initialize()
     Builder.initialize(self, {})
     tinsert(self.embeds, 'cell')
     tinsert(self.embeds, 'classIconCell')
     tinsert(self.embeds, 'classColoredCell')
+    tinsert(self.embeds, 'classAndPlayerIconColoredNameCell')
+    tinsert(self.embeds, 'playerIconAndColoredNameCell')
+    tinsert(self.embeds, 'playerColoredCell')
+    tinsert(self.embeds, 'playerColoredCellOrElse')
     tinsert(self.embeds, 'deleteCell')
     tinsert(self.embeds, 'itemIconCell')
+    tinsert(self.embeds, 'iconCell')
     tinsert(self.embeds, 'textCell')
+    tinsert(self.embeds, 'timerBarCell')
 end
 
 --- @return Cell
@@ -169,6 +203,11 @@ end
 function CellBuilder:playerColoredCell(player)
     local p = Player:Get(player) or Player.Unknown(player)
     return self:classColoredCell(p:GetShortName(), p.class)
+end
+
+function CellBuilder:playerColoredCellOrElse(player, other)
+    local p = Util.Strings.IsSet(player) and Player:Get(player) or nil
+    return (p and not p:IsUNK()) and self:classColoredCell(p:GetShortName(), p.class) or self:classColoredCell(other, "PRIEST")
 end
 
 --- @return ClassIconCell
@@ -201,6 +240,11 @@ function CellBuilder:textCell(fn)
     return self:entry(TextCell, fn)
 end
 
+--- @return TimerBarCell
+function CellBuilder:timerBarCell(width, height, fn)
+    return self:entry(TimerBarCell, width, height, fn)
+end
+
 local DefaultRowCount, DefaultRowHeight, DefaultHighlight =
     20, 25, { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 }
 
@@ -215,7 +259,7 @@ function ScrollingTable.CellBuilder()
 end
 
 --- @param attach boolean should the scrolling table be attached to frame at 'st'
---- @return table
+--- @return LibScrollingTable.ScrollingTable
 function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach, multiSelect)
     cols = cols or {}
     rows = rows or DefaultRowCount
@@ -229,6 +273,29 @@ function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach, mul
         st.frame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
         frame.st = st
         frame:SetWidth(st.frame:GetWidth() + 20)
+    end
+
+    st.CreateSpecialHighlight = function(self, rowFrame)
+        if not rowFrame.specialHL then
+            rowFrame.specialHL = rowFrame:CreateTexture(nil, "OVERLAY")
+            rowFrame.specialHL:SetAllPoints(rowFrame)
+            rowFrame.specialHL:SetColorTexture(1, 1, 1, 1)
+            rowFrame.specialHL:SetGradient("HORIZONTAL", C.Colors.LuminousYellow, C.Colors.DeathKnightRed)
+        end
+
+        self:ShowSpecialHighlight(rowFrame)
+    end
+
+    st.ShowSpecialHighlight = function(_, rowFrame)
+        if rowFrame.specialHL then
+            rowFrame.specialHL:Show()
+        end
+    end
+
+    st.HideSpecialHighlight = function(_, rowFrame)
+        if rowFrame.specialHL then
+            rowFrame.specialHL:Hide()
+        end
     end
 
     ScrollingTable.Decorate(st)
@@ -246,7 +313,6 @@ local STBackdrop = {
 local STBackdropBorderColor = C.Colors.ItemPoor
 
 function ScrollingTable.Decorate(st)
-
     st.ReSkin = function(self)
         self.frame:SetBackdrop(STBackdrop)
         self.frame:SetBackdropColor(0, 0, 0, 1)
@@ -321,27 +387,28 @@ end
 
 --- @return function
 function ScrollingTable.DoCellUpdateFn(fn)
-    local function after(rowFrame, _, _, cols, _, realrow, column, _, table, ...)
-        local rowdata = table:GetRow(realrow)
-        local celldata = table:GetCell(rowdata, column)
+    local function after(rowFrame, _, _, cols, _, realRow, column, _, table, ...)
+        local rowData = table:GetRow(realRow)
+        local cellData = table:GetCell(rowData, column)
 
         local highlight
-        if type(celldata) == "table" then
-            highlight = celldata.highlight
+        if type(cellData) == "table" then
+            highlight = cellData.highlight
         end
 
         if table.fSelect then
-            if table.selected == realrow then
-                table:SetHighLightColor(rowFrame, highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight())
+            if table.selected == realRow then
+                table:SetHighLightColor(rowFrame, highlight or cols[column].highlight or rowData.highlight or table:GetDefaultHighlight())
             else
                 table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank())
             end
         end
     end
 
-    return function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
-        fn(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
-        after(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
+    -- rowFrame, cellFrame, data, cols, row, realRow, column, fShow, table. ...
+    return function(...)
+        fn(...)
+        after(...)
     end
 end
 

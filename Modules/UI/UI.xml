@@ -5,9 +5,11 @@
     <Script file="CustomItems.lua" />
     <Script file="Lists.lua" />
     <Script file="MasterLooter.lua" />
-    <Script file="VersionCheck.lua" />
     <Script file="LootSession.lua" />
-    <Script file="Loot.lua" />
+    <Script file="LootLedger.lua" />
     <Script file="LootAllocate.lua" />
+    <Script file="LootTrade.lua" />
+    <Script file="Loot.lua" />
+    <Script file="VersionCheck.lua" />
     <Script file="Metrics.lua" />
 </Ui>
