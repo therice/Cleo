@@ -2,6 +2,37 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.16 (2024-11-21)
+* Add basic framework for handling traing of items that were awarded from a player's bags instead of a loot table 73e8b1e
+* Add descriptions and help to announcements configuration 0dbbdc6
+* Add Firelands encounters 30dd15a
+* Add Firelands loot e5af8da
+* Add icon and tooltip for source of item in the loot session interface 8834325
+* Add item owner as a transmitted attribute which is made available for announcing items 687f6df
+* Add item owner as an available attribute for announcing items awards 8d03b1b
+* Add owner and item status to loot allocation interface. Add right-click menu to loot ledger interface. bfad0e4
+* Add support for updating loot ledger when items are for 'award later' or 'to trade' f072da3
+* Added shell of interface for displaying loot ledger through UI 2cea873
+* Added source of loot to Loot Ledger, if dropped from an encounter 65821c1
+* Added winner of loot to Loot Ledger, if has been awarded d7e9063
+* Address issue with time remaining bar not being properly handled on sort and refresh 5efb00e
+* Address issues with loot slots not properly being accessed 5b3980b
+* Attempt to resolve NPM issues by using '--legacy-peer-deps' f3651ed
+* Augmented item which was looted to bags (for later award), with ability store/restore the associated award attributes c540631
+* Capture encounter from award if present when auditing and add tests for loot trading bd46971
+* Completed support for 'award later' via loot session interface 5c6f162
+* Correct interface version for Firelands 4e96a3d
+* Disable 'award later' if items are added to loot session from ledger c466796
+* Finalize award lader and item trading support 33b378d
+* Fix testing regressions a8578fa
+* Highlight specific item(s) on the loot session interface in order to prevent incorrect allocation a41149b
+* Include Vehicle, GameObject, and Pet as valid 'creature' GUIDs 5d6e1e2
+* Simplify the representation of an item award, allowing for use when awarding/trading from items in bags 1db6db3
+* Support 'award later' from loot allocation interface 8e32aa7
+* Support removal of items from loot ledger, by specific item or state a61602d
+* Update support for requesting and automatically adding random rolls during loot allocation c516132
+* First round of changes in the effort to support awarding loot from player's bags instead of directly from creature ae7915b
+
 2025.0.15 (2024-10-29)
 * Add Firelands encounters 398c6c8
 * Add Firelands loot 5841023
