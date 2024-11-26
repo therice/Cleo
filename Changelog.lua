@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.17 (2024-11-26)
+* Fix race condition with logging on login. Fix issue with Replication interface being incorrectly referenced. 85c4637
+
 2025.0.16 (2024-11-21)
 * Add basic framework for handling traing of items that were awarded from a player's bags instead of a loot table 73e8b1e
 * Add descriptions and help to announcements configuration 0dbbdc6
