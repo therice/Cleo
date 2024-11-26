@@ -63,7 +63,7 @@ end
 
 AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
 
---- @type Logging
+--- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
 ---@type LibUtil
 local Util = AddOn:GetLibrary("Util")

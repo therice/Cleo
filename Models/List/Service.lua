@@ -322,7 +322,7 @@ function Service:PlayerMappingFunction(configId)
 end
 
 
--- idOrConfig can be an instance of Configuration or Configuration Id (string)
+--- @param idOrConfig Models.List.Configuration|string an instance of Configuration or Configuration Id (string)
 --- @return Models.List.ActiveConfiguration
 function Service:Activate(idOrConfig)
 	local config =

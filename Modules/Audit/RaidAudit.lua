@@ -171,7 +171,7 @@ local UTCOffset = Util.Memoize.Memoize(
 local function GetNormalizedInterval(self, intervalInDays)
 	assert(Util.Objects.IsNumber(intervalInDays) and intervalInDays >= 0, "intervalInDays must be a positive number")
 	-- determine number of weeks and days which make up the interval
-	local weeks, remainder, raid_weeks =
+	local weeks, remainder, raidWeeks =
 		floor(intervalInDays / 7), (intervalInDays % 7), {}
 	local now = Date():hour(15 + UTCOffset()):min(0):sec(0)
 
@@ -195,8 +195,8 @@ local function GetNormalizedInterval(self, intervalInDays)
 		while (weeks > 0) do
 			rwe = Date(rws):add { day = 7 }
 			if rwe <= now then
-				Util.Tables.Push(raid_weeks, {rws, rwe, false})
-				weeks = weeks -1
+				Util.Tables.Push(raidWeeks, { rws, rwe, false})
+				weeks = weeks - 1
 			end
 
 			rws = Date(rws):add { day = -7 }
@@ -207,7 +207,7 @@ local function GetNormalizedInterval(self, intervalInDays)
 
 	if Logging:IsEnabledFor(Logging.Level.Debug) then
 		Util.Tables.Call(
-			raid_weeks,
+			raidWeeks,
 			function(rw)
 				Logging:Debug(
 					"GetNormalizedInterval(%d) : %s (start) -> %s (end)",
@@ -228,7 +228,7 @@ local function GetNormalizedInterval(self, intervalInDays)
 		function(a, b) return a.timestamp > b.timestamp end
 	)
 
-	for idx, rw in pairs(raid_weeks) do
+	for idx, rw in pairs(raidWeeks) do
 		local rws, rwe, index = rw[1], rw[2]
 
 		for i, v in pairs(orderedHistory) do
@@ -244,23 +244,23 @@ local function GetNormalizedInterval(self, intervalInDays)
 		end
 
 
-		raid_weeks[idx][3] = index and true or false
+		raidWeeks[idx][3] = index and true or false
 		-- could not find a raid during the week, look for another
 		if not index then
-			local lrws, lrwe = raid_weeks[#raid_weeks][1], raid_weeks[#raid_weeks][2]
+			local lrws, lrwe = raidWeeks[#raidWeeks][1], raidWeeks[#raidWeeks][2]
 			local _, _, lrwdd = lrwe:diff(lrws):Duration()
 			-- if the last raid week window was 7 days (full week) add another raid week to search
 			if lrwdd == 7 then
 				rwe = Date(lrws)
 				rws =  Date(rwe):add { day = -7 }
-				Util.Tables.Push(raid_weeks, {rws, rwe})
+				Util.Tables.Push(raidWeeks, { rws, rwe})
 			end
 		end
 	end
 
 	if Logging:IsEnabledFor(Logging.Level.Trace) then
 		Util.Tables.Call(
-			raid_weeks,
+			raidWeeks,
 			function(rw)
 				Logging:Trace(
 					"GetNormalizedInterval(%d) : %s (start) -> %s (end) / found = %s",
@@ -273,7 +273,7 @@ local function GetNormalizedInterval(self, intervalInDays)
 		)
 	end
 
-	local sdate, edate = raid_weeks[#raid_weeks][1], raid_weeks[1][2]
+	local sdate, edate = raidWeeks[#raidWeeks][1], raidWeeks[1][2]
 	local interval = (edate.time - sdate.time) / (24 * 60 * 60)
 
 	Logging:Debug(

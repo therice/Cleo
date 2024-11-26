@@ -8,9 +8,8 @@ local Util = AddOn:GetLibrary("Util")
 --- @class Logging
 local Logging = AddOn:NewModule("Logging")
 
-local accum
+local accum= {}
 if not AddOn._IsTestContext() then
-    accum = {}
     Log:SetWriter(
         function(msg)
             Util.Tables.Push(accum, msg)
@@ -50,7 +49,7 @@ function Logging:OnEnable()
     Log:Debug("OnEnable(%s)", self:GetName())
     if not AddOn._IsTestContext() then
         self:SwitchDestination(accum)
-        accum = nil
+        Util.Tables.Wipe(accum)
     end
 end
 

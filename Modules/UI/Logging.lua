@@ -85,10 +85,11 @@ end
 function Logging:SwitchDestination(msgs)
     if self.frame then
         if msgs then
-            Util.Tables.Call(msgs,
-                    function(line)
-                        self.frame.msg:AddMessage(line, 1.0, 1.0, 1.0, nil, false)
-                    end
+            Util.Tables.Call(
+                msgs,
+                function(line)
+                    self.frame.msg:AddMessage(line, 1.0, 1.0, 1.0, nil, false)
+                end
             )
         end
         ---- now set logging to emit to frame

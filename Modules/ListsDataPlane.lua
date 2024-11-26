@@ -371,7 +371,7 @@ function ListsDP:OnModeChange(_, _, flag, enabled)
 	-- e.g. with development mode enabled, only considers inactive configurations
 	--  see Models/Replication/Engine.CreateReplicaDefinitions()
 	if flag == C.Modes.Develop then
-		if Replicate:IsRunning() then
+		if Replicate():IsRunning() then
 			self:RestartReplication()
 		end
 	elseif flag == C.Modes.Replication then
