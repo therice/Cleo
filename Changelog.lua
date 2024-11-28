@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.18 (2024-11-28)
+* Attempt to address issues with LibWindow by incrementing version 0776952
+
 2025.0.17 (2024-11-26)
 * Fix race condition with logging on login. Fix issue with Replication interface being incorrectly referenced. 85c4637
 
