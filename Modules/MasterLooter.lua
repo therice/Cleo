@@ -1012,7 +1012,8 @@ function ML:OnLootReady(...)
 		self.lootOpen = true
 		self:ProcessLootSlots(
 			function(...)
-				return self:ScheduleTimer("OnLootReady", 0, C.Events.LootReady, ...)
+				local args = {...}
+				return self:ScheduleTimer(function() self:OnLootReady(unpack(args)) end, 0)
 			end,
 			...
 		)
@@ -1021,9 +1022,9 @@ end
 
 -- Fires when a corpse is looted, after LOOT_READY.
 -- Documentation says it should be autoLoot (boolean), isFromItem (boolean)
--- However, from testing it's only one argument which is autoLoot
+-- However, from testing it's only one argument which is autoLoot (verified to be one argument - boolean on 12.15.24)
 function ML:OnLootOpened(...)
-	--Logging:Debug("OnLootOpened() : %s", Util.Objects.ToString({...}))
+	-- Logging:Debug("OnLootOpened() : %s", Util.Objects.ToString({...}))
 	if self:IsHandled() then
 		self.lootOpen = true
 
@@ -1038,7 +1039,7 @@ function ML:OnLootOpened(...)
 						attempt = attempt + 1
 					end
 
-					return self:ScheduleTimer("OnLootOpened", attempt / 10, C.Events.LootOpened, autoLoot, attempt)
+					return self:ScheduleTimer(function() self:OnLootOpened(autoLoot, attempt) end, attempt / 10)
 				end,
 				...
 			)

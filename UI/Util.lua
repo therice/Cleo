@@ -511,7 +511,7 @@ function U.IsMouseOnFrame(f)
     local left, right, bottom, top = f:GetLeft(), f:GetRight(), f:GetBottom(), f:GetTop()
 
     if (not left or not right or not bottom or not top) then
-        return false;
+        return false
     end
 
     return ((x >= left) and (x <= right) and (y >= bottom) and (y <= top))

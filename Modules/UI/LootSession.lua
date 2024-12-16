@@ -143,7 +143,7 @@ function LootSession:AddItems(items)
 										-- this is code to add extra highlight to draw attention to items
 										-- which should not be handled via addon and therefore should not be in
 										-- the loot session
-										if item and Util.Objects.In(item.id, 71141) then
+										if item and Util.Objects.In(item.id, 71141, 69815, 69848) then
 											self.frame.st:CreateSpecialHighlight(rowFrame)
 										else
 											self.frame.st:HideSpecialHighlight(rowFrame)
