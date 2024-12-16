@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.19 (2024-12-16)
+* Address issues with retry via LOOT_READY and LOOT_OPENED a858af0
+
 2025.0.18 (2024-11-28)
 * Attempt to address issues with LibWindow by incrementing version 0776952
 
