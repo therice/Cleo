@@ -3,12 +3,12 @@ local _, AddOn = ...
 local L = AddOn.Locale
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
 --- @type Package
 local AuditPkg = AddOn.ImportPackage('Models.Audit')
 --- @type Models.Date
 local Date = AddOn.ImportPackage('Models').Date
---- @type Models.DateFormat
-local DateFormat = AddOn.ImportPackage('Models').DateFormat
 --- @type Models.Player
 local Player = AddOn.Package('Models').Player
 --- @type LibEncounter
@@ -51,9 +51,16 @@ function RaidRosterRecord:GetEncounterName()
 	return encounter
 end
 
+function RaidRosterRecord:IsValid()
+	return
+		Util.Objects.IsNumber(self.instanceId) and
+		Util.IsNumber(self.encounterId) and
+		(self.encounterDifficultyId == nil or Util.Objects.IsNumber(self.encounterDifficultyId))
+end
+
 function RaidRosterRecord:GetDifficultyName()
-	local name = GetDifficultyInfo(self.encounterDifficultyId)
-	return name
+	--Logging:Debug("GetDifficultyName(%s)", Util.Objects.ToString(self:toTable()))
+	return GetDifficultyInfo(self.encounterDifficultyId)
 end
 
 --- @param encounter Models.Encounter

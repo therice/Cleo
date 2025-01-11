@@ -85,8 +85,29 @@ function RA:OnDisable()
 	self:UnsubscribeFromComms()
 end
 
+--- @param validate boolean if true history will be validated to insure no incorrect records before being returned
 --- @return Models.CompressedDb
-function RA:GetHistory()
+function RA:GetHistory(validate)
+	validate = (validate == true)
+	if validate then
+		local toRemove = {}
+		for row, data in cpairs(self.history) do
+			--- @type Models.Audit.RaidRosterRecord
+			local entry = RaidRosterRecord:reconstitute(data)
+			if not entry or not entry:IsValid() then
+				Util.Tables.Push(toRemove, tonumber(row))
+			end
+		end
+
+		if #toRemove > 0 then
+			Logging:Warn("GetHistory() : validation determined the following should be removed %s", Util.Objects.ToString(toRemove))
+			for _, idx in pairs(toRemove) do
+				Logging:Warn("GetHistory() : removing entry %d", idx)
+				self.history:del(idx)
+			end
+		end
+	end
+
 	return self.history
 end
 

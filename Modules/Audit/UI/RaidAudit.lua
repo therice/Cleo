@@ -355,9 +355,10 @@ function RaidTab:BuildData()
 
 	local tsData, instanceData, encounterData = {}, {}, {}
 
-	for row, entryData in cpairs(RA:GetHistory()) do
+	for row, entryData in cpairs(RA:GetHistory(true)) do
 		--- @type Models.Audit.RaidRosterRecord
 		local entry = RaidRosterRecord:reconstitute(entryData)
+		Logging:Debug("BuildData() : %s / %s", Util.Objects.ToString(row), tostring(entry:IsValid()))
 		container.rows[row] = {
 			num = row,
 			entry = entry,
