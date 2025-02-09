@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.20 (2025-01-12)
+* Address potential issue with corrupted Raid Audit records 81660a1
+
 2025.0.19 (2024-12-16)
 * Address issues with retry via LOOT_READY and LOOT_OPENED a858af0
 
