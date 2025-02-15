@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.21 (2025-02-15)
+* Correct tokens and add support for uploading to Curseforge 8248e84
+* Update TOC with CurseForge Project ID 5b83110
+* Publish to CurseForge ccc0d47
+
 2025.0.20 (2025-01-12)
 * Address potential issue with corrupted Raid Audit records 81660a1
 
