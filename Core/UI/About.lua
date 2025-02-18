@@ -59,18 +59,21 @@ function AddOn:AddAbout()
 		about.authorText =  UI:New('Text', about, AddOn.author):Size(520,25):Point("TOPLEFT", about.authorLabel, "TOPRIGHT"):Color():Shadow():Top()
 		about.versionLabel =  UI:New('Text', about, L.version):Size(150,25):Point("TOPLEFT", about.authorLabel, "BOTTOMLEFT", 0, 10):Shadow():Top()
 		about.versionText =  UI:New('Text', about, tostring(AddOn.version)):Size(520,25):Point("TOPLEFT", about.versionLabel, "TOPRIGHT"):Color():Shadow():Top()
-		about.changeLog = UI:New('ScrollFrame', about):Size(680, 180):Point("TOP", 0, -385):OnShow(
+		about.wowVersionLabel = UI:New('Text', about, format('WOW %s', L.version)):Size(150,25):Point("TOPLEFT", about.versionLabel, "BOTTOMLEFT", 0, 10):Shadow():Top()
+		about.wowVersionText = UI:New('Text', about, tostring(AddOn.BuildInfo.version)):Size(520,25):Point("TOPLEFT", about.wowVersionLabel, "TOPRIGHT"):Color():Shadow():Top()
+		about.changeLog = UI:New('ScrollFrame', about):Size(680, 200):Point("TOP", 0, -405):OnShow(
 				function(self)
 					local cl = ParsedChangeLog()
 					local text = Util.Strings.Join2("\n", function() return true end, cl)
 					self.text:SetText(text)
-					self:Height(self.text:GetStringHeight() + 50)
+					self:Height(self.text:GetStringHeight() + 20)
 
+					--[[
 					self:OnShow(function()
 						local height = 50 + self.text:GetStringHeight()
 						self:Height(height)
 						self:OnShow()
-					end)
+					end)--]]
 				end,
 				true
 		)

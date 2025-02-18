@@ -43,6 +43,7 @@ local lib = LibStub("LibEncounter-1.1", true)
 --  Blackwing Descent
 --  Throne of the Four Winds
 --  Firelands
+--  Dragon Soul
 
 --
 -- Mapping from map id to details (name will be used as index for localization)
@@ -152,6 +153,10 @@ lib.Maps = {
     -- JournalInstance.ID = 78
     [720] = {
         name = 'Firelands'
+    },
+    -- JournalInstance.ID = 187
+    [967] = {
+        name = 'Dragon Soul'
     },
 }
 
@@ -902,6 +907,30 @@ lib.Creatures = {
     },
     [52409] = {
         name = 'Ragnaros'
+    },
+    [55265] = {
+        name = 'Morchok'
+    },
+    [55308] = {
+        name = 'Warlord Zon\'ozz'
+    },
+    [55312] = {
+        name = 'Yor\'sahj the Unsleeping'
+    },
+    [55689] = {
+        name = 'Hagara the Stormbinder'
+    },
+    [55294] = {
+        name = 'Ultraxion'
+    },
+    [56427] = {
+        name = 'Warmaster Blackhorn'
+    },
+    [53879] = {
+        name = 'Spine of Deathwing'
+    },
+    [56173] = {
+        name = 'Madness of Deathwing'
     },
 }
 
@@ -1731,5 +1760,45 @@ lib.Encounters = {
     [1203] = {
         map_id = 720,
         creature_id = {52409}
+    },
+    -- Morchok
+    [1292] = {
+        map_id = 967,
+        creature_id = {55265}
+    },
+    -- Zonozz
+    [1294] = {
+        map_id = 967,
+        creature_id = {55308}
+    },
+    -- Yorashj
+    [1295] = {
+        map_id = 967,
+        creature_id = {55312}
+    },
+    -- Hagara
+    [1296] = {
+        map_id = 967,
+        creature_id = {55689}
+    },
+    -- Ultraxion
+    [1297] = {
+        map_id = 967,
+        creature_id = {55294}
+    },
+    -- Blackhorn
+    [1298] = {
+        map_id = 967,
+        creature_id = {56427}
+    },
+    -- Spine of Deathwing
+    [1291] = {
+        map_id = 967,
+        creature_id = {53879}
+    },
+    -- Madness of Deathwing
+    [1299] = {
+        map_id = 967,
+        creature_id = {56173}
     },
 }

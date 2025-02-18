@@ -272,6 +272,7 @@ AddOn.DefaultCustomItems = {
 
     -- CATA P1
     -- T11 https://www.wowhead.com/cata/guide=cataclysm&tier-11
+    --[[
     [63683] = { 4, 359, "INVTYPE_HEAD" },                       -- Helm of the Forlorn Conqueror
     [63684] = { 4, 359, "INVTYPE_HEAD" },                       -- Helm of the Forlorn Protector
     [63682] = { 4, 359, "INVTYPE_HEAD" },                       -- Helm of the Forlorn Vanquisher
@@ -320,6 +321,40 @@ AddOn.DefaultCustomItems = {
     [71673] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
     -- Omitting for now, but keeping placeholder
     -- [71617] = { }, -- Crystallized Firestone (can be used to upgrade gear, not enumerating)
+    --]]
+
+    -- CATA P4 (Dragon Soup)
+    -- T13
+    [78182] = { 4, 397, "INVTYPE_HEAD" },                   -- Crown of the Corrupted Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [78177] = { 4, 397, "INVTYPE_HEAD" },                   -- Crown of the Corrupted Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [78172] = { 4, 397, "INVTYPE_HEAD" },                   -- Crown of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [78850] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Crown of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [78851] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Crown of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [78852] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Crown of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [78183] = { 4, 397, "INVTYPE_HAND" },                   -- Gauntlets of the Corrupted Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [78178] = { 4, 397, "INVTYPE_HAND" },                   -- Gauntlets of the Corrupted Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [78173] = { 4, 397, "INVTYPE_HAND" },                   -- Gauntlets of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid)) [NORMAL]
+    [78853] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Gauntlets of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [78854] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Gauntlets of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [78855] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Gauntlets of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [78184] = { 4, 397, "INVTYPE_CHEST" },                  -- Chest of the Corrupted Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [78179] = { 4, 397, "INVTYPE_CHEST" },                  -- Chest of the Corrupted Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [78174] = { 4, 397, "INVTYPE_CHEST" },                  -- Chest of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [78847] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Chest of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [78848] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Chest of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [78849] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Chest of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [78181] = { 4, 397, "INVTYPE_LEGS" },                   -- Leggings of the Corrupted Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [78176] = { 4, 397, "INVTYPE_LEGS" },                   -- Leggings of the Corrupted Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [78171] = { 4, 397, "INVTYPE_LEGS" },                   -- Leggings of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [78856] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Leggings of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [78857] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Leggings of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [78858] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Leggings of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    [78180] = { 4, 397, "INVTYPE_SHOULDER" },               -- Shoulders of the Corrupted Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [78175] = { 4, 397, "INVTYPE_SHOULDER" },               -- Shoulders of the Corrupted Protector (Warrior, Hunter, Shaman) [NORMAL]
+    [78170] = { 4, 397, "INVTYPE_SHOULDER" },               -- Shoulders of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
+    [78859] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [78860] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
+    [78861] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
 }
 
 AddOn.TestItems = {
@@ -458,7 +493,6 @@ AddOn.TestItems = {
     51912, 51913, 51914, 51915, 51916, 51917, 51918, 51919, 51920, 51921, 51922, 51923, 51924, 51925, 51926, 51927,
     51928, 51929, 51930, 51931, 51932, 51933, 51934, 51935, 51936, 51937, 51938, 51939, 51940, 51941, 51942, 51943,
     51944, 51945, 51946, 51947, 52025, 52026, 52027, 52028, 52029, 52030
-    --]]
 
     -- CATA P1 START
     59117, 59118, 59119, 59120, 59121, 59122, 59216, 59217, 59218, 59219, 59220, 59221, 59222, 59223, 59224, 59225,
@@ -507,4 +541,28 @@ AddOn.TestItems = {
     71567, 71580, 71568, 71593, 71592, 71617, 69976, 69966, 69975, 69965, 69962, 69960, 69971, 69974, 69972, 69961,
     69963, 69973, 69970, 69969, 69968, 69958, 69957, 69959,
     -- CATA P3 END
+    --]]
+
+    -- CATA P4 START
+    71999, 72000, 72001, 72002, 72003, 72004, 72005, 72006, 72007, 72008, 72009, 72010, 72011, 72012, 72013, 72014,
+    72015, 72016, 77067, 77069, 77188, 77189, 77190, 77191, 77192, 77193, 77194, 77195, 77196, 77197, 77198, 77199,
+    77200, 77201, 77202, 77203, 77204, 77205, 77206, 77207, 77208, 77209, 77210, 77211, 77212, 77213, 77214, 77215,
+    77216, 77217, 77218, 77219, 77220, 77221, 77223, 77224, 77225, 77226, 77227, 77228, 77229, 77230, 77231, 77232,
+    77234, 77235, 77236, 77237, 77238, 77239, 77240, 77241, 77242, 77243, 77244, 77245, 77246, 77247, 77248, 77249,
+    77250, 77251, 77252, 77253, 77254, 77255, 77257, 77258, 77259, 77260, 77261, 77262, 77263, 77265, 77266, 77267,
+    77268, 77269, 77270, 77271, 77938, 77969, 77970, 77971, 77972, 77973, 77974, 77975, 77976, 77977, 77978, 77979,
+    77980, 77981, 77982, 77983, 77989, 77990, 77991, 77992, 77993, 77994, 77995, 77996, 77997, 77998, 77999, 78000,
+    78001, 78002, 78003, 78011, 78012, 78013, 78170, 78171, 78172, 78173, 78174, 78175, 78176, 78177, 78178, 78179,
+    78180, 78181, 78182, 78183, 78184, 78357, 78359, 78361, 78362, 78363, 78364, 78365, 78366, 78367, 78368, 78369,
+    78370, 78371, 78372, 78373, 78375, 78376, 78377, 78378, 78380, 78381, 78382, 78384, 78385, 78386, 78387, 78388,
+    78389, 78390, 78391, 78392, 78393, 78395, 78396, 78397, 78398, 78399, 78400, 78401, 78402, 78403, 78404, 78405,
+    78406, 78408, 78411, 78412, 78413, 78414, 78415, 78416, 78417, 78418, 78419, 78420, 78421, 78422, 78423, 78424,
+    78425, 78427, 78428, 78429, 78430, 78431, 78432, 78433, 78434, 78435, 78436, 78438, 78439, 78440, 78441, 78442,
+    78443, 78444, 78445, 78446, 78447, 78448, 78449, 78450, 78451, 78452, 78454, 78455, 78456, 78457, 78458, 78460,
+    78461, 78462, 78463, 78464, 78465, 78466, 78467, 78468, 78469, 78470, 78471, 78472, 78473, 78474, 78475, 78476,
+    78477, 78478, 78479, 78480, 78481, 78482, 78483, 78484, 78485, 78486, 78487, 78488, 78489, 78490, 78491, 78492,
+    78493, 78494, 78495, 78496, 78497, 78498, 78847, 78848, 78849, 78850, 78851, 78852, 78853, 78854, 78855, 78856,
+    78857, 78858, 78859, 78860, 78861, 78862, 78863, 78864, 78865, 78866, 78867, 78868, 78869, 78870, 78871, 78872,
+    78873, 78874, 78875, 78876, 78878, 78879, 78882, 78884, 78885, 78886, 78887, 78888, 78889
+    -- CATA P4 START
 }
