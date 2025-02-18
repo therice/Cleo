@@ -2,6 +2,14 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2025.0.22 (2025-02-18)
+* Add additional images for documentation da93131
+* Add license f67b4fc
+* Add more detailed README b4c63c1
+* Update for Dragon Soul (TOC and Items) 5baab57
+* Actually update TOC for Dragon Soul game version 77c68e6
+* Add Dragon Soul encounters 83e8544
+
 2025.0.21 (2025-02-15)
 * Correct tokens and add support for uploading to Curseforge 8248e84
 * Update TOC with CurseForge Project ID 5b83110
