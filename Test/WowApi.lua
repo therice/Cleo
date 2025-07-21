@@ -778,11 +778,14 @@ _G.C_CreatureInfo.ClassInfo = {
     [9] = {
         "Warlock", "WARLOCK"
     },
-    [10] = nil,
+    [10] = {
+        "Monk", "MONK"
+    },
     [11] = {
         "Druid", "DRUID"
     },
     [12] = nil,
+    [13] = nil,
 }
 
 -- className (localized name, e.g. "Warrior"), classFile (non-localized name, e.g. "WARRIOR"), classID
