@@ -321,7 +321,6 @@ AddOn.DefaultCustomItems = {
     [71673] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
     -- Omitting for now, but keeping placeholder
     -- [71617] = { }, -- Crystallized Firestone (can be used to upgrade gear, not enumerating)
-    --]]
 
     -- CATA P4 (Dragon Soup)
     -- T13
@@ -355,6 +354,41 @@ AddOn.DefaultCustomItems = {
     [78859] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
     [78860] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
     [78861] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    --]]
+
+    -- MOP P1
+    -- T14 (Terrace of Endless Spring, Heart of Fear)
+    -- Normal is 496, Heroic is 509
+    [89234] = { 4, 496, "INVTYPE_HEAD" },                       -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89258] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89235] = { 4, 496, "INVTYPE_HEAD" },                       -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89259] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89236] = { 4, 496, "INVTYPE_HEAD" },                       -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89260] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89242] = { 4, 496, "INVTYPE_HAND" },                       -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89255] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89240] = { 4, 496, "INVTYPE_HAND" },                       -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89241] = { 4, 496, "INVTYPE_HAND" },                       -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89257] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89239] = { 4, 496, "INVTYPE_CHEST" },                      -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89249] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89237] = { 4, 496, "INVTYPE_CHEST" },                      -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89250] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89238] = { 4, 496, "INVTYPE_CHEST" },                      -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89251] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89245] = { 4, 496, "INVTYPE_LEGS" },                       -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89252] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89243] = { 4, 496, "INVTYPE_LEGS" },                       -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89244] = { 4, 496, "INVTYPE_LEGS" },                       -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89254] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89248] = { 4, 496, "INVTYPE_SHOULDER" },                   -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89261] = { 4, 509, ItemUtil.CustomItemInvTypeSelf  },      -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89246] = { 4, 496, "INVTYPE_SHOULDER" },                   -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89262] = { 4, 509, ItemUtil.CustomItemInvTypeSelf  },      -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89247] = { 4, 496, "INVTYPE_SHOULDER" },                   -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89263] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
 }
 
 AddOn.TestItems = {

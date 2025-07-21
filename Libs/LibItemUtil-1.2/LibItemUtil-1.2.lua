@@ -445,6 +445,15 @@ local HEROIC = strtrim(_G.PLAYER_DIFFICULTY2)
 
 lib.HEROIC = HEROIC
 
+local function StripColor(text)
+    text = string.gsub(text or "", "|c%x%x%x%x%x%x%x%x", "" )
+    -- Apparently stuff like this exists "|cFF 0FF 0Heroic|r"
+    text = string.gsub(text or "", "|c%x%x%s?%x%x%x%s?%x?", "" )
+    text = string.gsub(text, "|c%x%x %x%x%x%x%x", "" )
+    text = string.gsub(text, "|r", "" )
+    return text
+end
+
 lib.IsItemHeroic = Util.Memoize.Memoize(
     function(itemLink)
         if type(itemLink) == "string" and itemLink:trim() == "" then
@@ -460,8 +469,8 @@ lib.IsItemHeroic = Util.Memoize.Memoize(
             local line = getglobal(TooltipFrameNameFormat:format(i))
             if line and line.GetText then
                 local text = strtrim(line:GetText() or "")
-                Logging:Trace("IsItemHeroic(%s) : Text=%s", itemLink, text)
-                if text == HEROIC then
+                Logging:Trace("IsItemHeroic(%s) : Text=%s, Stripped=%s, Checking=%s", itemLink, gsub(text, "\124", "\124\124"), StripColor(text), HEROIC)
+                if StripColor(text) == HEROIC then
                     Logging:Trace("IsItemHeroic(%s) : IsHeroic=true", itemLink)
                     tooltip:Hide()
                     return true

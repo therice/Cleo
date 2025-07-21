@@ -303,6 +303,39 @@ lib.TokenEquipmentLocations = {
     [64316] = { "ShoulderSlot" },   -- Mantle of the Forlorn Protector
     [64314] = { "ShoulderSlot" },   -- Mantle of the Forlorn Vanquisher      
     [66998] = { "ChestSlot", "HandsSlot", "HeadSlot", "LegsSlot", "ShoulderSlot" },  -- Essence of the Forlorn (can be used to purchase any Heroic armor token)
+
+    -- MOP Classic P1 (T14)
+    -- This does not include Celestial gear, as it is obtained via dungeons and August Stone Fragments
+    [89234] = { "HeadSlot" },       -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89258] = { "HeadSlot" },       -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89235] = { "HeadSlot" },       -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89259] = { "HeadSlot" },       -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89236] = { "HeadSlot" },       -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89260] = { "HeadSlot" },       -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89242] = { "HandsSlot" },      -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89255] = { "HandsSlot" },      -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89240] = { "HandsSlot" },      -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { "HandsSlot" },      -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89241] = { "HandsSlot" },      -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89257] = { "HandsSlot" },      -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89239] = { "ChestSlot" },      -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89249] = { "ChestSlot" },      -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89237] = { "ChestSlot" },      -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89250] = { "ChestSlot" },      -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89238] = { "ChestSlot" },      -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89251] = { "ChestSlot" },      -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89245] = { "LegsSlot" },       -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89252] = { "LegsSlot" },       -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89243] = { "LegsSlot" },       -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { "LegsSlot" },       -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89244] = { "LegsSlot" },       -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89254] = { "LegsSlot" },       -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89248] = { "ShoulderSlot" },   -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89261] = { "ShoulderSlot" },   -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89246] = { "ShoulderSlot" },   -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89262] = { "ShoulderSlot" },   -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89247] = { "ShoulderSlot" },   -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89263] = { "ShoulderSlot" },   -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
 }
 
 -- mapping from token to items (id) which are rewarded from turning in
@@ -537,4 +570,37 @@ lib.TokenItems = {
     [78859] = { 78742, 78745, 78746, 78747, 78749, 78750 },             -- Shoulders of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
     [78860] = { 78733, 78734, 78735, 78737, 78739, 78741 },             -- Shoulders of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
     [78861] = { 78736, 78738, 78740, 78743, 78744, 78748, 78751 },      -- Shoulders of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    -- MOP Classic P1 (T14)
+    -- This does not include Celestial gear, as it is obtained via dungeons and August Stone Fragments
+    -- Celestial is 483, Normal is 496, Heroic is 509
+    [89234] = { 85301, 85316, 85336, 85377, 85307, 85311, 85381, 85357 },           -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89258] = { 87126, 86920, 86915, 87008, 86934, 86925, 86940, 86929 },           -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89235] = { 85346, 85321, 85341, 85362, 85365, 85370 },                         -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89259] = { 87106, 87111, 87101, 87115, 87120, 87188 },                         -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89236] = { 85333, 85326, 85296, 85291, 85286, 85351, 85386, 85390, 85396 },    -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89260] = { 87192, 87199, 87004, 87141, 87136, 87131, 87096, 87090, 87086 },    -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89242] = { 85302, 85317, 85337, 85378, 85308, 85312, 85380, 85358 },           -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89255] = { 87125, 86919, 86914, 87007, 86933, 86924, 86939, 86928 },           -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89240] = { 85347, 85322, 85342, 85363, 85364, 85369 },                         -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { 87105, 87110, 87100, 87114, 87119, 87187 },                         -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89241] = { 85331, 85327, 85297, 85290, 85287, 85352, 85387, 85389, 85395 },    -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89257] = { 87194, 87198, 87003, 87140, 87135, 87130, 87095, 87089, 87085 },    -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89239] = { 85303, 85318, 85338, 85375, 85305, 85313, 85379, 85355 },           -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89249] = { 87124, 86918, 86913, 87010, 86936, 86923, 86938, 86931 },           -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89237] = { 85348, 85323, 85343, 85360, 85367, 85372 },                         -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89250] = { 87104, 87109, 87099, 87117, 87122, 87190 },                         -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89238] = { 85332, 85328, 85298, 85292, 85288, 85353, 85388, 85392, 85394 },    -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89251] = { 87193, 87197, 87002, 87142, 87134, 87129, 87094, 87092, 87084 },    -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89245] = { 85300, 85315, 85335, 85376, 85306, 85310, 85382, 85356 },           -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89252] = { 87127, 86921, 86916, 87009, 86935, 86926, 86941, 86930 },           -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89243] = { 85345, 85320, 85340, 85361, 85366, 85371 },                         -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { 87107, 87112, 87102, 87116, 87121, 87189 },                         -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89244] = { 85330, 85325, 85295, 85292, 85285, 85350, 85385, 85391, 85397 },    -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89254] = { 87195, 87200, 87005, 87142, 87137, 87132, 87097, 87091, 87087 },    -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89248] = { 85299, 85314, 85334, 85374, 85304, 85309, 85383, 85354 },           -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89261] = { 87128, 86922, 86917, 87011, 86937, 86927, 86942, 86932 },           -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89246] = { 85344, 85319, 85339, 85359, 85368, 85373 },                         -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89262] = { 87108, 87113, 87103, 87118, 87123, 87191 },                         -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89247] = { 85329, 85324, 85294, 85293, 85284, 85349, 85384, 85393, 85398 },    -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89263] = { 87196, 87201, 87006, 87143, 87138, 87133, 87098, 87093, 87088 },    -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
 }
