@@ -358,8 +358,9 @@ AddOn.Constants.EquipmentLocations = {
     -- This needs mapped to ranged where used
     -- INVTYPE_RANGEDRIGHT    = C.ItemEquipmentLocationNames.Ranged,
     INVTYPE_WAND           = C.ItemEquipmentLocationNames.Wand,
-    INVTYPE_THROWN         = C.ItemEquipmentLocationNames.Thrown,
-    INVTYPE_RELIC          = C.ItemEquipmentLocationNames.Relic,
+    -- Removed for MOP
+    --INVTYPE_THROWN         = C.ItemEquipmentLocationNames.Thrown,
+    --INVTYPE_RELIC          = C.ItemEquipmentLocationNames.Relic,
 }
 
 AddOn.Constants.EquipmentNameToLocation = tInvert(AddOn.Constants.EquipmentLocations)
