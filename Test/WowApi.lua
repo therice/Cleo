@@ -772,31 +772,31 @@ _G.MAX_CLASSES = 9
 
 _G.C_CreatureInfo = {}
 _G.C_CreatureInfo.ClassInfo = {
-    [1] = {
+    [1]  = {
         "Warrior", "WARRIOR"
     },
-    [2] = {
+    [2]  = {
         "Paladin", "PALADIN"
     },
-    [3] = {
+    [3]  = {
         "Hunter", "HUNTER"
     },
-    [4] = {
+    [4]  = {
         "Rogue", "ROGUE"
     },
-    [5] = {
+    [5]  = {
         "Priest", "PRIEST"
     },
-    [6] = {
+    [6]  = {
         "Death Knight", "DEATHKNIGHT"
     },
-    [7] = {
+    [7]  = {
         "Shaman", "SHAMAN"
     },
-    [8] = {
+    [8]  = {
         "Mage", "MAGE"
     },
-    [9] = {
+    [9]  = {
         "Warlock", "WARLOCK"
     },
     [10] = {

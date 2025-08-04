@@ -741,11 +741,11 @@ function AddOn:GetResponse(name)
 end
 
 function AddOn:AutoPassCheck(class, equipLoc, typeId, subTypeId, classes)
-    --Logging:Debug(
-    --        "AutoPassCheck() : %s, %s, %s, %s, %s",
-    --        tostring(class), tostring(equipLoc), tostring(typeId), tostring(subTypeId), tostring(classes)
-    --)
-    return not ItemUtil:ClassCanUse(class, classes, equipLoc, typeId, subTypeId)
+    Logging:Debug(
+            "AutoPassCheck() : %s, %s, %s, %s, %s",
+            tostring(class), tostring(equipLoc), tostring(typeId), tostring(subTypeId), tostring(classes)
+    )
+    return not ItemUtil:ClassCanUse(class, classes, equipLoc, typeId, subTypeId, not self:MasterLooterDbValue('showNonPreferredArmorTypes'))
 end
 
 function AddOn:DoAutoPass(lt, skip)

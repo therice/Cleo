@@ -256,6 +256,20 @@ local DisallowedByClass = {
     },
 }
 
+local PreferredArmorTypeByClass = {
+    DEATHKNIGHT = LE_ITEM_ARMOR_PLATE,
+    DRUID       = LE_ITEM_ARMOR_LEATHER,
+    HUNTER      = LE_ITEM_ARMOR_MAIL,
+    MAGE        = LE_ITEM_ARMOR_CLOTH,
+    MONK        = LE_ITEM_ARMOR_LEATHER,
+    PALADIN     = LE_ITEM_ARMOR_PLATE,
+    PRIEST      = LE_ITEM_ARMOR_CLOTH,
+    ROGUE       = LE_ITEM_ARMOR_LEATHER,
+    SHAMAN      = LE_ITEM_ARMOR_MAIL,
+    WARLOCK     = LE_ITEM_ARMOR_CLOTH,
+    WARRIOR     = LE_ITEM_ARMOR_PLATE,
+}
+
 local function GetNumClasses()
     return _G.MAX_CLASSES
 end
@@ -560,27 +574,44 @@ function lib:GetItemClassesAllowedFlag(itemLink)
 end
 
 --[[
-ClassCanUse(PRIEST) : Classes=4294967295 EquipLoc=[Helm of Endless Rage], TypeId=INVTYPE_HEAD, SubTypeId=4
+ClassCanUse(PRIEST) : Classes=4294967295 EquipLoc=INVTYPE_SHOULDER, TypeId=4 (LE_ITEM_CLASS_ARMOR), SubTypeId=4 (LE_ITEM_ARMOR_CLOTH)
+-- TypeId will be number representation of the type, e.g. 4 for LE_ITEM_CLASS_ARMOR
+-- SubTypeId will be the number representation of the sub-type, e.g. 1 for LE_ITEM_ARMOR_CLOTH
 --]]
-function lib:ClassCanUse(class, classesFlag, equipLoc, typeId, subTypeId)
-    Logging:Trace("ClassCanUse(%s) : Classes=%s EquipLoc=%s, TypeId=%s, SubTypeId=%s",
-            class, classesFlag, tostring(equipLoc), tostring(typeId), tostring(subTypeId))
+function lib:ClassCanUse(class, classesFlag, equipLoc, typeId, subTypeId, checkIfPreferred)
+    -- default to not checking preferred unless specified
+    checkIfPreferred = checkIfPreferred or false
+
+    Logging:Trace("ClassCanUse(%s) : Classes=%s EquipLoc=%s, TypeId=%s, SubTypeId=%s, CheckIfPreferred=%s",
+            class, classesFlag, tostring(equipLoc), tostring(typeId), tostring(subTypeId), tostring(checkIfPreferred))
 
     local classId = self.ClassTagNameToId[class]
-    --Logging:Trace("ClassCanUse(%s) : ClassId=%s", class, classId)
+    -- Logging:Trace("ClassCanUse(%s) : ClassId=%s", class, classId)
     -- if the classes flag, parsed from tooltip, doesn't contain the class id then it cannot be used
     if bit.band(classesFlag, bit.lshift(1, classId-1)) == 0 then
         return false
     end
 
-    if not equipLoc ~= "INVTYPE_CLOAK" then
+    local classCanUse = true
+    -- skip check for cloak, rings, trinkets, and necks
+    if not Util.Objects.In(equipLoc, "INVTYPE_CLOAK", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_NECK") then
         if DisallowedByClass[class] and DisallowedByClass[class][typeId] then
             local canUse = DisallowedByClass[class][typeId][subTypeId]
-            if canUse then return not canUse end
+            -- it's inverted, as boolean simply a placeholder to signify it isn't permitted
+            -- presence and true means cannot use
+            if canUse then
+                classCanUse = false
+            end
+        end
+
+        -- it's usable and armor, check if preferred type if specified
+        if classCanUse and checkIfPreferred and typeId == LE_ITEM_CLASS_ARMOR then
+            classCanUse = subTypeId == 0 or (PreferredArmorTypeByClass[class] == subTypeId)
         end
     end
 
-    return true
+    --Logging:Trace("ClassCanUse() : result=%s", tostring(classCanUse))
+    return classCanUse
 end
 
 function lib:IsTokenBasedItem(itemId)
