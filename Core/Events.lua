@@ -87,14 +87,14 @@ end
 -- This is fired when looting begins, but before the loot window is shown.
 -- Loot functions like GetNumLootItems will be available until LOOT_CLOSED is fired.
 function AddOn:LootReady(_, ...)
-    Logging:Debug("LootReady()")
+    Logging:Debug("LootReady()") -- : %s", Util.Objects.ToString({...}))
     self:MasterLooterModule():OnLootReady(...)
 end
 
 -- https://wow.gamepedia.com/LOOT_OPENED
 -- Fired when a corpse is looted, after LOOT_READY.
 function AddOn:LootOpened(_, ...)
-    Logging:Debug("LootOpened()")
+    Logging:Debug("LootOpened()") -- : %s", Util.Objects.ToString({...}))
     self:MasterLooterModule():OnLootOpened(...)
 end
 
@@ -102,7 +102,7 @@ end
 -- Fired when a player ceases looting a corpse.
 -- Note that this will fire before the last CHAT_MSG_LOOT event for that loot.
 function AddOn:LootClosed(_, ...)
-    Logging:Debug("LootClosed()")
+    Logging:Debug("LootClosed()") -- : %s", Util.Objects.ToString({...}))
     self:MasterLooterModule():OnLootClosed(...)
 end
 
@@ -122,18 +122,18 @@ local function DispatchEncounterEvent(self)
     end
 end
 
--- https://wow.gamepedia.com/ENCOUNTER_START
+-- https://warcraft.wiki.gg/wiki/ENCOUNTER_START
 -- ENCOUNTER_START: encounterID, "encounterName", difficultyID, groupSize
 function AddOn:EncounterStart(_, ...)
-    Logging:Debug("EncounterStart()")
+    Logging:Debug("EncounterStart() : %s", Util.Objects.ToString({...}))
     self.encounter = Encounter.Start(...)
     DispatchEncounterEvent(self)
 end
 
--- https://wow.gamepedia.com/ENCOUNTER_END
+-- https://warcraft.wiki.gg/wiki/ENCOUNTER_END
 -- ENCOUNTER_END: encounterID, "encounterName", difficultyID, groupSize, success
 function AddOn:EncounterEnd(_, ...)
-    Logging:Debug("EncounterEnd()")
+    Logging:Debug("EncounterEnd() : %s", Util.Objects.ToString({...}))
     self.encounter = Encounter.End(self.encounter, ...)
     DispatchEncounterEvent(self)
     self:ScheduleTimer(function() self:UpdatePlayerData() end, 2)
@@ -141,7 +141,7 @@ end
 
 -- https://wow.gamepedia.com/RAID_INSTANCE_WELCOME
 function AddOn:RaidInstanceEnter(_, ...)
-    Logging:Debug("RaidInstanceEnter()")
+    Logging:Debug("RaidInstanceEnter() : %s", Util.Objects.ToString({...}))
     local ML = self:MasterLooterModule()
 
     if not self.enabled or (not IsInRaid() and ML:GetDbValue('onlyUseInRaids')) then

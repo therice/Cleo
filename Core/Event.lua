@@ -38,7 +38,7 @@ function Events:Subject(event)
 end
 
 function Events:HandleEvent(event, ...)
-    --Logging:Debug("HandleEvent(%s) : %s", event, Util.Objects.ToString({...}))
+    Logging:Debug("HandleEvent(%s) : %s", event, Util.Objects.ToString({...}))
     self:Subject(event):next(event, ...)
 end
 

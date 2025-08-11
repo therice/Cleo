@@ -554,45 +554,45 @@ function LA:SubscribeToComms()
 	-- LootTableAdd is handled through message hook in initializer
 	self.commSubscriptions = Comm():BulkSubscribe(C.CommPrefixes.Main, {
 		[C.Commands.LootAck] = function(data, sender)
-			Logging:Debug("LootAck from %s", tostring(sender))
+			Logging:Debug("LootAck received from %s", tostring(sender))
 			self:OnLootAckReceived(sender, unpack(data))
 		end,
 		[C.Commands.Response] = function(data, sender)
-			Logging:Debug("Response from %s", tostring(sender))
+			Logging:Debug("Response received from %s", tostring(sender))
 			self:OnResponseReceived(unpack(data))
 		end,
 		[C.Commands.ChangeResponse] = function(data, sender)
-			Logging:Debug("ChangeResponse from %s", tostring(sender))
+			Logging:Debug("ChangeResponse received from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
 				self:OnChangeResponseReceived(unpack(data))
 			end
 		end,
 		[C.Commands.Awarded] = function(data, sender)
-			Logging:Debug("Awarded from %s", tostring(sender))
+			Logging:Debug("Awarded received from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
 				self:OnAwarded(unpack(data))
 			end
 		end,
 		[C.Commands.LootedToBags] = function(data, sender)
-			Logging:Debug("LootedToBags from %s", tostring(sender))
+			Logging:Debug("LootedToBags received from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
 				self:OnLootedToBags(unpack(data))
 			end
 		end,
 		[C.Commands.CheckIfOffline] = function(_, sender)
-			Logging:Debug("CheckIfOffline from %s", tostring(sender))
+			Logging:Debug("CheckIfOffline received from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
 				self:OnCheckIfOfflineReceived()
 			end
 		end,
 		[C.Commands.Rolls] = function(data, sender)
-			Logging:Debug("Rolls from %s", tostring(sender))
+			Logging:Debug("Rolls received from %s", tostring(sender))
 			if AddOn:IsMasterLooter(sender) then
 				self:OnRollsReceived(unpack(data))
 			end
 		end,
 		[C.Commands.Roll] = function(data, sender)
-			Logging:Debug("Rolls from %s -> %s", tostring(sender), Util.Objects.ToString(data))
+			Logging:Debug("Rolls received from %s -> %s", tostring(sender), Util.Objects.ToString(data))
 			self:OnRollReceived(unpack(data))
 		end,
 	})

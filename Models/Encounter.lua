@@ -47,6 +47,10 @@ function Encounter:IsSuccess()
     error("IsSuccess() not implemented")
 end
 
+function Encounter:tostring()
+    return Util.Objects.ToString(self:toTable())
+end
+
 Encounter.None = Encounter(0, _G.UNKNOWN, nil, nil)
 
 function EncounterStart:initialize(...)

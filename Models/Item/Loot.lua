@@ -473,6 +473,8 @@ local ItemAwardMixin = {
 	--- @param winner string the player who is being awarded the item
 	--- @param class string the player's class, if nil will be derived from Player
 	WithWinner = function(self, winner, class)
+		Logging:Trace("WithWinner() : %s, %s", tostring(winner), tostring(class))
+
 		self.winner = winner
 		if class then
 			self.class = class
