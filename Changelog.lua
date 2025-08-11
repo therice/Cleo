@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.2 (2025-08-11)
+* Game version is 'mists', not 'mop' 626e53e
+
 2026.0.1 (2025-08-11)
 * Update packager to MOP from Cata b6c6670
 
