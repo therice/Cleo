@@ -2,6 +2,18 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.0 (2025-08-11)
+* Update TOC for Mists of Pandaria a9613e8
+* Update versions of actions f9d8838
+* Add Monk 5157096
+* Add MOP Phase 1 Encounters 305d0f2
+* Add T14 items 62130da
+* Add test items for MOP Phase 1 990378b
+* Additional logging to assist with any issues that may arise during raid testing fcd7e1c
+* Fix incorrect item number for Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) 
+* Hide non-preferred types of armor by default in loot window 8f5e4c9
+* Remove Thrown and Relic item types 49e7fd9
+
 2025.0.22 (2025-02-18)
 * Add additional images for documentation da93131
 * Add license f67b4fc
