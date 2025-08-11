@@ -170,6 +170,8 @@ ML.defaults = {
 		},
 		-- are player's responses available (shown) in the loot dialogue
 		showLootResponses = false,
+		-- are player's given option to roll on armor which isn't of their preferred type (e.g. leather)
+		showNonPreferredArmorTypes = false,
 		-- are whispers supported for candidate responses
 		acceptWhispers = true,
 		-- are awards announced via specified channel
@@ -1589,7 +1591,7 @@ end
 function ML:RegisterAndAnnounceAward(award)
 	local session, winner, response =
 		award.session, award.winner, award:NormalizedReason().text
-	Logging:Debug("RegisterAndAnnounceAwarded(%d) : %s", session, winner)
+	Logging:Debug("RegisterAndAnnounceAwarded(%d, %s) : %s", session, winner, tostring(award))
 
 	local ltEntry = self:GetLootTableEntry(session)
 	local changeAward = ltEntry.awarded

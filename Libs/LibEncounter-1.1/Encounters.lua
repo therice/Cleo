@@ -44,7 +44,12 @@ local lib = LibStub("LibEncounter-1.1", true)
 --  Throne of the Four Winds
 --  Firelands
 --  Dragon Soul
-
+--
+-- MOP
+--  Terrace of Endless Spring
+--  Heart of Fear
+--  Mogu'shan Vaults
+--
 --
 -- Mapping from map id to details (name will be used as index for localization)
 -- https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749 (DEPRECATED)
@@ -157,6 +162,18 @@ lib.Maps = {
     -- JournalInstance.ID = 187
     [967] = {
         name = 'Dragon Soul'
+    },
+    -- JournalInstance.ID = 320
+    [996] = {
+        name = 'Terrace of Endless Spring'
+    },
+    -- JournalInstance.ID = 330
+    [1009] = {
+      name = 'Heart of Fear'
+    },
+    -- JournalInstance.ID = 317
+    [1008] = {
+        name = 'Mogu\'shan Vaults'
     },
 }
 
@@ -931,6 +948,88 @@ lib.Creatures = {
     },
     [56173] = {
         name = 'Madness of Deathwing'
+    },
+    -- Protectors of the Endless
+    [60583] = {
+        name = 'Protector Kaolan'
+    },
+    [60585] = {
+        name = 'Elder Regail'
+    },
+    [60586] = {
+        name = 'Elder Asani'
+    },
+    [62442] = {
+        name = 'Tsulong'
+    },
+    [62983] = {
+        name = 'Lei Shi'
+    },
+    [60999] = {
+        name = 'Sha of Fear'
+    },
+    -- https://www.wowhead.com/mop-classic/guide/mists-of-pandaria-classic-phase-1-overview
+    -- Heart of Fear
+    [62980] = {
+        name = 'Imperial Vizier Zor\'lok'
+    },
+    [62543] = {
+        name = 'Blade Lord Ta\'yak'
+    },
+    [62164] = {
+        name = 'Garalon'
+    },
+    [62397] = {
+        name = 'Wind Lord Mel\'jarak'
+    },
+    [62511] = {
+        name = 'Amber-Shaper Un\'sok'
+    },
+    [62837] = {
+        name = 'Grand Empress Shek\'zeer'
+    },
+    -- Mogu'shan Vaults
+    [60051] = {
+        name = 'Cobalt Guardian'
+    },
+    [60043] = {
+        name = 'Jade Guardian'
+    },
+    [59915] = {
+        name = 'Jasper Guardian'
+    },
+    [60047] = {
+        name = 'Amethyst Guardian'
+    },
+    [60047] = {
+        name = 'Amethyst Guardian'
+    },
+    [60009] = {
+        name = 'Feng the Accursed'
+    },
+    [60143] = {
+        name = 'Gara\'jal the Spiritbinder'
+    },
+    [60701] = {
+        name = 'Zian of the Endless Shadow'
+    },
+    [60708] = {
+        name = 'Meng the Demented'
+    },
+    [60709] = {
+        name = 'Qiang the Merciless'
+    },
+    [60710] = {
+        name = 'Subetai the Swift'
+    },
+    [60410] = {
+        name = 'Elegon'
+    },
+    [60399] = {
+        name = 'Qin-xi'
+    },
+    [60400] = {
+        name = 'Jan-xi'
     },
 }
 
@@ -1800,5 +1899,91 @@ lib.Encounters = {
     [1299] = {
         map_id = 967,
         creature_id = {56173}
+    },
+    -- Terrace of Endless Springs
+    -- Protectors of the Endless
+    [1409] = {
+        map_id = 996,
+        creature_id = {60583, 60585, 60586},
+    },
+    -- Tsulong
+    [1505] = {
+        map_id = 996,
+        creature_id = {62442},
+    },
+    -- Lei Shi
+    [1506] = {
+        map_id = 996,
+        creature_id = {62983},
+    },
+    -- Sha of Fear
+    [1431] = {
+        map_id = 996,
+        creature_id = {60999},
+    },
+    -- Heart of Fear
+    -- Imperial Vizier Zor'lok
+    [1507] = {
+        map_id = 1009,
+        creature_id = {62980},
+    },
+    -- Blade Lord Ta'yak
+    [1504] = {
+        map_id = 1009,
+        creature_id = {62543},
+    },
+    -- Garalon
+    [1463] = {
+        map_id = 1009,
+        creature_id = {62164},
+    },
+    -- Wind Lord Mel'jarak
+    [1498] = {
+        map_id = 1009,
+        creature_id = {62397},
+    },
+    -- Amber-Shaper Un'sok
+    [1499] = {
+        map_id = 1009,
+        creature_id = {62511},
+    },
+    -- Grand Empress Shek'zeer
+    [1501] = {
+        map_id = 1009,
+        creature_id = {62837},
+    },
+    -- Mogu'shan Vaults
+    -- Stone Guards
+    [1395] = {
+        map_id = 1008,
+        creature_id = {60051, 60043, 59915, 60047},
+        name = 'The Stone Guard'
+    },
+    -- Feng
+    [1390] = {
+        map_id = 1008,
+        creature_id = {60009},
+    },
+    -- Gara'jal
+    [1434] = {
+        map_id = 1008,
+        creature_id = {60143},
+    },
+    -- The Spirit Kings
+    [1436] = {
+        map_id = 1008,
+        creature_id = {60701, 60708, 60709, 60710},
+        name = 'The Spirit Kings"'
+    },
+    -- Elegon
+    [1500] = {
+        map_id = 1008,
+        creature_id = {60410},
+    },
+    -- Will of the Emperor
+    [1407] = {
+        map_id = 1008,
+        creature_id = {60399, 60400},
+        name = 'Will of the Emperor'
     },
 }

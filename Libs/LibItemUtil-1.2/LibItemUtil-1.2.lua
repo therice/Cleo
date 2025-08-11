@@ -43,200 +43,231 @@ lib.TokenItems = {
 -- https://wow.gamepedia.com/ItemType
 local DisallowedByClass = {
     DEATHKNIGHT = {
-        [LE_ITEM_CLASS_ARMOR] = {
+        [LE_ITEM_CLASS_ARMOR]  = {
             [LE_ITEM_ARMOR_SHIELD] = true,
-            [LE_ITEM_ARMOR_IDOL] = true,
+            [LE_ITEM_ARMOR_IDOL]   = true,
             [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_TOTEM]  = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_BOWS] = true,
+            [LE_ITEM_WEAPON_BOWS]     = true,
             [LE_ITEM_WEAPON_CROSSBOW] = true,
-            [LE_ITEM_WEAPON_WAND] = true,
-            [LE_ITEM_WEAPON_THROWN]  = true,
-            [LE_ITEM_WEAPON_DAGGER] = true,
-            [LE_ITEM_WEAPON_UNARMED] = true,
-            [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_STAFF] = true,
+            [LE_ITEM_WEAPON_WAND]     = true,
+            [LE_ITEM_WEAPON_THROWN]   = true,
+            [LE_ITEM_WEAPON_DAGGER]   = true,
+            [LE_ITEM_WEAPON_UNARMED]  = true,
+            [LE_ITEM_WEAPON_GUNS]     = true,
+            [LE_ITEM_WEAPON_STAFF]    = true,
         }
     },
-    DRUID = {
-        [LE_ITEM_CLASS_ARMOR] = {
-            [LE_ITEM_ARMOR_MAIL] = true,
-            [LE_ITEM_ARMOR_PLATE] = true,
+    DRUID       = {
+        [LE_ITEM_CLASS_ARMOR]  = {
+            [LE_ITEM_ARMOR_MAIL]   = true,
+            [LE_ITEM_ARMOR_PLATE]  = true,
             [LE_ITEM_ARMOR_SHIELD] = true,
             [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_SIGIL]  = true,
+            [LE_ITEM_ARMOR_TOTEM]  = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_BOWS] = true,
+            [LE_ITEM_WEAPON_BOWS]     = true,
             [LE_ITEM_WEAPON_CROSSBOW] = true,
-            [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_AXE1H] = true,
-            [LE_ITEM_WEAPON_SWORD1H] = true,
-            [LE_ITEM_WEAPON_AXE2H] = true,
-            [LE_ITEM_WEAPON_SWORD2H] = true,
-            [LE_ITEM_WEAPON_WAND] = true,
-            [LE_ITEM_WEAPON_THROWN]  = true,
+            [LE_ITEM_WEAPON_GUNS]     = true,
+            [LE_ITEM_WEAPON_AXE1H]    = true,
+            [LE_ITEM_WEAPON_SWORD1H]  = true,
+            [LE_ITEM_WEAPON_AXE2H]    = true,
+            [LE_ITEM_WEAPON_SWORD2H]  = true,
+            [LE_ITEM_WEAPON_WAND]     = true,
+            [LE_ITEM_WEAPON_THROWN]   = true,
         },
     },
-    HUNTER = {
-        [LE_ITEM_CLASS_ARMOR] = {
-            [LE_ITEM_ARMOR_PLATE] = true,
+    HUNTER      = {
+        [LE_ITEM_CLASS_ARMOR]  = {
+            [LE_ITEM_ARMOR_PLATE]  = true,
             [LE_ITEM_ARMOR_SHIELD] = true,
-            [LE_ITEM_ARMOR_IDOL] = true,
+            [LE_ITEM_ARMOR_IDOL]   = true,
             [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_SIGIL]  = true,
+            [LE_ITEM_ARMOR_TOTEM]  = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
             [LE_ITEM_WEAPON_MACE1H] = true,
             [LE_ITEM_WEAPON_MACE2H] = true,
-            [LE_ITEM_WEAPON_WAND] = true,
+            [LE_ITEM_WEAPON_WAND]   = true,
         },
     },
-    MAGE = {
-        [LE_ITEM_CLASS_ARMOR] = {
+    MAGE        = {
+        [LE_ITEM_CLASS_ARMOR]  = {
             [LE_ITEM_ARMOR_LEATHER] = true,
-            [LE_ITEM_ARMOR_MAIL] = true,
-            [LE_ITEM_ARMOR_PLATE] = true,
-            [LE_ITEM_ARMOR_SHIELD] = true,
-            [LE_ITEM_ARMOR_IDOL] = true,
-            [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_MAIL]    = true,
+            [LE_ITEM_ARMOR_PLATE]   = true,
+            [LE_ITEM_ARMOR_SHIELD]  = true,
+            [LE_ITEM_ARMOR_IDOL]    = true,
+            [LE_ITEM_ARMOR_LIBRAM]  = true,
+            [LE_ITEM_ARMOR_SIGIL]   = true,
+            [LE_ITEM_ARMOR_TOTEM]   = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_BOWS] = true,
+            [LE_ITEM_WEAPON_BOWS]     = true,
             [LE_ITEM_WEAPON_CROSSBOW] = true,
-            [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_UNARMED] = true,
-            [LE_ITEM_WEAPON_AXE1H] = true,
-            [LE_ITEM_WEAPON_MACE1H] = true,
-            [LE_ITEM_WEAPON_POLEARM] = true,
-            [LE_ITEM_WEAPON_AXE2H] = true,
-            [LE_ITEM_WEAPON_MACE2H] = true,
-            [LE_ITEM_WEAPON_SWORD2H] = true,
-            [LE_ITEM_WEAPON_THROWN]  = true,
+            [LE_ITEM_WEAPON_GUNS]     = true,
+            [LE_ITEM_WEAPON_UNARMED]  = true,
+            [LE_ITEM_WEAPON_AXE1H]    = true,
+            [LE_ITEM_WEAPON_MACE1H]   = true,
+            [LE_ITEM_WEAPON_POLEARM]  = true,
+            [LE_ITEM_WEAPON_AXE2H]    = true,
+            [LE_ITEM_WEAPON_MACE2H]   = true,
+            [LE_ITEM_WEAPON_SWORD2H]  = true,
+            [LE_ITEM_WEAPON_THROWN]   = true,
         },
     },
-    PALADIN = {
-        [LE_ITEM_CLASS_ARMOR] = {
-            [LE_ITEM_ARMOR_IDOL] = true,
+    MONK        = {
+        [LE_ITEM_CLASS_ARMOR]  = {
+            [LE_ITEM_ARMOR_MAIL]   = true,
+            [LE_ITEM_ARMOR_PLATE]  = true,
+            [LE_ITEM_ARMOR_SHIELD] = true,
+            [LE_ITEM_ARMOR_IDOL]   = true,
+            [LE_ITEM_ARMOR_LIBRAM] = true,
+            [LE_ITEM_ARMOR_SIGIL]  = true,
+            [LE_ITEM_ARMOR_TOTEM]  = true,
+        },
+        [LE_ITEM_CLASS_WEAPON] = {
+            [LE_ITEM_WEAPON_DAGGER]  = true,
+            [LE_ITEM_WEAPON_SWORD2H] = true,
+            [LE_ITEM_WEAPON_AXE2H]   = true,
+            [LE_ITEM_WEAPON_STAFF]   = true,
+        },
+    },
+    PALADIN     = {
+        [LE_ITEM_CLASS_ARMOR]  = {
+            [LE_ITEM_ARMOR_IDOL]  = true,
             [LE_ITEM_ARMOR_SIGIL] = true,
             [LE_ITEM_ARMOR_TOTEM] = true,
 
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_BOWS] = true,
+            [LE_ITEM_WEAPON_BOWS]     = true,
             [LE_ITEM_WEAPON_CROSSBOW] = true,
-            [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_UNARMED] = true,
-            [LE_ITEM_WEAPON_STAFF] = true,
-            [LE_ITEM_WEAPON_WAND] = true,
-            [LE_ITEM_WEAPON_THROWN]  = true,
+            [LE_ITEM_WEAPON_GUNS]     = true,
+            [LE_ITEM_WEAPON_UNARMED]  = true,
+            [LE_ITEM_WEAPON_STAFF]    = true,
+            [LE_ITEM_WEAPON_WAND]     = true,
+            [LE_ITEM_WEAPON_THROWN]   = true,
         },
     },
-    PRIEST = {
-        [LE_ITEM_CLASS_ARMOR] = {
+    PRIEST      = {
+        [LE_ITEM_CLASS_ARMOR]  = {
             [LE_ITEM_ARMOR_LEATHER] = true,
-            [LE_ITEM_ARMOR_MAIL] = true,
-            [LE_ITEM_ARMOR_PLATE] = true,
-            [LE_ITEM_ARMOR_SHIELD] = true,
-            [LE_ITEM_ARMOR_IDOL] = true,
-            [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_MAIL]    = true,
+            [LE_ITEM_ARMOR_PLATE]   = true,
+            [LE_ITEM_ARMOR_SHIELD]  = true,
+            [LE_ITEM_ARMOR_IDOL]    = true,
+            [LE_ITEM_ARMOR_LIBRAM]  = true,
+            [LE_ITEM_ARMOR_SIGIL]   = true,
+            [LE_ITEM_ARMOR_TOTEM]   = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_BOWS] = true,
+            [LE_ITEM_WEAPON_BOWS]     = true,
             [LE_ITEM_WEAPON_CROSSBOW] = true,
-            [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_UNARMED] = true,
-            [LE_ITEM_WEAPON_AXE1H] = true,
-            [LE_ITEM_WEAPON_SWORD1H] = true,
-            [LE_ITEM_WEAPON_POLEARM] = true,
-            [LE_ITEM_WEAPON_AXE2H] = true,
-            [LE_ITEM_WEAPON_MACE2H] = true,
-            [LE_ITEM_WEAPON_SWORD2H] = true,
-            [LE_ITEM_WEAPON_THROWN]  = true,
+            [LE_ITEM_WEAPON_GUNS]     = true,
+            [LE_ITEM_WEAPON_UNARMED]  = true,
+            [LE_ITEM_WEAPON_AXE1H]    = true,
+            [LE_ITEM_WEAPON_SWORD1H]  = true,
+            [LE_ITEM_WEAPON_POLEARM]  = true,
+            [LE_ITEM_WEAPON_AXE2H]    = true,
+            [LE_ITEM_WEAPON_MACE2H]   = true,
+            [LE_ITEM_WEAPON_SWORD2H]  = true,
+            [LE_ITEM_WEAPON_THROWN]   = true,
         },
     },
-    ROGUE = {
-        [LE_ITEM_CLASS_ARMOR] = {
-            [LE_ITEM_ARMOR_MAIL] = true,
-            [LE_ITEM_ARMOR_PLATE] = true,
+    ROGUE       = {
+        [LE_ITEM_CLASS_ARMOR]  = {
+            [LE_ITEM_ARMOR_MAIL]   = true,
+            [LE_ITEM_ARMOR_PLATE]  = true,
             [LE_ITEM_ARMOR_SHIELD] = true,
-            [LE_ITEM_ARMOR_IDOL] = true,
+            [LE_ITEM_ARMOR_IDOL]   = true,
             [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_SIGIL]  = true,
+            [LE_ITEM_ARMOR_TOTEM]  = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
             [LE_ITEM_WEAPON_POLEARM] = true,
-            [LE_ITEM_WEAPON_STAFF] = true,
-            [LE_ITEM_WEAPON_AXE2H] = true,
-            [LE_ITEM_WEAPON_MACE2H] = true,
+            [LE_ITEM_WEAPON_STAFF]   = true,
+            [LE_ITEM_WEAPON_AXE2H]   = true,
+            [LE_ITEM_WEAPON_MACE2H]  = true,
             [LE_ITEM_WEAPON_SWORD2H] = true,
-            [LE_ITEM_WEAPON_WAND] = true,
+            [LE_ITEM_WEAPON_WAND]    = true,
         },
     },
-    SHAMAN = {
-        [LE_ITEM_CLASS_ARMOR] = {
-            [LE_ITEM_ARMOR_PLATE] = true,
-            [LE_ITEM_ARMOR_IDOL] = true,
+    SHAMAN      = {
+        [LE_ITEM_CLASS_ARMOR]  = {
+            [LE_ITEM_ARMOR_PLATE]  = true,
+            [LE_ITEM_ARMOR_IDOL]   = true,
             [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
+            [LE_ITEM_ARMOR_SIGIL]  = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_BOWS] = true,
+            [LE_ITEM_WEAPON_BOWS]     = true,
             [LE_ITEM_WEAPON_CROSSBOW] = true,
-            [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_SWORD1H] = true,
-            [LE_ITEM_WEAPON_POLEARM] = true,
-            [LE_ITEM_WEAPON_SWORD2H] = true,
-            [LE_ITEM_WEAPON_THROWN]  = true,
-            [LE_ITEM_WEAPON_WAND] = true,
+            [LE_ITEM_WEAPON_GUNS]     = true,
+            [LE_ITEM_WEAPON_SWORD1H]  = true,
+            [LE_ITEM_WEAPON_POLEARM]  = true,
+            [LE_ITEM_WEAPON_SWORD2H]  = true,
+            [LE_ITEM_WEAPON_THROWN]   = true,
+            [LE_ITEM_WEAPON_WAND]     = true,
         },
     },
-    WARLOCK = {
-        [LE_ITEM_CLASS_ARMOR] = {
+    WARLOCK     = {
+        [LE_ITEM_CLASS_ARMOR]  = {
             [LE_ITEM_ARMOR_LEATHER] = true,
-            [LE_ITEM_ARMOR_MAIL] = true,
-            [LE_ITEM_ARMOR_PLATE] = true,
-            [LE_ITEM_ARMOR_SHIELD] = true,
-            [LE_ITEM_ARMOR_IDOL] = true,
-            [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_MAIL]    = true,
+            [LE_ITEM_ARMOR_PLATE]   = true,
+            [LE_ITEM_ARMOR_SHIELD]  = true,
+            [LE_ITEM_ARMOR_IDOL]    = true,
+            [LE_ITEM_ARMOR_LIBRAM]  = true,
+            [LE_ITEM_ARMOR_SIGIL]   = true,
+            [LE_ITEM_ARMOR_TOTEM]   = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_BOWS] = true,
+            [LE_ITEM_WEAPON_BOWS]     = true,
             [LE_ITEM_WEAPON_CROSSBOW] = true,
-            [LE_ITEM_WEAPON_GUNS] = true,
-            [LE_ITEM_WEAPON_UNARMED] = true,
-            [LE_ITEM_WEAPON_AXE1H] = true,
-            [LE_ITEM_WEAPON_MACE1H] = true,
-            [LE_ITEM_WEAPON_POLEARM] = true,
-            [LE_ITEM_WEAPON_AXE2H] = true,
-            [LE_ITEM_WEAPON_MACE2H] = true,
-            [LE_ITEM_WEAPON_SWORD2H] = true,
-            [LE_ITEM_WEAPON_THROWN]  = true,
+            [LE_ITEM_WEAPON_GUNS]     = true,
+            [LE_ITEM_WEAPON_UNARMED]  = true,
+            [LE_ITEM_WEAPON_AXE1H]    = true,
+            [LE_ITEM_WEAPON_MACE1H]   = true,
+            [LE_ITEM_WEAPON_POLEARM]  = true,
+            [LE_ITEM_WEAPON_AXE2H]    = true,
+            [LE_ITEM_WEAPON_MACE2H]   = true,
+            [LE_ITEM_WEAPON_SWORD2H]  = true,
+            [LE_ITEM_WEAPON_THROWN]   = true,
 
         },
     },
-    WARRIOR = {
-        [LE_ITEM_CLASS_ARMOR] = {
-            [LE_ITEM_ARMOR_IDOL] = true,
+    WARRIOR     = {
+        [LE_ITEM_CLASS_ARMOR]  = {
+            [LE_ITEM_ARMOR_IDOL]   = true,
             [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL] = true,
-            [LE_ITEM_ARMOR_TOTEM] = true,
+            [LE_ITEM_ARMOR_SIGIL]  = true,
+            [LE_ITEM_ARMOR_TOTEM]  = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
             [LE_ITEM_WEAPON_WAND] = true,
         },
     },
+}
+
+local PreferredArmorTypeByClass = {
+    DEATHKNIGHT = LE_ITEM_ARMOR_PLATE,
+    DRUID       = LE_ITEM_ARMOR_LEATHER,
+    HUNTER      = LE_ITEM_ARMOR_MAIL,
+    MAGE        = LE_ITEM_ARMOR_CLOTH,
+    MONK        = LE_ITEM_ARMOR_LEATHER,
+    PALADIN     = LE_ITEM_ARMOR_PLATE,
+    PRIEST      = LE_ITEM_ARMOR_CLOTH,
+    ROGUE       = LE_ITEM_ARMOR_LEATHER,
+    SHAMAN      = LE_ITEM_ARMOR_MAIL,
+    WARLOCK     = LE_ITEM_ARMOR_CLOTH,
+    WARRIOR     = LE_ITEM_ARMOR_PLATE,
 }
 
 local function GetNumClasses()
@@ -445,6 +476,15 @@ local HEROIC = strtrim(_G.PLAYER_DIFFICULTY2)
 
 lib.HEROIC = HEROIC
 
+local function StripColor(text)
+    text = string.gsub(text or "", "|c%x%x%x%x%x%x%x%x", "" )
+    -- Apparently stuff like this exists "|cFF 0FF 0Heroic|r"
+    text = string.gsub(text or "", "|c%x%x%s?%x%x%x%s?%x?", "" )
+    text = string.gsub(text, "|c%x%x %x%x%x%x%x", "" )
+    text = string.gsub(text, "|r", "" )
+    return text
+end
+
 lib.IsItemHeroic = Util.Memoize.Memoize(
     function(itemLink)
         if type(itemLink) == "string" and itemLink:trim() == "" then
@@ -460,8 +500,8 @@ lib.IsItemHeroic = Util.Memoize.Memoize(
             local line = getglobal(TooltipFrameNameFormat:format(i))
             if line and line.GetText then
                 local text = strtrim(line:GetText() or "")
-                Logging:Trace("IsItemHeroic(%s) : Text=%s", itemLink, text)
-                if text == HEROIC then
+                Logging:Trace("IsItemHeroic(%s) : Text=%s, Stripped=%s, Checking=%s", itemLink, gsub(text, "\124", "\124\124"), StripColor(text), HEROIC)
+                if StripColor(text) == HEROIC then
                     Logging:Trace("IsItemHeroic(%s) : IsHeroic=true", itemLink)
                     tooltip:Hide()
                     return true
@@ -534,27 +574,44 @@ function lib:GetItemClassesAllowedFlag(itemLink)
 end
 
 --[[
-ClassCanUse(PRIEST) : Classes=4294967295 EquipLoc=[Helm of Endless Rage], TypeId=INVTYPE_HEAD, SubTypeId=4
+ClassCanUse(PRIEST) : Classes=4294967295 EquipLoc=INVTYPE_SHOULDER, TypeId=4 (LE_ITEM_CLASS_ARMOR), SubTypeId=4 (LE_ITEM_ARMOR_CLOTH)
+-- TypeId will be number representation of the type, e.g. 4 for LE_ITEM_CLASS_ARMOR
+-- SubTypeId will be the number representation of the sub-type, e.g. 1 for LE_ITEM_ARMOR_CLOTH
 --]]
-function lib:ClassCanUse(class, classesFlag, equipLoc, typeId, subTypeId)
-    Logging:Trace("ClassCanUse(%s) : Classes=%s EquipLoc=%s, TypeId=%s, SubTypeId=%s",
-            class, classesFlag, tostring(equipLoc), tostring(typeId), tostring(subTypeId))
+function lib:ClassCanUse(class, classesFlag, equipLoc, typeId, subTypeId, checkIfPreferred)
+    -- default to not checking preferred unless specified
+    checkIfPreferred = checkIfPreferred or false
+
+    Logging:Trace("ClassCanUse(%s) : Classes=%s EquipLoc=%s, TypeId=%s, SubTypeId=%s, CheckIfPreferred=%s",
+            class, classesFlag, tostring(equipLoc), tostring(typeId), tostring(subTypeId), tostring(checkIfPreferred))
 
     local classId = self.ClassTagNameToId[class]
-    --Logging:Trace("ClassCanUse(%s) : ClassId=%s", class, classId)
+    -- Logging:Trace("ClassCanUse(%s) : ClassId=%s", class, classId)
     -- if the classes flag, parsed from tooltip, doesn't contain the class id then it cannot be used
     if bit.band(classesFlag, bit.lshift(1, classId-1)) == 0 then
         return false
     end
 
-    if not equipLoc ~= "INVTYPE_CLOAK" then
+    local classCanUse = true
+    -- skip check for cloak, rings, trinkets, and necks
+    if not Util.Objects.In(equipLoc, "INVTYPE_CLOAK", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_NECK") then
         if DisallowedByClass[class] and DisallowedByClass[class][typeId] then
             local canUse = DisallowedByClass[class][typeId][subTypeId]
-            if canUse then return not canUse end
+            -- it's inverted, as boolean simply a placeholder to signify it isn't permitted
+            -- presence and true means cannot use
+            if canUse then
+                classCanUse = false
+            end
+        end
+
+        -- it's usable and armor, check if preferred type if specified
+        if classCanUse and checkIfPreferred and typeId == LE_ITEM_CLASS_ARMOR then
+            classCanUse = subTypeId == 0 or (PreferredArmorTypeByClass[class] == subTypeId)
         end
     end
 
-    return true
+    --Logging:Trace("ClassCanUse() : result=%s", tostring(classCanUse))
+    return classCanUse
 end
 
 function lib:IsTokenBasedItem(itemId)

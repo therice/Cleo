@@ -104,7 +104,7 @@ describe("Service Model", function()
 								"4372-011C6125",
 							},
 							["equipment"] = {
-								"INVTYPE_RELIC", -- [1]
+								--"INVTYPE_RELIC", -- [1]
 								"INVTYPE_HOLDABLE", -- [2]
 							},
 							["name"] = "Misc",

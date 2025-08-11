@@ -188,10 +188,11 @@ local _build = function(self, ml)
             0
 
     self.db = {
-        outOfRaid         = mlSettings.outOfRaid,
-        timeout           = mlSettings.timeout and Util.Tables.Copy(mlSettings.timeout) or nil,
-        showLootResponses = mlSettings.showLootResponses,
-        buttons           = { numButtons = numButtons }
+        outOfRaid                  = mlSettings.outOfRaid,
+        timeout                    = mlSettings.timeout and Util.Tables.Copy(mlSettings.timeout) or nil,
+        showLootResponses          = mlSettings.showLootResponses,
+        showNonPreferredArmorTypes = mlSettings.showNonPreferredArmorTypes,
+        buttons                    = { numButtons = numButtons }
     }
 
     Logging:Trace("MasterLooterDb:_build(AFTER) : %d", Util.Tables.Count(self.db))

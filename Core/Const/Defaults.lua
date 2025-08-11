@@ -321,7 +321,6 @@ AddOn.DefaultCustomItems = {
     [71673] = { 4, 391, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Fiery Vanquisher (Rogue, Mage, Death Knight, Druid) [NORMAL]
     -- Omitting for now, but keeping placeholder
     -- [71617] = { }, -- Crystallized Firestone (can be used to upgrade gear, not enumerating)
-    --]]
 
     -- CATA P4 (Dragon Soup)
     -- T13
@@ -355,6 +354,41 @@ AddOn.DefaultCustomItems = {
     [78859] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Conqueror (Paladin, Priest, Warlock) [HEROIC]
     [78860] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Protector (Warrior, Hunter, Shaman) [HEROIC]
     [78861] = { 4, 410, ItemUtil.CustomItemInvTypeSelf },   -- Shoulders of the Corrupted Vanquisher (Rogue, Mage, Death Knight, Druid) [HEROIC]
+    --]]
+
+    -- MOP P1
+    -- T14 (Terrace of Endless Spring, Heart of Fear)
+    -- Normal is 496, Heroic is 509
+    [89234] = { 4, 496, "INVTYPE_HEAD" },                       -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89258] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Helm of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89235] = { 4, 496, "INVTYPE_HEAD" },                       -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89259] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Helm of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89236] = { 4, 496, "INVTYPE_HEAD" },                       -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89260] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Helm of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89242] = { 4, 496, "INVTYPE_HAND" },                       -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89255] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Gauntlets of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89240] = { 4, 496, "INVTYPE_HAND" },                       -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Gauntlets of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89241] = { 4, 496, "INVTYPE_HAND" },                       -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89257] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Gauntlets of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89239] = { 4, 496, "INVTYPE_CHEST" },                      -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89249] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Chest of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89237] = { 4, 496, "INVTYPE_CHEST" },                      -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89250] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Chest of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89238] = { 4, 496, "INVTYPE_CHEST" },                      -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89251] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Chest of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89245] = { 4, 496, "INVTYPE_LEGS" },                       -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89252] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Leggings of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89243] = { 4, 496, "INVTYPE_LEGS" },                       -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89253] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Leggings of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89244] = { 4, 496, "INVTYPE_LEGS" },                       -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89254] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Leggings of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+    [89248] = { 4, 496, "INVTYPE_SHOULDER" },                   -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [89261] = { 4, 509, ItemUtil.CustomItemInvTypeSelf  },      -- Shoulders of the Shadowy Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [89246] = { 4, 496, "INVTYPE_SHOULDER" },                   -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [89262] = { 4, 509, ItemUtil.CustomItemInvTypeSelf  },      -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [89247] = { 4, 496, "INVTYPE_SHOULDER" },                   -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [89263] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
 }
 
 AddOn.TestItems = {
@@ -541,7 +575,6 @@ AddOn.TestItems = {
     71567, 71580, 71568, 71593, 71592, 71617, 69976, 69966, 69975, 69965, 69962, 69960, 69971, 69974, 69972, 69961,
     69963, 69973, 69970, 69969, 69968, 69958, 69957, 69959,
     -- CATA P3 END
-    --]]
 
     -- CATA P4 START
     71999, 72000, 72001, 72002, 72003, 72004, 72005, 72006, 72007, 72008, 72009, 72010, 72011, 72012, 72013, 72014,
@@ -564,5 +597,39 @@ AddOn.TestItems = {
     78493, 78494, 78495, 78496, 78497, 78498, 78847, 78848, 78849, 78850, 78851, 78852, 78853, 78854, 78855, 78856,
     78857, 78858, 78859, 78860, 78861, 78862, 78863, 78864, 78865, 78866, 78867, 78868, 78869, 78870, 78871, 78872,
     78873, 78874, 78875, 78876, 78878, 78879, 78882, 78884, 78885, 78886, 78887, 78888, 78889
-    -- CATA P4 START
+    -- CATA P4 END
+    --]]
+
+    -- MOP P1 START
+    85922, 85923, 85924, 85925, 85926, 85975, 85976, 85977, 85978, 85979, 85980, 85982, 85983, 85984, 85985, 85986,
+    85987, 85988, 85989, 85990, 85991, 85992, 85993, 85994, 85995, 85996, 85997, 86027, 86038, 86039, 86040, 86041,
+    86042, 86043, 86044, 86045, 86046, 86047, 86071, 86075, 86076, 86080, 86081, 86082, 86083, 86084, 86086, 86127,
+    86128, 86129, 86130, 86131, 86132, 86133, 86134, 86135, 86136, 86137, 86138, 86139, 86140, 86141, 86142, 86144,
+    86145, 86146, 86147, 86148, 86149, 86150, 86151, 86152, 86153, 86154, 86155, 86156, 86157, 86158, 86159, 86160,
+    86161, 86162, 86163, 86164, 86165, 86166, 86167, 86168, 86169, 86170, 86171, 86172, 86173, 86174, 86175, 86176,
+    86177, 86178, 86179, 86180, 86181, 86182, 86183, 86184, 86185, 86186, 86187, 86188, 86189, 86190, 86191, 86192,
+    86200, 86201, 86202, 86203, 86204, 86205, 86210, 86211, 86212, 86213, 86214, 86217, 86219, 86226, 86227, 86228,
+    86229, 86230, 86231, 86232, 86233, 86234, 86315, 86316, 86317, 86318, 86319, 86320, 86321, 86322, 86323, 86324,
+    86325, 86326, 86327, 86328, 86329, 86330, 86331, 86332, 86333, 86334, 86335, 86336, 86337, 86338, 86339, 86340,
+    86341, 86342, 86343, 86383, 86384, 86385, 86386, 86387, 86388, 86389, 86390, 86391, 86513, 86514, 86943, 86944,
+    86945, 86946, 86947, 86948, 86949, 86950, 86951, 86952, 86953, 86954, 86955, 86956, 86957, 86958, 86959, 86960,
+    86961, 86962, 86963, 86964, 86965, 86966, 86967, 86968, 86969, 86970, 86971, 86972, 86973, 86974, 86975, 86976,
+    86977, 86978, 86979, 86980, 86981, 86982, 86983, 86984, 86985, 86986, 86987, 86988, 86989, 86990, 86991, 87012,
+    87013, 87014, 87015, 87016, 87017, 87018, 87019, 87020, 87021, 87022, 87023, 87024, 87025, 87026, 87027, 87028,
+    87029, 87030, 87031, 87032, 87033, 87034, 87035, 87036, 87037, 87038, 87039, 87040, 87041, 87042, 87043, 87044,
+    87045, 87046, 87047, 87048, 87049, 87050, 87051, 87052, 87053, 87054, 87055, 87056, 87057, 87058, 87059, 87060,
+    87061, 87062, 87063, 87064, 87065, 87066, 87067, 87068, 87069, 87070, 87071, 87072, 87073, 87074, 87075, 87076,
+    87077, 87078, 87144, 87145, 87146, 87147, 87148, 87149, 87150, 87151, 87152, 87153, 87154, 87155, 87156, 87157,
+    87158, 87159, 87160, 87161, 87162, 87163, 87164, 87165, 87166, 87167, 87168, 87169, 87170, 87171, 87172, 87173,
+    87174, 87175, 87176, 87177, 87178, 87179, 87180, 87181, 87182, 87183, 87184, 87185, 87186, 87210, 87777, 87822,
+    87824, 87825, 87827, 89234, 89235, 89236, 89237, 89238, 89239, 89240, 89241, 89242, 89243, 89244, 89245, 89246,
+    89247, 89248, 89249, 89250, 89251, 89252, 89253, 89254, 89255, 89256, 89257, 89258, 89259, 89260, 89261, 89262,
+    89263, 89424, 89425, 89766, 89767, 89768, 89802, 89803, 89817, 89818, 89819, 89820, 89821, 89822, 89823, 89824,
+    89825, 89826, 89827, 89828, 89829, 89830, 89831, 89832, 89833, 89834, 89835, 89836, 89837, 89839, 89841, 89842,
+    89843, 89883, 89884, 89885, 89886, 89887, 89917, 89918, 89919, 89920, 89921, 89922, 89923, 89924, 89925, 89926,
+    89927, 89928, 89929, 89930, 89931, 89932, 89933, 89934, 89935, 89936, 89937, 89938, 89939, 89940, 89941, 89942,
+    89943, 89944, 89945, 89946, 89947, 89948, 89949, 89950, 89951, 90503, 90504, 90505, 90506, 90507, 90508, 90509,
+    90510, 90511, 90512, 90513, 90514, 90515, 90516, 90517, 90518, 90519, 90520, 90521, 90522, 90523, 90524, 90525,
+    90526, 90527, 90528, 90529, 90530, 90738, 90740,
+    -- MOP P1 END
 }

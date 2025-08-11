@@ -303,9 +303,23 @@ tocversion : number - Interface (.toc) version number
 localizedVersion : string - Localized translation for the string "Version"
 buildType : string - Localized build type and machine architecture
 --]]
+
+-- https://warcraft.wiki.gg/wiki/API_GetBuildInfo
+-- buildVersion, buildNumber, buildDate, interfaceVersion, localizedVersion, buildInfo, currentVersion = GetBuildInfo()  -- Classic
+--[[
+buildVersion : string - Current patch version
+buildNumber : string - Build number
+buildDate : string - Build date
+interfaceVersion : number - Interface (.toc) version number
+localizedVersion : string - Localized description of the build version
+buildInfo : string - Localized build type and machine architecture
+currentVersion : string - Current patch version, but formatted similarly to interface version numbers (eg. "11505")
+--]]
+
 function GetBuildInfo()
     -- return "3.4.1", 47612, "Jan 11 2023", 30401
-    return "4.4.0", "55262", "Jun 20 2024", 40400, "40400", nil
+    -- return "4.4.0", "55262", "Jun 20 2024", 40400, "40400", nil
+    return "5.5.0", "62258", "Jul 25 2025", 50500, "", "", 50500
 end
 
 function IsInGuild() return 1 end
@@ -644,6 +658,13 @@ function GetPlayerInfoByGUID (guid)
     end
 end
 
+-- https://warcraft.wiki.gg/wiki/API_GetInventorySlotInfo
+-- invSlotId, textureName, checkRelic = GetInventorySlotInfo(invSlotName)
+--
+-- invSlotName : string - InventorySlotName to query (e.g. "HEADSLOT").
+-- invSlotId : number : InventorySlotId - The ID to use to refer to that slot in the other GetInventory functions.
+-- textureName : string - The texture to use for the empty slot on the paper doll display.
+-- checkRelic : boolean
 function GetInventorySlotInfo(slot)
 
 end
@@ -751,38 +772,41 @@ _G.MAX_CLASSES = 9
 
 _G.C_CreatureInfo = {}
 _G.C_CreatureInfo.ClassInfo = {
-    [1] = {
+    [1]  = {
         "Warrior", "WARRIOR"
     },
-    [2] = {
+    [2]  = {
         "Paladin", "PALADIN"
     },
-    [3] = {
+    [3]  = {
         "Hunter", "HUNTER"
     },
-    [4] = {
+    [4]  = {
         "Rogue", "ROGUE"
     },
-    [5] = {
+    [5]  = {
         "Priest", "PRIEST"
     },
-    [6] = {
+    [6]  = {
         "Death Knight", "DEATHKNIGHT"
     },
-    [7] = {
+    [7]  = {
         "Shaman", "SHAMAN"
     },
-    [8] = {
+    [8]  = {
         "Mage", "MAGE"
     },
-    [9] = {
+    [9]  = {
         "Warlock", "WARLOCK"
     },
-    [10] = nil,
+    [10] = {
+        "Monk", "MONK"
+    },
     [11] = {
         "Druid", "DRUID"
     },
     [12] = nil,
+    [13] = nil,
 }
 
 -- className (localized name, e.g. "Warrior"), classFile (non-localized name, e.g. "WARRIOR"), classID

@@ -146,7 +146,7 @@ end
 
 --- @param encounter Models.Encounter
 function RA:OnEncounterEvent(encounter)
-	Logging:Trace("OnEncounterEvent() : %s", Util.Objects.ToString())
+	Logging:Trace("OnEncounterEvent() : %s", Util.Objects.ToString(encounter))
 	-- create record and broadcast if settings dictate it should be done
 	-- pre-requisites for this being called is already evaluated (valid encounter, is ML, and Cleo handling loot)
 	local enabled, trigger = self.db.profile.enabled, self.db.profile.trackingType

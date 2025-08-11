@@ -240,6 +240,7 @@ end
 
 
 local function ReorderPlayers(self, mapper)
+	--Logging:Trace("ReorderPlayers() : %s", Util.Objects.ToString(self.players))
 	local u = Util.Tables.New()
 	for prio, player in Util.Tables.Sparse.ipairs(self.players) do
 		local key, value = mapper(prio, player)
@@ -258,9 +259,9 @@ function List:RemovePlayer(player, shift)
 	Logging:Trace("RemovePlayer(%s) : priority %d", tostring(player), tostring(priority))
 
 	if priority then
-		-- Logging:Debug("%s", Util.Objects.ToString(self:GetPlayers(true, false)))
+		--Logging:Debug("%s", Util.Objects.ToString(self:GetPlayers(true, false)))
 		self.players[priority] = nil
-		-- Logging:Debug("%s", Util.Objects.ToString(self:GetPlayers(true, false)))
+		--Logging:Debug("%s", Util.Objects.ToString(self:GetPlayers(true, false)))
 		if shift then
 			ReorderPlayers(
 				self,

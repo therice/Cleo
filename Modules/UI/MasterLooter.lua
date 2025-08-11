@@ -576,7 +576,7 @@ function ML:LayoutGeneralTab(tab)
 	tab.autoAddNonEquipable:SetSize(14, 14)
 	tab.autoAddBOE =
 		UI:New('Checkbox', content, format(L["auto_add_x_items"], 'BOE'), false)
-			:Point("TOPLEFT", tab.autoAddNonEquipable, "TOPRIGHT", 200, 0)
+			:Point("TOPLEFT", tab.autoAddNonEquipable, "TOPRIGHT", 225, 0)
 			:TextSize(12)
 			:Tooltip(L["auto_add_boe_desc"])
 			:Datasource(
@@ -678,6 +678,18 @@ function ML:LayoutResponsesTab(tab)
 				'showLootResponses'
 			)
 	tab.showLootResponses:SetSize(14, 14)
+
+	tab.showNonPreferredArmorTypes =
+		UI:New('Checkbox', content, L["responses_non_preferred_armor_type_enable"], false)
+			:Point("TOPLEFT", tab.showLootResponses, "TOPRIGHT", 225, 0)
+			:TextSize(12)
+			:Tooltip(L["responses_non_preferred_armor_type_desc"])
+			:Datasource(
+				module,
+				module.db.profile,
+				'showNonPreferredArmorTypes'
+		)
+	tab.showNonPreferredArmorTypes:SetSize(14, 14)
 
 	tab.suicideGroup =
 		UI:New('InlineGroup',tab)
