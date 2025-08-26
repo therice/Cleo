@@ -7,7 +7,7 @@
 ## X-Curse-Project-ID: 1201094 
 ## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit, Cleo_RaidAudit, Cleo_LootLedger
 ## X-AddonName: Cleo
-## X-InterfaceName: Cleo (Cataclysm Classic)
+## X-InterfaceName: Cleo (Mists of Pandaria Classic)
 
 ## Required Libraries
 Libs\Libs.xml

@@ -75,7 +75,7 @@ local function Get(guid)
     if IsCachedPlayerValid(player) then
         return Player:reconstitute(player)
     else
-        Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), player and DateFormat.Full:format(Date(player.timestamp)) or "(nil)")
+        Logging:Trace('Get(%s) : Cached entry expired at %s', tostring(guid), player and DateFormat.Full:format(Date(player.timestamp)) or "(empty)")
         Remove(guid)
     end
 
@@ -180,7 +180,7 @@ function Player.Create(guid, info)
     if Util.Objects.IsEmpty(name) then
         --Logging:Debug("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
         if info and Util.Strings.IsSet(info.name) then
-            --Logging:Debug("Create(%s) : Using provided player information", guid)
+            Logging:Debug("Create(%s) : Using provided player information", guid)
             name = info.name
             class = info.classTag or info.class
         else
@@ -190,6 +190,7 @@ function Player.Create(guid, info)
 
     if Util.Objects.IsEmpty(realm) then
         realm = AddOn:RealmName()
+        --Logging:Debug("Create(%s) : Missing realm remapped to %s", guid, AddOn:RealmName())
     end
 
     local player = Player(guid, name, class, realm)

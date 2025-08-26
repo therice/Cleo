@@ -121,21 +121,25 @@ local DisallowedByClass = {
             [LE_ITEM_WEAPON_THROWN]   = true,
         },
     },
-    MONK        = {
-        [LE_ITEM_CLASS_ARMOR]  = {
-            [LE_ITEM_ARMOR_MAIL]   = true,
-            [LE_ITEM_ARMOR_PLATE]  = true,
-            [LE_ITEM_ARMOR_SHIELD] = true,
-            [LE_ITEM_ARMOR_IDOL]   = true,
-            [LE_ITEM_ARMOR_LIBRAM] = true,
-            [LE_ITEM_ARMOR_SIGIL]  = true,
-            [LE_ITEM_ARMOR_TOTEM]  = true,
+    MONK = {
+        [LE_ITEM_CLASS_ARMOR] = {
+            [LE_ITEM_ARMOR_MAIL]    = true,
+            [LE_ITEM_ARMOR_PLATE]   = true,
+            [LE_ITEM_ARMOR_SHIELD]  = true,
+            [LE_ITEM_ARMOR_IDOL]    = true,
+            [LE_ITEM_ARMOR_LIBRAM]  = true,
+            [LE_ITEM_ARMOR_SIGIL]   = true,
+            [LE_ITEM_ARMOR_TOTEM]   = true,
         },
         [LE_ITEM_CLASS_WEAPON] = {
-            [LE_ITEM_WEAPON_DAGGER]  = true,
-            [LE_ITEM_WEAPON_SWORD2H] = true,
-            [LE_ITEM_WEAPON_AXE2H]   = true,
-            [LE_ITEM_WEAPON_STAFF]   = true,
+            [LE_ITEM_WEAPON_BOWS]       = true,
+            [LE_ITEM_WEAPON_CROSSBOW]   = true,
+            [LE_ITEM_WEAPON_GUNS]       = true,
+            [LE_ITEM_WEAPON_DAGGER]     = true,
+            [LE_ITEM_WEAPON_AXE2H]      = true,
+            [LE_ITEM_WEAPON_MACE2H]     = true,
+            [LE_ITEM_WEAPON_SWORD2H]    = true,
+            [LE_ITEM_WEAPON_WAND]       = true,
         },
     },
     PALADIN     = {
@@ -586,7 +590,7 @@ function lib:ClassCanUse(class, classesFlag, equipLoc, typeId, subTypeId, checkI
             class, classesFlag, tostring(equipLoc), tostring(typeId), tostring(subTypeId), tostring(checkIfPreferred))
 
     local classId = self.ClassTagNameToId[class]
-    -- Logging:Trace("ClassCanUse(%s) : ClassId=%s", class, classId)
+    --Logging:Trace("ClassCanUse(%s) : ClassId=%s", class, classId)
     -- if the classes flag, parsed from tooltip, doesn't contain the class id then it cannot be used
     if bit.band(classesFlag, bit.lshift(1, classId-1)) == 0 then
         return false
