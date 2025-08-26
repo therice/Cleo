@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.3 (2025-08-26)
+* Misc changes including changing terms used on loot screen and correcting what weapons can be used by Monks d8ca4f5
+
 2026.0.2 (2025-08-11)
 * Game version is 'mists', not 'mop' 626e53e
 
