@@ -17,13 +17,6 @@ function endswith(str, ending)
     return ending == "" or str:sub(-#ending) == ending
 end
 
--- returns absolute pathname of specified file
-function absolutepath(file)
-    local normalized = normalize(file)
-    local endAt = findlast(normalized, '/', true)
-    return normalized:sub(1, endAt - 1)
-end
-
 function normalize(file)
     return file:gsub('\\', '/')
 end

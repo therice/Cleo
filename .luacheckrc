@@ -25,7 +25,6 @@ ignore = {
 
 globals = {
 	"Cleo",
-	"RAID_CLASS_COLORS.a", -- seems suspcicious
 }
 
 read_globals = {

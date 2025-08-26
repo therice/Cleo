@@ -649,11 +649,15 @@ function UnitGUID (name)
     return PlayerToGuid[name] and PlayerToGuid[name].guid or "Player-FFF-ABCDF012"
 end
 
+--local playerNumber = 0
+
 function GetPlayerInfoByGUID (guid)
     local player = PlayerGuidInfo[guid]
     if player then
         return nil,player.class, nil,nil,nil, player.name, player.realm
     else
+        --playerNumber = playerNumber + 1
+        --return nil, "HUNTER", nil,nil,nil, format("Playername%d", playerNumber), "Realm1"
         return nil, "HUNTER", nil,nil,nil, "Unknown", "Unknown"
     end
 end
@@ -768,7 +772,7 @@ _G.C_ChatInfo.SendAddonMessage = SendAddonMessage
 
 _G.C_FriendList = {}
 
-_G.MAX_CLASSES = 9
+_G.MAX_CLASSES = 11
 
 _G.C_CreatureInfo = {}
 _G.C_CreatureInfo.ClassInfo = {

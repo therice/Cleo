@@ -45,6 +45,7 @@ describe("Raid Roster Audit Record", function()
 			record = RaidRosterRecord.For(e)
 			assert(record.actor)
 			assert(record.players)
+            print(Util.Objects.ToString(record.players))
 			assert(Util.Tables.Count(record.players) == 25)
 			_G.IsInRaidVal = rv
 			_G.MAX_RAID_MEMBERS = m

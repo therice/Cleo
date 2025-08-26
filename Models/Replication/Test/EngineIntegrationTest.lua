@@ -11,7 +11,7 @@ local Service
 --- @type Models.Player
 local Player
 
-describe("Replication", function()
+describe("Replication #travisignore", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Replication')
 		loadfile('Models/Replication/Test/EngineIntegrationTestData.lua')()
