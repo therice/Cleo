@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.4 (2025-09-03)
+* Address non-deterministic transmission of required data for configuration activation and neuter LibGuildStorage 9507c69
+
 2026.0.3 (2025-08-26)
 * Misc changes including changing terms used on loot screen and correcting what weapons can be used by Monks d8ca4f5
 
