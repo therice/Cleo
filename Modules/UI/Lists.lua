@@ -92,6 +92,7 @@ end
 
 -- this is invoked as result of a ResourceRequestCompleted message
 function Lists:OnResourceRequestCompleted(_, resource)
+	Logging:Trace("OnResourceRequestCompleted(%s)", tostring(resource))
 	local ok,msg = pcall(
 		function()
 			if Util.Objects.IsInstanceOf(resource, Configuration) and self.configTab then
@@ -114,10 +115,10 @@ function Lists:Refresh()
 	local ok, msg = pcall(
 		function()
 			if self.interfaceFrame then
-				if self.configTab:IsVisible() then
+				if self.configTab then
 					self.configTab:Refresh()
 				end
-				if self.listTab:IsVisible() then
+				if self.listTab then
 					self.listTab:Refresh()
 				end
 			end
@@ -279,6 +280,7 @@ function Lists:LayoutConfigurationTab(tab)
 	end
 
 	tab.Refresh = function(self, config)
+		Logging:Trace("Lists.ConfigurationTab:Refresh()")
 		local cs = module:GetService():Configurations()
 		self.configList:SetList(cs, AlphabeticalOrder(cs))
 		self:ConfigurationUpdated(nil, {entity=config})
@@ -1198,6 +1200,7 @@ function Lists:LayoutListTab(tab)
 	end
 
 	tab.Refresh = function(self, list)
+		Logging:Trace("Lists.ListsTab:Refresh()")
 		local configs = module:GetService():Configurations()
 		self.config:SetList(configs, AlphabeticalOrder(configs))
 		self:ListUpdated(nil, {entity=list})

@@ -5,6 +5,19 @@ local MINOR_VERSION = 40400
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 
+--[[
+--- @type LibUtil
+local Util
+
+local function LoadUtil()
+	if not Util then
+		Util = LibStub("LibUtil-1.2", true)
+	end
+
+	return Util ~= nil
+end
+--]]
+
 local function _createIndexWrapper(aClass, f)
     if f == nil then
         return aClass.__instanceDict
@@ -121,10 +134,26 @@ local function _cycle_aware_copy(t, cache)
 end
 
 local function _strip_class_metadata(t, cache)
-    if type(t) ~= 'table' then return t end
-    if cache[t] then return cache[t] end
+    if type(t) ~= 'table' then
+	    return t
+    end
+
+    if cache[t] then
+	    return cache[t]
+    end
+
     local res = {}
     cache[t] = res
+
+	--[[
+	local iterator
+	if LoadUtil() then
+		iterator = function(t) return Util.Tables.OrderedPairs(t) end
+	else
+		iterator = function(t) return pairs(t) end
+	end
+	--]]
+
     for k, v in pairs(t) do
         if k ~= "clazz" then
             k = _strip_class_metadata(k, cache)
@@ -163,6 +192,10 @@ local DefaultMixin = {
     -- allows for manipulation of reconstituted instance before being returned
     afterReconstitute = function(self, instance)
         return instance
+    end,
+
+    getClassName = function(self)
+	    return tostring(self.clazz.name)
     end,
 
     static = {

@@ -129,6 +129,15 @@ describe("LibUtil", function()
 
             assert.same({All = 99, Equippable = 1, ['Not Equippable'] = 2}, Util.Tables.Sort2(t, true))
             assert.same({'Equippable', 'Not Equippable', [99] = 'All'}, Util.Tables.Sort2(t, false))
+
+	        t = {
+		        b="xxx",
+		        a="yyy",
+		        100,
+		        [-5]=100
+	        }
+	        assert.same({[-5] = 100, [1] = 100, a = "yyy", b = "xxx"}, Util.Tables.Sort2(t, false))
+
         end)
         it("sorts associatively", function()
             local t = {

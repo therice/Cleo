@@ -18,10 +18,6 @@ local Util = LibStub("LibUtil-1.2")
 local Cbh = LibStub("CallbackHandler-1.0")
 --- @type AceEvent
 local AceEvent = LibStub("AceEvent-3.0")
---- @type AceComm
-local AceComm = LibStub("AceComm-3.0")
---- @type AceTimer
-local AceTimer = LibStub("AceTimer-3.0")
 
 if not lib.callbacks then
     lib.callbacks = Cbh:New(lib)
@@ -30,46 +26,22 @@ end
 local callbacks = lib.callbacks
 
 AceEvent:Embed(lib)
-AceComm:Embed(lib)
-AceTimer:Embed(lib)
 
 lib:UnregisterAllEvents()
-lib:UnregisterAllComm()
-lib:CancelAllTimers()
 
 local States = {
     Stale                   =   1,
     StaleAwaitingUpdate     =   2,
     Current                 =   3,
-    PendingChanges          =   4,
-    PersistingChanges       =   5,
 }
 lib.States = States
 
 local StateNames = tInvert(States)
 
 local StateTransitions = {
-    [States.Stale]                  = { [States.Current] = true, [States.PersistingChanges] = true, [States.StaleAwaitingUpdate] = true },
-    [States.StaleAwaitingUpdate]    = { [States.Stale] = true, [States.PendingChanges] = true },
-    [States.Current]                = { [States.PendingChanges] = true, [States.PersistingChanges] = true, [States.Stale] = true },
-    [States.PendingChanges]         = { [States.StaleAwaitingUpdate] = true },
-    [States.PersistingChanges]      = { [States.StaleAwaitingUpdate] = true },
-}
-
-lib:RegisterComm(LIB_MESSAGE_PREFIX, function(...) lib:OnLibraryMessage(...) end)
-
-local Messages = {
-    ChangesPending  = "ChangesPending",
-    ChangesWritten  = "ChangesWritten",
-    Refresh         = "Refresh",
-
-    SendLibraryMessage = function(...)
-        lib:SendCommMessage(LIB_MESSAGE_PREFIX, ...)
-    end,
-
-    SendMessage = function(...)
-        lib:SendMessage(...)
-    end
+	[States.Stale]               = { [States.Current] = true, [States.StaleAwaitingUpdate] = true },
+	[States.StaleAwaitingUpdate] = { [States.Stale] = true },
+	[States.Current]             = { [States.Stale] = true, [States.StaleAwaitingUpdate] = true },
 }
 
 lib.Events = {
@@ -77,9 +49,6 @@ lib.Events = {
     StateChanged             =   "StateChanged",
     GuildInfoChanged         =   "GuildInfoChanged",
     GuildNameChanged         =   "GuildNameChanged",
-    GuildOfficerNoteChanged  =   "GuildNoteChanged",
-    GuildOfficerNoteConflict =   "GuildNoteConflict",
-    GuildOfficerNoteWritten  =   "GuildOfficerNoteWritten",
     GuildMemberDeleted       =   "GuildMemberDeleted",
     GuildMemberOnlineChanged =   "GuildMemberOnlineChanged",
 }
@@ -95,9 +64,7 @@ local GuildStorageEntry = Class('GuildStorageEntry')
 -- rank : String - The member's rank in the guild ( Guild Master, Member ...)
 -- rankIndex : Number - The number corresponding to the guild's rank (already with 1 added to API return value)
 -- guid : String - The player's globally unique id, https://wowwiki.fandom.com/wiki/API_UnitGUID
-function GuildStorageEntry:initialize(
-        name, class, classTag, rank, rankIndex, level, officerNote, guid, online
-)
+function GuildStorageEntry:initialize(name, class, classTag, rank, rankIndex, level, officerNote, guid, online)
     self.name = name
     self.class = class
     self.classTag = classTag
@@ -107,29 +74,21 @@ function GuildStorageEntry:initialize(
     self.officerNote = officerNote
     self.guid = guid
     self.online = online or false
-    self.pendingOfficerNote = nil
     self.seen = nil
 end
 
-function GuildStorageEntry:HasPendingOfficerNote()
-    return self.pendingOfficerNote ~= nil
-end
-
 function SetState(value)
-    Logging:Trace("SetState(%s)", tostring(value))
+    Logging:Debug("SetState() : %s => %s", tostring(state), tostring(value))
     if state == value then
         return
     end
     
     if not StateTransitions[state][value] then
-        Logging:Trace("Ignoring state change from '%s' to '%s'", StateNames[state], StateNames[value])
+        Logging:Warn("Ignoring state change from '%s' to '%s'", StateNames[state], StateNames[value])
         return
     else
-        Logging:Trace("State change from '%s' to '%s'", StateNames[state], StateNames[value])
+        Logging:Debug("State change from '%s' to '%s'", StateNames[state], StateNames[value])
         state = value
-        if value == States.PendingChanges then
-            Messages.SendLibraryMessage(Messages.ChangesPending, "GUILD")
-        end
         callbacks:Fire(lib.Events.StateChanged, state)
     end
 end
@@ -173,26 +132,6 @@ function lib:GetOfficerNote(name)
     return self:GetMemberAttribute(name, 'officerNote')
 end
 
-function lib:SetOfficeNote(name, note)
-    local entry = self:GetMember(name)
-    if entry then
-        if entry:HasPendingOfficerNote() then
-            Logging:Warn("SetOfficeNote() : Pending officer note update for %s", name)
-            DEFAULT_CHAT_FRAME:AddMessage(
-                    format(MAJOR_VERSION .. " : ignoring attempt to set officer note before persisting pending officer note for %s", name)
-            )
-        else
-            Logging:Trace("SetOfficeNote() : Officer note for %s set to %s", name, note)
-            entry.pendingOfficerNote = note
-            SetState(States.PendingChanges)
-        end
-        
-        return entry.pendingOfficerNote
-    else
-        Logging:Warn("SetOfficeNote() : Could not set officer not for %s", name)
-    end
-end
-
 function lib:GetClass(name)
     return self:GetMemberAttribute(name, 'class')
 end
@@ -205,51 +144,43 @@ end
 function lib:GetRank(name)
     local entry = self:GetMember(name)
     if entry then return entry.rank, entry.rankIndex end
+	return nil, nil
 end
 
 function lib:GetGUID(name)
     return self:GetMemberAttribute(name, 'guid')
 end
 
+local Refresh
 
-function lib:OnLibraryMessage(prefix, msg, type, sender)
-    Logging:Trace("[LibGuildStorage-1.4] OnLibraryMessage: %s, %s, %s, %s", prefix, msg, type, sender)
-
-    -- only look at messages from this library and ignore ones from yourself
-    if prefix ~= LIB_MESSAGE_PREFIX or UnitIsUnit(Ambiguate(sender, "short"), "player") then
-        return
-    end
-
-    if msg == Messages.ChangesPending then
-        SetState(States.PersistingChanges)
-    elseif msg == Messages.ChangesWritten then
-        SetState(States.StaleAwaitingUpdate)
-    end
-
-    --Messages.SendMessage(Messages.Refresh)
+local function ScheduleRefresh()
+	C_Timer.After(1, Refresh)
 end
 
+-- Fired when a player is gkicked, gquits, etc.
 function lib:OnPlayerGuildUpdate(...)
-    Logging:Trace("[LibGuildStorage-1.4] OnPlayerGuildUpdate(%d)", state)
+    Logging:Trace("OnPlayerGuildUpdate(%d)", state)
     SetState(States.StaleAwaitingUpdate)
-    --Messages.SendMessage(Messages.Refresh)
+	ScheduleRefresh()
 end
 
+-- Fires when the player logs in, /reloads the UI or zones between map instances. Basically whenever the loading screen appears.
 function lib:OnPlayerEnteringWorld(...)
-    Logging:Trace("[LibGuildStorage-1.4] OnPlayerEnteringWorld()")
+    Logging:Trace("OnPlayerEnteringWorld()")
     lib:OnPlayerGuildUpdate(...)
-    --GuildRoster()
 end
 
+-- Fired when the client's guild info cache has been updated after a call to GuildRoster or after any data change in
+-- any of the guild's data, excluding the Guild Information window.
 function lib:OnGuildRosterUpdate(_, canRequestRosterUpdate)
-    Logging:Trace("[LibGuildStorage-1.4] OnGuildRosterUpdate(%s)", tostring(canRequestRosterUpdate))
+    Logging:Debug("OnGuildRosterUpdate(%s)", tostring(canRequestRosterUpdate))
     if canRequestRosterUpdate then
-        SetState(States.PendingChanges)
+	    SetState(States.StaleAwaitingUpdate)
     else
         SetState(States.Stale)
         index = nil
     end
-    --Messages.SendMessage(Messages.Refresh)
+	ScheduleRefresh()
 end
 
 lib:RegisterEvent("PLAYER_GUILD_UPDATE", function(...) lib:OnPlayerGuildUpdate(...) end)
@@ -258,8 +189,8 @@ lib:RegisterEvent("GUILD_ROSTER_UPDATE", function(...) lib:OnGuildRosterUpdate(.
 
 -- Order of events and functions when first logging into game
 --  PLAYER_ENTERING_WORLD
---  PLAYER_GUILD_UPDATE(2)
---      OnUpdate(2)
+--  PLAYER_GUILD_UPDATE(StaleAwaitingUpdate[2])
+--      OnUpdate(StaleAwaitingUpdate[2])
 --      GuildRoster()
 --  GUILD_ROSTER_UPDATE(false)
 --      StaleAwaitingUpdate -> Stale
@@ -269,8 +200,8 @@ lib:RegisterEvent("GUILD_ROSTER_UPDATE", function(...) lib:OnGuildRosterUpdate(.
 --      initialized
 --      Stale -> Current
 --
-local function Refresh(...)
-    --Logging:Debug("[LibGuildStorage-1.4] : Refresh(active=%s)", tostring(refreshing))
+Refresh = function(...)
+    Logging:Trace("Refresh(active=%s,state=%s)", tostring(refreshing), tostring(state))
 
     -- don't allow more than one refresh operation to occur concurrently
     if refreshing then
@@ -328,7 +259,7 @@ local function Refresh(...)
             for i = index, lastIndex do
                 -- https://wowwiki.fandom.com/wiki/API_GetGuildRosterInfo
                 local name, rank, rankIndex, level, class, _, _, officerNote, online, _, classTag, _, _, _, _, _, guid =
-                GetGuildRosterInfo(i)
+                    GetGuildRosterInfo(i)
                 -- The Rank Index starts at 0, add 1 to correspond with the index
                 -- for usage in GuildControlGetRankName(index)
                 rankIndex = rankIndex + 1
@@ -340,11 +271,12 @@ local function Refresh(...)
                         entry = GuildStorageEntry(name, class, classTag, rank, rankIndex, level, officerNote, guid, online)
                         cache[name] = entry
                     else
+	                    entry.class = class
+	                    entry.classTag = classTag
                         entry.rank = rank
                         entry.rankIndex = rankIndex
                         entry.level = level
-                        entry.class = class
-                        entry.classTag = classTag
+	                    entry.officerNote = officerNote
                         entry.guid = guid
                     end
                     entry.seen = true
@@ -359,75 +291,43 @@ local function Refresh(...)
                             callbacks:Fire(lib.Events.GuildMemberOnlineChanged, name, online)
                         end
                     end
-
-                    if entry.officerNote ~= officerNote then
-                        entry.officerNote = officerNote
-                        if initialized then
-                            Logging:Trace("Firing Events.GuildOfficerNoteChanged for %s", name)
-                            callbacks:Fire(lib.Events.GuildOfficerNoteChanged, name, officerNote)
-                        end
-                        if entry:HasPendingOfficerNote() then
-                            Logging:Trace("Firing Events.GuildOfficerNoteConflict for %s", name)
-                            callbacks:Fire(lib.Events.GuildOfficerNoteConflict, name, officerNote, entry.officerNote, entry.pendingOfficerNote)
-                        end
-                    end
-
-
-                    if entry:HasPendingOfficerNote() then
-                        Logging:Trace("Writing note '%s' for '%s'", entry.pendingOfficerNote, entry.name)
-                        GuildRosterSetOfficerNote(i, entry.pendingOfficerNote)
-                        local note = entry.pendingOfficerNote
-                        entry.pendingOfficerNote = nil
-                        Logging:Trace("Firing Events.GuildOfficerNoteWritten for %s", name)
-                        callbacks:Fire(lib.Events.GuildOfficerNoteWritten, name, note)
-                    end
                 end
             end
 
             index = lastIndex
-            Logging:Trace("(%s / %d) %d >= %d", tostring(initialized), state, index, guildMemberCount)
-            if index >= guildMemberCount then
-                for name, entry in pairs(cache) do
-                    if entry.seen then
-                        entry.seen = nil
-                    else
-                        cache[name] = nil
-                        Logging:Trace("Firing Events.GuildMemberDeleted for %s", name)
-                        callbacks:Fire(lib.Events.GuildMemberDeleted, name)
-                    end
-                end
+            Logging:Trace("Initialized(%s) / State(%d) : index=%d, guildMemberCount=%d", tostring(initialized), state, index, guildMemberCount)
+	        if index >= guildMemberCount then
+		        for name, entry in pairs(cache) do
+			        if entry.seen then
+				        entry.seen = nil
+			        else
+				        cache[name] = nil
+				        Logging:Trace("Firing Events.GuildMemberDeleted for %s", name)
+				        callbacks:Fire(lib.Events.GuildMemberDeleted, name)
+			        end
+		        end
 
-                if not initialized then
-                    for name, entry in pairs(cache) do
-                        Logging:Trace("Firing Events.GuildOfficerNoteChanged for %s", name)
-                        callbacks:Fire(lib.Events.GuildOfficerNoteChanged, name, entry.officerNote)
-                    end
-                    initialized = true
-                    callbacks:Fire(lib.Events.Initialized)
-                    Logging:Trace("initalized")
-                end
+		        if not initialized then
+			        initialized = true
+			        callbacks:Fire(lib.Events.Initialized)
+			        Logging:Trace("Initialized")
+		        end
 
-                if state == States.Stale then
-                    SetState(States.Current)
-                elseif state == States.PendingChanges then
-                    Logging:Trace("State is States.ChangesPending - checking pending count")
-                    local pendingCount = Util.Tables.CountFn(cache,
-                                                             function(entry)
-                                                                 if entry.pendingOfficerNote then return 1 else return 0 end
-                                                             end
-                    )
-                    Logging:Trace("Pending Count = %d", pendingCount)
-                    if pendingCount == 0 then
-                        SetState(States.StaleAwaitingUpdate)
-                        Logging:Trace("Firing Messages.ChangesWritten")
-                        Messages.SendLibraryMessage(Messages.ChangesWritten, "GUILD")
-                    end
-                end
-            end
+		        if state == States.Stale then
+			        SetState(States.Current)
+		        end
+	        else
+		        ScheduleRefresh()
+	        end
 
-            Logging:Trace("Refresh(%d) : %d guild members, %d ms elapsed, current index %d", state, Util.Tables.Count(cache), debugprofilestop() - start, index and index or -1)
+	        local elapsed = (debugprofilestop() - start)
+            Logging:Debug("Refresh(state=%d) : %d guild members, %d ms elapsed, current index %d", state, function() return Util.Tables.Count(cache) end, elapsed, index and index or -1)
         end
-    ).finally(function() refreshing = false end)
+    ).finally(
+	    function()
+		    refreshing = false
+	    end
+    )
 end
 
 
@@ -435,26 +335,15 @@ end
 -- which is used, resulting in stack overflows
 --
 -- in this case, we have a "proper" C_Timer and can rely upon it
-if not C_Timer.IsMock or not C_Timer.IsMock() then
-    lib:ScheduleTimer(
-        function()
-            lib:ScheduleRepeatingTimer(function() Refresh() end, 1)
-            GuildRoster()
-        end,
-        1
-    )
--- in this case, we are in a test context, use a frame for periodic updates of the data
-else
-    if lib.frame then
-        lib.frame:UnregisterAllEvents()
-        lib.frame:SetScript("OnEvent", nil)
-        lib.frame:SetScript("OnUpdate", nil)
-    else
-        lib.frame = CreateFrame("Frame", MAJOR_VERSION .. "_Frame")
-    end
+if C_Timer.IsMock and C_Timer.IsMock() then
+	if lib.frame then
+		lib.frame:UnregisterAllEvents()
+		lib.frame:SetScript("OnEvent", nil)
+		lib.frame:SetScript("OnUpdate", nil)
+	else
+		lib.frame = CreateFrame("Frame", MAJOR_VERSION .. "_Frame")
+	end
 
-    lib.frame:Show()
-    lib.frame:SetScript("OnUpdate", Refresh)
-
-    GuildRoster()
+	lib.frame:Show()
+	GuildRoster()
 end

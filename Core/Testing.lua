@@ -11,6 +11,10 @@ local LootSource = AddOn.Package('Models.Item').LootSource
 local Event = AddOn.RequireOnUse('Core.Event')
 --- @type LootLedger.Storage
 local LootLedgerStorage = AddOn.Package('LootLedger').Storage
+--- @type Models.List.Configuration
+local Configuration = AddOn.Package('Models.List').Configuration
+--- @type Models.List.List
+local List = AddOn.Package('Models.List').List
 
 --- @class Testing.TestLootSource : Models.Item.LootSource
 local TestLootSource = AddOn.Package('Testing'):Class('TestLootSource', LootSource)
@@ -212,15 +216,99 @@ function MasterLooter:Resign()
 	return false
 end
 
+--- @class Testing.ListsDataPlane
+local ListsDataPlane = {
+	--- @return ListsDataPlane
+	GetDataPlaneModule = function(_)
+		--Logging:Debug("GetDataPlaneModule()")
+		return AddOn:ListsDataPlaneModule()
+	end,
+	--- @return Lists
+	GetListsModule = function(_)
+		--Logging:Debug("GetListsModule()")
+		return AddOn:ListsModule()
+	end,
+	--- @return Models.List.Service
+	GetListsService = function(self)
+		--Logging:Debug("GetListsService()")
+		return self:GetListsModule():GetService()
+	end,
+	--- @param self Testing.ListsDataPlane
+	--- @param configId string
+	GetConfig = function(self, configId)
+		--Logging:Debug("GetConfig(%s)", tostring(configId))
+		if Util.Strings.IsSet(configId) then
+			return self:GetListsService().Configuration:Get(configId)
+		end
+	end,
+	GetLists = function(self, configId)
+		if Util.Strings.IsSet(configId) then
+			return self:GetListsService():Lists(configId)
+		end
+	end,
+	GetList = function(self, listId)
+		if Util.Strings.IsSet(listId) then
+			return self:GetListsService().List:Get(listId)
+		end
+	end,
+	CreateRequest = function(self, entity)
+		return self:GetDataPlaneModule():CreateRequest(entity:getClassName(), entity.id)
+	end,
+	SendRequest = function(self, to, ...)
+		self:GetDataPlaneModule():SendRequest(to or AddOn.player, nil, ...)
+	end
+}
+
+---
+--- Simulates a request for a configuration from another player
+---	/run _G.Cleo.Testing.ListsDataPlane:SendConfigurationRequest("688FD610-1B93-3614-01FE-C5E43CB06896")
+---
+function ListsDataPlane:SendConfigurationRequest(configId, player)
+	local config = self:GetConfig(configId)
+	if config then
+		self:SendRequest(player, self:CreateRequest(config))
+	end
+end
+
+---
+--- Simulates a request for a list from another player
+---	/run _G.Cleo.Testing.ListsDataPlane:SendListRequest("688FD65A-693E-4C24-5936-E12CBAE6DB4F")
+---
+function ListsDataPlane:SendListRequest(listId, player)
+	local list = self:GetList(listId)
+	if list then
+		self:SendRequest(player, self:CreateRequest(list))
+	end
+end
+
+---
+--- Simulates a request for a configuration and lists from another player
+---	/run _G.Cleo.Testing.ListsDataPlane:SendAllRequest("688FD610-1B93-3614-01FE-C5E43CB06896")
+---
+function ListsDataPlane:SendAllRequest(configId, player)
+	local config = self:GetConfig(configId)
+	if config then
+		local requests = Util.Tables.Push({}, self:CreateRequest(config))
+		local lists = self:GetLists(configId)
+		for _, list in pairs(lists) do
+			Util.Tables.Push(requests, self:CreateRequest(list))
+		end
+
+		self:SendRequest(player, unpack(requests))
+	end
+end
+
 --- @class Testing
 local Testing = {
-	warningTimer = nil,
+	warningTimer   = nil,
 	--- @type Testing.LootLedger
-	LootLedger   = LootLedger,
+	LootLedger     = LootLedger,
 	--- @type Testing.MasterLooter
-	MasterLooter = MasterLooter,
+	MasterLooter   = MasterLooter,
+	--- @type Testing.ListsDataPlane
+	ListsDataPlane = ListsDataPlane,
 	--- @type Testing.TestLootSource
-	LootSource   = TestLootSource("Testing-0")
+	LootSource     = TestLootSource("Testing-0"),
 }
 
 ---

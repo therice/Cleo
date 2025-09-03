@@ -75,6 +75,13 @@ function ListsDP:SubscribeToComms()
 				self:OnBroadcastReceived(unpack(data))
 			end
 		end,
+		[C.Commands.ConfigBroadcastRequest] = function(data, sender)
+			Logging:Debug("ConfigBroadcastRequest from %s", tostring(sender))
+			--don't consume our own broadcast (unless we're in dev mode)
+			if not AddOn.UnitIsUnit(sender, AddOn.player) or AddOn:DevModeEnabled() then
+				self:OnBroadcastRequest(sender, unpack(data))
+			end
+		end,
 		[C.Commands.ConfigBroadcastRemove] = function(data, sender)
 			Logging:Debug("ConfigBroadcastRemove from %s", tostring(sender))
 			--don't consume our own broadcast (unless we're in dev mode)
@@ -150,7 +157,7 @@ function ListsDP:SendRequest(to, callback, ...)
 end
 
 function ListsDP:OnResourceRequest(sender, payload)
-	Logging:Trace("OnResourceRequest() : from %s", tostring(sender))
+	Logging:Trace("OnResourceRequest() : %s from %s", function() return Util.Objects.ToString(payload) end, tostring(sender))
 
 	--- @type Lists.Request
 	local request = Request:reconstitute(payload)
@@ -192,7 +199,6 @@ function ListsDP:SendResponse(to, ...)
 end
 
 function ListsDP:OnResourceResponse(sender, payload)
-	-- Logging:Trace("OnResourceResponse(%s) : %s", tostring(sender), Util.Objects.ToString(payload))
 	--- @type Lists.Response
 	local response = Response:reconstitute(payload)
 	Logging:Trace("OnResourceResponse() : %s from %s", tostring(response and response or nil), tostring(sender))
@@ -230,6 +236,7 @@ function ListsDP:OnResourceResponse(sender, payload)
 				end
 			).finally(
 				function()
+					Logging:Trace("OnResourceResponse() : removing request handle %s and sending 'ResourceRequestCompleted' message", tostring(response.cid))
 					self.requestsTemp[response.cid] = nil
 					self:SendMessage(C.Messages.ResourceRequestCompleted, resource)
 				end
@@ -240,7 +247,7 @@ end
 
 --- broadcasts the specified configuration and any associated lists (for add or update) to specified target
 ---
---- @param configId number the configuration identifier
+--- @param configId string the configuration identifier
 --- @param target string the target channel to which to broadcast
 function ListsDP:Broadcast(configId, target)
 	Logging:Debug("Broadcast(%s, %s)", tostring(configId), tostring(target))
@@ -256,7 +263,7 @@ end
 
 --- broadcasts the specified configuration (for remove) to specified target
 ---
---- @param configId number the configuration identifier
+--- @param configId string the configuration identifier
 --- @param target string the target channel to which to broadcast
 function ListsDP:BroadcastRemove(configId, target)
 	Logging:Debug("BroadcastRemove(%s, %s)", tostring(configId), tostring(target))
@@ -266,6 +273,27 @@ function ListsDP:BroadcastRemove(configId, target)
 			self:Send(target, C.Commands.ConfigBroadcastRemove, {config = config.id})
 		end
 	end
+end
+
+--- sends a request for a broadcast to the ML (or specified player)
+---
+--- @param sender string player requesting the broadcast
+--- @param configId string the configuration identifier
+function ListsDP:SendBroadcastRequest(to, configId)
+	to = to or AddOn.masterLooter
+	Logging:Trace("SendBroadcastRequest(%s, %s)", tostring(to), tostring(configId))
+	if Util.Strings.IsSet(configId) then
+		self:Send(to, C.Commands.ConfigBroadcastRequest, configId)
+	end
+end
+
+--- handles a request for a broadcast to a single player
+---
+--- @param sender string player requesting the broadcast
+--- @param configId string the configuration identifier
+function ListsDP:OnBroadcastRequest(sender, configId)
+	Logging:Trace("OnBroadcastRequest(%s, %s)", tostring(sender), tostring(configId))
+	self:Broadcast(configId, sender)
 end
 
 -- todo : if admin or owner make sure we don't overwrite local changes
@@ -398,8 +426,8 @@ function ListsDP:OnGroupEvent()
 end
 
 function ListsDP:RestartReplication()
-	Logging:Debug("RestartReplication()")
 	if AddOn:ReplicationModeEnabled() and Replicate():IsRunning() then
+		Logging:Trace("RestartReplication()")
 		Replicate():Shutdown()
 		-- use a random delay between 2 and 5 seconds so replication election is somewhat
 		-- staggered between players
@@ -408,8 +436,8 @@ function ListsDP:RestartReplication()
 end
 
 function ListsDP:InitiateReplication()
-	Logging:Debug("InitiateReplication()")
 	if AddOn:ReplicationModeEnabled() then
+		Logging:Trace("InitiateReplication()")
 		Replicate():Initialize(Comm(), function(...) self:OnReplicaLeaderChanged(...) end)
 	end
 end

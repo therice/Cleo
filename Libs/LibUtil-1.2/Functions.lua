@@ -13,7 +13,7 @@ function Self.Id(...) return ... end
 function Self.True() return true end
 function Self.False() return false end
 function Self.Zero() return 0 end
-function Self.Noop() end
+function Self.Noop(...) end
 
 function Self.CompareMultitype(op1, op2)
     -- Inspired by http://lua-users.org/wiki/SortedIteration

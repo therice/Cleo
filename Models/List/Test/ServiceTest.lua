@@ -262,21 +262,21 @@ describe("Service Model", function()
 
 			local x = {
 				EntityCreated = function(_, event, eventDetail)
-					print('EntityCreated')
+					--print('EntityCreated')
 					IncrementEventCount(eventDetail, event)
 				end,
 				EntityDeleted = function(_, event, eventDetail)
-					print('EntityDeleted')
+					--print('EntityDeleted')
 					IncrementEventCount(eventDetail, event)
 				end,
 				EntityUpdated = function(_, event, eventDetail)
-					-- print(format('EntityUpdated (%s) => %s', attr, Util.Objects.ToString(diff)))
-					-- print(format('EntityUpdated %s / %s', entity:hash(), asRef.hash))
 					IncrementEventCount(eventDetail, event)
-					local entity, ref, attr = eventDetail.entity, eventDetail.ref, eventDetail.attr
+					local entity, ref, attr, diff = eventDetail.entity, eventDetail.ref, eventDetail.attr, eventDetail.diff
+					--print(format('EntityUpdated (%s)  => %s', attr,  Util.Objects.ToString(diff)))
+					--print(format('EntityUpdated %s / %s', entity:hash(), ref.hash))
 					assert.Not.equal(entity:hash(), ref.hash)
 					if entity:TriggersNewRevision(attr) then
-						print('Expect new revision -> ' .. tostring(attr))
+						--print('Expect a new revision for attr => ' .. tostring(attr))
 						assert.Not.equal(entity.revision, ref.revision)
 					end
 				end
@@ -302,7 +302,7 @@ describe("Service Model", function()
 
 			C.name = "An Updated Name"
 			S.Configuration:Update(C, 'name')
-			C.status = Configuration.Status.Inactive
+			C.status = Configuration.Status.Active
 			S.Configuration:Update(C, 'status')
 			assert.equal(1, events[C][Dao.Events.EntityUpdated]['name'])
 			assert.equal(1, events[C][Dao.Events.EntityUpdated]['status'])
@@ -321,6 +321,7 @@ describe("Service Model", function()
 
 			S:UnregisterAllCallbacks(x)
 		end)
+
 		it("is activated", function()
 			--- @type  Models.List.ActiveConfiguration
 			local ac = S:Activate("614A4F87-AF52-34B4-E983-B9E8929D44AF")
@@ -330,7 +331,7 @@ describe("Service Model", function()
 				assert.equal(0, list:GetPlayerCount())
 			end
 		end)
-		it("marhsalls as CSV", function()
+		it("marshals as CSV", function()
 			local cs = S:Configurations(true, true)
 			for _, c in pairs(cs) do
 				assert(c ~= nil)
