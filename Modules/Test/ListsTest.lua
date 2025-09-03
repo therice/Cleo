@@ -4,12 +4,15 @@ local AddOnName, AddOn, Util, C, Player
 local Configuration
 --- @type Models.List.List
 local List
+--- @type Models.List.ActiveConfiguration
+local ActivateConfiguration
 
 describe("Lists", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_Lists')
 		Util, C = AddOn:GetLibrary('Util'), AddOn.Constants
 		Configuration, List = AddOn.Package('Models.List').Configuration, AddOn.Package('Models.List').List
+		ActivateConfiguration = AddOn.Package('Models.List').ActiveConfiguration
 		Player = AddOn.Package('Models').Player
 		AddOnLoaded(AddOnName, true)
 		SetTime()
@@ -45,7 +48,7 @@ describe("Lists", function()
 		local lists
 		--- @type ListsDataPlane
 		local listsDp
-		local Send
+		local _Send
 		local DbDefaults
 
 		setup(function()
@@ -105,15 +108,15 @@ describe("Lists", function()
 			lists.db = db
 			lists:InitializeService()
 			listsDp = AddOn:ListsDataPlaneModule()
-			Send = listsDp.Send
+			_Send = listsDp.Send
 			listsDp.Send = function(...)
-				Send(...)
+				_Send(...)
 				WoWAPI_FireUpdate(GetTime()+10)
 			end
 		end)
 
 		teardown(function()
-			listsDp.Send = Send
+			listsDp.Send = _Send
 			listsDp = nil
 			lists = nil
 		end)
@@ -294,7 +297,6 @@ describe("Lists", function()
 			local listToRemove = service.List:Get("61534E26-36A0-4F24-51D7-BE511B88B834")
 			listsDp:Broadcast(config.id, AddOn.Constants.guild)
 
-
 			service.List:Remove(listToRemove, false)
 
 			local _OnBroadcastReceived = listsDp.OnBroadcastReceived
@@ -311,7 +313,139 @@ describe("Lists", function()
 			assert.equal(Util.Tables.Count(lists), 1)
 
 			finally(function()
+				-- add removed list back at end to restore to default state
+				service.List:Add(listToRemove, false)
 				listsDp.OnBroadcastReceived =  _OnBroadcastReceived
+			end)
+		end)
+		it("handles broadcast request", function()
+			local service = lists:GetService()
+			local configs = service:Configurations()
+			local config = Util.Tables.Values(configs)[1]
+
+			local _OnBroadcastRequest, _OnBroadcastReceived = listsDp.OnBroadcastRequest, listsDp.OnBroadcastReceived
+			local requestCount, receivedCount = 0, 0
+
+			listsDp.OnBroadcastReceived =  function(self, payload)
+				receivedCount = receivedCount + 1
+				_OnBroadcastReceived(self, payload)
+			end
+
+			listsDp.OnBroadcastRequest = function(self, sender, configId)
+				requestCount = requestCount + 1
+				_OnBroadcastRequest(self, sender, configId)
+			end
+
+			listsDp:SendBroadcastRequest(AddOn.player, config.id)
+
+			assert.equal(requestCount, 1)
+			assert.equal(receivedCount, 1)
+			finally(function()
+				listsDp.OnBroadcastRequest =  _OnBroadcastRequest
+				listsDp.OnBroadcastReceived =  _OnBroadcastReceived
+			end)
+		end)
+		it("handles configuration activation", function()
+			for _ = 1, 3 do
+				print("")
+			end
+
+			local config = lists:GetService():Configurations()["614A4F87-AF52-34B4-E983-B9E8929D44AF"]
+			local masterLooter = AddOn.masterLooter
+
+			AddOn:CallModule("MasterLooter")
+			--- @type MasterLooter
+			local _ml = AddOn:MasterLooterModule()
+			local _IsHandled, _Activate, _ActivateConfiguration = _ml.IsHandled, lists:GetService().Activate, lists.ActivateConfiguration
+
+			AddOn.masterLooter = Player:Get("Player1")
+			_ml.IsHandled = function() return true end
+
+			local activeConfig = _ml:BuildActiveConfig(config)
+
+			AddOn.masterLooter = Player:Get("Player2")
+			AddOn.player = Player:Get("Player1")
+
+			local activateAttempts, activateConfigAttempts = 0, 0
+
+			lists:GetService().Activate = function(...)
+				activateAttempts = activateAttempts + 1
+				-- first attempt we will simulate a blanket failure
+				if activateAttempts == 1 then
+					error("simulating failure")
+				end
+
+				return _Activate(...)
+			end
+
+			lists.ActivateConfiguration = function(self, idOrConfig, callback)
+				activateConfigAttempts = activateConfigAttempts + 1
+				local result, _Verify
+
+				Util.Functions.try(
+					function()
+						local callbackWrapper = function(success, activated)
+							if activateConfigAttempts >= 2 and activateConfigAttempts <=4 and activated then
+								_Verify = activated.Verify
+
+								if activateConfigAttempts == 2 then
+									activated.Verify = function(self, config, lists)
+										local verification = _Verify(self, config, lists)
+										verification[1].verified = false
+
+										return verification
+									end
+								elseif activateConfigAttempts == 3 then
+									activated.Verify = function(self, config, lists)
+										local verification = _Verify(self, config, lists)
+										local listResults = verification[2]
+										local listsVerifications = listResults[1]
+										listsVerifications['615247A9-311F-57E4-0503-CC3F53E61597'].verified = false
+
+										return verification
+									end
+								elseif activateConfigAttempts == 4 then
+									activated.Verify = function(self, config, lists)
+										local verification = _Verify(self, config, lists)
+										local listResults = verification[2]
+										local listsMissing = listResults[2]
+
+										Util.Tables.Push(listsMissing, '615247A9-311F-57E4-0503-CC3F53E61599')
+
+										return verification
+									end
+								end
+							end
+
+							callback(success, activated)
+						end
+
+						result = Util.Tables.New(_ActivateConfiguration(self, idOrConfig, callbackWrapper))
+					end
+				).finally(
+					function()
+						if _Verify and lists.activeConfig then
+							lists.activeConfig.Verify = _Verify
+						end
+						_Verify = nil
+					end
+				)
+
+
+				return Util.Tables.Unpack(result)
+			end
+
+			lists:OnActivateConfigReceived(AddOn.masterLooter, activeConfig)
+
+			assert(lists.activeConfig ~= nil)
+
+			finally(function()
+				lists:DeactivateConfiguration(config)
+				lists:GetService().Activate = _Activate
+				lists.ActivateConfiguration = _ActivateConfiguration()
+				_ml.IsHandled = _IsHandled
+				AddOn.masterLooter = masterLooter
+				AddOn:YieldModule("MasterLooter")
 			end)
 		end)
 	end)

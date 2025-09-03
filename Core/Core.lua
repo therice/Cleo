@@ -311,8 +311,9 @@ end
 
 function AddOn:IsMasterLooter(unit)
     unit = Util.Objects.Default(unit, self.player)
-    --Logging:Trace("IsMasterLooter() : unit=%s, ml=%s", tostring(unit), tostring(self.masterLooter))
-    return Util.Objects.IsSet(self.masterLooter) and not Player.IsUnknown(self.masterLooter) and self.masterLooter:IsValid() and AddOn.UnitIsUnit(unit, self.masterLooter)
+	local isML = Util.Objects.IsSet(self.masterLooter) and not Player.IsUnknown(self.masterLooter) and self.masterLooter:IsValid() and AddOn.UnitIsUnit(unit, self.masterLooter)
+    -- Logging:Trace("IsMasterLooter() : unit=%s, ml=%s, isML=%s", tostring(unit), tostring(self.masterLooter), tostring(isML))
+    return isML
 end
 
 --- @return boolean, Models.Player

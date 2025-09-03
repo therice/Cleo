@@ -8,6 +8,9 @@ local SHA = AddOn:GetLibrary("SHA")
 local MessagePack = AddOn:GetLibrary("MessagePack")
 --- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
+--- @type LibBase64
+local Base64 = AddOn:GetLibrary("Base64")
+
 
 --- @class Models.Hasher
 local Hasher = AddOn.Class('Models.Hasher')
@@ -17,6 +20,7 @@ function Hasher:initialize(hashFn, packFn)
 end
 
 function Hasher:hash(data)
+	--print(Base64:Encode(self.packFn(data)))
 	return self.hashFn(self.packFn(data))
 end
 
@@ -47,26 +51,31 @@ function Hashable.Includable(algorithm)
 		included = function(_, clazz)
 			clazz.isHashable = true
 		end,
-		hash = function(self, verbose)
+		hash = function(self, sorted, verbose)
+			sorted =  Util.Objects.Default(sorted, true)
 			verbose = Util.Objects.Default(verbose, false)
+
 			local asTable = self:toTable()
 			for _, attr in pairs(self.clazz.static.excludedHA) do
 				Util.Tables.Remove(asTable, attr)
 			end
 
+			local toHash = sorted and Util.Tables.SortRecursively(asTable) or asTable
+
 			if verbose then
-				Logging:Trace("hash() : %s", Util.Objects.ToString(asTable))
+				Logging:Trace("hash(orig) : %s", function() return Util.Objects.ToString(asTable) end)
+				Logging:Trace("hash(sorted) : %s", function() return Util.Objects.ToString(Util.Tables.SortRecursively(toHash)) end)
 			end
 
-			local hv = hasher:hash(asTable)
-			return hv
+			return hasher:hash(toHash)
 		end,
+		--- @return boolean, string, string are hashes the same, hash of this instance, hash of comparison instance
 		Verify = function(self, against)
 			local ours = self:hash()
 
 			if against and against.hash then
 				local theirs = Util.Objects.IsFunction(against.hash) and against:hash() or against.hash
-				-- Logging:Trace("Verify() : %s (ours) %s (theirs)", ours, theirs)
+				--Logging:Trace("Verify() : %s (ours) %s (theirs)", tostring(ours), tostring(theirs))
 				return Util.Objects.Equals(ours, theirs), ours, theirs
 			end
 

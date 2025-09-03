@@ -270,11 +270,11 @@ describe("Replication #travisignore", function()
 						sender = "Eliovak-Atiesh"
 					end
 
-					local originalService, replacementSevice =  lists:GetService(), engines[to]:EntityProvider()
+					local originalService, replacementService =  lists:GetService(), engines[to]:EntityProvider()
 
 					Util.Functions.try(
 						function()
-							lists.listsService = replacementSevice
+							lists.listsService = replacementService
 
 							if Util.Objects.Equals(cmd, C.Commands.ConfigResourceRequest) then
 								listsDp:OnResourceRequest(sender, data:toTable())

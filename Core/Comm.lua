@@ -212,7 +212,7 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
                         prefix, toSend, C.Channels.Whisper, AddOn.player:GetName(), prio, callback, callbackarg
                     )
                 else
-                    Logging:Trace("SendComm[other]() : UnitIsUnit(false), %s", target)
+                    Logging:Trace("SendComm[other]() : UnitIsUnit(false), %s", tostring(target))
                     self.AceComm:SendCommMessage(
                         prefix, toSend, C.Channels.Whisper, target, prio, callback, callbackarg
                     )

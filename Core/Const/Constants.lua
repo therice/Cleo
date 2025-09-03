@@ -106,6 +106,7 @@ AddOn.Constants = {
         Awarded                 =   "awd",
         ChangeResponse          =   "cr",
         ConfigBroadcast         =   "cb",       -- this is a broadcast to multiple recipients for a configuration and associated lists (for add/update)
+        ConfigBroadcastRequest  =   "cbrq",     -- this a request for a broadcast to a single recipient for a configuration and associated lists (for add/update)
         ConfigBroadcastRemove   =   "cbr",      -- this is a broadcast to multiple recipients for a configuration and associated lists (for remove)
         ConfigResourceRequest   =   "crr",      -- this is a request for a configuration or a list
         ConfigResourceResponse  =   "crrsp",    -- this is a response for a configuration or a list

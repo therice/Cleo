@@ -2,7 +2,7 @@
 local _, AddOn = ...
 local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibLogging
-local Logging =  AddOn:GetLibrary("Logging")
+local Logging = AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 --- @type Core.Comm
@@ -202,7 +202,7 @@ function Lists:ValidateConfigurations()
 							--Logging:Debug("%s/%s (l1) %s/%s (l2)", l1MostRecent.name, tostring(Date(l1MostRecent.revision)), l2MostRecent.name, tostring(Date(l2MostRecent.revision)))
 
 							-- compare most recent list revision for each configuration to determine which
-							-- configuration should beecome default
+							-- configuration should become the default
 							return l1MostRecent.revision > l2MostRecent.revision
 						end)()
 
@@ -466,9 +466,9 @@ function Lists:ActivateConfiguration(idOrConfig, callback)
 
 		if success then
 			self.activeConfig = activated
-			Logging:Debug("ActivateConfiguration() : Activated %s", tostring(activated))
+			Logging:Debug("ActivateConfiguration() : Successfully activated '%s'", tostring(activated))
 		else
-			Logging:Warn("ActivateConfiguration() : Could not activate %s - %s", tostring(idOrConfig), tostring(activated))
+			Logging:Warn("ActivateConfiguration() : Could not activate '%s' - %s", tostring(idOrConfig), tostring(activated))
 		end
 
 		if Util.Objects.IsFunction(callback) then
@@ -481,13 +481,219 @@ function Lists:ActivateConfiguration(idOrConfig, callback)
 	return false, nil
 end
 
-local MaxActivationReattempts = 4
+local MaxActivationAttempts, ActivationResourceRequestStrategy = 4, {
+	Individual = 1, -- request a single, specific resource from the remote source
+	Bulk       = 2, -- request all resources in bulk from the remote source
+	None       = 3, -- do not request any resources from the remote source
+	Abandoned  = 4, -- the request mechanism failed or was abandoned
+}
+
+--- @class Lists.ActivationState
+local ActivationState = {
+	timer    = nil,
+	attempt  = 0,
+	requests = {},
+
+	--- @param self Lists.ActivationState
+	Reset = function(self)
+		Logging:Trace("Reset()")
+
+		-- cancel any scheduled task if it hasn't yet fired as no need to repeat the activation
+		-- process again if it will be scheduled in the near future
+		if self.timer then
+			Logging:Trace("Reset() : Cancelling timer")
+			AddOn:CancelTimer(self.timer)
+			self.timer = nil
+		end
+
+		Util.Tables.Wipe(self.requests)
+		self.attempt = 0
+	end,
+
+	--- @param self Lists.ActivationState
+	--- @return number
+	--- @see ActivationResourceRequestStrategy
+	NextAttempt = function(self)
+		self.attempt = self.attempt + 1
+
+		local strategy
+
+		if self.attempt < MaxActivationAttempts then
+			strategy = ActivationResourceRequestStrategy.Individual
+		elseif self.attempt == MaxActivationAttempts then
+			strategy = ActivationResourceRequestStrategy.Bulk
+		elseif self.attempt == (MaxActivationAttempts + 1) then
+			strategy = ActivationResourceRequestStrategy.None
+		else
+			strategy = ActivationResourceRequestStrategy.Abandoned
+		end
+
+		Logging:Trace("NextAttempt() : attempt=%s, strategy=%s", tostring(self.attempt), tostring(strategy))
+		return strategy
+	end,
+
+	-- TODO : if we're an admin or owner, but not the ML, we shouldn't send blanket requests (could overwrite local changes)
+	--- @param self Lists.ActivationState
+	EnqueueRequest = function(self, id, type)
+		Logging:Trace("EnqueueRequest(%s, %s)", tostring(id), tostring(type))
+		Util.Tables.Push(self.requests, ListsDp:CreateRequest(type, id))
+	end,
+
+	--- @param self Lists.ActivationState
+	--- @param to string
+	--- @return boolean
+	DispatchRequests = function(self, to)
+		-- we have missing data, request it and reschedule activation
+		if Util.Tables.Count(self.requests) > 0 then
+			ListsDp:SendRequest(to, nil, unpack(self.requests))
+			Util.Tables.Wipe(self.requests)
+			return true
+		end
+
+		return false
+	end,
+
+	--- @param self Lists.ActivationState
+	--- @param lists Lists
+	--- @param originator string
+	--- @param activation table
+	AttemptActivation = function(self, lists, originator, activation)
+		Logging:Trace("AttemptActivation() : %s originating from %s", function() return Util.Objects.ToString(activation) end, tostring(originator))
+
+		if activation and Util.Tables.Count(activation) >= 1 then
+			local strategy = self:NextAttempt()
+
+			if strategy == ActivationResourceRequestStrategy.Abandoned then
+				Logging:Warn("AttemptActivation() : Maximum activation attempts exceeded, giving up")
+				AddOn:PrintError(L["invalid_configuration_max_attempts"])
+			else
+				local configForActivation = activation['config']
+				-- setup mechanism for requesting remote resource should it be needed
+				-- it will vary based upon current strategy, but default to noop (which will be the case for None)
+				local enqueue, submit = Util.Functions.Noop, Util.Functions.False
+				-- todo : may be necessary/preferred to refresh the activation contents, as it's possible the
+				-- todo : original hash is no longer valid for a recently requested/received configuration or list
+				-- todo : however, in that case a new activation message should be received and restart the process
+				local submitAndReattempt = function(...)
+					local delay = 30
+
+					if submit(...) then
+						Logging:Trace("AttemptActivation() : scheduling another activation attempt in %d seconds", delay)
+						self.timer = lists:ScheduleTimer(function()  self:AttemptActivation(lists, originator, activation) end, delay)
+						return true
+					end
+
+					return false
+				end
+
+				-- request individual resources if required
+				if strategy == ActivationResourceRequestStrategy.Individual then
+					enqueue = function(...) self:EnqueueRequest(...) end
+					submit = function(...) return self:DispatchRequests(originator) end
+				-- request all resources if any is required
+				elseif strategy == ActivationResourceRequestStrategy.Bulk then
+					local enqueued = false
+					enqueue = function(...) enqueued = true end
+					submit = function(...)
+						if enqueued then
+							ListsDp:SendBroadcastRequest(originator, configForActivation.id)
+							return true
+						end
+
+						return false
+					end
+				end
+
+				-- resolve the configuration for activation
+				local resolved = lists.listsService:LoadRefs({configForActivation})
+				-- could not resolve the configuration for activation, will need to request it and reschedule activation
+				if not resolved or #resolved ~= 1 then
+					enqueue(configForActivation.id, Configuration.name)
+				else
+					local activate = resolved[1]
+					lists:ActivateConfiguration(
+						activate,
+						-- this callback is entirely about verifying what we activated  matches what was requested
+						function(success, activated)
+							if not success then
+								enqueue(activate.id, Configuration.name)
+								Logging:Warn("AttemptActivation() : Could not activate configuration '%s'", activate.id)
+							else
+								Logging:Debug("AttemptActivation() : Verifying activated configuration '%s'", tostring(activated))
+								-- do some checks to see if we have the correct data
+								-- this is entirely about requesting the most recent data in case we are behind
+								--
+								-- no need to check version and revision here, just compare hashes of data
+								--
+								-- we intentionally pass 'activate' as that is what was requested and we need to compare
+								-- the active configuration against it
+								local verification = lists.activeConfig:Verify(activate, activation['lists'])
+								-- index 1 is always the configuration verification
+								local v = verification[1]
+								if not v.verified then
+									Logging:Warn(
+										"AttemptActivation(%s)[Configuration] : Failed hash verification %s / %s",
+										lists.activeConfig.config.id, tostring(v.ah), tostring(v.ch)
+									)
+									enqueue(activate.id, Configuration.name)
+
+								-- only handle potential list requests in face of a verified configuration
+								-- otherwise, could result in ordering issues with responses
+								-- this means it will take multiple passes to reconcile (send a request, receive a response)
+								else
+									-- index 2 is the list verifications
+									local listResults = verification[2]
+									local verifications, missing, extra = listResults[1], listResults[2], listResults[3]
+
+									for id, vfn in pairs(verifications) do
+										if not vfn.verified then
+											Logging:Warn(
+												"AttemptActivation(%s)[List] : failed hash verification %s / %s",
+												id,
+												tostring(vfn.ah),
+												tostring(vfn.ch)
+											)
+											enqueue(id, List.name)
+										end
+									end
+
+									for _, id in pairs(missing) do
+										Logging:Warn("AttemptActivation(%s)[List] : Missing", tostring(id))
+										enqueue(id, List.name)
+									end
+
+									for _, id in pairs(extra) do
+										Logging:Warn("AttemptActivation(%s)[List] : Extra (this should not occur unless player is the admin/owner and not current master looter)", id)
+										-- no request to make for an extra one, the sender won't have it
+										-- signifies an issue with owners/admins not having synchronized config/list data
+									end
+								end
+							end
+						end
+					)
+				end
+
+				-- if we have missing or incorrect data, request it and reschedule activation
+				if submitAndReattempt() then
+					return
+				end
+			end
+		end
+
+		if lists.activeConfig then
+			Logging:Debug("AttemptActivation() : Completed activation of configuration '%s'", tostring(lists.activeConfig.config.name))
+			AddOn:Print(format(L["activated_configuration"], tostring(lists.activeConfig.config.name)))
+		else
+			Logging:Warn("AttemptActivation() : No active configuration")
+			AddOn:Print(L["invalid_configuration"])
+		end
+	end
+}
 
 --- @param sender string
 --- @param activation table
-function Lists:OnActivateConfigReceived(sender, activation, attempt)
-	attempt = Util.Objects.Default(attempt, 0)
-	Logging:Debug("OnActivateConfigReceived(%s, %d)", tostring(sender), attempt)
+function Lists:OnActivateConfigReceived(sender, activation)
+	Logging:Debug("OnActivateConfigReceived(%s) : %s", tostring(sender), function() return Util.Objects.ToString(activation, 6) end)
 
 	-- configuration activation should only originate from ML
 	if not AddOn:IsMasterLooter(sender) then
@@ -496,116 +702,17 @@ function Lists:OnActivateConfigReceived(sender, activation, attempt)
 		return
 	end
 
+	-- configuration activation takes a different path when the ML
 	if AddOn:IsMasterLooter() then
 		Logging:Error("OnActivateConfigReceived() : Message should not be dispatched to Master Looter")
 		AddOn:PrintError(format(L["invalid_configuration_received_ml"], tostring(sender)))
 		return
 	end
 
-	local maxActivationReattemptsExceeded = (attempt > MaxActivationReattempts)
-	if maxActivationReattemptsExceeded then
-		Logging:Warn("OnActivateConfigReceived() : Maximum activation (re)attempts exceeded, giving up")
-		AddOn:PrintError(L["invalid_configuration_max_attempts"])
-	end
-
-	-- TODO : if we're an admin or owner, but not the ML, we shouldn't send blanket requests (could overwrite local changes)
-	local function EnqueueRequest(to, id, type)
-		Logging:Trace("EnqueueRequest(%s, %s)",tostring(id), tostring(type))
-		Util.Tables.Push(to, ListsDp:CreateRequest(type, id))
-	end
-
-	-- see MasterLooter:ActivateConfiguration() for 'activation' message contents
-	-- only load reference for configuration, as activation is going to load lists
-	if (not maxActivationReattemptsExceeded) and activation and Util.Tables.Count(activation) >= 1 then
-		local configForActivation, toRequest = activation['config'], {}
-		local resolved = self.listsService:LoadRefs({configForActivation})
-
-		-- could not resolve the configuration for activation, will need to request it
-		-- and reschedule activation
-		if not resolved or #resolved ~= 1 then
-			EnqueueRequest(toRequest, configForActivation.id, Configuration.name)
-		else
-			local activate = resolved[1]
-			self:ActivateConfiguration(
-				activate,
-				-- this callback is entirely about verifying what we activated
-				-- matches what was requested
-				function(success, activated)
-					if not success then
-						EnqueueRequest(toRequest, activate.id, Configuration.name)
-						Logging:Warn("OnActivateConfigReceived() : Could not activate configuration '%s'", activate.id)
-					else
-						Logging:Debug("OnActivateConfigReceived() : Activated '%s'", tostring(activated))
-						-- do some checks to see if we have the correct data
-						-- this is entirely for requesting the most recent data in case we are behind
-
-						-- no need to check version and revision here, just compare hashes of data
-						--
-						-- we intentionally pass 'activate' as that is what was requested and we need to compare
-						-- the active configuration against it
-						local verification = self.activeConfig:Verify(activate, activation['lists'])
-						-- index 1 is always the configuration verification
-						local v = verification[1]
-						if not v.verified then
-							Logging:Warn(
-								"OnActivateConfigReceived(%s)[Configuration] : Failed hash verification %s / %s",
-								self.activeConfig.config.id,
-								v.ah,
-								v.ch
-							)
-							EnqueueRequest(toRequest, activate.id, Configuration.name)
-						-- only handle potential list requests in face of a verified configuration
-						-- otherwise, could result in ordering issues with responses
-						-- this means it will take multiple passes to reconcile (send a request, receive a response)
-						else
-							-- index 2 is the list verifications
-							local listResults = verification[2]
-							local verifications, missing, extra = listResults[1], listResults[2], listResults[3]
-
-							for id, vfn in pairs(verifications) do
-								if not vfn.verified then
-									Logging:Warn(
-										"OnActivateConfigReceived(%s)[List] : failed hash verification %s / %s",
-										id,
-										vfn.ah,
-										vfn.ch
-									)
-									EnqueueRequest(toRequest, id, List.name)
-								end
-							end
-
-							for _, id in pairs(missing) do
-								Logging:Warn("OnActivateConfigReceived(%s)[List] : Missing", id)
-								EnqueueRequest(toRequest, id, List.name)
-							end
-
-							for _, id in pairs(extra) do
-								Logging:Warn("OnActivateConfigReceived(%s)[List] : Extra (this should not occur unless player is the admin/owner and not current master looter)", id)
-								-- no request for an extra one, the sender won't have it
-								-- signifies an issue with owners/admins not having synchronized config/list data
-							end
-						end
-					end
-				end
-			)
-		end
-
-		-- we have missing data, request it and reschedule activation
-		if Util.Tables.Count(toRequest) > 0 then
-			--Logging:Warn("OnActivateConfigReceived() : Requesting %s", Util.Objects.ToString(Util.Tables.Copy(toRequest, function(r) return tostring(r) end)))
-			ListsDp:SendRequest(AddOn.masterLooter, nil, unpack(toRequest))
-			self:ScheduleTimer(function() self:OnActivateConfigReceived(sender, activation, attempt + 1) end, 30)
-			return
-		end
-	end
-
-	if self.activeConfig then
-		Logging:Debug("OnActivateConfigReceived() : Activated configuration %s", tostring(self.activeConfig.config.name))
-		AddOn:Print(format(L["activated_configuration"], tostring(self.activeConfig.config.name)))
-	else
-		Logging:Warn("OnActivateConfigReceived() : No active configuration")
-		AddOn:Print(L["invalid_configuration"])
-	end
+	-- reset the state of activation, as this workflow indicates a new/fresh activation operation
+	ActivationState:Reset()
+	-- attempt to activate the configuration, it manages case where local config/lists are out of sync
+	ActivationState:AttemptActivation(self, sender, activation)
 end
 
 --- @param itemAward Models.Item.ItemAward

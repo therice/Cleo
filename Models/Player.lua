@@ -62,7 +62,9 @@ local function GetCacheDuration()
 end
 
 local function IsCachedPlayerValid(player)
-    if player and (GetServerTime() - player.timestamp <= GetCacheDuration()) then
+    local serverTime = GetServerTime()
+    if player and ((serverTime - player.timestamp) <= GetCacheDuration()) then
+        --Logging:Trace("IsCachedPlayerValid(%s) : %s / %s => %d (%d)", tostring(player.name), DateFormat.Full:format(Date(serverTime)), DateFormat.Full:format(Date(player.timestamp)), (serverTime - player.timestamp), GetCacheDuration())
         return true
     end
 

@@ -456,9 +456,10 @@ function ActiveConfiguration:__tostring()
 	return format("%s (%s)", self.config.name, self.config.id)
 end
 
--- returns a table with following contents, with the following potential attributes
--- v (table) => {verified = result (boolean), ah = active hash (string), ch = comparison hash (string)}
--- lid (string) => id for the list
+-- returns a table with attributes with the following attribute
+--
+--  'v' (table)     => {verified = result (boolean), ah = active hash (string), ch = comparison hash (string)}
+--  'lid' (string)  => id for the list
 --
 -- [1] = 'v' for configuration
 -- [2] = lists results (table with 3 entries)
@@ -467,17 +468,17 @@ end
 --  [3] (extra)     = table of 'lid' => list ids present in passed lists, but missing in active config
 function ActiveConfiguration:Verify(config, lists)
 	local verification = {}
-	-- configuration 1st
-	-- {verified, active hash (ah), comparison hash (ch)}
-	-- this goes through Hashable:Verify()
+	-- verify configuration 1st, which goes through Hashable:Verify()
+	-- { verified, active hash (ah), comparison hash (ch) }
 	local verified, ah, ch = self.config:Verify(config)
 	Util.Tables.Push(verification, {verified = verified, ah = ah, ch = ch})
-	-- only go through lists if configuration was verified
-	-- as lists are bound to a configuration and all bets are off if the config is not verified
+
+	-- only go through lists if configuration was verified, as lists are bound to a configuration and all bets
+	-- are off if the config is not verified
 	if verified then
-		-- lvs - id(s) to verification of ones which are present in both self.lists and lists
-		-- missing - id(s) of ones which are present in self.lists, but missing in lists
-		-- extra - id(s) of ones which are present in lists, but missing in self.lists
+		-- lvs - id(s) to verification of entries which are present in both self.lists and lists
+		-- missing - id(s) of entries which are present in self.lists, but missing in lists
+		-- extra - id(s) of entries which are present in lists, but missing in self.lists
 		local lvs, missing, extra = {}, {}, {}
 
 		for _, lref in pairs(lists) do

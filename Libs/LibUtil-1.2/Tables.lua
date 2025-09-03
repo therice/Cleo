@@ -1004,6 +1004,18 @@ function Self.Sort2(t, flip)
     return u
 end
 
+function Self.SortRecursively(t)
+	local u = Self.Sort2(t)
+
+	for i, v in pairs(u) do
+		if type(v) == 'table' then
+			u[i] = Self.Sort2(v)
+		end
+	end
+
+	return u
+end
+
 local function GenOrderedIndex(t)
     local orderedIndex = {}
     for key in pairs(t) do

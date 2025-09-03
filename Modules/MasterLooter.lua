@@ -616,10 +616,12 @@ function ML:IsHandled()
 	-- we are the master looter (and)
 	-- the addon is enabled (and)
 	-- the addon is handling loot
-	--Logging:Trace("IsHandled() : %s, %s, %s, %s",
-	--              tostring(self:IsEnabled()), tostring(AddOn:IsMasterLooter()),
-	--              tostring(AddOn.enabled), tostring(AddOn.handleLoot)
-	--)
+	--[[
+	Logging:Trace("IsHandled() : %s, %s, %s, %s",
+	              tostring(self:IsEnabled()), tostring(AddOn:IsMasterLooter()),
+	              tostring(AddOn.enabled), tostring(AddOn.handleLoot)
+	)
+	--]]
 	return self:IsEnabled() and AddOn:IsMasterLooter() and AddOn.enabled and (AddOn.handleLoot or AddOn:TestModeEnabled())
 end
 
@@ -852,25 +854,35 @@ function ML:OnHandleLootStart(configId)
 	end
 end
 
+function ML:BuildActiveConfig(config)
+	if self:IsHandled() and config then
+		local activeConfig = {
+			config = {},
+			lists = {}
+		}
+
+		Util.Tables.Set(activeConfig, 'config', config:ToRef())
+		local lists = AddOn:ListsModule():GetService():Lists(config.id)
+		for _, list in pairs(lists) do
+			local ref = list:ToRef()
+			-- Logging:Trace("SendActiveConfig(%s) : %s", tostring(list.id), Util.Objects.ToString(ref))
+			Util.Tables.Push(activeConfig.lists, ref)
+		end
+
+		return activeConfig
+	end
+
+	return nil
+end
+
 function ML:SendActiveConfig(target, config)
 	if self:IsHandled() then
 		Logging:Debug("SendActiveConfig(%s) : %s", tostring(target), tostring(config.id))
 		-- dispatch the config activation message to target
 		-- include information about the associated lists as well
 		-- this is necessary to make sure what we are activating is aligned with the master looter's view
-		local toSend = {
-			config = {},
-			lists = {}
-		}
-
-		Util.Tables.Set(toSend, 'config', config:ToRef())
-		local lists = AddOn:ListsModule():GetService():Lists(config.id)
-		for _, list in pairs(lists) do
-			local ref = list:ToRef()
-			Logging:Trace("SendActiveConfig(%s) : %s", tostring(list.id), Util.Objects.ToString(ref))
-			Util.Tables.Push(toSend.lists, ref)
-		end
-
+		local toSend = self:BuildActiveConfig(config)
+		Logging:Trace("SendActiveConfig(%s) : %s", tostring(config.id), function() return  Util.Objects.ToString(toSend) end)
 		AddOn:Send(target, C.Commands.ActivateConfig, toSend)
 	end
 end
@@ -979,6 +991,7 @@ function ML:ActivateConfiguration(config, dispatchOnly)
 			-- this broadcasts to entire group, but message handling will not process in case of
 			-- receiving player being the ML (which is the case here)
 			if Util.Objects.Default(activationSuccess, true) then
+				Logging:Trace("ActivateConfiguration(%s) : sending active configuration to 'group'", tostring(config))
 				self:SendActiveConfig(C.group, config)
 			end
 		end
