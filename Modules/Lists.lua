@@ -758,6 +758,7 @@ function Lists:OnAwardItem(itemAward)
 					L["list_priority_announcement"],
 			        list and list.name or L['unknown'],
 					AddOn.Ambiguate(itemAward.winner),
+					suicideAmt and format(L["amount_x"], tostring(suicideAmt)) or "",
 					tostring(apb or '?'),
 					tostring(apa or '?'),
 					tostring(opb or '?'),

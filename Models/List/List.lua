@@ -283,21 +283,46 @@ end
 --- @param count number|nil the number of slots to drop the player (optional, if nil will drop to bottom)
 function List:DropPlayer(player, count)
 	count = tonumber(Util.Objects.Default(count, nil))
+	-- this transforms priorities into a list where each table index corresponds to a priority
+	-- need to do this before removing the player
+	--
+	-- E.G. { { [Player_P1] }, 3 = { [Player_P3] }, 5 = { [Player_P5] } 7 = { [Player_P7] }, 9 = { [Player_P9] }, 10 = { [Player_P9] } }
+	-- TO {1, 3, 5, 7, 9, 10}
+	--
+	local priorityIndices = Util.Tables.Sparse.Keys(self.players)
 	local priority, _ = self:RemovePlayer(player, false)
-	Logging:Trace("DropPlayer() : Dropping %s [priority=%s, count=%s]", tostring(player), tostring(priority), tostring(count))
+	Logging:Trace("DropPlayer() : Dropping %s [priority=%s, count=%s]", tostring(player), tostring(priority), count and tostring(count) or "'last active/occupied spot'")
 
 	if priority then
-		local floor = (count and count > 0) and (priority + count) or nil
+		local floor = table.maxn(self.players)
+		if count and count >= 0 then
+			if count > 0 then
+				-- find the table index which corresponds to player's priority (before removal)
+				local priorityIndex, _ = Util.Tables.Find(priorityIndices, priority)
+				-- the target priority should be that index incremented by count
+				local targetPriority = priorityIndices[priorityIndex + count]
+				-- possible that count (to drop) pushes the index off the end of the list
+				-- in that case, just select the last index and associated priority
+				floor = targetPriority and targetPriority or priorityIndices[#priorityIndices]
+				Logging:Trace(
+					"DropPlayer() : Priority indices : %s[%s] => target priority=%s, final priority=%s",
+					function() return Util.Objects.ToString(priorityIndices) end,
+					tostring(priorityIndex), tostring(targetPriority), tostring(floor)
+				)
+			else
+				-- a count of zero means not moving
+				floor = priority
+			end
+		end
+
 		ReorderPlayers(
 				self,
 				function(prio, p)
-					Logging:Trace("DropPlayer() : Evaluating %s [%d]", tostring(p), prio)
+					Logging:Trace("DropPlayer() : Evaluating %s [current %d floor %d]", tostring(p), tostring(prio), floor)
 					local newPriority = prio
-					if prio > priority then
-						if not floor or prio <= floor then
-							newPriority = priority
-							priority = prio
-						end
+					if prio > priority and prio <= floor then
+						newPriority = priority
+						priority = prio
 					end
 
 					Logging:Trace("DropPlayer() : Result %s [%d => %d]", tostring(p), prio, newPriority)

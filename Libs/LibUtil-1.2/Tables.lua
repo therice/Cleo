@@ -1250,6 +1250,17 @@ Self.Sparse = {
 
 }
 
+function Self.Sparse.Keys(t)
+	local u, index = Self.New(), 1
+	for k, _ in Self.Sparse.ipairs(t) do
+		tinsert(u, index, k)
+		index = index + 1
+	end
+
+	return u
+
+end
+
 function Self.Sparse.ipairs(t)
     -- tmpIndex will hold sorted indices, otherwise
     -- this iterator would be no different from pairs iterator

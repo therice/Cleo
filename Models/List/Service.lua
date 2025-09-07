@@ -606,11 +606,13 @@ function ActiveConfiguration:OnPlayerEvent(player, joined)
 			list:RemovePlayer(player, false)
 		end
 
-		--Logging:Trace(
-		--	"OnPlayerEvent[after](%s, %s, %s) : %s",
-		--	tostring(player), tostring(joined), tostring(listId),
-		--	Util.Objects.ToString(Util.Tables.Copy(list.players, function(p) return p:toTable() end))
-		--)
+		--[[
+		Logging:Trace(
+			"OnPlayerEvent[after](%s, %s, %s) : %s",
+			tostring(player), tostring(joined), tostring(listId),
+			Util.Objects.ToString(Util.Tables.Copy(list.players, function(p) return p:toTable() end))
+		)
+		--]]
 	end
 end
 
@@ -631,10 +633,9 @@ function ActiveConfiguration:OnLootEvent(player, equipment, count)
 
 	if (listId and list) then
 		Logging:Trace(
-			"OnLootEvent(%s, %s, %s) : Located List(%s, '%s'), 'suiciding' player (with respect to count of spots to drop)",
-			tostring(player), tostring(equipment), tostring(count), tostring(listId), list.name
+			"OnLootEvent(%s, %s) : Located List(%s, '%s'), moving player %s",
+			tostring(player), tostring(equipment), tostring(listId), list.name, function() return count and "down " .. tostring(count) .. " spot(s)" or "to last active/occupied spot" end
 		)
-
 		-- apb : active priority before
 		-- apa : active priority after
 		-- opb : original priority before
@@ -646,7 +647,7 @@ function ActiveConfiguration:OnLootEvent(player, equipment, count)
 		list:DropPlayer(player, count)
 		local apa = list:GetPlayerPriority(player, true)
 		-- apply the adjusted priorities back to master (original) list
-		local origList = self.lists[listId]
+		local origList = self:GetOriginalList(listId)
 		local opb, opa
 
 		Util.Functions.try(
@@ -673,8 +674,9 @@ function ActiveConfiguration:OnLootEvent(player, equipment, count)
 		)
 
 		Logging:Trace(
-			"OnLootEvent(%s) : %s -> %s [Active] %s -> %s [Original]",
+			"OnLootEvent(%s) : [Count] %s [Active] %s -> %s [Original] %s -> %s",
 			listId,
+			count and tostring(count) or "'last active/occupied'",
 			tostring(apb), tostring(apa),
 			tostring(opb), tostring(opa)
 		)
