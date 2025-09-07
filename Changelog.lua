@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.5 (2025-09-07)
+* Address edge cases where list priorities may not be adjusted correctly beb4074
+
 2026.0.4 (2025-09-03)
 * Address non-deterministic transmission of required data for configuration activation and neuter LibGuildStorage 9507c69
 
