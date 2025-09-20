@@ -47,7 +47,7 @@ local Watcher = AddOn.Package("LootLedger"):Class("Watcher")
 local TradeTimes = AddOn.Package("LootLedger"):Class("TradeTimes")
 AceBucket:Embed(TradeTimes)
 ---
---- Tracks remaining time for a tradeable item which is in a player's bags
+--- Tracks remaining time for a tradable item which is in a player's bags
 ---
 --- @class LootLedger.TradeTime
 local TradeTime = AddOn.Package("LootLedger"):Class("TradeTime")
@@ -223,6 +223,15 @@ function LootLedger:ScheduleStorageValidation()
 	end
 end
 
+--[[ E.G.
+{
+	id     = ItemUtil:ItemLinkToId(lootEntry.item),
+	link   = lootEntry.item,
+	count  = 1,
+	player = AddOn.player:GetName(),
+	when   = GetServerTime()
+}
+--]]
 --- @see LootLedger.Watcher#OnChatMessageLoot
 --- @param item table<number, string, number, string, number> named key/value pairs as follows, id (itemId) link (itemLink) count (itemCount) player (playerName) when (timestamp)
 --- @return table<LootLedger.Entry> all located and updated Loot Ledger entries which correspond to the item. they will be sorted from oldest to most recent creation time
@@ -260,7 +269,7 @@ function LootLedger:OnItemReceived(item)
 			)
 
 			-- locate all instance(s) of the item in bags which have remaining trade time (>0 secs)
-			-- and remove any of those which have a guid which is already assigned to another entry
+			-- and remove any of those which have a guid already assigned to another entry
 			-- and sort with least remaining trade time being 1st
 			local items = Util(AddOn:FindItemsInBags(item.link, false))
 				:Filter(function(i) return not Util.Tables.ContainsValue(assigned, i.guid) end)
@@ -280,7 +289,7 @@ function LootLedger:OnItemReceived(item)
 				--
 				-- could process all entries in storage which have a corresponding index in located items
 				-- which will result in any entries/items not processed previously being picked up on a subsequent
-				-- item of the same type being received (which seems incorrect, at least at this time)
+				-- item of the same type being received (seems incorrect, at least at this time)
 				for index, entry in ipairs(candidates) do
 					if index > receivedCount then
 						Logging:Warn(

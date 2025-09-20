@@ -1177,7 +1177,7 @@ function ML:ProcessLootSlots(onFailure, ...)
 			if missing or itemChanged then
 				Logging:Debug(
 				"ProcessLootSlots(slot=%d, missing=%s, itemChanged=%s): attempting to (re)add info for %s",
-					slot, tostring(missing), tostring(itemChanged), (missing and "<missing>" or lootSlotInfo.item)
+					slot, tostring(missing), tostring(itemChanged), (missing and "<missing>" or tostring(lootSlotInfo.item))
 				)
 
 				if not self:AddLootSlot(slot, ...) then

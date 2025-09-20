@@ -741,7 +741,7 @@ function AddOn:FindItemsInBags(item, skipSoulBoundCheck)
                 -- isn't the item we are looking for (link)
                 -- may not want to use ItemIsItem here and compare item strings directly
                 (isItemLink and not self.ItemIsItem(item, bagItemLink)) or
-                -- item is no longer tradeable
+                -- item is no longer tradable
                 (not skipSoulBoundCheck and self:GetInventoryItemTradeTimeRemaining(bag, slot) <= 0)
             ) then
                 Logging:Trace("FindItemsInBags(%s,%s) : Skipping",  tostring(bag), tostring(slot))
