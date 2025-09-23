@@ -615,8 +615,6 @@ end
 
 function IsLoggedIn() return false end
 
-function GetLootMethod() return "master", nil, 1 end
-
 function IsMasterLooter() return true end
 
 function UnitHealthMax() return 100  end

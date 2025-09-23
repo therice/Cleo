@@ -1,5 +1,5 @@
-## Interface: 50500
-## X-Min-Interface-Cata: 50500
+## Interface: 50501
+## X-Min-Interface-Mists: 50500
 ## Title: |cfffe7b2cCleo|r
 ## Notes: Cleo : Suicide Kings Loot System for World of Warcraft (Mists of Pandaria Classic)
 ## Author: Jackburtón-Atiesh

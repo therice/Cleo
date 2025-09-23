@@ -100,7 +100,6 @@ read_globals = {
 	"GetItemStats",
 	"GetItemSubClassInfo",
 	"GetLocale",
-	"GetLootMethod",
 	"GetLootSlotInfo",
 	"GetLootSlotLink",
 	"GetLootSourceInfo",

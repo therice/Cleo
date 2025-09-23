@@ -8,3 +8,7 @@ AddOn.C_Container = _G.C_Container or {
 	GetContainerItemInfo     = _G.GetContainerItemInfo,
 	PickupContainerItem      = _G.PickupContainerItem,
 }
+
+AddOn.C_PartyInfo = _G.C_PartyInfo or {
+	GetLootMethod           = _G.GetLootMethod
+}

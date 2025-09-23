@@ -37,6 +37,7 @@ function AddOn:OnInitialize()
 
         IsCataclysm = function(self) return self.version.major == 4 and self.version.minor == 4 end,
         IsMOP = function(self) return self.version.major == 5 and self.version.minor == 5 end,
+        IsMOPP2 = function(self) return self:IsMOP() and self.version.patch == 2 end,
     }
 
     Logging:Debug("OnInitialize(%s) : BuildInfo(%s)", self:GetName(), Util.Objects.ToString(AddOn.BuildInfo))
@@ -60,7 +61,7 @@ function AddOn:OnInitialize()
     -- the master looter (Player)
     self.masterLooter = nil
     -- capture looting method for later required checks
-    self.lootMethod = GetLootMethod() or "freeforall"
+    self.lootMethod = AddOn.C_PartyInfo.GetLootMethod() or "freeforall"
     -- does addon handle loot?
     self.handleLoot = false
     -- are we currently engaged in combat

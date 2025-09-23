@@ -323,7 +323,7 @@ function AddOn:GetMasterLooter()
     --                and nil if the master looter isn't in the player's party or master looting is not used.
     -- mlRaidId     : Returns index of the master looter in the raid (corresponding to a raidX unit), or nil if the player
     --                is not in a raid or master looting is not used.
-    local lootMethod, mlPartyId, mlRaidId = GetLootMethod()
+    local lootMethod, mlPartyId, mlRaidId = AddOn.C_PartyInfo.GetLootMethod()
     self.lootMethod = lootMethod
     Logging:Debug(
         "GetMasterLooter() : lootMethod='%s', mlPartyId=%s, mlRaidId=%s",
@@ -374,7 +374,7 @@ function AddOn:NewMasterLooterCheck()
 
     local oldMl, oldLm = self.masterLooter, self.lootMethod
     _, self.masterLooter = self:GetMasterLooter()
-    self.lootMethod = GetLootMethod()
+    self.lootMethod = AddOn.C_PartyInfo.GetLootMethod()
 
     -- ML is set, but it's not valid or an unknown player
     if Util.Objects.IsSet(self.masterLooter) and (not self.masterLooter:IsValid() or Player.IsUnknown(self.masterLooter)) then
@@ -460,7 +460,7 @@ end
 --- @param ... any list of arguments that will be passed to constituent functions
 function AddOn:StartHandleLoot(...)
     Logging:Debug("StartHandleLoot()")
-    local lootMethod = GetLootMethod()
+    local lootMethod = AddOn.C_PartyInfo.GetLootMethod()
     if not Util.Strings.Equal(lootMethod, "master") and GetNumGroupMembers() > 0 then
         self:Print(L["changing_loot_method_to_ml"])
         SetLootMethod("master", self.Ambiguate(self.player:GetName()))
