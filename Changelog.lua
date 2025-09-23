@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.6 (2025-09-20)
+* Very minor change to logging which could result in errors under very specific (and rare) conditions 9881b7c
+
 2026.0.5 (2025-09-07)
 * Address edge cases where list priorities may not be adjusted correctly beb4074
 
