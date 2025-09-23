@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.7 (2025-09-23)
+* Add support for MOP Phase 2 df40ab7
+
 2026.0.6 (2025-09-20)
 * Very minor change to logging which could result in errors under very specific (and rare) conditions 9881b7c
 
