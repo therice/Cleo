@@ -120,6 +120,10 @@ function Player:GetShortName()
     return Ambiguate(self.name, "short")
 end
 
+function Player:GetAmbiguatedName()
+	return AddOn.Ambiguate(self.name)
+end
+
 function Player:GetClassId()
     return self.class and ItemUtil.ClassTagNameToId[self.class] or 0
 end
@@ -211,24 +215,26 @@ function Player:Get(input)
 
     if Util.Strings.IsSet(input) then
         guid = Player.ParseGUID(input)
-        --Logging:Debug("Get(%s) : %s", tostring(input), tostring(guid))
+        --Logging:Trace("Get(%s) : guid=%s", tostring(input), tostring(guid))
 
         if Util.Objects.IsNil(guid) then
-            local name = Ambiguate(input, "short")
+	        local name = Ambiguate(input, "short")
             -- For players: Player-[server ID]-[player UID] (Example: "Player-976-0002FD64")
             guid = UnitGUID(name)
-            --Logging:Debug("Get(%s) : %s / %s", tostring(input), tostring(name), tostring(guid))
+            --Logging:Trace("Get(%s)[UnitGUID] : name=%s / guid=%s", tostring(input), tostring(name), tostring(guid))
             -- GUID(s) are only available for people we're grouped with
             -- so attempt a few other approaches if not available
             --
             -- via existing cached players
             if Util.Strings.IsEmpty(guid) then
                 guid = GUID(name)
+	            --Logging:Trace("Get(%s)[GUID] : name=%s / guid=%s", tostring(input), tostring(name), tostring(guid))
                 -- last attempt is try via the guild
                 if Util.Strings.IsEmpty(guid) then
                     -- fully qualify the name for guild query
                     info = GuildStorage:GetMember(AddOn:UnitName(name))
                     if info then guid = info.guid end
+	                --Logging:Trace("Get(%s)[GuildStorage] : name=%s / info=%s", tostring(input), tostring(name), Util.Objects.ToString(info))
                 end
             end
 
@@ -248,7 +254,7 @@ function Player:Get(input)
         error(format("'%s' (%s) is an invalid player", Util.Objects.ToString(input), type(input)), 2)
     end
 
-    -- Logging:Trace("Get(%s) : GUID=%s", tostring(input), tostring(guid))
+    --Logging:Trace("Get(%s)[Final] : guid=%s", tostring(input), tostring(guid))
 
     if Util.Strings.IsEmpty(guid) then
         Logging:Warn("Get(%s) : unable to determine GUID", tostring(input))

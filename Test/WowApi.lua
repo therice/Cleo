@@ -581,6 +581,7 @@ function Ambiguate(name, context)
     if context == "short" then
         name = gsub(name, "%-.+", "")
     end
+
     return name
 end
 
@@ -644,7 +645,7 @@ function UnitGUID (name)
     if name == 'player' then name = UnitName(name) end
     if name == 'noguid' then return nil end
     --print(format('UnitGUID(%s)', name))
-    return PlayerToGuid[name] and PlayerToGuid[name].guid or "Player-FFF-ABCDF012"
+    return PlayerToGuid[name] and PlayerToGuid[name].guid or "Player-1234-00C1D807"
 end
 
 --local playerNumber = 0

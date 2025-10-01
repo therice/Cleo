@@ -35,12 +35,30 @@ function AddOn:IsInNonInstance()
     end
 end
 
+---
+--- https://warcraft.wiki.gg/wiki/API_Ambiguate
+---
+---+--------------+-------------------+-------------------+-------------------+-------------------+
+---|   Context    |   Same Realm:     |   Same Realm:     | Different Realm:  | Different Realm:  |
+---|              |   Same Guild      |   Other Guild     |   Same Guild      |   Other Guild     |
+---+--------------+-------------------+-------------------+-------------------+-------------------+
+---| all          | character         | character         | character         | character-realm   |
+---| guild        | character         | character         | character         | character-realm   |
+---| craftingorder| character-realm   | character-realm   | character-realm   | character-realm   |
+---| mail         | character-realm   | character-realm   | character-realm   | character-realm   |
+---| none         | character         | character         | character-realm   | character-realm   |
+---| short        | character         | character         | character         | character         |
+---+--------------+-------------------+-------------------+-------------------+-------------------+
+---
 --- @param name string|Models.Player the player name
---- @return string the player's name with the realm stripped
+--- @return string the player's name with the realm stripped if on same realm, otherwise it will have realm included
 function AddOn.Ambiguate(name)
     if Util.Objects.IsTable(name) then name = name.name end
     if Util.Objects.IsEmpty(name) then error("name not specified") end
-    return Ambiguate(name, "none")
+
+	local ambiguated = Ambiguate(name, "none")
+	--Logging:Trace("Ambiguate(%s) : %s", tostring(name), ambiguated)
+    return ambiguated
 end
 
 -- Gets a unit's name formatted with realmName.
@@ -105,7 +123,7 @@ end
 
 -- Custom, better UnitIsUnit() function.
 -- Blizz UnitIsUnit() doesn't know how to compare unit-realm with unit.
--- Seems to be because unit-realm isn't a valid unitid.
+-- Seems to be because unit-realm isn't a valid unit id.
 function AddOn.UnitIsUnit(unit1, unit2)
     if Util.Objects.IsTable(unit1) then unit1 = unit1.name end
     if Util.Objects.IsTable(unit2) then unit2 = unit2.name end
@@ -120,9 +138,8 @@ function AddOn.UnitIsUnit(unit1, unit2)
     end
 
     -- There's problems comparing non-ascii characters of different cases using UnitIsUnit()
-    -- I.e. UnitIsUnit("Foo", "foo") works, but UnitIsUnit("Æver", "æver") doesn't.
-    -- Since I can't find a way to ensure consistent returns from UnitName(),
-    -- just lowercase units here before passing them.
+    -- E.G. UnitIsUnit("Foo", "foo") works, but UnitIsUnit("Æver", "æver") doesn't.
+    -- Since I can't find a way to ensure consistent returns from UnitName(), just lowercase units here before passing them
     return UnitIsUnit(unit1:lower(), unit2:lower())
 end
 

@@ -392,6 +392,7 @@ local EditDragType = {
 
 local ConfigAltsActionMenu
 
+--- @param tab Frame
 function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	local module = self
 
@@ -423,6 +424,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 
 	local function EditOnDragStart(self)
 		if self:IsMovable() then
+			Logging:Trace("EditOnDragStart[alts]() : %s / %s", tostring(self:GetText()), tostring(self.guid))
 			-- capture the original position
 			_, _, _, self.x, self.y = self:GetPoint()
 			self:StartMoving()
@@ -430,16 +432,19 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	end
 
 	local function EditOnDragStop(self, dragType)
+		Logging:Trace("EditOnDragStop()[alt] : %s / %s", tostring(self:GetText()), tostring(self.guid))
+
 		self:StopMovingOrSizing()
 
-		local function SetText(edit, text)
-			edit:Set(text)
+		local function SetText(edit, text, guid)
+			Logging:Trace("SetText()[alt] : %s / %s", tostring(text), tostring(guid))
+			edit:Set(text, guid)
 		end
 
 		local function SwapText(from, to)
 			local textFrom, textTo = from:GetText(), to:GetText()
-			SetText(to, textFrom)
-			SetText(from, textTo)
+			SetText(to, textFrom, from.guid)
+			SetText(from, textTo, to.guid)
 		end
 
 		local x, y
@@ -450,7 +455,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 					SwapText(self, target)
 					x, y = PriorityCoord(self)
 				elseif dragType == EditDragType.Into then
-					SetText(target, self:GetText())
+					SetText(target, self:GetText(), self.guid)
 					x, y = self.x, self.y
 				end
 				break
@@ -476,10 +481,9 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 		if Util.Objects.IsEmpty(priorValue) then priorValue = nil end
 
 		Logging:Trace(
-			"EditOnChange(%s, %d, %s, %s) : %s / %s",
+			"EditOnChange(%s, %d, %s, %s)[alt] : %s / %s",
 			tostring(isPlayer), index, tostring(isMain), tostring(userInput),
 			tostring(playerName), tostring(priorValue)
-
 		)
 
 		if playerName then
@@ -498,7 +502,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 			if isMain then
 				-- if the main was removed, the alts have no meaning - wipe them
 				if not playerName and priorValue then
-					Logging:Trace("EditOnChange()[main] : %s (previous) cleared", tostring(priorValue))
+					Logging:Trace("EditOnChange()[alt] : %s (previous) cleared", tostring(priorValue))
 					for i = index + 1, index + MaxAlts do
 						self:GetParent().altEdits[i]:Reset()
 					end
@@ -553,10 +557,14 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 			self:Set(nil)
 			self:OnChange(otcFn)
 			self.priorValue = nil
+			self.guid = nil
 		end
-		altEdit.Set = function(self, text)
+		altEdit.Set = function(self, text, guid)
+			Logging:Trace("Set()[alt] : %s / %s", tostring(text), tostring(guid))
 			self.priorValue = self:GetText()
 			self:SetText(text or "")
+			self.guid = guid
+
 			if Util.Objects.IsEmpty(text) then
 				self:BackgroundText(self.isMain and "Main" or "Alt")
 				self.xButton:Hide()
@@ -651,27 +659,28 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 			changes = not Util.Tables.Equals(config:GetAlternates(), self:ProcessPlayers(), true)
 		end
 
-		Logging:Trace("HasPendingChanges(%s)", tostring(changes))
+		Logging:Trace("HasPendingChanges(%s)[alt]", tostring(changes))
 		return changes
 	end
 
 	tab.playersCache = {}
 	tab.ProcessPlayers = Util.Memoize.Memoize(
 		function(self)
-			Logging:Trace("ProcessPlayers()")
+			Logging:Trace("ProcessPlayers()[alt]")
 
 			local players = {}
 			-- iterate through main indexes
 			for mainIndex = 1, (columns * rowsPerColumn), (MaxAlts + 1) do
-				local mainName = self.altEdits[mainIndex]:GetText()
-				if Util.Objects.IsSet(mainName) then
-					local main, alts = Player:Get(mainName), {}
-					Logging:Trace("ProcessPlayers(%d) : %s", mainIndex, tostring(mainName))
+				local mainName, mainGuid = self.altEdits[mainIndex]:GetText(), self.altEdits[mainIndex].guid
+				Logging:Trace("ProcessPlayers(%d)[alt] : %s => %s", mainIndex, tostring(mainGuid), tostring(mainName))
+
+				if Util.Objects.IsSet(mainName) and Util.Objects.IsSet(mainGuid) then
+					local main, alts = Player:Get(mainGuid), {}
 					for altIndex = mainIndex + 1, (mainIndex + MaxAlts) do
-						local altName = self.altEdits[altIndex]:GetText()
-						if Util.Objects.IsSet(altName) then
-							Logging:Trace("ProcessPlayers(%d) : %s", altIndex, tostring(altName))
-							local alt = Player:Get(altName)
+						local altName, altGuid = self.altEdits[altIndex]:GetText(), self.altEdits[altIndex].guid
+						Logging:Trace("ProcessPlayers(%d)[alt] : %s => %s", altIndex, tostring(altGuid), tostring(altName))
+						if Util.Objects.IsSet(altName) and Util.Objects.IsSet(altGuid) then
+							local alt = Player:Get(altGuid)
 							if alt then
 								Util.Tables.Push(alts, alt)
 							end
@@ -686,6 +695,8 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 				end
 			end
 
+			--Logging:Trace("ProcessPlayers(RESULT)[alt] : %s", Util.Objects.ToString(players))
+
 			return players
 		end,
 		tab.playersCache
@@ -693,27 +704,27 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 
 	tab.UpdatePlayers = function(self)
 		local config = configSupplier()
-		Logging:Trace("UpdatePlayers(%s)", config and config.id or 'nil')
+		Logging:Trace("UpdatePlayers(%s)[alt]", config and config.id or 'nil')
 
 		if config then
 			local mappings = config:GetAlternates()
 			local mains = Util.Tables.Sort(Util.Tables.Keys(mappings), function(m1, m2) return m1 < m2 end)
 			local mainCount = Util.Tables.Count(mains)
-			Logging:Trace("UpdatePlayers(%s) : Count(%d)", config and config.id or 'nil', mainCount)
+			Logging:Trace("UpdatePlayers(%s)[alt] : Count(%d)", config and config.id or 'nil', mainCount)
 
 			local editIndex = 1
 			for _, mainGuid in pairs(mains) do
 				-- reset it so potential change to previous value still fires the OnTextChanged event
 				self.altEdits[editIndex]:Reset()
 				local main = Player.Resolve(mainGuid) or Player.Unknown(mainGuid)
-				Logging:Trace("UpdatePlayers(%s)[Main] : %s => %s ", config.id, tostring(mainGuid), tostring(main:GetShortName()))
-				self.altEdits[editIndex]:Set(main:GetShortName())
+				Logging:Trace("UpdatePlayers(%s)[alt] : %s => %s ", config.id, tostring(mainGuid), tostring(main:GetAmbiguatedName()))
+				self.altEdits[editIndex]:Set(main:GetAmbiguatedName(), mainGuid)
 
 				local altCount = Util.Tables.Count(mappings[mainGuid])
 				for _, alt in pairs(mappings[mainGuid]) do
 					editIndex = editIndex + 1
 					self.altEdits[editIndex]:Reset()
-					self.altEdits[editIndex]:Set(alt:GetShortName())
+					self.altEdits[editIndex]:Set(alt:GetAmbiguatedName(), alt.guid)
 				end
 
 				for _ = altCount, MaxAlts do
@@ -731,7 +742,7 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 	end
 
 	tab.SavePlayers = function(self)
-		Logging:Trace("SavePlayers()")
+		Logging:Trace("SavePlayers()[alt]")
 		--- @type Models.List.Configuration
 		local config = configSupplier()
 		if config then
@@ -760,24 +771,30 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 		local allPlayers = AddOn:Players(self.includeRaid, self.includeGuild, true)
 		local players = self:ProcessPlayers()
 		local allAlts = Util.Tables.Flatten(Util.Tables.Values(players))
-		Logging:Trace("UpdateAvailablePlayers() : all(%d) alts(%d)",
-		              Util.Tables.Count(allPlayers), Util.Tables.Count(allAlts)
+		Logging:Trace(
+			"UpdateAvailablePlayers()[alt] : all(%d) alts(%d)",
+			function() return Util.Tables.Count(allPlayers) end,
+			function() return Util.Tables.Count(allAlts) end
 		)
+
+		--Logging:Trace("UpdateAvailablePlayers()[alt] : players=%s", Util.Objects.ToString(players))
+		Logging:Trace("UpdateAvailablePlayers()[alt] : allAlts=%s", Util.Objects.ToString(allAlts))
 
 		local available =
 			Util(allPlayers)
 				:CopyFilter(
 					function(player)
-						return
-							not Util.Tables.ContainsKey(players, player.guid) and
-							not Util.Tables.ContainsValue(allAlts, player)
+						-- include player as an available option should they not already be on the players list and they are not in set of alts
+						local retain = not Util.Tables.ContainsKey(players, player.guid) and not Util.Tables.ContainsValue(allAlts, player)
+						Logging:Trace("UpdateAvailablePlayers()[alt] : %s (retain=%s)", tostring(player), tostring(retain))
+						return retain
 					end)
 				:Sort(function(p1, p2) return p1:GetName() < p2:GetName() end)()
 
 		-- update scroll (as needed)
 		local overflow = #available - displayRows
 		Logging:Trace(
-			"UpdateAvailablePlayers() : available(%d), rows(%d), overflow(%d)",
+			"UpdateAvailablePlayers()[alt] : available(%d), rows(%d), overflow(%d)",
 			Util.Tables.Count(available), displayRows, overflow
 		)
 		if overflow > 0 then
@@ -811,9 +828,10 @@ function Lists:LayoutConfigAltsTab(tab, configSupplier)
 
 			local playerIndex = index + floor(self.playersScroll:GetValue() + 0.5)
 			if playerIndex > #available then playerIndex = index end
-			Logging:Trace("UpdateAvailablePlayers() : index=%d, playerIndex=%d", index, playerIndex)
+			Logging:Trace("UpdateAvailablePlayers()[alt] : index=%d, playerIndex=%d, playerGuid=%s", index, playerIndex, tostring(available[playerIndex].guid))
 
-			playerEdit:SetText(available[playerIndex]:GetShortName())
+			playerEdit:SetText(available[playerIndex]:GetAmbiguatedName())
+			playerEdit.guid = available[playerIndex].guid
 			playerEdit:SetCursorPosition(1)
 			playerEdit:Show()
 		end
@@ -1406,7 +1424,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 
 	local function EditOnDragStart(self)
 		if self:IsMovable() then
-			Logging:Trace("EditOnDragStart")
+			Logging:Trace("EditOnDragStart()[priority] : %s / %s", tostring(self:GetText()), tostring(self.guid))
 			-- capture the original position
 			 _, _, _, self.x, self.y = self:GetPoint()
 			self:StartMoving()
@@ -1414,16 +1432,19 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	end
 
 	local function EditOnDragStop(self, dragType)
+		Logging:Trace("EditOnDragStop()[priority] : %s / %s", tostring(self:GetText()), tostring(self.guid))
+
 		self:StopMovingOrSizing()
 
-		local function SetText(edit, text)
-			edit:Set(text)
+		local function SetText(edit, text, guid)
+			Logging:Trace("SetText()[priority] : %s / %s", tostring(text), tostring(guid))
+			edit:Set(text, guid)
 		end
 
 		local function SwapText(from, to)
 			local textFrom, textTo = from:GetText(), to:GetText()
-			SetText(to, textFrom)
-			SetText(from, textTo)
+			SetText(to, textFrom, from.guid)
+			SetText(from, textTo, to.guid)
 		end
 
 		local x, y
@@ -1434,7 +1455,7 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 					SwapText(self, target)
 					x, y = PriorityCoord(self)
 				elseif dragType == EditDragType.Into then
-					SetText(target, self:GetText())
+					SetText(target, self:GetText(), self.guid)
 					x, y = self.x, self.y
 				end
 				break
@@ -1451,8 +1472,12 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 	end
 
 	local function EditOnChange(self, isPriority)
-		--Logging:Trace("EditOnChange() : player=%s, index=%d, isPriority=%s", tostring(self:GetText()), self.index, tostring(isPriority))
-		local playerName, index, priorities = self:GetText(), self.index, self:GetParent().priorities
+		Logging:Trace(
+			"EditOnChange()[priority] : player=%s, guid=%s, index=%d, isPriority=%s",
+			tostring(self:GetText()), tostring(self.guid), self.index, tostring(isPriority)
+		)
+
+		local playerName, playerGuid, index, priorities = self:GetText(), self.guid, self.index, self:GetParent().priorities
 		if Util.Strings.IsSet(playerName) then
 			local color = UIUtil.GetPlayerClassColor(playerName)
 			if Util.Objects.IsFunction(color.GetRGBA) then
@@ -1467,8 +1492,8 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		self:ClearTooltip()
 
 		if isPriority then
-			if Util.Strings.IsSet(playerName) then
-				priorities[index] = Player:Get(playerName)
+			if Util.Strings.IsSet(playerName) and Util.Objects.IsSet(playerGuid) then
+				priorities[index] = Player:Get(playerGuid)
 			else
 				priorities[index] = nil
 			end
@@ -1590,9 +1615,12 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			self:OnChange(nil)
 			self:Set(nil)
 			self:OnChange(otcFn)
+			self.guid = nil
 		end
-		priorityEdit.Set = function(self, text)
+		priorityEdit.Set = function(self, text, guid)
+			Logging:Trace("Set()[priority] : %s / %s", tostring(text), tostring(guid))
 			self:SetText(text or "")
+			self.guid = guid
 			if Util.Objects.IsEmpty(text) then
 				self.xButton:Hide()
 			else
@@ -1712,11 +1740,11 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			-- reset it so potential change to previous value still fires the OnTextChanged event
 			self.priorityEdits[priority]:Reset()
 			local player = reload and self.prioritiesOrig[priority] or self.priorities[priority]
-			self.priorityEdits[priority]:Set(player and player:GetShortName() or nil)
+			self.priorityEdits[priority]:Set(player and player:GetAmbiguatedName() or nil, player.guid)
 			Logging:Trace(
 				"UpdatePriorities(%s) : %d => %s/%s",
 				list and list.id or 'nil', priority,
-				tostring(player and player:GetShortName() or nil),
+				tostring(player and player:GetName() or nil),
 				tostring(player and player.guid or nil)
 			)
 			reschedule = reschedule or (player and Util.Strings.Equal(player:GetShortName(), "Unknown"))
@@ -1896,22 +1924,29 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 		local allPlayers = AddOn:Players(self.includeRaid, self.includeGuild, true)
 		local allAlts = config and Util.Tables.Flatten(Util.Tables.Values(config:GetAlternates())) or {}
 
-		Logging:Trace("UpdateAvailablePlayers() : all(%d) / list(%d)", Util.Tables.Count(allPlayers), Util.Tables.Count(self.priorities))
+		Logging:Trace(
+			"UpdateAvailablePlayers()[priority] : all(%d) list(%d)",
+			function() return Util.Tables.Count(allPlayers) end,
+			function() return Util.Tables.Count(self.priorities) end
+		)
+
+		--Logging:Trace("UpdateAvailablePlayers()[priority] : %s", Util.Objects.ToString(self.priorities))
 
 		local available =
 			Util(allPlayers)
 				:CopyFilter(
 					function(player)
-						return
-							not Util.Tables.ContainsValue(self.priorities, player) and
-							not Util.Tables.ContainsValue(allAlts, player)
+						-- include player as an available option should they not already be on the priorities list and they are not in set of alts
+						local retain = not Util.Tables.ContainsValue(self.priorities, player) and not Util.Tables.ContainsValue(allAlts, player)
+						Logging:Trace("UpdateAvailablePlayers()[priority] : %s (retain=%s)", tostring(player), tostring(retain))
+						return retain
 					end
 				)
 				:Sort(function(p1, p2) return p1:GetName() < p2:GetName() end)()
 
 		-- update scroll (as needed)
 		local overflow = #available - displayRows
-		Logging:Trace("UpdateAvailablePlayers() : available(%d), rows(%d), overflow(%d)", Util.Tables.Count(available), displayRows, overflow)
+		Logging:Trace("UpdateAvailablePlayers()[priority] : available(%d), rows(%d), overflow(%d)", Util.Tables.Count(available), displayRows, overflow)
 		if overflow > 0 then
 			self.playersScroll:SetMinMaxValues(0, overflow)
 		else
@@ -1924,8 +1959,11 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local playerEdit = self.playerEdits[index]
 			-- create individual player slot (which can be dragged and dropped)
 			if not playerEdit then
-				Logging:Trace("UpdateAvailablePlayers() : creating player edit at index(%d)", index)
-				playerEdit = UI:New('EditBox', tab):Size(PriorityWidth, PriorityHeight):OnChange(function(self, userInput) EditOnChange(self, false, userInput) end)
+				Logging:Trace("UpdateAvailablePlayers()[priority] : creating player edit at index(%d)", index)
+				playerEdit =
+					UI:New('EditBox', tab)
+						:Size(PriorityWidth, PriorityHeight)
+						:OnChange(function(self, userInput) EditOnChange(self, false, userInput) end)
 				self.playerEdits[index] = playerEdit
 				playerEdit.index = index
 				playerEdit:Point("TOPLEFT", PriorityCoord(playerEdit, (4.5*PriorityWidth), -(PriorityHeight * 1.5)))
@@ -1941,8 +1979,9 @@ function Lists:LayoutListPriorityTab(tab, configSupplier, listSupplier)
 			local playerIndex = index + floor(self.playersScroll:GetValue() + 0.5)
 			if playerIndex > #available then playerIndex = index end
 
-			Logging:Trace("UpdateAvailablePlayers() : index=%d, playerIndex=%d", index, playerIndex)
-			playerEdit:SetText(available[playerIndex]:GetShortName())
+			Logging:Trace("UpdateAvailablePlayers()[priority] : index=%d, playerIndex=%d, playerGuid=%s", index, playerIndex, tostring(available[playerIndex].guid))
+			playerEdit:SetText(available[playerIndex]:GetAmbiguatedName())
+			playerEdit.guid = available[playerIndex].guid
 			playerEdit:SetCursorPosition(1)
 			playerEdit:SetScript(
 				"OnMouseDown",
@@ -2078,7 +2117,7 @@ function Lists:LayoutListPriorityRaidTab(tab, configSupplier, listSupplier)
 			for priority = 1, priorityCount do
 				self.priorities[priority]:Reset()
 				player = Player.Resolve(players[priority])
-				self.priorities[priority]:Set(player and player:GetShortName() or L['unknown'])
+				self.priorities[priority]:Set(player and player:GetAmbiguatedName() or L['unknown'])
 			end
 		end
 

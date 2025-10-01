@@ -650,19 +650,24 @@ function AddOn:Players(group, guild, ambiguate)
     group = Util.Objects.Default(group, false)
     guild = Util.Objects.Default(guild, false)
     ambiguate = Util.Objects.Default(ambiguate, false)
-    Logging:Trace("Players(%s, %s, %s)", tostring(group), tostring(guild), tostring(ambiguate))
+    --Logging:Trace("Players(%s, %s, %s)", tostring(group), tostring(guild), tostring(ambiguate))
 
     local players = {}
 
     if group then
         for name, _ in self:GroupIterator() do
-            players[ambiguate and self.Ambiguate(name) or name] = Player:Get(name)
+	        local playerName = ambiguate and self.Ambiguate(name) or name
+	        players[playerName] = Player:Get(name)
+	        Logging:Trace("Players()[group] : Added %s at %s", tostring(players[playerName]), tostring(playerName))
         end
     end
 
     if guild then
         for name, _ in self:GuildIterator() do
-            players[ambiguate and self.Ambiguate(name) or name] = Player:Get(name)
+	        --Logging:Trace("Players() : Evaluating %s", tostring(name))
+	        local playerName = ambiguate and self.Ambiguate(name) or name
+	        players[playerName] = Player:Get(name)
+	        Logging:Trace("Players()[guild] : Added %s at %s", tostring(players[playerName]), tostring(playerName))
         end
     end
 
