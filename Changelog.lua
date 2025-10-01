@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.8 (2025-10-01)
+* Add support for multiple realms to list configurationa and priorities 010e96f
+
 2026.0.7 (2025-09-23)
 * Add support for MOP Phase 2 df40ab7
 
