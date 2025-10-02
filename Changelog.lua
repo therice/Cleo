@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.10 (2025-10-02)
+* Cleanup changes related to master loot to use declared constants rather than inline literals 40181d5
+
 2026.0.9 (2025-10-02)
 * Correct issue with master looter being changed to enum instead of strings 6601201
 * Fix failing tests to due GetLootMethod changes 6135e18
