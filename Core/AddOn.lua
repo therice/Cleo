@@ -61,7 +61,7 @@ function AddOn:OnInitialize()
     -- the master looter (Player)
     self.masterLooter = nil
     -- capture looting method for later required checks
-    self.lootMethod = AddOn.C_PartyInfo.GetLootMethod() or "freeforall"
+    self.lootMethod = AddOn.C_PartyInfo.GetLootMethod() or _G.Enum.LootMethod.Freeforall
     -- does addon handle loot?
     self.handleLoot = false
     -- are we currently engaged in combat

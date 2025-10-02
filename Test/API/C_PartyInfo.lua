@@ -5,7 +5,11 @@
 C_PartyInfo = {}
 
 function C_PartyInfo.GetLootMethod()
-	return 2, nil, 1
+	return _G.Enum.LootMethod.Masterlooter, nil, 1
+end
+
+function C_PartyInfo.SetLootMethod(method, lootMaster)
+
 end
 
 _G.C_PartyInfo = C_PartyInfo

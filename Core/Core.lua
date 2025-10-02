@@ -318,7 +318,7 @@ end
 
 --- @return boolean, Models.Player
 function AddOn:GetMasterLooter()
-    -- lootMethod   : One of 'freeforall', 'roundrobin', 'master', 'group', 'needbeforegreed', 'personalloot'
+    -- lootMethod   : One of 'freeforall', 'roundrobin', 'master', 'group', 'needbeforegreed', 'personalloot' (see Enum.LootMethod)
     -- mlPartyId    : Returns 0 if player is the master looter, 1-4 if party member is master looter (corresponding to party1-4)
     --                and nil if the master looter isn't in the player's party or master looting is not used.
     -- mlRaidId     : Returns index of the master looter in the raid (corresponding to a raidX unit), or nil if the player
@@ -347,9 +347,8 @@ function AddOn:GetMasterLooter()
         Logging:Debug("GetMasterLooter() : ML is '%s' (no group OR test mode)", tostring(self.player))
         return true, self.player
     end
-
-    --if Util.Strings.Equal(lootMethod, "master") then
-    if lootMethod == 2 then
+	
+    if lootMethod == _G.Enum.LootMethod.Masterlooter then
         local name
         -- Someone in raid
         if mlRaidId then
@@ -462,7 +461,7 @@ end
 function AddOn:StartHandleLoot(...)
     Logging:Debug("StartHandleLoot()")
     local lootMethod = AddOn.C_PartyInfo.GetLootMethod()
-    if lootMethod ~= 2 and GetNumGroupMembers() > 0 then
+    if lootMethod ~= _G.Enum.LootMethod.Masterlooter and GetNumGroupMembers() > 0 then
         self:Print(L["changing_loot_method_to_ml"])
 	    AddOn.C_PartyInfo.SetLootMethod(2, self.Ambiguate(self.player:GetName()))
     end
