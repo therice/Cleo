@@ -462,7 +462,7 @@ end
 function AddOn:StartHandleLoot(...)
     Logging:Debug("StartHandleLoot()")
     local lootMethod = AddOn.C_PartyInfo.GetLootMethod()
-    if not lootMethod == 2 and GetNumGroupMembers() > 0 then
+    if lootMethod ~= 2 and GetNumGroupMembers() > 0 then
         self:Print(L["changing_loot_method_to_ml"])
 	    AddOn.C_PartyInfo.SetLootMethod(2, self.Ambiguate(self.player:GetName()))
     end
