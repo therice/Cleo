@@ -5,7 +5,7 @@
 C_PartyInfo = {}
 
 function C_PartyInfo.GetLootMethod()
-	return "master", nil, 1
+	return 2, nil, 1
 end
 
 _G.C_PartyInfo = C_PartyInfo
