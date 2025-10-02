@@ -2,6 +2,11 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.0.9 (2025-10-02)
+* Correct issue with master looter being changed to enum instead of strings 6601201
+* Fix failing tests to due GetLootMethod changes 6135e18
+* Fix linting issue with change 052a55f
+
 2026.0.8 (2025-10-01)
 * Add support for multiple realms to list configurationa and priorities 010e96f
 
