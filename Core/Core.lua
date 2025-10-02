@@ -348,7 +348,8 @@ function AddOn:GetMasterLooter()
         return true, self.player
     end
 
-    if Util.Strings.Equal(lootMethod, "master") then
+    --if Util.Strings.Equal(lootMethod, "master") then
+    if lootMethod == 2 then
         local name
         -- Someone in raid
         if mlRaidId then
@@ -461,9 +462,9 @@ end
 function AddOn:StartHandleLoot(...)
     Logging:Debug("StartHandleLoot()")
     local lootMethod = AddOn.C_PartyInfo.GetLootMethod()
-    if not Util.Strings.Equal(lootMethod, "master") and GetNumGroupMembers() > 0 then
+    if not lootMethod == 2 and GetNumGroupMembers() > 0 then
         self:Print(L["changing_loot_method_to_ml"])
-        SetLootMethod("master", self.Ambiguate(self.player:GetName()))
+	    AddOn.C_PartyInfo.SetLootMethod(2, self.Ambiguate(self.player:GetName()))
     end
 
     local ML, lootThreshold = self:MasterLooterModule(), GetLootThreshold()

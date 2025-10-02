@@ -10,5 +10,6 @@ AddOn.C_Container = _G.C_Container or {
 }
 
 AddOn.C_PartyInfo = _G.C_PartyInfo or {
-	GetLootMethod           = _G.GetLootMethod
+	GetLootMethod           = _G.GetLootMethod,
+	SetLootMethod           = _G.SetLootMethod
 }
