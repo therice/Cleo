@@ -49,7 +49,7 @@ local lib = LibStub("LibEncounter-1.1", true)
 --  Terrace of Endless Spring
 --  Heart of Fear
 --  Mogu'shan Vaults
---
+--  Throne of Thunder
 --
 -- Mapping from map id to details (name will be used as index for localization)
 -- https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749 (DEPRECATED)
@@ -174,6 +174,10 @@ lib.Maps = {
     -- JournalInstance.ID = 317
     [1008] = {
         name = 'Mogu\'shan Vaults'
+    },
+	-- JournalInstance.ID = 362
+    [1098] = {
+	    named = 'Throne of Thunder'
     },
 }
 
@@ -1030,6 +1034,78 @@ lib.Creatures = {
     },
     [60400] = {
         name = 'Jan-xi'
+    },
+    [69465] = {
+	    name = 'Jin\'rokh the Breaker'
+    },
+    [68476] = {
+	    name = 'Horridon'
+    },
+    [69078] = {
+	    name = 'Sul the Sandcrawler'
+    },
+    [69132] = {
+	    name = 'High Priestess Mar\'li'
+    },
+    [69134] = {
+	    name = 'Kazra\'jin'
+    },
+    [69131] = {
+	    name = 'Frost King Malakk'
+    },
+    [70212] = {
+	    name = 'Flaming Head of Megaera'
+    },
+    [70235] = {
+	    name = 'Frozen Head of Megaera'
+    },
+    [70247] = {
+	    name = 'Venomous Head of Megaera'
+    },
+    [70252] = {
+	    name = 'Arcane Head of Megaera'
+    },
+    [68065] = {
+	    name = 'Megaera'
+    },
+    [69712] = {
+	    name = 'Ji-Kun'
+    },
+    [68036] = {
+	    name = 'Durumu the Forgotten'
+    },
+    [67977] = {
+	    name = 'Tortos'
+    },
+    [69017] = {
+	    name = 'Primordius'
+    },
+    [69427] = {
+	    name = 'Dark Animus'
+    },
+    [68079] = {
+	    name = 'Ro\'shak'
+    },
+    [68080] = {
+	    name = 'Quet\'zal'
+    },
+    [68081] = {
+	    name = 'Dam\'ren'
+    },
+    [68078] = {
+	    name = 'Iron Qon'
+    },
+    [68905] = {
+	    name = 'Lu\'lin'
+    },
+    [68904] = {
+	    name = 'Suen'
+    },
+    [68397] = {
+	    name = 'Lei Shen'
+    },
+    [69473] = {
+	    name = 'Ra-den'
     },
 }
 
@@ -1985,5 +2061,78 @@ lib.Encounters = {
         map_id = 1008,
         creature_id = {60399, 60400},
         name = 'Will of the Emperor'
+    },
+	-- Throne of Thunder
+    -- Jin'rokh
+    [1577] = {
+	    map_id = 1098,
+	    creature_id = {69465},
+    },
+    -- Horridon
+    [1575] = {
+		map_id = 1098,
+		creature_id = {1575},
+	},
+	-- Council of Elders
+    [1570] = {
+	    map_id = 1098,
+	    creature_id = {69078, 69132, 69134, 69131},
+	    name = 'Council of Elders',
+    },
+	-- Megaera
+    [1578] = {
+	    map_id = 1098,
+	    creature_id = {68065, 70212, 70235, 70247, 70252},
+    },
+	-- Ji-Kun
+    [1573] = {
+	    map_id = 1098,
+	    creature_id = {69712},
+    },
+	-- Durumu the Forgotten
+    [1572] = {
+	    map_id = 1098,
+	    creature_id = {68036},
+    },
+	-- Tortos
+    [1565] = {
+	    map_id = 1098,
+	    creature_id = {67977},
+    },
+	-- Primordius
+    [1574] = {
+	    map_id = 1098,
+	    creature_id = {69017},
+    },
+	-- Dark Animus
+    [1576] = {
+	    map_id = 1098,
+	    creature_id = {69427},
+    },
+	-- Iron Qon
+    [1559] = {
+	    map_id = 1098,
+	    creature_id = {68078, 68079, 68080, 68081},
+	    name = 'Iron Qon',
+    },
+	-- Twin Consorts
+    [1560] = {
+	    map_id = 1098,
+	    creature_id = {68905, 68904},
+	    name = 'Twin Consorts',
+    },
+	-- Lei Shen
+    [1579] = {
+	    map_id = 1098,
+	    creature_id = {68397},
+    },
+	-- Ra-den
+    [1580] = {
+	    map_id = 1098,
+	    creature_id = {69473},
+    },
+    [1581] = {
+	    map_id = 1098,
+	    creature_id = {69473},
     },
 }

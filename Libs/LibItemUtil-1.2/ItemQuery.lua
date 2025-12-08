@@ -61,7 +61,7 @@ function lib.QueryItem(id, callback)
     id = tonumber(id)
 
     if Item then
-        local item = Item:CreateFromItemID(id)
+	    local item = Item:CreateFromItemID(id)
         item:ContinueOnItemLoad(function() callback(item, true) end)
     else
         lib:QueryItemInfo(id, callback)

@@ -36,8 +36,10 @@ function AddOn:OnInitialize()
         IsWrathP4 = function(self) return self:IsWrath() and self.version.patch == 3 end, -- ICC
 
         IsCataclysm = function(self) return self.version.major == 4 and self.version.minor == 4 end,
+
         IsMOP = function(self) return self.version.major == 5 and self.version.minor == 5 end,
         IsMOPP2 = function(self) return self:IsMOP() and self.version.patch == 2 end,
+        IsMOPP3 = function(self) return self:IsMOP() and self.version.patch == 3 end,
     }
 
     Logging:Debug("OnInitialize(%s) : BuildInfo(%s)", self:GetName(), Util.Objects.ToString(AddOn.BuildInfo))

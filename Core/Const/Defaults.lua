@@ -389,6 +389,73 @@ AddOn.DefaultCustomItems = {
     [89262] = { 4, 509, ItemUtil.CustomItemInvTypeSelf  },      -- Shoulders of the Shadowy Conqueror (Paladin, Priest, Warlock) [HEROIC]
     [89247] = { 4, 496, "INVTYPE_SHOULDER" },                   -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
     [89263] = { 4, 509, ItemUtil.CustomItemInvTypeSelf },       -- Shoulders of the Shadowy Protector (Warrior, Hunter, Shaman, Monk) [HEROIC]
+
+	-- MOP P3
+	-- T15 (Throne of Thunder)
+	-- Normal is 522, Thunderforged is 528, Heroic is 535, Heroic Thunderforged is 541
+    --
+    -- Map Heroic and Heroic Thunderforged to ItemUtil.CustomItemInvTypeSelf, which allows them
+    -- to be placed into separate lists than where the item equipment location maps
+    [95571] = {4, 522, "INVTYPE_HEAD" },                        -- Helm of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [96251] = {4, 528, "INVTYPE_HEAD" },                        -- Helm of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [THUNDERFORGED]
+    [96623] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Helm of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [96995] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Helm of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC THUNDERFORGED]
+    [95577] = {4, 522, "INVTYPE_HEAD"},                         -- Helm of the Crackling Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [96252] = {4, 528, "INVTYPE_HEAD"},                         -- Helm of the Crackling Conqueror (Paladin, Priest, Warlock) [THUNDERFORGED]
+    [96624] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Helm of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [96996] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Helm of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC THUNDERFORGED]
+    [95582] = {4, 522, "INVTYPE_HEAD"},                         -- Helm of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [96253] = {4, 528, "INVTYPE_HEAD"},                         -- Helm of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [THUNDERFORGED]
+    [96625] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Helm of the Crackling Protector (Warrior, Hunter, Shaman, Monk [HEROIC]
+    [96997] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Helm of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [HEROIC THUNDERFORGED]
+    [95570] = {4, 522, "INVTYPE_HAND"},                         -- Gauntlets of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [96227] = {4, 528, "INVTYPE_HAND"},                         -- Gauntlets of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [THUNDERFORGED]
+    [96599] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Gauntlets of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [96971] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Gauntlets of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC THUNDERFORGED]
+    [95575] = {4, 522, "INVTYPE_HAND"},                         -- Gauntlets of the Crackling Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [96228] = {4, 528, "INVTYPE_HAND"},                         -- Gauntlets of the Crackling Conqueror (Paladin, Priest, Warlock) [THUNDERFORGED]
+    [96600] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Gauntlets of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [96972] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Gauntlets of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC THUNDERFORGED]
+    [95580] = {4, 522, "INVTYPE_HAND"},                         -- Gauntlets of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [96229] = {4, 528, "INVTYPE_HAND"},                         -- Gauntlets of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [THUNDERFORGED]
+    [96601] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Gauntlets of the Crackling Protector (Warrior, Hunter, Shaman, Monk [HEROIC]
+    [96973] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Gauntlets of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [HEROIC THUNDERFORGED]
+    [95569] = {4, 522, "INVTYPE_CHEST"},                        -- Chest of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [96194] = {4, 528, "INVTYPE_CHEST"},                        -- Chest of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [THUNDERFORGED]
+    [96566] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Chest of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [96938] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Chest of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC THUNDERFORGED]
+    [95574] = {4, 522, "INVTYPE_CHEST"},                        -- Chest of the Crackling Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [96195] = {4, 528, "INVTYPE_CHEST"},                        -- Chest of the Crackling Conqueror (Paladin, Priest, Warlock) [THUNDERFORGED]
+    [96567] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Chest of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [96939] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Chest of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC THUNDERFORGED]
+    [95579] = {4, 522, "INVTYPE_CHEST"},                        -- Chest of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [96196] = {4, 528, "INVTYPE_CHEST"},                        -- Chest of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [THUNDERFORGED]
+    [96568] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Chest of the Crackling Protector (Warrior, Hunter, Shaman, Monk [HEROIC]
+    [96940] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Chest of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [HEROIC THUNDERFORGED]
+    [95572] = {4, 522, "INVTYPE_LEGS"},                         -- Leggings of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [96259] = {4, 528, "INVTYPE_LEGS"},                         -- Leggings of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [THUNDERFORGED]
+    [96631] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Leggings of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [97003] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Leggings of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC THUNDERFORGED]
+    [95576] = {4, 522, "INVTYPE_LEGS"},                         -- Leggings of the Crackling Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [96260] = {4, 528, "INVTYPE_LEGS"},                         -- Leggings of the Crackling Conqueror (Paladin, Priest, Warlock) [THUNDERFORGED]
+    [96632] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Leggings of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [97004] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Leggings of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC THUNDERFORGED]
+    [95581] = {4, 522, "INVTYPE_LEGS"},                         -- Leggings of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [96261] = {4, 528, "INVTYPE_LEGS"},                         -- Leggings of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [THUNDERFORGED]
+    [96633] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Leggings of the Crackling Protector (Warrior, Hunter, Shaman, Monk [HEROIC]
+    [97005] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Leggings of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [HEROIC THUNDERFORGED]
+    [95573] = {4, 522, "INVTYPE_SHOULDER"},                     -- Shoulders of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [NORMAL]
+    [96327] = {4, 528, "INVTYPE_SHOULDER"},                     -- Shoulders of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [THUNDERFORGED]
+    [96699] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Shoulders of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC]
+    [97071] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Shoulders of the Crackling Vanquisher (Rogue, DK, Mage, Druid) [HEROIC THUNDERFORGED]
+    [95578] = {4, 522, "INVTYPE_SHOULDER"},                     -- Shoulders of the Crackling Conqueror (Paladin, Priest, Warlock) [NORMAL]
+    [96328] = {4, 528, "INVTYPE_SHOULDER"},                     -- Shoulders of the Crackling Conqueror (Paladin, Priest, Warlock) [THUNDERFORGED]
+    [96700] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Shoulders of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC]
+    [97072] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Shoulders of the Crackling Conqueror (Paladin, Priest, Warlock) [HEROIC THUNDERFORGED]
+    [95583] = {4, 522, "INVTYPE_SHOULDER"},                     -- Shoulders of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [NORMAL]
+    [96329] = {4, 528, "INVTYPE_SHOULDER"},                     -- Shoulders of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [THUNDERFORGED]
+    [96701] = {4, 535, ItemUtil.CustomItemInvTypeSelf },        -- Shoulders of the Crackling Protector (Warrior, Hunter, Shaman, Monk [HEROIC]
+    [97073] = {4, 541, ItemUtil.CustomItemInvTypeSelf },        -- Shoulders of the Crackling Protector (Warrior, Hunter, Shaman, Monk) [HEROIC THUNDERFORGED]
 }
 
 AddOn.TestItems = {
@@ -632,4 +699,72 @@ AddOn.TestItems = {
     90510, 90511, 90512, 90513, 90514, 90515, 90516, 90517, 90518, 90519, 90520, 90521, 90522, 90523, 90524, 90525,
     90526, 90527, 90528, 90529, 90530, 90738, 90740,
     -- MOP P1 END
+
+	-- MOP P3 START
+    93666, 94125, 94152, 94512, 94513, 94514, 94515, 94516, 94518, 94519, 94520, 94521, 94522, 94523, 94524, 94525,
+    94526, 94527, 94528, 94529, 94530, 94531, 94532, 94722, 94723, 94724, 94725, 94726, 94727, 94728, 94729, 94730,
+    94731, 94732, 94733, 94734, 94735, 94736, 94737, 94738, 94739, 94740, 94741, 94742, 94743, 94744, 94745, 94746,
+    94747, 94748, 94749, 94750, 94751, 94752, 94753, 94754, 94755, 94756, 94757, 94758, 94759, 94760, 94761, 94762,
+    94763, 94764, 94765, 94766, 94767, 94768, 94769, 94770, 94771, 94772, 94773, 94774, 94775, 94776, 94777, 94778,
+    94779, 94780, 94781, 94782, 94783, 94784, 94785, 94786, 94787, 94788, 94789, 94790, 94791, 94792, 94793, 94794,
+    94795, 94796, 94797, 94798, 94799, 94800, 94801, 94802, 94803, 94804, 94805, 94806, 94807, 94808, 94809, 94810,
+    94811, 94812, 94813, 94814, 94815, 94816, 94817, 94818, 94819, 94820, 94821, 94822, 94835, 94867, 94922, 94923,
+    94924, 94925, 94926, 94927, 94928, 94929, 94930, 94931, 94937, 94938, 94939, 94940, 94941, 94942, 94943, 94944,
+    94945, 94946, 94947, 94948, 94949, 94950, 94951, 94952, 94953, 94954, 94955, 94956, 94957, 94958, 94959, 94960,
+    94961, 94962, 94963, 94964, 94965, 94966, 94967, 94968, 94969, 94970, 94971, 94972, 94973, 94974, 94975, 94976,
+    94977, 94978, 94979, 94980, 94981, 94982, 94983, 94984, 94985, 94986, 94987, 94988, 94989, 94990, 94991, 94992,
+    94993, 94994, 94995, 94996, 94997, 94998, 94999, 95000, 95001, 95002, 95003, 95004, 95005, 95006, 95007, 95008,
+    95009, 95010, 95011, 95012, 95013, 95014, 95015, 95016, 95017, 95018, 95019, 95020, 95021, 95022, 95023, 95024,
+    95025, 95026, 95027, 95028, 95029, 95030, 95031, 95032, 95033, 95034, 95035, 95036, 95037, 95038, 95039, 95040,
+    95059, 95060, 95061, 95062, 95063, 95064, 95065, 95066, 95067, 95068, 95069, 95202, 95203, 95204, 95205, 95206,
+    95207, 95208, 95209, 95210, 95211, 95212, 95213, 95214, 95215, 95216, 95217, 95218, 95219, 95220, 95221, 95222,
+    95223, 95224, 95472, 95473, 95498, 95499, 95500, 95501, 95502, 95503, 95504, 95505, 95506, 95507, 95510, 95511,
+    95512, 95513, 95514, 95515, 95516, 95535, 95569, 95570, 95571, 95572, 95573, 95574, 95575, 95576, 95577, 95578,
+    95579, 95580, 95581, 95582, 95583, 95996, 95997, 95998, 95999, 96000, 96001, 96002, 96003, 96004, 96005, 96006,
+    96007, 96008, 96009, 96010, 96011, 96012, 96013, 96014, 96015, 96016, 96017, 96018, 96019, 96020, 96021, 96022,
+    96023, 96024, 96025, 96026, 96027, 96028, 96029, 96030, 96031, 96032, 96033, 96034, 96035, 96036, 96037, 96038,
+    96039, 96040, 96041, 96042, 96043, 96044, 96045, 96046, 96047, 96048, 96049, 96050, 96051, 96052, 96053, 96054,
+    96055, 96056, 96057, 96058, 96059, 96060, 96061, 96062, 96063, 96064, 96065, 96066, 96067, 96068, 96069, 96070,
+    96071, 96072, 96073, 96074, 96075, 96076, 96077, 96078, 96079, 96080, 96081, 96082, 96083, 96084, 96085, 96086,
+    96087, 96088, 96089, 96090, 96091, 96092, 96093, 96094, 96095, 96096, 96097, 96098, 96099, 96100, 96101, 96102,
+    96103, 96104, 96105, 96106, 96107, 96108, 96109, 96110, 96111, 96112, 96113, 96114, 96115, 96116, 96117, 96118,
+    96119, 96120, 96121, 96122, 96123, 96124, 96125, 96126, 96127, 96128, 96129, 96130, 96131, 96132, 96133, 96134,
+    96135, 96136, 96137, 96138, 96139, 96140, 96141, 96142, 96143, 96144, 96145, 96146, 96147, 96148, 96149, 96150,
+    96151, 96152, 96153, 96154, 96155, 96156, 96157, 96158, 96159, 96160, 96161, 96162, 96163, 96164, 96165, 96166,
+    96167, 96168, 96169, 96170, 96171, 96172, 96173, 96174, 96175, 96176, 96177, 96178, 96179, 96180, 96181, 96182,
+    96183, 96184, 96185, 96186, 96187, 96188, 96189, 96190, 96191, 96192, 96193, 96230, 96231, 96232, 96233, 96234,
+    96235, 96236, 96237, 96238, 96239, 96240, 96241, 96242, 96243, 96244, 96245, 96246, 96247, 96248, 96249, 96250,
+    96330, 96331, 96332, 96333, 96334, 96335, 96336, 96337, 96338, 96339, 96340, 96341, 96342, 96343, 96344, 96345,
+    96346, 96347, 96348, 96349, 96350, 96351, 96352, 96368, 96369, 96370, 96371, 96372, 96373, 96374, 96375, 96376,
+    96377, 96378, 96379, 96380, 96381, 96382, 96383, 96384, 96385, 96386, 96387, 96388, 96389, 96390, 96391, 96392,
+    96393, 96394, 96395, 96396, 96397, 96398, 96399, 96400, 96401, 96402, 96403, 96404, 96405, 96406, 96407, 96408,
+    96409, 96410, 96411, 96412, 96413, 96414, 96415, 96416, 96417, 96418, 96419, 96420, 96421, 96422, 96423, 96424,
+    96425, 96426, 96427, 96428, 96429, 96430, 96431, 96432, 96433, 96434, 96435, 96436, 96437, 96438, 96439, 96440,
+    96441, 96442, 96443, 96444, 96445, 96446, 96447, 96448, 96449, 96450, 96451, 96452, 96453, 96454, 96455, 96456,
+    96457, 96458, 96459, 96460, 96461, 96462, 96463, 96464, 96465, 96466, 96467, 96468, 96469, 96470, 96471, 96472,
+    96473, 96474, 96475, 96476, 96477, 96478, 96479, 96480, 96481, 96482, 96483, 96484, 96485, 96486, 96487, 96488,
+    96489, 96490, 96491, 96492, 96493, 96494, 96495, 96496, 96497, 96498, 96499, 96500, 96501, 96502, 96503, 96504,
+    96505, 96506, 96507, 96508, 96509, 96510, 96511, 96512, 96513, 96514, 96515, 96516, 96517, 96518, 96519, 96520,
+    96521, 96522, 96523, 96524, 96525, 96526, 96527, 96528, 96529, 96530, 96531, 96532, 96533, 96534, 96535, 96536,
+    96537, 96538, 96539, 96540, 96541, 96542, 96543, 96544, 96545, 96546, 96547, 96548, 96549, 96550, 96551, 96552,
+    96553, 96554, 96555, 96556, 96557, 96558, 96559, 96560, 96561, 96562, 96563, 96564, 96565, 96566, 96567, 96568,
+    96599, 96600, 96601, 96602, 96603, 96604, 96605, 96606, 96607, 96608, 96609, 96610, 96611, 96612, 96613, 96614,
+    96615, 96616, 96617, 96618, 96619, 96620, 96621, 96622, 96623, 96624, 96625, 96631, 96632, 96633, 96699, 96700,
+    96701, 96740, 96741, 96742, 96743, 96744, 96745, 96746, 96747, 96748, 96749, 96750, 96751, 96752, 96753, 96754,
+    96755, 96756, 96757, 96758, 96759, 96760, 96761, 96762, 96763, 96764, 96765, 96766, 96767, 96768, 96769, 96770,
+    96771, 96772, 96773, 96774, 96775, 96776, 96777, 96778, 96779, 96780, 96781, 96782, 96783, 96784, 96785, 96786,
+    96787, 96788, 96789, 96790, 96791, 96792, 96793, 96794, 96795, 96796, 96797, 96798, 96799, 96800, 96801, 96802,
+    96803, 96804, 96805, 96806, 96807, 96808, 96809, 96810, 96811, 96812, 96813, 96814, 96815, 96816, 96817, 96818,
+    96819, 96820, 96821, 96822, 96823, 96824, 96825, 96826, 96827, 96828, 96829, 96830, 96831, 96832, 96833, 96834,
+    96835, 96836, 96837, 96838, 96839, 96840, 96841, 96842, 96843, 96844, 96845, 96846, 96847, 96848, 96849, 96850,
+    96851, 96852, 96853, 96854, 96855, 96856, 96857, 96858, 96859, 96860, 96861, 96862, 96863, 96864, 96865, 96866,
+    96867, 96868, 96869, 96870, 96871, 96872, 96873, 96874, 96875, 96876, 96877, 96878, 96879, 96880, 96881, 96882,
+    96883, 96884, 96885, 96886, 96887, 96888, 96889, 96890, 96891, 96892, 96893, 96894, 96895, 96896, 96897, 96898,
+    96899, 96900, 96901, 96902, 96903, 96904, 96905, 96906, 96907, 96908, 96909, 96910, 96911, 96912, 96913, 96914,
+    96915, 96916, 96917, 96918, 96919, 96920, 96921, 96922, 96923, 96924, 96925, 96926, 96927, 96928, 96929, 96930,
+    96931, 96932, 96933, 96934, 96935, 96936, 96937, 96974, 96975, 96976, 96977, 96978, 96979, 96980, 96981, 96982,
+    96983, 96984, 96985, 96986, 96987, 96988, 96989, 96990, 96991, 96992, 96993, 96994, 97126, 97127, 97128, 97130,
+    97960
+	-- MOP P3 END
+
 }

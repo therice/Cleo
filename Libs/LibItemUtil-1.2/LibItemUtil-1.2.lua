@@ -476,9 +476,13 @@ function lib:NeutralizeItem(item)
 end
 
 local TooltipFrameNameFormat = tooltip:GetName().."TextLeft%d"
-local HEROIC = strtrim(_G.PLAYER_DIFFICULTY2)
+local HEROIC = strtrim(_G.ITEM_HEROIC)
+-- Not translated, will break if not an english client
+-- Cannot figure out the global string which corresponds to it or not yet introduced
+local THUNDER_FORGED = strtrim(_G.ITEM_THUNDERFORGED or "Thunderforged")
 
 lib.HEROIC = HEROIC
+lib.THUNDER_FORGED = THUNDER_FORGED
 
 local function StripColor(text)
     text = string.gsub(text or "", "|c%x%x%x%x%x%x%x%x", "" )
@@ -488,6 +492,12 @@ local function StripColor(text)
     text = string.gsub(text, "|r", "" )
     return text
 end
+
+local HeroicVariety = {
+	None          = 0,
+	Normal        = 1,
+	Thunderforged = 2,
+}
 
 lib.IsItemHeroic = Util.Memoize.Memoize(
     function(itemLink)
@@ -505,24 +515,42 @@ lib.IsItemHeroic = Util.Memoize.Memoize(
             if line and line.GetText then
                 local text = strtrim(line:GetText() or "")
                 Logging:Trace("IsItemHeroic(%s) : Text=%s, Stripped=%s, Checking=%s", itemLink, gsub(text, "\124", "\124\124"), StripColor(text), HEROIC)
-                if StripColor(text) == HEROIC then
+				-- In MOP P3, they introduced another variety of 'Heroic' - 'Heroic Thunderforged'
+				local strippedText = StripColor(text):trim()
+	            local isHeroicNormal = (strippedText == HEROIC)
+	            local isHeroicTf = (strippedText:match("^"..HEROIC) and strippedText:match(THUNDER_FORGED.."$"))
+
+	            if isHeroicNormal or isHeroicTf then
                     Logging:Trace("IsItemHeroic(%s) : IsHeroic=true", itemLink)
                     tooltip:Hide()
-                    return true
+                    return true, (isHeroicNormal and HeroicVariety.Normal or HeroicVariety.Thunderforged)
                 end
             end
         end
 
         Logging:Trace("IsItemHeroic(%s) : IsHeroic=false", itemLink)
         tooltip:Hide()
-        return false
+        return false, HeroicVariety.None
     end
 )
 
 lib.DisambiguateIfHeroicItem = Util.Memoize.Memoize(
     function(item)
-        local isHeroic = lib.IsItemHeroic(item:GetItemLink())
-        return isHeroic and format("%s (%s)", item:GetItemName(), lib.HEROIC) or item:GetItemName()
+	    local itemName = item:GetItemName()
+	    local itemLink = item:GetItemLink()
+	    local isHeroic, variety = lib.IsItemHeroic(itemLink)
+
+	    if not isHeroic then
+		    return itemName
+	    end
+
+	    -- Heroic
+	    if variety == HeroicVariety.Normal then
+		    return string.format("%s (%s)", itemName, lib.HEROIC)
+		-- Heroic Thunderforged
+	    else
+		    return string.format("%s (%s %s)", itemName, lib.HEROIC, lib.THUNDER_FORGED)
+	    end
     end
 )
 
