@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.1.0 (2025-12-08)
+* Add support for Throne of Thunder, MOP Phase 3 9d1d2eb
+
 2026.0.10 (2025-10-02)
 * Cleanup changes related to master loot to use declared constants rather than inline literals 40181d5
 
