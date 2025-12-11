@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.1.1 (2025-12-11)
+* remove thunderforged variants of tier, these are not applicable 32393dd
+
 2026.1.0 (2025-12-08)
 * Add support for Throne of Thunder, MOP Phase 3 9d1d2eb
 
