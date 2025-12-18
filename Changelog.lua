@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.1.2 (2025-12-18)
+* /named/name/g to resolve issue with map not being found for Throne of Thunder 719c3ea
+
 2026.1.1 (2025-12-11)
 * remove thunderforged variants of tier, these are not applicable 32393dd
 
