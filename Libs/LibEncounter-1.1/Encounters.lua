@@ -177,7 +177,7 @@ lib.Maps = {
     },
 	-- JournalInstance.ID = 362
     [1098] = {
-	    named = 'Throne of Thunder'
+	    name = 'Throne of Thunder'
     },
 }
 
