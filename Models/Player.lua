@@ -100,7 +100,13 @@ function Player:initialize(guid, name, class, realm)
     self.class = class
     self.realm = realm
     self.timestamp = -1
-    --Logging:Debug("Player(%s, %s, %s)", tostring(name), tostring(self.name), tostring(self.realm))
+
+	if Util.Strings.IsSet(self.name) and Util.Strings.IsSet(self.realm) and not Util.Strings.EndsWith(self.name, self.realm) then
+		Logging:Warn("Player(%s, %s) : realm doesn't match name, updating to reflect specified realm", tostring(self.name), tostring(self.realm))
+		self.name = Ambiguate(self.name, "short") .. "-" .. self.realm
+	end
+
+    Logging:Trace("Player(%s, %s, %s)", tostring(name), tostring(self.name), tostring(self.realm))
 end
 
 function Player:IsValid()
@@ -171,7 +177,7 @@ end
 Player.Nobody = Util.Memoize.Memoize(function() return Player("Player-9999-XXXXXXXX", "Nobody", "DEATHKNIGHT") end)
 
 function Player.Create(guid, info)
-    --Logging:Debug("Create(%s) : info=%s", tostring(guid), tostring(Util.Objects.IsSet(info)))
+    --Logging:Debug("Create(%s) : info=%s", tostring(guid), info and Util.Objects.ToString(info) or "EMPTY")
     if Util.Strings.IsEmpty(guid) then return Player(nil, 'Unknown', nil, nil) end
 
     -- https://wow.gamepedia.com/API_GetPlayerInfoByGUID
@@ -186,9 +192,10 @@ function Player.Create(guid, info)
     if Util.Objects.IsEmpty(name) then
         --Logging:Debug("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
         if info and Util.Strings.IsSet(info.name) then
-            Logging:Debug("Create(%s) : Using provided player information", guid)
+            --Logging:Debug("Create(%s) : Using provided player information", guid)
             name = info.name
             class = info.classTag or info.class
+	        realm = Util.Strings.Split(name)[2]
         else
             return nil
         end
@@ -254,7 +261,7 @@ function Player:Get(input)
         error(format("'%s' (%s) is an invalid player", Util.Objects.ToString(input), type(input)), 2)
     end
 
-    --Logging:Trace("Get(%s)[Final] : guid=%s", tostring(input), tostring(guid))
+    Logging:Trace("Get(%s)[Final] : guid=%s", tostring(input), tostring(guid))
 
     if Util.Strings.IsEmpty(guid) then
         Logging:Warn("Get(%s) : unable to determine GUID", tostring(input))

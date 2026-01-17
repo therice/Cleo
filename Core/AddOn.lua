@@ -234,6 +234,13 @@ function AddOn:Test(itemCount, playerCount)
                 end
             end
         end
+
+	    -- Used for testing specific player
+	    --[[
+	    Util.Tables.Pop(players)
+	    Util.Tables.Push(players, "Waltrax-Raden")
+	    Logging:Debug(Util.Objects.ToString(players))
+	    --]]
     end
 
     -- attempt to enable test mode and become master looter

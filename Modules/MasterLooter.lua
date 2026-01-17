@@ -1491,7 +1491,7 @@ ML.AwardStatus = {
 	},
 	Neutral = {
 		AwardLaterAlreadyInBags = "AwardLaterAlreadyInBags",
-		AwardLaterFromBags      = "AwardLaterAlreadyInBags",
+		AwardLaterFromBags      = "AwardLaterFromBags",
 		TestMode                = "TestMode",
 	}
 }

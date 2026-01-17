@@ -2071,7 +2071,7 @@ lib.Encounters = {
     -- Horridon
     [1575] = {
 		map_id = 1098,
-		creature_id = {1575},
+		creature_id = {68476},
 	},
 	-- Council of Elders
     [1570] = {
@@ -2083,6 +2083,7 @@ lib.Encounters = {
     [1578] = {
 	    map_id = 1098,
 	    creature_id = {68065, 70212, 70235, 70247, 70252},
+	    name = 'Megaera',
     },
 	-- Ji-Kun
     [1573] = {

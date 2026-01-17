@@ -116,7 +116,7 @@ function lib:GetMember(name)
             cache,
             function(g)
                 return Util.Strings.Equal(g.name, name) or
-                       Util.Strings.Equal(Ambiguate(g.name, "short"), name)
+                       Util.Strings.Equal(Ambiguate(g.name, "short"), Ambiguate(name, "short"))
             end
         )
     return member
@@ -281,7 +281,7 @@ Refresh = function(...)
                     end
                     entry.seen = true
 
-                    -- Logging:Trace("AFTER(%s) = %s", name, Util.Objects.ToString(entry))
+                    --Logging:Trace("AFTER(%s) = %s", name, Util.Objects.ToString(entry))
 
                     online = Util.Objects.Default(online, false)
                     if entry.online ~= online then
