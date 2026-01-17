@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.1.3 (2026-01-17)
+* address issues with realm name not being properly set when player is in guild but from different realm 02dc748
+
 2026.1.2 (2025-12-18)
 * /named/name/g to resolve issue with map not being found for Throne of Thunder 719c3ea
 
