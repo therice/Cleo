@@ -239,7 +239,6 @@ function AddOn:Test(itemCount, playerCount)
 	    --[[
 	    Util.Tables.Pop(players)
 	    Util.Tables.Push(players, "Waltrax-Raden")
-	    Logging:Debug(Util.Objects.ToString(players))
 	    --]]
     end
 

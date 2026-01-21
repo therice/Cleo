@@ -604,7 +604,25 @@ end
 ---@return Models.Item.LootAllocateResponse
 function LootAllocateEntry:GetCandidateResponse(name)
 	--Logging:Debug("GetCandidateResponse(%s) : %s", tostring(name), Util.Objects.ToString(self.candidates))
-	local lar = self.candidates[name]
+
+	-- when the entry is added to the table, it's implicitly using the same player name as the key
+	-- could use either one really, but using the key for consistency
+	--
+	-- simpler approach is just to use the following code, but trying to sort out cross realm stuff
+	-- which this could be implicated in causing
+	--
+	-- local lar = self.candidates[name]
+	--
+	-- also, the function below which uses Ambiguate if not an exact match will cause problems
+	-- if you end up with two players with same short name but on different realms
+	local _, lar = Util.Tables.FindFn(
+		self.candidates,
+		function(_, candidateName)
+			return  Util.Strings.Equal(candidateName, name) or
+					Util.Strings.Equal(Ambiguate(candidateName, "short"), Ambiguate(name, "short"))
+		end,
+		true
+	)
 	assert(lar, format("no response available for candidate %s", tostring(name)))
 	return lar
 end

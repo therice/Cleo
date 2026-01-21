@@ -94,15 +94,24 @@ function AddOn:UnitName(u)
     -- always work with that (see ticket #145). We need this to be consistent, so just lowercase the unit:
     unit = unit:lower()
     -- Proceed with UnitName()
-    local name, _ = UnitName(unit)
-    -- realm will be the normalized realm the unit is from
-    local realm = self:RealmName(unit)
+	-- realm will be the normalized realm the unit is from
+    local name, realm = UnitName(unit)
+	Logging:Trace("UnitName(%s)[via UnitName] : name=%s, realm=%s", unit, tostring(name), tostring(realm))
+	-- if realm is empty, then attempt to resolve in a different manner
+	if Util.Strings.IsEmpty(realm) then
+		realm = self:RealmName(unit)
+		Logging:Trace("UnitName(%s)[via RealmName] : name=%s, realm=%s", unit, tostring(name), tostring(realm))
+	end
+
     -- if the name isn't set then UnitName couldn't parse unit, most likely because we're not grouped.
-    if not name then name = unit end
+	if Util.Strings.IsEmpty(name) then
+		name = unit
+	end
+
     -- Below won't work without name
     -- We also want to make sure the returned name is always title cased (it might not always be! ty Blizzard)
     local qualified = qualify(name, realm)
-    --Logging:Debug("UnitName(%s) => %s", tostring(u), tostring(qualified))
+    -- Logging:Debug("UnitName(%s) => %s", tostring(u), tostring(qualified))
     return qualified
 end
 
@@ -111,11 +120,14 @@ function AddOn:RealmName(u)
     local realm
 
     if Util.Strings.IsSet(u) then
+	    -- this will return nil if player is on same realm, which is handled below
         _, realm = UnitFullName(u:lower())
+	    Logging:Trace("RealmName(%s)[via UnitFullName] => %s", u, tostring(realm))
     end
 
     if Util.Strings.IsEmpty(realm) then
         realm = GetNormalizedRealmName() or GetRealmName() or ""
+	    Logging:Trace("RealmName(%s)[via GetNormalizedRealmName] => %s", u, tostring(realm))
     end
 
     return gsub(realm, " ", "")

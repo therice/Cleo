@@ -98,11 +98,13 @@ function Player:initialize(guid, name, class, realm)
     self.guid = guid
     self.name = name and AddOn:UnitName(name) or nil
     self.class = class
-    self.realm = realm
+	-- normalize the realm name in case it was passed in with spaces
+    self.realm = realm and gsub(realm, " ", "")
     self.timestamp = -1
 
 	if Util.Strings.IsSet(self.name) and Util.Strings.IsSet(self.realm) and not Util.Strings.EndsWith(self.name, self.realm) then
 		Logging:Warn("Player(%s, %s) : realm doesn't match name, updating to reflect specified realm", tostring(self.name), tostring(self.realm))
+		-- don't go through AddOn:UnitName() here, we already have all the stuff we need to construct the name
 		self.name = Ambiguate(self.name, "short") .. "-" .. self.realm
 	end
 
