@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.1.4 (2026-01-21)
+* minor changes to loot allocation and unit names with respect to realms 920a6a6
+
 2026.1.3 (2026-01-17)
 * address issues with realm name not being properly set when player is in guild but from different realm 02dc748
 
