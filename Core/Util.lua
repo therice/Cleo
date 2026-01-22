@@ -122,15 +122,15 @@ function AddOn:RealmName(u)
     if Util.Strings.IsSet(u) then
 	    -- this will return nil if player is on same realm, which is handled below
         _, realm = UnitFullName(u:lower())
-	    Logging:Trace("RealmName(%s)[via UnitFullName] => %s", u, tostring(realm))
+	    Logging:Trace("RealmName(%s)[via UnitFullName] => %s", tostring(u), tostring(realm))
     end
 
     if Util.Strings.IsEmpty(realm) then
         realm = GetNormalizedRealmName() or GetRealmName() or ""
-	    Logging:Trace("RealmName(%s)[via GetNormalizedRealmName] => %s", u, tostring(realm))
+	    Logging:Trace("RealmName(%s)[via GetNormalizedRealmName] => %s", tostring(u), tostring(realm))
     end
 
-    return gsub(realm, " ", "")
+    return gsub(realm or "", " ", "")
 end
 
 -- Custom, better UnitIsUnit() function.
