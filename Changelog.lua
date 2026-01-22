@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.1.5 (2026-01-22)
+* address issue with attempting to log a nil value db3e053
+
 2026.1.4 (2026-01-21)
 * minor changes to loot allocation and unit names with respect to realms 920a6a6
 
