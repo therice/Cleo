@@ -48,9 +48,34 @@ function Text:Create()
     return text
 end
 
+local function IsFontPath(font)
+    return Util.Objects.IsString(font) and (font:find("[/\\]") or font:find("%.[Tt][Tt][Ff]$"))
+end
+
+local function ResolveFont(font)
+    local fontObject = Util.Objects.IsString(font) and _G[font] or font
+    if fontObject and fontObject.GetFont then
+        return fontObject:GetFont()
+    end
+
+    return font
+end
 
 function Text.SetFont(self, ...)
-    self:SetFont(...)
+    local font, size, flags = ...
+    local fontName, fontSize, fontFlags = ResolveFont(font)
+    if fontName and fontName ~= font then
+        self:SetFont(fontName, size or fontSize, flags or fontFlags)
+    elseif Util.Objects.IsString(font) and not IsFontPath(font) and self.SetFontObject then
+        self:SetFontObject(font)
+        fontName, _, fontFlags = self:GetFont()
+        if fontName and size then
+            self:SetFont(fontName, size, flags or fontFlags)
+        end
+    else
+        self:SetFont(...)
+    end
+
     return self
 end
 
