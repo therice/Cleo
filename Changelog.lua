@@ -2,6 +2,10 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.2.0 (2026-06-03)
+* add Siege of Orgrimmar support 57b419d
+* restore compatibility with updated WoW APIs 5887ef6
+
 2026.1.5 (2026-01-22)
 * address issue with attempting to log a nil value db3e053
 
