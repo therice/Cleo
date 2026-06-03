@@ -727,7 +727,7 @@ function ML:AnnounceItems(items)
 
 			local msg = template
 			for repl, fn in pairs(self.AnnounceItemStrings) do
-				msg = gsub(msg, repl, escapePatternSymbols(tostring(
+				msg = gsub(msg, repl, AddOn.EscapePatternSymbols(tostring(
 					fn(
 						e.session or i,
 						itemRef:GetItem(),
@@ -806,7 +806,7 @@ function ML:AnnounceAward(winner, link, response, roll, session, changeAward, is
 		announcement =
 			gsub(announcement,
 			     repl,
-			     escapePatternSymbols(tostring(fn(winner, ItemRef(link):GetItem(), response, roll, session)))
+			     AddOn.EscapePatternSymbols(tostring(fn(winner, ItemRef(link):GetItem(), response, roll, session)))
 			)
 	end
 

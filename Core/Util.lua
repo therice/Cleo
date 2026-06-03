@@ -26,6 +26,11 @@ function AddOn:Qualify(...)
     return Util.Strings.Join('_', C.name, ...)
 end
 
+function AddOn.EscapePatternSymbols(value)
+    local escaped = gsub(tostring(value or ""), "%%", "%%%%")
+    return escaped
+end
+
 function AddOn:IsInNonInstance()
     local instanceType = select(2, IsInInstance())
     if Util.Objects.In(instanceType, 'pvp', 'arena') then

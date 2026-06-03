@@ -1,21 +1,49 @@
 -- Dependency-free API compatibility shims that must load before libraries.
 
-local Enum = _G.Enum or {}
-_G.Enum = Enum
+local Enum = _G.Enum
+local createdEnum = false
+if not Enum then
+    Enum = {}
+    _G.Enum = Enum
+    createdEnum = true
+end
 
 local function EnumTable(name)
-    local t = Enum[name] or {}
-    Enum[name] = t
+    local t = Enum[name]
+    if not t then
+        t = {}
+        if createdEnum then
+            Enum[name] = t
+        end
+    end
     return t
 end
 
 local function Define(enumTable, enumKey, globalName, fallback)
-    if enumTable[enumKey] == nil then
-        enumTable[enumKey] = _G[globalName] ~= nil and _G[globalName] or fallback
+    local value = enumTable[enumKey]
+    if value == nil then
+        value = _G[globalName] ~= nil and _G[globalName] or fallback
+        if createdEnum then
+            enumTable[enumKey] = value
+        end
     end
 
     if _G[globalName] == nil then
-        _G[globalName] = enumTable[enumKey]
+        _G[globalName] = value
+    end
+end
+
+local function DefineGlobalFunction(globalName, namespaceName, methodName, fallback)
+    if type(_G[globalName]) ~= "function" then
+        _G[globalName] = function(...)
+            local namespace = _G[namespaceName]
+            local fn = namespace and namespace[methodName]
+            if type(fn) == "function" then
+                return fn(...)
+            elseif fallback then
+                return fallback(...)
+            end
+        end
     end
 end
 
@@ -68,3 +96,11 @@ Define(ItemBind, "OnAcquire", "LE_ITEM_BIND_ON_ACQUIRE", 1)
 Define(ItemBind, "OnEquip", "LE_ITEM_BIND_ON_EQUIP", 2)
 Define(ItemBind, "OnUse", "LE_ITEM_BIND_ON_USE", 3)
 Define(ItemBind, "Quest", "LE_ITEM_BIND_QUEST", 4)
+
+DefineGlobalFunction("GuildRoster", "C_GuildInfo", "GuildRoster")
+DefineGlobalFunction("GetNumGuildMembers", "C_GuildInfo", "GetNumGuildMembers", function() return 0 end)
+DefineGlobalFunction("GetGuildRosterInfo", "C_GuildInfo", "GetGuildRosterInfo")
+DefineGlobalFunction("GetGuildInfo", "C_GuildInfo", "GetGuildInfo")
+DefineGlobalFunction("GetGuildInfoText", "C_GuildInfo", "GetGuildInfoText")
+DefineGlobalFunction("GuildControlGetNumRanks", "C_GuildInfo", "GuildControlGetNumRanks", function() return 0 end)
+DefineGlobalFunction("GuildControlGetRankName", "C_GuildInfo", "GuildControlGetRankName")

@@ -54,7 +54,7 @@ do
     AddOn:AddLibrary('Dialog', 'LibDialog-1.1')
     AddOn:AddLibrary('DataBroker', 'LibDataBroker-1.1')
     AddOn:AddLibrary('DbIcon', 'LibDBIcon-1.0')
-    AddOn:AddLibrary('GuildStorage', 'LibGuildStorage-1.4')
+    AddOn:AddLibrary('GuildStorage', 'LibGuildStorage-1.5')
     AddOn:AddLibrary('Encounter', 'LibEncounter-1.1')
     AddOn:AddLibrary('JSON', 'LibJSON-1.0')
     AddOn:AddLibrary('Deformat', 'LibDeformat-3.0')

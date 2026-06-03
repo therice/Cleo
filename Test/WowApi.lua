@@ -277,7 +277,9 @@ function GetCurrentRegionName()
     return "US"
 end
 
-function GuildRoster()
+_G.C_GuildInfo = _G.C_GuildInfo or {}
+
+function C_GuildInfo.GuildRoster()
     -- dubious to work around issues with library using this function
     -- being called before addon is loaded
     if _G.IsAddOnLoaded('Cleo') then
@@ -500,17 +502,17 @@ function AddPlayerGuid(name, guid, realm, class)
     end
 end
 
-function GetGuildInfo(unit)
+function C_GuildInfo.GetGuildInfo(unit)
     return "Semi Hard and Casual", "Officer", 1, nil
 end
 
-function GetGuildInfoText()
+function C_GuildInfo.GetGuildInfoText()
     return "This is my guild info"
 end
 
-function GetNumGuildMembers() return 10 end
+function C_GuildInfo.GetNumGuildMembers() return 10 end
 
-function GetGuildRosterInfo(index)
+function C_GuildInfo.GetGuildRosterInfo(index)
     local workingIdx = 100 + index
     local name, guid, realm = "Player" .. workingIdx, 'Player-1-' .. string.format("%08d", workingIdx), 'Realm1'
     local classInfo = C_CreatureInfo.GetClassInfo(math.random(1,5))

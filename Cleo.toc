@@ -9,7 +9,7 @@
 ## X-AddonName: Cleo
 ## X-InterfaceName: Cleo (Mists of Pandaria Classic)
 ## IconTexture-blank: 982414
-## IconTexture: Interface\AddOns\Cleo\Media\Textures\cleopatra
+## IconTexture: Interface\AddOns\Cleo\Media\Textures\icon
 
 ## API Compatibility
 ApiCompat.lua
