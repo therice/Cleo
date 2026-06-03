@@ -9,6 +9,11 @@ AddOn.C_Container = _G.C_Container or {
 	PickupContainerItem      = _G.PickupContainerItem,
 }
 
+AddOn.C_AddOns = _G.C_AddOns or {
+	GetAddOnMetadata = _G.GetAddOnMetadata,
+	IsAddOnLoaded    = _G.IsAddOnLoaded,
+}
+
 AddOn.C_PartyInfo = _G.C_PartyInfo or {
 	GetLootMethod           = _G.GetLootMethod,
 	SetLootMethod           = _G.SetLootMethod

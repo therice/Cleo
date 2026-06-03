@@ -165,7 +165,7 @@ function ScrollList.Font(self, name , size)
 	self.fontName = name
 	self.fontSize = size
 	for i=1,#self.List do
-		self.List[i].text:SetFont(name,size, "")
+		self.List[i].text:Font(name,size, "")
 	end
 
 	--[[

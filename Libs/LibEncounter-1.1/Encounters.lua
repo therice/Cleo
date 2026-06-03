@@ -50,6 +50,7 @@ local lib = LibStub("LibEncounter-1.1", true)
 --  Heart of Fear
 --  Mogu'shan Vaults
 --  Throne of Thunder
+--  Siege of Orgrimmar
 --
 -- Mapping from map id to details (name will be used as index for localization)
 -- https://wow.tools/dbc/?dbc=journalinstance&#page=1&colFilter[0]=749 (DEPRECATED)
@@ -178,6 +179,10 @@ lib.Maps = {
 	-- JournalInstance.ID = 362
     [1098] = {
 	    name = 'Throne of Thunder'
+    },
+	-- JournalInstance.ID = 369
+    [1136] = {
+	    name = 'Siege of Orgrimmar'
     },
 }
 
@@ -1106,6 +1111,84 @@ lib.Creatures = {
     },
     [69473] = {
 	    name = 'Ra-den'
+    },
+    [71543] = {
+	    name = 'Immerseus'
+    },
+    [71479] = {
+	    name = 'He Softfoot'
+    },
+    [71475] = {
+	    name = 'Rook Stonetoe'
+    },
+    [71480] = {
+	    name = 'Sun Tenderheart'
+    },
+    [72276] = {
+	    name = 'Amalgam of Corruption'
+    },
+    [71734] = {
+	    name = 'Sha of Pride'
+    },
+    [72249] = {
+	    name = 'Galakras'
+    },
+    [71466] = {
+	    name = 'Iron Juggernaut'
+    },
+    [71859] = {
+	    name = 'Earthbreaker Haromm'
+    },
+    [71858] = {
+	    name = 'Wavebinder Kardris'
+    },
+    [71515] = {
+	    name = 'General Nazgrim'
+    },
+    [71454] = {
+	    name = 'Malkorok'
+    },
+    [73720] = {
+	    name = 'Spoils of Pandaria'
+    },
+    [71512] = {
+	    name = 'Spoils of Pandaria'
+    },
+    [71529] = {
+	    name = 'Thok the Bloodthirsty'
+    },
+    [71504] = {
+	    name = 'Siegecrafter Blackfuse'
+    },
+    [71152] = {
+	    name = 'Skeer the Bloodseeker'
+    },
+    [71153] = {
+	    name = 'Hisek the Swarmkeeper'
+    },
+    [71154] = {
+	    name = 'Ka\'roz the Locust'
+    },
+    [71155] = {
+	    name = 'Korven the Prime'
+    },
+    [71156] = {
+	    name = 'Kaz\'tik the Manipulator'
+    },
+    [71157] = {
+	    name = 'Xaril the Poisoned-Mind'
+    },
+    [71158] = {
+	    name = 'Rik\'kal the Dissector'
+    },
+    [71160] = {
+	    name = 'Iyyokuk the Lucid'
+    },
+    [71161] = {
+	    name = 'Kil\'ruk the Wind-Reaver'
+    },
+    [71865] = {
+	    name = 'Garrosh Hellscream'
     },
 }
 
@@ -2135,5 +2218,82 @@ lib.Encounters = {
     [1581] = {
 	    map_id = 1098,
 	    creature_id = {69473},
+    },
+	-- Siege of Orgrimmar
+	-- Immerseus
+    [1602] = {
+	    map_id = 1136,
+	    creature_id = {71543},
+    },
+	-- The Fallen Protectors
+    [1598] = {
+	    map_id = 1136,
+	    creature_id = {71479, 71475, 71480},
+	    name = 'The Fallen Protectors',
+    },
+	-- Norushen
+    [1624] = {
+	    map_id = 1136,
+	    creature_id = {72276},
+	    name = 'Norushen',
+    },
+	-- Sha of Pride
+    [1604] = {
+	    map_id = 1136,
+	    creature_id = {71734},
+    },
+	-- Galakras
+    [1622] = {
+	    map_id = 1136,
+	    creature_id = {72311, 72560, 72249, 73910, 72302, 72561, 73909},
+	    name = 'Galakras',
+    },
+	-- Iron Juggernaut
+    [1600] = {
+	    map_id = 1136,
+	    creature_id = {71466},
+    },
+	-- Kor'kron Dark Shaman
+    [1606] = {
+	    map_id = 1136,
+	    creature_id = {71859, 71858},
+	    name = 'Kor\'kron Dark Shaman',
+    },
+	-- General Nazgrim
+    [1603] = {
+	    map_id = 1136,
+	    creature_id = {71515},
+    },
+	-- Malkorok
+    [1595] = {
+	    map_id = 1136,
+	    creature_id = {71454},
+    },
+	-- Spoils of Pandaria
+    [1594] = {
+	    map_id = 1136,
+	    creature_id = {73720, 71512},
+	    name = 'Spoils of Pandaria',
+    },
+	-- Thok the Bloodthirsty
+    [1599] = {
+	    map_id = 1136,
+	    creature_id = {71529},
+    },
+	-- Siegecrafter Blackfuse
+    [1601] = {
+	    map_id = 1136,
+	    creature_id = {71504},
+    },
+	-- Paragons of the Klaxxi
+    [1593] = {
+	    map_id = 1136,
+	    creature_id = {71152, 71153, 71154, 71155, 71156, 71157, 71158, 71160, 71161},
+	    name = 'Paragons of the Klaxxi',
+    },
+	-- Garrosh Hellscream
+    [1623] = {
+	    map_id = 1136,
+	    creature_id = {71865},
     },
 }

@@ -116,6 +116,41 @@ describe("MasterLooter", function()
 			PlayerEnteredWorld()
 			assert(module:IsEnabled())
 		end)
+
+		it("announces items without global escapePatternSymbols", function()
+			local db = NewAceDb(ListDataComplete)
+			LM.db = db
+			LM:InitializeService()
+			PlayerEnteredWorld()
+
+			module.db.profile.announceItems = true
+			module.db.profile.announceItemPrefix = ""
+			module.db.profile.announceItemText = { channel = "group", text = "&s: &i (&ln)"}
+
+			local escapePatternSymbols = _G.escapePatternSymbols
+			_G.escapePatternSymbols = nil
+
+			local announcements = {}
+			local SendAnnouncement = AddOn.SendAnnouncement
+			AddOn.SendAnnouncement = function(_, msg)
+				Util.Tables.Push(announcements, msg)
+			end
+
+			local ok, err = pcall(function()
+				module:AnnounceItems({
+					{
+						ref = "18832",
+						session = 1,
+					}
+				})
+			end)
+
+			AddOn.SendAnnouncement = SendAnnouncement
+			_G.escapePatternSymbols = escapePatternSymbols
+
+			assert(ok, err)
+			assert.equal("1: |cffa335ee|Hitem:18832:::::::::::::::::|h[Brutality Blade]|h|r (Weapon)", announcements[2])
+		end)
 	end)
 
 	describe("events", function()

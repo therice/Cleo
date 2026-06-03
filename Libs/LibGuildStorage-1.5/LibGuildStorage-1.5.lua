@@ -1,6 +1,6 @@
-local MAJOR_VERSION = "LibGuildStorage-1.4"
+local MAJOR_VERSION = "LibGuildStorage-1.5"
 local MINOR_VERSION = 40400
-local LIB_MESSAGE_PREFIX = "GuildStorage14"
+local LIB_MESSAGE_PREFIX = "GuildStorage15"
 
 --- @class LibGuildStorage
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -56,6 +56,13 @@ lib.Events = {
 local state, initialized, refreshing, index, cache, guildInfo, guildName =
     States.StaleAwaitingUpdate, false, false, nil, {}, nil, nil
 
+local function RefreshGuildRoster()
+    local C_GuildInfo = _G.C_GuildInfo
+    if C_GuildInfo and C_GuildInfo.GuildRoster then
+        return C_GuildInfo.GuildRoster()
+    end
+    return GuildRoster()
+end
 
 local GuildStorageEntry = Class('GuildStorageEntry')
 
@@ -217,7 +224,7 @@ Refresh = function(...)
             end
 
             if state == States.StaleAwaitingUpdate then
-                GuildRoster()
+                RefreshGuildRoster()
                 return
             end
 
@@ -345,5 +352,5 @@ if C_Timer.IsMock and C_Timer.IsMock() then
 	end
 
 	lib.frame:Show()
-	GuildRoster()
+	RefreshGuildRoster()
 end

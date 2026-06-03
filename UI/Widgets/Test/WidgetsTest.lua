@@ -40,6 +40,27 @@ describe("Native UI Widgets", function()
             w:SetTextColor()
             w:SetText('t')
         end)
+        it("resolves Text font object names", function()
+            _G.CleoTestFontObject = {
+                GetFont = function()
+                    return "Fonts\\FRIZQT__.TTF", 11, "OUTLINE"
+                end
+            }
+
+            local w = NativeUI:New('Text')
+            local font, size, flags
+            w.SetFont = function(_, ...)
+                font, size, flags = ...
+            end
+
+            w:Font("CleoTestFontObject", 14)
+
+            _G.CleoTestFontObject = nil
+
+            assert.equal("Fonts\\FRIZQT__.TTF", font)
+            assert.equal(14, size)
+            assert.equal("OUTLINE", flags)
+        end)
         it("succeeds for Frame", function()
             local w = NativeUI:New('Frame', nil, 'FrameName', 'UI_Native_Widgets')
             assert(w.content)

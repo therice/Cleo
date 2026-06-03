@@ -265,14 +265,6 @@ function GetServerTime()
     return os.time()
 end
 
-function GetAddOnMetadata(name, attr)
-    if string.lower(attr) == 'version' then
-        return "2021.1.0-dev"
-    else
-        return nil
-    end
-end
-
 function GetAddOnInfo()
     return
 end
@@ -285,7 +277,9 @@ function GetCurrentRegionName()
     return "US"
 end
 
-function GuildRoster()
+_G.C_GuildInfo = _G.C_GuildInfo or {}
+
+function C_GuildInfo.GuildRoster()
     -- dubious to work around issues with library using this function
     -- being called before addon is loaded
     if _G.IsAddOnLoaded('Cleo') then
@@ -508,17 +502,17 @@ function AddPlayerGuid(name, guid, realm, class)
     end
 end
 
-function GetGuildInfo(unit)
+function C_GuildInfo.GetGuildInfo(unit)
     return "Semi Hard and Casual", "Officer", 1, nil
 end
 
-function GetGuildInfoText()
+function C_GuildInfo.GetGuildInfoText()
     return "This is my guild info"
 end
 
-function GetNumGuildMembers() return 10 end
+function C_GuildInfo.GetNumGuildMembers() return 10 end
 
-function GetGuildRosterInfo(index)
+function C_GuildInfo.GetGuildRosterInfo(index)
     local workingIdx = 100 + index
     local name, guid, realm = "Player" .. workingIdx, 'Player-1-' .. string.format("%08d", workingIdx), 'Realm1'
     local classInfo = C_CreatureInfo.GetClassInfo(math.random(1,5))
@@ -962,39 +956,7 @@ _G.INVTYPE_2HWEAPON = "Two-Handed"
 _G.INVTYPE_WEAPONMAINHAND = "Main Hand"
 _G.INVTYPE_WEAPONOFFHAND = "Off Hand"
 _G.WEAPON = "Weapon"
-_G.LE_ITEM_WEAPON_AXE1H = 0
-_G.LE_ITEM_WEAPON_AXE2H = 1
-_G.LE_ITEM_WEAPON_BOWS = 2
-_G.LE_ITEM_WEAPON_GUNS = 3
-_G.LE_ITEM_WEAPON_MACE1H = 4
-_G.LE_ITEM_WEAPON_MACE2H = 5
-_G.LE_ITEM_WEAPON_POLEARM = 6
-_G.LE_ITEM_WEAPON_SWORD1H = 7
-_G.LE_ITEM_WEAPON_SWORD2H = 8
-_G.LE_ITEM_WEAPON_WARGLAIVE = 9
-_G.LE_ITEM_WEAPON_STAFF = 10
-_G.LE_ITEM_WEAPON_BEARCLAW = 11
-_G.LE_ITEM_WEAPON_CATCLAW = 12
-_G.LE_ITEM_WEAPON_UNARMED = 13
-_G.LE_ITEM_WEAPON_GENERIC = 14
-_G.LE_ITEM_WEAPON_DAGGER = 15
-_G.LE_ITEM_WEAPON_THROWN = 16
-_G.LE_ITEM_WEAPON_CROSSBOW = 18
-_G.LE_ITEM_WEAPON_WAND = 19
-_G.LE_ITEM_ARMOR_GENERIC = 0
-_G.LE_ITEM_ARMOR_CLOTH = 1
-_G.LE_ITEM_ARMOR_LEATHER = 2
-_G.LE_ITEM_ARMOR_MAIL = 3
-_G.LE_ITEM_ARMOR_PLATE = 4
-_G.LE_ITEM_ARMOR_COSMETIC = 5
-_G.LE_ITEM_ARMOR_SHIELD = 6
-_G.LE_ITEM_ARMOR_LIBRAM = 7
-_G.LE_ITEM_ARMOR_IDOL = 8
-_G.LE_ITEM_ARMOR_TOTEM = 9
-_G.LE_ITEM_ARMOR_SIGIL = 10
-_G.LE_ITEM_ARMOR_RELIC = 11
-_G.LE_ITEM_CLASS_WEAPON = 2
-_G.LE_ITEM_CLASS_ARMOR = 4
+-- Item LE_* globals are intentionally provided by ApiCompat.lua from Enum.*.
 -- not colored
 _G.ITEM_QUALITY0_DESC = 'Poor'
 _G.ITEM_QUALITY1_DESC = 'Common'
@@ -1078,8 +1040,7 @@ _G.TOOLTIP_DEFAULT_COLOR = {
     b = 0,
 }
 
-_G.LE_ITEM_BIND_ON_EQUIP = 2
-_G.LE_ITEM_BIND_ON_ACQUIRE = 1
+-- Item bind LE_* globals are intentionally provided by ApiCompat.lua from Enum.ItemBind.
 
 _G.AUTO_LOOT_DEFAULT_TEXT = "Auto Loot"
 _G.ITEM_LEVEL_ABBR = "Item Level"
@@ -1107,6 +1068,8 @@ _G.MAX_TRADE_ITEMS = 7
 _G.LE_GAME_ERR_TRADE_COMPLETE = 235
 _G.ITEM_HEROIC = "Heroic"
 _G.THUNDER_FORGED = "Thunderforged"
+_G.ITEM_THUNDERFORGED = "Thunderforged"
+_G.ITEM_WARFORGED = "Warforged"
 
 -- https://wow.gamepedia.com/API_GetItemSubClassInfo
 function GetItemSubClassInfo(classId, subClassId)

@@ -40,7 +40,7 @@ function Logging:BuildFrame()
 
         local msg = UI:NewNamed('ScrollingMessageFrame', frame.content, 'Messages')
         msg:SetMaxLines(10000)
-        msg:SetPoint("CENTER",frame.content, "CENTER", 0, 10)
+        msg:SetPoint("CENTER", frame.content, "CENTER", 0, 10)
         frame.msg = msg
 
         local clear = UI:NewNamed("Button", frame.content or frame, "Clear", L['clear'])

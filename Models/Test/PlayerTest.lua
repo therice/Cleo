@@ -83,5 +83,32 @@ describe("Player", function()
             local p = Player:Get('1-00000002')
             assert.are.equal('Player2-Realm1',p:GetName())
         end)
+        it("creates player from provided info when GUID lookup has no name", function()
+            local GetPlayerInfoByGUIDOrig = _G.GetPlayerInfoByGUID
+            _G.GetPlayerInfoByGUID = function()
+                return nil, nil, nil, nil, nil, nil, nil
+            end
+
+            local ok, p = pcall(
+                function()
+                    return Player.Create(
+                        "Player-1-00000999",
+                        {
+                            name = "Player999-Realm2",
+                            realm = "IgnoredRealm",
+                            classTag = "WARRIOR",
+                        }
+                    )
+                end
+            )
+
+            _G.GetPlayerInfoByGUID = GetPlayerInfoByGUIDOrig
+
+            assert(ok, p)
+            assert.are.equal("Player999-Realm2", p:GetName())
+            assert.are.equal("Player999", p:GetShortName())
+            assert.are.equal("Realm2", p.realm)
+            assert.are.equal("WARRIOR", p.class)
+        end)
     end)
 end)

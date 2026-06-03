@@ -310,7 +310,7 @@ function LA:AnnounceResponse(session, candidate)
 				for repl, fn in pairs(ML.AwardStrings) do
 					announcement =
 						gsub(announcement, repl,
-						     escapePatternSymbols(
+						     AddOn.EscapePatternSymbols(
 								tostring(fn(candidate, ItemRef(entry.link):GetItem(), response.text, nil, session))
 						     )
 						)

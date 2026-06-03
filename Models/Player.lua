@@ -32,6 +32,9 @@ local function InitializeCache()
                     return AddOn.db.global.cache.player[id]
                 end,
                 __newindex = function(_, id, v)
+                    if not AddOn.db.global.cache.player then
+                        AddOn.db.global.cache.player = {}
+                    end
                     AddOn.db.global.cache.player[id] = v
                 end,
             }
@@ -197,7 +200,7 @@ function Player.Create(guid, info)
             --Logging:Debug("Create(%s) : Using provided player information", guid)
             name = info.name
             class = info.classTag or info.class
-	        realm = Util.Strings.Split(name)[2]
+	        realm = Util.Strings.Split(name, "-")[2]
         else
             return nil
         end

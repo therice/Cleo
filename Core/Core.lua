@@ -530,9 +530,9 @@ local function ExtraGroupMembers()
 end
 
 function AddOn:UpdateGroupMembers()
-    Logging:Trace("UpdateGroupMembers() : current count is %d", Util.Tables.Count(self.group))
-
     local group, groupCount, name = {}, GetNumGroupMembers(), nil
+	Logging:Trace("UpdateGroupMembers() : current count is %d, group members count is %d", Util.Tables.Count(self.group), groupCount)
+
     for i = 1, groupCount do
         name = GetRaidRosterInfo(i)
         if Util.Objects.IsSet(name) then

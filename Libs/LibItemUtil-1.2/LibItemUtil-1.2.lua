@@ -480,9 +480,11 @@ local HEROIC = strtrim(_G.ITEM_HEROIC)
 -- Not translated, will break if not an english client
 -- Cannot figure out the global string which corresponds to it or not yet introduced
 local THUNDER_FORGED = strtrim(_G.ITEM_THUNDERFORGED or "Thunderforged")
+local WAR_FORGED = strtrim(_G.ITEM_WARFORGED or "Warforged")
 
 lib.HEROIC = HEROIC
 lib.THUNDER_FORGED = THUNDER_FORGED
+lib.WAR_FORGED = WAR_FORGED
 
 local function StripColor(text)
     text = string.gsub(text or "", "|c%x%x%x%x%x%x%x%x", "" )
@@ -497,6 +499,7 @@ local HeroicVariety = {
 	None          = 0,
 	Normal        = 1,
 	Thunderforged = 2,
+	Warforged     = 3,
 }
 
 lib.IsItemHeroic = Util.Memoize.Memoize(
@@ -515,15 +518,22 @@ lib.IsItemHeroic = Util.Memoize.Memoize(
             if line and line.GetText then
                 local text = strtrim(line:GetText() or "")
                 Logging:Trace("IsItemHeroic(%s) : Text=%s, Stripped=%s, Checking=%s", itemLink, gsub(text, "\124", "\124\124"), StripColor(text), HEROIC)
-				-- In MOP P3, they introduced another variety of 'Heroic' - 'Heroic Thunderforged'
+				-- MoP heroic raid items can be qualified as Thunderforged or Warforged.
 				local strippedText = StripColor(text):trim()
 	            local isHeroicNormal = (strippedText == HEROIC)
-	            local isHeroicTf = (strippedText:match("^"..HEROIC) and strippedText:match(THUNDER_FORGED.."$"))
+	            local isHeroicTf = Util.Strings.StartsWith(strippedText, HEROIC) and Util.Strings.EndsWith(strippedText, THUNDER_FORGED)
+	            local isHeroicWf = Util.Strings.StartsWith(strippedText, HEROIC) and Util.Strings.EndsWith(strippedText, WAR_FORGED)
 
-	            if isHeroicNormal or isHeroicTf then
+	            if isHeroicNormal or isHeroicTf or isHeroicWf then
                     Logging:Trace("IsItemHeroic(%s) : IsHeroic=true", itemLink)
                     tooltip:Hide()
-                    return true, (isHeroicNormal and HeroicVariety.Normal or HeroicVariety.Thunderforged)
+                    if isHeroicNormal then
+                        return true, HeroicVariety.Normal
+                    elseif isHeroicTf then
+                        return true, HeroicVariety.Thunderforged
+                    else
+                        return true, HeroicVariety.Warforged
+                    end
                 end
             end
         end
@@ -548,8 +558,11 @@ lib.DisambiguateIfHeroicItem = Util.Memoize.Memoize(
 	    if variety == HeroicVariety.Normal then
 		    return string.format("%s (%s)", itemName, lib.HEROIC)
 		-- Heroic Thunderforged
-	    else
+	    elseif variety == HeroicVariety.Thunderforged then
 		    return string.format("%s (%s %s)", itemName, lib.HEROIC, lib.THUNDER_FORGED)
+		-- Heroic Warforged
+	    else
+		    return string.format("%s (%s %s)", itemName, lib.HEROIC, lib.WAR_FORGED)
 	    end
     end
 )

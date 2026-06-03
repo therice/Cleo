@@ -221,11 +221,24 @@ function Tabs.SetTo(self, tab)
 	return self
 end
 
+local TabStyle = {
+	Selected = {0.25, 0.78, 0.92, 0.95},
+}
+
+function Tabs.SetTabStyle(self, selected)
+	if selected then
+		self.TabSelectedLine:Show()
+	else
+		self.TabSelectedLine:Hide()
+	end
+end
+
 function Tabs.SelectTab(self)
 	-- Logging:Debug("SelectTab(%s)", tostring(self:GetName()))
 	self.Left:Hide()
 	self.Middle:Hide()
 	self.Right:Hide()
+	Tabs.SetTabStyle(self, true)
 
 	self:Disable()
 	local offsetX = self.Icon and 8 or 0
@@ -243,6 +256,7 @@ function Tabs.DeselectTab(self)
 	self.Left:Show()
 	self.Middle:Show()
 	self.Right:Show()
+	Tabs.SetTabStyle(self, false)
 
 	self:Enable()
 	local offsetX = self.Icon and 8 or 0
@@ -351,6 +365,13 @@ function Tabs.CreateTabButton(parent, name)
 
 	local tabButton = CreateFrame("Button", "TabButton_" .. name, parent)
 	tabButton:SetSize(115,24)
+
+	tabButton.TabSelectedLine = tabButton:CreateTexture(nil, "BORDER")
+	tabButton.TabSelectedLine:SetColorTexture(unpack(TabStyle.Selected))
+	tabButton.TabSelectedLine:SetPoint("BOTTOMLEFT", tabButton, "BOTTOMLEFT", 0, 0)
+	tabButton.TabSelectedLine:SetPoint("BOTTOMRIGHT", tabButton, "BOTTOMRIGHT", 0, 0)
+	tabButton.TabSelectedLine:SetHeight(1)
+	Tabs.SetTabStyle(tabButton, false)
 
 	tabButton.LeftDisabled = tabButton:CreateTexture(nil, "BORDER")
 	tabButton.LeftDisabled:SetPoint("BOTTOMLEFT", 0, -3)
