@@ -1,4 +1,4 @@
-## Interface: 50503
+## Interface: 50504
 ## X-Min-Interface-Mists: 50500
 ## Title: |cfffe7b2cCleo|r
 ## Notes: Cleo : Suicide Kings Loot System for World of Warcraft (Mists of Pandaria Classic)
@@ -8,6 +8,11 @@
 ## SavedVariables: Cleo_DB, Cleo_CustomItems, Cleo_Lists, Cleo_TrafficAudit, Cleo_LootAudit, Cleo_LogAudit, Cleo_RaidAudit, Cleo_LootLedger
 ## X-AddonName: Cleo
 ## X-InterfaceName: Cleo (Mists of Pandaria Classic)
+## IconTexture-blank: 982414
+## IconTexture: Interface\AddOns\Cleo\Media\Textures\cleopatra
+
+## API Compatibility
+ApiCompat.lua
 
 ## Required Libraries
 Libs\Libs.xml

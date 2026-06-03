@@ -40,6 +40,8 @@ function AddOn:OnInitialize()
         IsMOP = function(self) return self.version.major == 5 and self.version.minor == 5 end,
         IsMOPP2 = function(self) return self:IsMOP() and self.version.patch == 2 end,
         IsMOPP3 = function(self) return self:IsMOP() and self.version.patch == 3 end,
+        IsMOPP4 = function(self) return self:IsMOP() and self.version.patch == 4 end,
+        IsMOPP5 = function(self) return self:IsMOPP4() end
     }
 
     Logging:Debug("OnInitialize(%s) : BuildInfo(%s)", self:GetName(), Util.Objects.ToString(AddOn.BuildInfo))

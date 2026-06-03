@@ -4,6 +4,7 @@ local ItemUtil
 describe("LibItemUtil", function()
     setup(function()
         loadfile("Test/TestSetup.lua")(false, 'LibItemUtil')
+        loadfile("ApiCompat.lua")()
         loadfile("Test/WowXmlParser.lua")()
         ParseXmlAndLoad('Libs/CallbackHandler-1.0/CallbackHandler-1.0.xml')
         ParseXmlAndLoad('Libs/AceEvent-3.0/AceEvent-3.0.xml')

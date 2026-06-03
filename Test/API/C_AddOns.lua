@@ -4,6 +4,14 @@
 --
 C_AddOns = {}
 
+function C_AddOns.GetAddOnMetadata(name, attr)
+	if string.lower(attr) == 'version' then
+		return "2021.1.0-dev"
+	else
+		return nil
+	end
+end
+
 function C_AddOns.IsAddOnLoaded(name)
 	-- stupid workaround for MSA-DropDownMenu
 	if name == "ElvUI" or name == "Tukui" or name == "Aurora" then

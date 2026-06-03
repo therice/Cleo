@@ -8,8 +8,8 @@ _G[AddOnName] = AddOn
 
 -- just capture version here, it will be turned into semantic version later
 -- as we don't have access to that model yet here
-AddOn.version = GetAddOnMetadata(AddOnName, "Version")
-AddOn.author = GetAddOnMetadata(AddOnName, "Author")
+AddOn.version = AddOn.C_AddOns.GetAddOnMetadata(AddOnName, "Version")
+AddOn.author = AddOn.C_AddOns.GetAddOnMetadata(AddOnName, "Author")
 --@debug@
 -- if local development and not substituted, then use a dummy version
 if AddOn.version == '@project-version@' then

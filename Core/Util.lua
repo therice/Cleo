@@ -67,7 +67,7 @@ end
 -- @param u Any unit, except those that include '-' like "name-target".
 -- @return Titlecased "unitName-realmName"
 function AddOn:UnitName(u)
-    --Logging:Debug("UnitName(%s)", tostring(u))
+    Logging:Trace("UnitName(%s)", tostring(u))
     if Util.Objects.IsEmpty(u) then return nil end
 
     local function qualify(name, realm)
