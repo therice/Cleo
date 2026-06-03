@@ -1068,6 +1068,8 @@ _G.MAX_TRADE_ITEMS = 7
 _G.LE_GAME_ERR_TRADE_COMPLETE = 235
 _G.ITEM_HEROIC = "Heroic"
 _G.THUNDER_FORGED = "Thunderforged"
+_G.ITEM_THUNDERFORGED = "Thunderforged"
+_G.ITEM_WARFORGED = "Warforged"
 
 -- https://wow.gamepedia.com/API_GetItemSubClassInfo
 function GetItemSubClassInfo(classId, subClassId)
