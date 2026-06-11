@@ -274,6 +274,13 @@ local PreferredArmorTypeByClass = {
     WARRIOR     = LE_ITEM_ARMOR_PLATE,
 }
 
+local PreferredArmorSubTypes = {
+    [LE_ITEM_ARMOR_CLOTH]   = true,
+    [LE_ITEM_ARMOR_LEATHER] = true,
+    [LE_ITEM_ARMOR_MAIL]    = true,
+    [LE_ITEM_ARMOR_PLATE]   = true,
+}
+
 local function GetNumClasses()
     return _G.MAX_CLASSES
 end
@@ -649,9 +656,9 @@ function lib:ClassCanUse(class, classesFlag, equipLoc, typeId, subTypeId, checkI
             end
         end
 
-        -- it's usable and armor, check if preferred type if specified
-        if classCanUse and checkIfPreferred and typeId == LE_ITEM_CLASS_ARMOR then
-            classCanUse = subTypeId == 0 or (PreferredArmorTypeByClass[class] == subTypeId)
+        -- it's usable wearable armor, check if preferred type if specified
+        if classCanUse and checkIfPreferred and typeId == LE_ITEM_CLASS_ARMOR and PreferredArmorSubTypes[subTypeId] then
+            classCanUse = PreferredArmorTypeByClass[class] == subTypeId
         end
     end
 
