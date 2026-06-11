@@ -2,6 +2,9 @@
 local _, AddOn = ...
 
 AddOn.Changelog = [=[
+2026.2.1 (2026-06-11)
+* allow shaman shields with preferred armor filtering a88db19
+
 2026.2.0 (2026-06-03)
 * add Siege of Orgrimmar support 57b419d
 * restore compatibility with updated WoW APIs 5887ef6
